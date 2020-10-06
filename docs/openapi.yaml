@@ -1,0 +1,53 @@
+openapi: 3.0.1
+info:
+  title: Promat service
+  description: >-
+    Provides backend services for the Promat system.
+  license:
+    name: GPL-3.0
+    url: 'https://github.com/DBCDK/promat-service/blob/master/LICENCE.txt'
+  version: 1.0-SNAPSHOT
+tags:
+  - name: subjects
+    description: Fields of interests
+paths:
+  /subjects:
+    get:
+      tags:
+        - subjects
+      summary: Returns list of all known subjects
+      operationId: getSubjects
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubjectList'
+components:
+  schemas:
+    SubjectList:
+      type: object
+      properties:
+        numFound:
+          type: integer
+        subjects:
+          type: array
+          items:
+            $ref: '#/components/schemas/Subject'
+      required:
+        - numFound
+        - subjects
+
+    Subject:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        parentId:
+          type: integer
+      required:
+        - id
+        - name
