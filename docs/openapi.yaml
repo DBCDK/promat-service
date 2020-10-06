@@ -8,9 +8,49 @@ info:
     url: 'https://github.com/DBCDK/promat-service/blob/master/LICENCE.txt'
   version: 1.0-SNAPSHOT
 tags:
+  - name: reviewers
+    description: Users writing professional reviews
   - name: subjects
     description: Fields of interests
 paths:
+  /reviewers:
+    get:
+      tags:
+        - reviewers
+      summary: Returns list of reviewers
+      operationId: getReviewers
+      parameters:
+        - name: deadline
+          in: query
+          required: false
+          description: Optional filter on deadline date as defined by RFC3339,
+                       meaning only reviewers available for the deadline will be returned.
+          schema:
+            type: string
+            format: date
+        - name: subjectId
+          in: query
+          required: false
+          description: Optional filter on subject ID,
+                       meaning only reviewers matching one or more subjects will be returned.
+          schema:
+            type: array
+            items:
+              type: integer
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReviewerList'
+        '400':
+          description: bad request, invalid deadline date
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+
   /subjects:
     get:
       tags:
@@ -26,6 +66,88 @@ paths:
                 $ref: '#/components/schemas/SubjectList'
 components:
   schemas:
+    Address:
+      type: object
+      properties:
+        address1:
+          type: string
+        address2:
+          type: string
+        zip:
+          type: integer
+        city:
+          type: string
+      required:
+        - address1
+        - zip
+        - city
+
+    ReviewerList:
+      type: object
+      properties:
+        numFound:
+          type: integer
+        reviewers:
+          type: array
+          items:
+            $ref: '#/components/schemas/Reviewer'
+      required:
+        - numFound
+        - reviewers
+    Reviewer:
+      type: object
+      properties:
+        id:
+          type: integer
+        firstName:
+          type: string
+        lastName:
+          type: string
+        email:
+          type: string
+        phone:
+          type: string
+        address:
+          $ref: '#/components/schemas/Address'
+        institution:
+          type: string
+        paycode:
+          type: integer
+        hiatus_begin:
+          type: string
+          format: date
+        hiatus_end:
+          type: string
+          format: date
+      required:
+        - id
+        - firstName
+        - lastName
+        - email
+        - address
+        - institution
+        - paycode
+
+    ServiceError:
+      type: object
+      properties:
+        code:
+          $ref: '#/components/schemas/ServiceErrorCode'
+        cause:
+          type: string
+          description: Specific cause of the error,
+                       for example the name of an invalid query parameter.
+        details:
+          type: string
+      required:
+        - code
+        - cause
+
+    ServiceErrorCode:
+      type: string
+      enum:
+        - INVALID_QUERY_PARAM
+
     SubjectList:
       type: object
       properties:
@@ -38,7 +160,6 @@ components:
       required:
         - numFound
         - subjects
-
     Subject:
       type: object
       properties:
