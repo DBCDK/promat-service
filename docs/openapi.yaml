@@ -64,6 +64,21 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/SubjectList'
+  /records:
+    get:
+      tags:
+        - records
+      summary: >-
+        Return zero or more faust numbers that match the given id.
+        The id can be a faust number or an isbn-10 or isbn-13 number.
+      operationId: getRecords
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecordsList'
 components:
   schemas:
     Address:
@@ -177,3 +192,21 @@ components:
       required:
         - id
         - name
+    RecordsList:
+      type: object
+      properties:
+        numFound:
+          type: integer
+        records:
+          type: array
+          items:
+            $ref: '#/components/schemas/Record'
+    Record:
+      type: object
+      properties:
+        faust:
+          type: integer
+        isMatch:
+          type: boolean
+        isRelated:
+          type: boolean
