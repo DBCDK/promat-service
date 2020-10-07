@@ -15,6 +15,7 @@ import javax.persistence.PersistenceContext;
  * {@literal @}Inject {@literal @}PromatEntityManager EntityManager em
  * </pre>
  */
+@SuppressWarnings("PMD.UnusedPrivateField")
 public class EntityManagerProducer {
     @Produces @PromatEntityManager
     @PersistenceContext(unitName="promatPU")
