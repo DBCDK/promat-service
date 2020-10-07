@@ -12,6 +12,8 @@ tags:
     description: Users writing professional reviews
   - name: subjects
     description: Fields of interests
+  - name: records
+    description: List of faustnumbers matching a given id
 paths:
   /reviewers:
     get:
@@ -64,7 +66,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/SubjectList'
-  /records:
+  /records/{id}:
     get:
       tags:
         - records
@@ -72,6 +74,15 @@ paths:
         Return zero or more faust numbers that match the given id.
         The id can be a faust number or an isbn-10 or isbn-13 number.
       operationId: getRecords
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            minimum: 1
+            maximum: 1
+            description: Identifier to lookup. Can be faust, isbn-10 or isbn-13
       responses:
         '200':
           description: successful operation
@@ -199,14 +210,20 @@ components:
           type: integer
         records:
           type: array
+          description: A list of faustnumbers matching the given id
           items:
             $ref: '#/components/schemas/Record'
+      required:
+        - numFound
+        - records
     Record:
       type: object
       properties:
         faust:
           type: integer
-        isMatch:
+          description: Faustnumber
+        isPrimary:
           type: boolean
-        isRelated:
-          type: boolean
+          description: Set to true for the faustnumber that currently is the primary object in the work
+      required:
+        - faust
