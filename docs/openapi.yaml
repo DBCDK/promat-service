@@ -7,6 +7,7 @@ info:
     name: GPL-3.0
     url: 'https://github.com/DBCDK/promat-service/blob/master/LICENCE.txt'
   version: 1.0-SNAPSHOT
+
 tags:
   - name: reviewers
     description: Users writing professional reviews
@@ -14,6 +15,9 @@ tags:
     description: Fields of interests
   - name: records
     description: List of faustnumbers matching a given id
+  - name: cases
+    description: Cases
+
 paths:
   /reviewers:
     get:
@@ -66,13 +70,13 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/SubjectList'
+
   /records/{id}:
     get:
       tags:
         - records
-      summary: >-
-        Return zero or more faust numbers that match the given id.
-        The id can be a faust number or an isbn-10 or isbn-13 number.
+      summary: Return zero or more faust numbers that match the given id.
+               The id can be a faust number or an isbn-10 or isbn-13 number.
       operationId: getRecords
       parameters:
         - in: path
@@ -90,6 +94,49 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/RecordsList'
+
+  /cases/faust/{faust}:
+    get:
+      tags:
+        - cases
+      summary: Returns list of cases for the given faustnumber
+      operationId: getCasesForFaust
+      parameters:
+        - in: path
+          name: faust
+          required: true
+          schema:
+            type: string
+            description: Faustnumber that most be covered by the cases returned
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CaseSummaryList'
+
+  /cases/{id}:
+    get:
+      tags:
+        - cases
+      summary: Returns a case with the given id
+      operationId: getCase
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            description: Case id
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Case'
+
 components:
   schemas:
     Address:
@@ -120,6 +167,7 @@ components:
       required:
         - numFound
         - reviewers
+
     Reviewer:
       type: object
       properties:
@@ -191,6 +239,7 @@ components:
       required:
         - numFound
         - subjects
+
     Subject:
       type: object
       properties:
@@ -203,6 +252,7 @@ components:
       required:
         - id
         - name
+
     RecordsList:
       type: object
       properties:
@@ -216,6 +266,7 @@ components:
       required:
         - numFound
         - records
+
     Record:
       type: object
       properties:
@@ -227,3 +278,185 @@ components:
           description: Set to true for the faustnumber that currently is the primary object in the work
       required:
         - faust
+
+    CaseSummaryList:
+      type: object
+      properties:
+        numFound:
+          type: integer
+        cases:
+          type: array
+          items:
+            $ref: '#/components/schemas/CaseSummary'
+      required:
+        - numFound
+        - cases
+
+    CaseSummary:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Case id
+        title:
+          type: string
+          description: Case title (free form, not tied to the bibliographic title of any of the faustnumbers)
+        primaryFaust:
+          type: string
+          description: Faustnumber for the primary manifestations, typically one of the paperbooks
+        relatedFausts:
+          type: array
+          items:
+            type: string
+            description: Other faustnumbers that should link to the review produced by this case
+          minItems: 0
+        deadline:
+          type: string
+          format: date
+          nullable: true
+          description: Date of delivery
+        status:
+          type: string
+          enum:
+            - 'CREATED'
+            - 'ASSIGNED'
+            - 'DONE'
+            - 'CLOSED'
+          description: Enum describing the overall state of this case
+            CREATED = Case has been created but still needs refinement
+            ASSIGNED = Case has been assigned and is in progress
+            DONE = All tasks is either done or closed
+            CLOSED = Case has been closed, individual task states is undefined
+      required:
+        - id
+        - title
+        - primaryFaust
+        - relatedFausts
+
+    Case:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Case id
+        title:
+          type: string
+          description: Case title (free form, not tied to the bibliographic title of any of the faustnumbers)
+        primaryFaust:
+          type: string
+          description: Faustnumber for the primary manifestations, typically one of the paperbooks
+        relatedFausts:
+          type: array
+          items:
+            type: string
+          description: Other faustnumbers that should link to the review produced by this case
+          minItems: 0
+        reviewer:
+          $ref: '#/components/schemas/Reviewer'
+          nullable: true
+          description: The selected reviewer, if any otherwise null
+        subjects:
+          type: array
+          items:
+            $ref: '#/components/schemas/Subject'
+          minItems: 0
+          description: One or more subjects covered by the work to review
+        created:
+          type: string
+          format: date
+          description: Date of creation
+        deadline:
+          type: string
+          format: date
+          nullable: true
+          description: Date of delivery
+        status:
+          type: string
+          enum:
+            - 'CREATED'
+            - 'ASSIGNED'
+            - 'DONE'
+            - 'CLOSED'
+          description: Enum describing the overall state of this case
+                       CREATED = Case has been created but still needs refinement
+                       ASSIGNED = Case has been assigned and is in progress
+                       DONE = All tasks is either done or closed
+                       CLOSED = Case has been closed, individual task states is undefined
+        tasks:
+          type: array
+          items:
+            $ref: '#/components/schemas/Task'
+      required:
+        - id
+        - title
+        - primaryFaust
+        - relatedFausts
+        - reviewer
+        - subjects
+        - created
+        - deadline
+        - status
+        - tasks
+
+    Task:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Task id
+        typeOfTask:
+          type: string
+          enum:
+            - 'NONE'  # Todo: define needed task types
+          description: Type of task
+        created:
+          type: string
+          format: date
+          description: Date of creation
+        paycode:
+          type: string
+          enum:
+            - 'NONE'  # Todo: define paycodes
+          description: Payment code
+        approved:
+          type: string
+          format: date
+          nullable: true
+          description: Date of approvement
+        payed:
+          type: string
+          format: date
+          nullable: true
+          description: Date when first added to a periods payroll. This value must not change hereafter
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/TaskField'
+      required:
+        - id
+        - typeOfTask
+        - created
+        - paycode
+        - approved
+        - payed
+        - data
+
+    TaskField:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Task data id
+        typeOfField:
+          type: string
+          enum:
+            - 'NONE'  # Todo: define field types (aka. template fields)
+        data:
+          type: string
+          description: The fields value
+          nullable: true
+      required:
+        - id
+        - typeOfData
+        - data
+
