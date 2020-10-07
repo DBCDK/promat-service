@@ -137,6 +137,171 @@ paths:
               schema:
                 $ref: '#/components/schemas/Case'
 
+  /cases:
+    post:
+      tags:
+        - cases
+      summary: Create new case
+      operationId: createCase
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                  description: Case title (free form, not tied to the bibliographic title of any of the  faustnumbers)
+                primaryFaust:
+                  type: string
+                  description: Faustnumber for the primary manifestations, typically one of the paperbooks
+                relatedFausts:
+                  type: array
+                  items:
+                    type: string
+                  description: Other faustnumbers that should link to the review produced by this case
+                  minItems: 0
+                reviewer:
+                  $ref: '#/components/schemas/Reviewer'
+                  nullable: true
+                  description: The selected reviewer, if any otherwise null
+                subjects:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Subject'
+                  minItems: 0
+                  description: One or more subjects covered by the work to review
+                created:
+                  type: string
+                  format: date
+                  description: Date of creation
+                deadline:
+                  type: string
+                  format: date
+                  nullable: true
+                  description: Date of delivery
+                status:
+                  type: string
+                  enum:
+                    - 'CREATED'
+                    - 'ASSIGNED'
+                    - 'DONE'
+                    - 'CLOSED'
+                  description: Enum describing the overall state of this case
+                    CREATED = Case has been created but still needs refinement
+                    ASSIGNED = Case has been assigned and is in progress
+                    DONE = All tasks is either done or closed
+                    CLOSED = Case has been closed, individual task states is undefined
+                tasks:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Task'
+                  minItems: 0
+              required:
+                - id
+                - title
+                - primaryFaust
+                - relatedFausts
+                - reviewer
+                - subjects
+                - created
+                - deadline
+                - status
+                - tasks
+      responses:
+        '201':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Case'
+        '409':
+          description: conflict. A case with a status of CREATED or ASSIGNED already exists
+    put:
+      tags:
+        - cases
+      summary: Update an existing case
+      operationId: updateCase
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                id:
+                  type: integer
+                  description: Case id
+                title:
+                  type: string
+                  description: Case title (free form, not tied to the bibliographic title of any of the  faustnumbers)
+                primaryFaust:
+                  type: string
+                  description: Faustnumber for the primary manifestations, typically one of the paperbooks
+                relatedFausts:
+                  type: array
+                  items:
+                    type: string
+                  description: Other faustnumbers that should link to the review produced by this case
+                  minItems: 0
+                reviewer:
+                  $ref: '#/components/schemas/Reviewer'
+                  nullable: true
+                  description: The selected reviewer, if any otherwise null
+                subjects:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Subject'
+                  minItems: 0
+                  description: One or more subjects covered by the work to review
+                created:
+                  type: string
+                  format: date
+                  description: Date of creation
+                deadline:
+                  type: string
+                  format: date
+                  nullable: true
+                  description: Date of delivery
+                status:
+                  type: string
+                  enum:
+                    - 'CREATED'
+                    - 'ASSIGNED'
+                    - 'DONE'
+                    - 'CLOSED'
+                  description: Enum describing the overall state of this case
+                    CREATED = Case has been created but still needs refinement
+                    ASSIGNED = Case has been assigned and is in progress
+                    DONE = All tasks is either done or closed
+                    CLOSED = Case has been closed, individual task states is undefined
+                tasks:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Task'
+                  minItems: 0
+              required:
+                - id
+                - title
+                - primaryFaust
+                - relatedFausts
+                - reviewer
+                - subjects
+                - created
+                - deadline
+                - status
+                - tasks
+      responses:
+        '201':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Case'
+        '409':
+          description: conflict. A case with a status of CREATED or ASSIGNED already exists
+
 components:
   schemas:
     Address:
@@ -386,6 +551,7 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Task'
+          minItems: 0
       required:
         - id
         - title
