@@ -1,0 +1,8 @@
+{
+  "appName": "promat-service",
+  "jdbc": {
+    "jdbc/promat": {
+      "url": "${PROMAT_DB_URL}"
+    }
+  }
+}
