@@ -119,6 +119,10 @@ components:
         hiatus_end:
           type: string
           format: date
+        subjects:
+          type: array
+          items:
+            $ref: '#/components/schemas/Subject'
       required:
         - id
         - firstName
@@ -127,6 +131,7 @@ components:
         - address
         - institution
         - paycode
+        - subjects
 
     ServiceError:
       type: object
