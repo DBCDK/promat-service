@@ -49,4 +49,22 @@
       <artifactId>slf4j-simple</artifactId>
     </dependency>
   </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-war-plugin</artifactId>
+          <configuration>
+            <webResources combine.children="append">
+              <resource>
+                <directory>${basedir}/docs</directory>
+                <filtering>true</filtering>
+                <targetPath>META-INF</targetPath>
+              </resource>
+            </webResources>
+          </configuration>
+        </plugin>
+    </plugins>
+  </build>
 </project>
