@@ -31,18 +31,20 @@ pipeline {
 
 				//junit testResults: '**/target/*-reports/TEST-*.xml'
 
-				def java = scanForIssues tool: [$class: 'Java']
-				def javadoc = scanForIssues tool: [$class: 'JavaDoc']
-				publishIssues issues:[java, javadoc]
+				script {
+					def java = scanForIssues tool: [$class: 'Java']
+					def javadoc = scanForIssues tool: [$class: 'JavaDoc']
+					publishIssues issues: [java, javadoc]
 
-				def pmd = scanForIssues tool: [$class: 'Pmd'], pattern: '**/target/pmd.xml'
-				publishIssues issues:[pmd]
+					def pmd = scanForIssues tool: [$class: 'Pmd'], pattern: '**/target/pmd.xml'
+					publishIssues issues: [pmd]
 
-				// spotbugs still has some outstanding issues with regard
-				// to analyzing Java 11 bytecode.
+					// spotbugs still has some outstanding issues with regard
+					// to analyzing Java 11 bytecode.
 
-				//def spotbugs = scanForIssues tool: [$class: 'SpotBugs'], pattern: '**/target/spotbugsXml.xml'
-				//publishIssues issues:[spotbugs]
+					//def spotbugs = scanForIssues tool: [$class: 'SpotBugs'], pattern: '**/target/spotbugsXml.xml'
+					//publishIssues issues:[spotbugs]
+				}
 			}
 		}
 		stage("docker push") {
