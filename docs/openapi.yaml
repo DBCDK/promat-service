@@ -139,7 +139,7 @@ paths:
     post:
       tags:
         - cases
-      summary: Create new case. (id field will be ignored if it exists.)
+      summary: Create new case. (id and status fields will be ignored if they exists.)
       operationId: createCase
       requestBody:
         required: true
@@ -155,7 +155,11 @@ paths:
               schema:
                 $ref: '#/components/schemas/Case'
         '409':
-          description: conflict. A case with a status of CREATED or ASSIGNED already exists
+          description: Conflict. A case with a status other than DONE or CLOSED already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
     put:
       tags:
         - cases
@@ -175,7 +179,11 @@ paths:
               schema:
                 $ref: '#/components/schemas/Case'
         '409':
-          description: conflict. A case with a status of CREATED or ASSIGNED already exists
+          description: Case could not be updated, check ServiceError in body for specifics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
 
 components:
   schemas:
@@ -266,6 +274,9 @@ components:
       type: string
       enum:
         - INVALID_QUERY_PARAM
+        - CASE_EXISTS           # Active case for this/these faust/fausts exists
+        - INVALID_STATE         # Change to a new state was not possible or invalid
+        - FAILED                # Some error occurred while updating the item
 
     SubjectList:
       type: object
