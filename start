@@ -4,7 +4,7 @@
 
 echo "### Starting promat service docker ###"
 
-promat_service_port=${LOBBY_SERVICE_PORT:-8080}
+promat_service_port=${PROMAT_SERVICE_PORT:-8080}
 docker run --rm --name promat-service -d -e JAVA_MAX_HEAP_SIZE=2G -e PROMAT_DB_URL=${PROMAT_DB_URL} -p ${promat_service_port}:8080 docker-io.dbc.dk/promat-service:devel
 
 attempts=0
