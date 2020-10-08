@@ -414,13 +414,17 @@ components:
           type: string
           enum:
             - 'CREATED'
+            - 'REJECTED'
             - 'ASSIGNED'
+            - 'READY'
             - 'DONE'
             - 'CLOSED'
           description: Enum describing the overall state of this case
                        CREATED = Case has been created but still needs refinement
+                       REJECTED = Case has been assigned and rejected by the reviewer
                        ASSIGNED = Case has been assigned and is in progress
-                       DONE = All tasks is either done or closed
+                       READY = All tasks is ready for approvement
+                       DONE = All tasks is approved and either done or closed
                        CLOSED = Case has been closed, individual task states is undefined
         tasks:
           type: array
