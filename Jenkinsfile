@@ -27,9 +27,7 @@ pipeline {
 			steps {
 				sh "mvn -D sourcepath=src/main/java verify pmd:pmd javadoc:aggregate"
 
-				// We don't have any tests yet
-
-				//junit testResults: '**/target/*-reports/TEST-*.xml'
+				junit testResults: '**/target/*-reports/TEST-*.xml'
 
 				script {
 					def java = scanForIssues tool: [$class: 'Java']
