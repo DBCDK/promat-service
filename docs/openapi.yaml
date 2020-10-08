@@ -95,27 +95,6 @@ paths:
               schema:
                 $ref: '#/components/schemas/RecordsList'
 
-  /cases/faust/{faust}:
-    get:
-      tags:
-        - cases
-      summary: Returns list of cases for the given faustnumber
-      operationId: getCasesForFaust
-      parameters:
-        - in: path
-          name: faust
-          required: true
-          schema:
-            type: string
-            description: Faustnumber that most be covered by the cases returned
-      responses:
-        '200':
-          description: successful operation
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/CaseSummaryList'
-
   /cases/{id}:
     get:
       tags:
@@ -138,6 +117,25 @@ paths:
                 $ref: '#/components/schemas/Case'
 
   /cases:
+    get:
+      tags:
+        - cases
+      summary: Returns list of cases for the given faustnumber
+      operationId: getCasesForFaust
+      parameters:
+        - in: query
+          name: number
+          required: true
+          schema:
+            type: string
+            description: Faustnumber that most be covered by the cases returned
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CaseSummaryList'
     post:
       tags:
         - cases
