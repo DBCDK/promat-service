@@ -11,7 +11,7 @@ import javax.ws.rs.ApplicationPath;
 import javax.ws.rs.core.Application;
 import java.util.Set;
 
-@ApplicationPath("/")
+@ApplicationPath("/v1/api")
 public class PromatApplication extends Application {
     private static final Set<Class<?>> classes = Set.of(JacksonFeature.class);
 
