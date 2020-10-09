@@ -55,5 +55,24 @@ pipeline {
 				}
 			}
 		}
+        stage("bump docker tag in promat-service-secrets") {
+			agent {
+				docker {
+					label workerNode
+					image "docker.dbc.dk/build-env:latest"
+					alwaysPull true
+				}
+			}
+			when {
+				branch "master"
+			}
+			steps {
+				script {
+					sh """  
+                        set-new-version services/promat-service.yml ${env.GITLAB_PRIVATE_TOKEN} metascrum/promat-service-secrets  ${env.BRANCH_NAME}-${env.BUILD_NUMBER} -b staging
+                    """
+				}
+			}
+		}
 	}
 }
