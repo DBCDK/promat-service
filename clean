@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+
+echo "### cleaning promat project ###"
+
+mvn clean
+docker rm -f promat-service &>/dev/null || true
+exit 0

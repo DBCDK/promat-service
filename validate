@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+
+echo "### Validating promat project ###"
+
+exit_status=0
+mvn -D sourcepath=src/main/java -D maven.javadoc.failOnWarnings=true javadoc:javadoc || exit_status=$?
+mvn pmd:check || exit_status=$?
+mvn spotbugs:check || exit_status=$?
+
+if [ ${exit_status} -ne 0 ]; then
+    echo "### THERE WERE ERRORS ###"
+fi
+exit ${exit_status}

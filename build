@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+
+case "$1" in
+    docker)
+        echo "### building promat service docker ###"
+        docker build -f target/docker/Dockerfile --pull --no-cache . -t docker-io.dbc.dk/promat-service:devel || exit 1
+        if [[ ! -z "$BUILD_NUMBER" ]]; then
+            docker tag docker-io.dbc.dk/promat-service:devel docker-io.dbc.dk/promat-service:${BRANCH_NAME}-${BUILD_NUMBER}
+        fi
+        ;;
+
+    *)
+        echo "### building promat project ###"
+        echo "### Look for build artifacts in target/ ###"
+
+        mvn verify || exit 1
+        ;;
+esac
+
