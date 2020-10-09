@@ -8,6 +8,9 @@ pipeline {
 		jdk 'jdk11'
 		maven 'Maven 3'
 	}
+    environment {
+		GITLAB_PRIVATE_TOKEN = credentials("metascrum-gitlab-api-token")
+	}
 	triggers {
 		upstream(upstreamProjects: "Docker-payara5-bump-trigger",
             threshold: hudson.model.Result.SUCCESS)
