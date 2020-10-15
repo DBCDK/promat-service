@@ -365,7 +365,7 @@ components:
       type: object
       properties:
         faust:
-          type: integer
+          type: string
           description: Faustnumber
         isPrimary:
           type: boolean
