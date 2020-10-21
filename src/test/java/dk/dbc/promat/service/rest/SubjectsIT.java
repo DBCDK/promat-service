@@ -13,6 +13,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import javax.ws.rs.core.Response;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,7 +24,6 @@ public class SubjectsIT extends ContainerTest {
     private static final Logger LOGGER = LoggerFactory.getLogger(SubjectsIT.class);
     private static PreparedStatement preparedInsertStatement;
     private static PreparedStatement preparedDeleteStatement;
-    private static PreparedStatement preparedPurgeStatement;
     private final JSONBContext jsonbContext = new JSONBContext();
 
     @BeforeAll
@@ -33,11 +33,10 @@ public class SubjectsIT extends ContainerTest {
                 .prepareStatement("INSERT INTO subject(id, name, parentid) VALUES (?,?,?)");
         preparedDeleteStatement = connection
                 .prepareStatement("DELETE FROM subject WHERE id=?");
-        preparedPurgeStatement = connection
-                .prepareStatement("TRUNCATE TABLE subject CASCADE ");
     }
 
     @Test
+    @Order(1)
     public void test_referential_hierarchy() throws SQLException, JSONBException {
         Set<String> expected = persistTestData();
 
@@ -49,8 +48,8 @@ public class SubjectsIT extends ContainerTest {
     }
 
     @Test
-    public void test_exception_when_parentid_does_not_exist() throws SQLException {
-        persistTestData();
+    @Order(2)
+    public void test_exception_when_parentid_does_not_exist() {
         try {
             persistSubject(new Subject().withId(4).withName("Harry Potter like").withParentId(99));
         } catch (SQLException e) {
@@ -61,6 +60,7 @@ public class SubjectsIT extends ContainerTest {
     }
 
     @Test
+    @Order(3)
     public void test_that_delete_of_parent_subject_is_not_allowed() throws SQLException {
         persistTestData();
         try {
@@ -75,7 +75,6 @@ public class SubjectsIT extends ContainerTest {
     }
 
     private Set<String> persistTestData() throws SQLException {
-        purge();
         return Set.of(
                 persistSubject(new Subject().withId(0).withName("Voksen")),
                 persistSubject(new Subject().withId(1).withName("Roman").withParentId(0)),
@@ -95,10 +94,6 @@ public class SubjectsIT extends ContainerTest {
     private void deleteSubject(Subject subject) throws SQLException {
         preparedDeleteStatement.setLong(1, subject.getId());
         preparedDeleteStatement.executeUpdate();
-    }
-
-    private void purge() throws SQLException {
-        preparedPurgeStatement.executeUpdate();
     }
 
     public String get(String uri) {
