@@ -1,11 +1,11 @@
 package dk.dbc.promat.service.api;
 
-import dk.dbc.commons.jsonb.JSONBContext;
-import dk.dbc.commons.jsonb.JSONBException;
+import dk.dbc.promat.service.dto.SubjectList;
 import dk.dbc.promat.service.entity.Subject;
+import dk.dbc.promat.service.persistence.PromatEntityManager;
 import javax.ejb.Stateless;
+import javax.inject.Inject;
 import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -14,19 +14,17 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 @Stateless
-@Path("")
+@Path("subjects")
 public class Subjects {
-    @PersistenceContext(unitName = "promatPU")
-    EntityManager entityManager;
-    private final JSONBContext jsonbContext = new JSONBContext();
 
-    protected static final String LIST_SUBJECTS = "subjects";
+    @Inject
+    @PromatEntityManager
+    EntityManager entityManager;
 
     @GET
-    @Path(LIST_SUBJECTS)
     @Produces(MediaType.APPLICATION_JSON)
-    public Response listSubjects() throws JSONBException {
+    public Response listSubjects() {
         TypedQuery<Subject> query = entityManager.createNamedQuery(Subject.GET_SUBJECTS_LIST_NAME, Subject.class);
-        return Response.ok(jsonbContext.marshall(query.getResultList())).build();
+        return Response.ok(new SubjectList().withSubjects(query.getResultList())).build();
     }
 }

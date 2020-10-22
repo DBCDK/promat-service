@@ -1,14 +1,11 @@
 package dk.dbc.promat.service.entity;
 
-import javax.persistence.Column;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.NamedQuery;
-import javax.persistence.Table;
 
 @Entity
-@Table(name = "subject")
 @NamedQuery(
         name = Subject.GET_SUBJECTS_LIST_NAME,
         query = Subject.GET_SUBJECTS_LIST_QUERY
@@ -17,14 +14,15 @@ public class Subject {
     public static final String GET_SUBJECTS_LIST_NAME =
             "Subjects.getSubjects";
     public static final String GET_SUBJECTS_LIST_QUERY =
-            "SELECT subject FROM Subject subject ORDER BY subject.id";
+            "SELECT subject FROM Subject subject where subject.id>0 ORDER BY subject.id";
 
-    @Id @GeneratedValue
+    @Id
     private long id;
 
     private String name;
 
-    @Column(name = "parentid")
+    private String path;
+
     private long parentId = -1;
 
     public long getId() {
@@ -49,6 +47,15 @@ public class Subject {
 
     public void setParentId(long parentId) {
         this.parentId = parentId;
+    }
+
+    @JsonIgnore
+    public String getPath() {
+        return path;
+    }
+
+    public void setPath(String path) {
+        this.path = path;
     }
 
     public Subject withId(long id) {
