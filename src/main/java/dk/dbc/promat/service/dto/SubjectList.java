@@ -8,7 +8,7 @@ public class SubjectList {
     List<Subject> subjects = null;
 
     public SubjectList withSubjects(List<Subject> subjects) {
-        if (subjects != null && subjects.size() > 0) {
+        if (subjects != null) {
             numFound = subjects.size();
         }
         this.subjects = subjects;
