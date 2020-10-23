@@ -6,4 +6,3 @@ CREATE TABLE subject
     parentid integer,
     FOREIGN KEY (parentid) REFERENCES subject (id)
 );
-INSERT INTO subject(ID, NAME) VALUES (0, 'ROOT');
