@@ -10,6 +10,8 @@ public class SubjectList {
     public SubjectList withSubjects(List<Subject> subjects) {
         if (subjects != null) {
             numFound = subjects.size();
+        } else {
+            numFound = 0;
         }
         this.subjects = subjects;
         return this;
