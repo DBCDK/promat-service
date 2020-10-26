@@ -17,19 +17,19 @@ public class Subject {
             "SELECT subject FROM Subject subject where subject.id>0 ORDER BY subject.id";
 
     @Id
-    private Long id;
+    private Integer id;
 
     private String name;
 
     private String path;
 
-    private Long parentId;
+    private Integer parentId;
 
-    public Long getId() {
+    public Integer getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(Integer id) {
         this.id = id;
     }
 
@@ -41,11 +41,11 @@ public class Subject {
         this.name = name;
     }
 
-    public Long getParentId() {
+    public Integer getParentId() {
         return parentId;
     }
 
-    public void setParentId(Long parentId) {
+    public void setParentId(Integer parentId) {
         this.parentId = parentId;
     }
 
@@ -58,7 +58,7 @@ public class Subject {
         this.path = path;
     }
 
-    public Subject withId(Long id) {
+    public Subject withId(Integer id) {
         this.id = id;
         return this;
     }
@@ -68,7 +68,7 @@ public class Subject {
         return this;
     }
 
-    public Subject withParentId(Long parentId) {
+    public Subject withParentId(Integer parentId) {
         this.parentId = parentId;
         return this;
     }

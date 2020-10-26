@@ -36,10 +36,10 @@ public class SubjectsIT extends ContainerTest {
     public void test_referential_hierarchy() throws JSONBException {
         SubjectList expected = new SubjectList().withSubjects(
                 List.of(
-                        new Subject().withId(1L).withName("Voksen"),
-                        new Subject().withId(2L).withName("Roman").withParentId(1L),
-                        new Subject().withId(3L).withName("Eventyr, fantasy").withParentId(2L),
-                        new Subject().withId(4L).withName("Digte").withParentId(1L)
+                        new Subject().withId(1).withName("Voksen"),
+                        new Subject().withId(2).withName("Roman").withParentId(1),
+                        new Subject().withId(3).withName("Eventyr, fantasy").withParentId(2),
+                        new Subject().withId(4).withName("Digte").withParentId(1)
                 ));
 
         SubjectList actual = jsonbContext
