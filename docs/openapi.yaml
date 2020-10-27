@@ -352,6 +352,9 @@ components:
         title:
           type: string
           description: Case title (free form, not tied to the bibliographic title of any of the faustnumbers)
+        details:
+          type: string
+          description: Case details (free form)
         primaryFaust:
           type: string
           description: Faustnumber for the primary manifestations, typically one of the paperbooks
@@ -361,28 +364,29 @@ components:
             type: string
             description: Other faustnumbers that should link to the review produced by this case
           minItems: 0
+        created:
+          type: string
+          format: date-time
+          description: Time of creation
         deadline:
           type: string
           format: date
           nullable: true
           description: Date of delivery
-        status:
+        assigned:
           type: string
-          enum:
-            - 'CREATED'
-            - 'ASSIGNED'
-            - 'DONE'
-            - 'CLOSED'
-          description: Enum describing the overall state of this case
-            CREATED = Case has been created but still needs refinement
-            ASSIGNED = Case has been assigned and is in progress
-            DONE = All tasks is either done or closed
-            CLOSED = Case has been closed, individual task states is undefined
+          format: date
+          nullable: true
+          description: Assigned to reviewer on this date
+        status:
+          $ref: '#/components/schemas/CaseStatus'
       required:
         - id
         - title
         - primaryFaust
         - relatedFausts
+        - created
+        - status
 
     Case:
       type: object
@@ -393,6 +397,9 @@ components:
         title:
           type: string
           description: Case title (free form, not tied to the bibliographic title of any of the faustnumbers)
+        details:
+          type: string
+          description: Case details (free form)
         primaryFaust:
           type: string
           description: Faustnumber for the primary manifestations, typically one of the paperbooks
@@ -414,29 +421,20 @@ components:
           description: One or more subjects covered by the work to review
         created:
           type: string
-          format: date
-          description: Date of creation
+          format: date-time
+          description: Time of creation
         deadline:
           type: string
           format: date
           nullable: true
           description: Date of delivery
-        status:
+        assigned:
           type: string
-          enum:
-            - 'CREATED'
-            - 'REJECTED'
-            - 'ASSIGNED'
-            - 'READY'
-            - 'DONE'
-            - 'CLOSED'
-          description: Enum describing the overall state of this case
-                       CREATED = Case has been created but still needs refinement
-                       REJECTED = Case has been assigned and rejected by the reviewer
-                       ASSIGNED = Case has been assigned and is in progress
-                       READY = All tasks is ready for approvement
-                       DONE = All tasks is approved and either done or closed
-                       CLOSED = Case has been closed, individual task states is undefined
+          format: date
+          nullable: true
+          description: Assigned to reviewer on this date
+        status:
+          $ref: '#/components/schemas/CaseStatus'
         tasks:
           type: array
           items:
@@ -453,6 +451,26 @@ components:
         - deadline
         - status
         - tasks
+
+    CaseStatus:
+      type: string
+      enum:
+        - 'CREATED'
+        - 'REJECTED'
+        - 'ASSIGNED'
+        - 'PENDING_APPROVAL'
+        - 'PENDING_ISSUES'
+        - 'DONE'
+        - 'CLOSED'
+      description: |
+        Enum describing the overall state of this case
+        * CREATED = Case has been created but still needs refinement
+        * ASSIGNED = Case has been assigned and is in progress
+        * REJECTED = Case has been assigned and rejected by the reviewer
+        * PENDING_APPROVAL = reviewer has completed all tasks, editor needs to approve
+        * PENDING_ISSUES = review could not be approved, further actions needed by the editor and/or reviewer
+        * DONE = All tasks is approved and either done or closed
+        * CLOSED = Case has been closed, individual task states is undefined
 
     Task:
       type: object
