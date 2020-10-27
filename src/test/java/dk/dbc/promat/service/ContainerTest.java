@@ -49,6 +49,8 @@ public abstract class ContainerTest {
                 .withEnv("LOG_FORMAT", "text")
                 .withEnv("PROMAT_DB_URL", String.format("postgres:@host.testcontainers.internal:%s/postgres",
                         pg.getPort()))
+                .withEnv("OPENSEARCH_SERVICE_URL", "")
+                .withEnv("WORK_PRESENTATION_SERVICE_URL", "")
                 .withExposedPorts(8080)
                 .waitingFor(Wait.forHttp("/openapi"))
                 .withStartupTimeout(Duration.ofMinutes(2));
