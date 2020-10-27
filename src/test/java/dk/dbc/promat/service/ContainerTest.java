@@ -8,13 +8,14 @@ package dk.dbc.promat.service;
 import com.opentable.db.postgres.embedded.EmbeddedPostgres;
 import dk.dbc.commons.jdbc.util.JDBCUtil;
 import dk.dbc.httpclient.HttpClient;
+import dk.dbc.httpclient.HttpGet;
+import dk.dbc.promat.service.rest.SubjectsIT;
 import java.io.File;
-import java.io.InputStream;
-import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
-import org.flywaydb.core.internal.jdbc.JdbcUtils;
+import javax.ws.rs.core.Response;
+import org.junit.jupiter.api.BeforeAll;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.Testcontainers;
@@ -31,6 +32,7 @@ import java.time.Duration;
 
 public abstract class ContainerTest {
     private static final Logger LOGGER = LoggerFactory.getLogger(ContainerTest.class);
+    private static boolean setupDone;
 
     static final EmbeddedPostgres pg = pgStart();
 
@@ -58,6 +60,19 @@ public abstract class ContainerTest {
         httpClient = HttpClient.create(HttpClient.newClient());
     }
 
+    @BeforeAll
+    public static void setUp() throws SQLException, IOException, URISyntaxException {
+        if (!setupDone) {
+            LOGGER.info("Populating database for test");
+            Connection connection = connectToPromatDB();
+            executeScript(connection, SubjectsIT.class.getResource("/dk/dbc/promat/service/db/subjects/subjectsdump.sql"));
+            executeScript(connection, SubjectsIT.class.getResource("/dk/dbc/promat/service/db/subjects/reviewersdump.sql"));
+            setupDone = true;
+        } else {
+            LOGGER.info("Database populate already done.");
+        }
+    }
+
     private static EmbeddedPostgres pgStart() {
         try {
             return EmbeddedPostgres.start();
@@ -80,5 +95,12 @@ public abstract class ContainerTest {
 
     protected static void executeScript(Connection connection, URL script) throws IOException, SQLException, URISyntaxException {
         JDBCUtil.executeScript(connection, new File(script.toURI()), StandardCharsets.UTF_8.name());
+    }
+
+    public String get(String uri) {
+        final Response response = new HttpGet(httpClient)
+                .withBaseUrl(uri)
+                .execute();
+        return response.readEntity(String.class);
     }
 }
