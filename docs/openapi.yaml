@@ -17,6 +17,8 @@ tags:
     description: List of faustnumbers matching a given id
   - name: cases
     description: Cases
+  - name: tasks
+    description: Case tasks
 
 paths:
   /reviewers:
@@ -95,27 +97,6 @@ paths:
               schema:
                 $ref: '#/components/schemas/RecordsList'
 
-  /cases/{id}:
-    get:
-      tags:
-        - cases
-      summary: Returns a case with the given id
-      operationId: getCase
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: integer
-            description: Case id
-      responses:
-        '200':
-          description: successful operation
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Case'
-
   /cases:
     get:
       tags:
@@ -139,14 +120,14 @@ paths:
     post:
       tags:
         - cases
-      summary: Create new case. (id and status fields will be ignored if they exists.)
+      summary: Create new case. (status field will be ignored if it exists.)
       operationId: createCase
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Case'
+              $ref: '#/components/schemas/CaseRequest'
       responses:
         '201':
           description: successful operation
@@ -160,17 +141,46 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ServiceError'
-    put:
+
+  /cases/{id}:
+    get:
+      tags:
+        - cases
+      summary: Returns a case with the given id
+      operationId: getCase
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            description: Case id
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Case'
+
+    post:
       tags:
         - cases
       summary: Update an existing case
       operationId: updateCase
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            description: Case id
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Case'
+              $ref: '#/components/schemas/CaseRequest'
       responses:
         '201':
           description: successful operation
@@ -180,6 +190,39 @@ paths:
                 $ref: '#/components/schemas/Case'
         '409':
           description: Case could not be updated, check ServiceError in body for specifics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+
+  /cases/{id}/tasks:
+    post:
+      tags:
+        - tasks
+      summary: Add task to case
+      operationId: addTask
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            description: Case id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Task'
+      responses:
+        '201':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        '409':
+          description: Task could not be added, check ServiceError in body for specifics
           content:
             application/json:
               schema:
@@ -195,7 +238,7 @@ components:
         address2:
           type: string
         zip:
-          type: integer
+          type: string
         city:
           type: string
       required:
@@ -352,6 +395,9 @@ components:
         title:
           type: string
           description: Case title (free form, not tied to the bibliographic title of any of the faustnumbers)
+        details:
+          type: string
+          description: Case details (free form)
         primaryFaust:
           type: string
           description: Faustnumber for the primary manifestations, typically one of the paperbooks
@@ -361,28 +407,32 @@ components:
             type: string
             description: Other faustnumbers that should link to the review produced by this case
           minItems: 0
+        created:
+          type: string
+          format: date-time
+          description: Time of creation
         deadline:
           type: string
           format: date
           nullable: true
           description: Date of delivery
-        status:
+        assigned:
           type: string
-          enum:
-            - 'CREATED'
-            - 'ASSIGNED'
-            - 'DONE'
-            - 'CLOSED'
-          description: Enum describing the overall state of this case
-            CREATED = Case has been created but still needs refinement
-            ASSIGNED = Case has been assigned and is in progress
-            DONE = All tasks is either done or closed
-            CLOSED = Case has been closed, individual task states is undefined
+          format: date
+          nullable: true
+          description: Assigned to reviewer on this date
+        status:
+          $ref: '#/components/schemas/CaseStatus'
+        materialType:
+          $ref: '#/components/schemas/MaterialType'
       required:
         - id
         - title
         - primaryFaust
         - relatedFausts
+        - created
+        - status
+        - materialType
 
     Case:
       type: object
@@ -393,6 +443,9 @@ components:
         title:
           type: string
           description: Case title (free form, not tied to the bibliographic title of any of the faustnumbers)
+        details:
+          type: string
+          description: Case details (free form)
         primaryFaust:
           type: string
           description: Faustnumber for the primary manifestations, typically one of the paperbooks
@@ -414,29 +467,22 @@ components:
           description: One or more subjects covered by the work to review
         created:
           type: string
-          format: date
-          description: Date of creation
+          format: date-time
+          description: Time of creation
         deadline:
           type: string
           format: date
           nullable: true
           description: Date of delivery
-        status:
+        assigned:
           type: string
-          enum:
-            - 'CREATED'
-            - 'REJECTED'
-            - 'ASSIGNED'
-            - 'READY'
-            - 'DONE'
-            - 'CLOSED'
-          description: Enum describing the overall state of this case
-                       CREATED = Case has been created but still needs refinement
-                       REJECTED = Case has been assigned and rejected by the reviewer
-                       ASSIGNED = Case has been assigned and is in progress
-                       READY = All tasks is ready for approvement
-                       DONE = All tasks is approved and either done or closed
-                       CLOSED = Case has been closed, individual task states is undefined
+          format: date
+          nullable: true
+          description: Assigned to reviewer on this date
+        status:
+          $ref: '#/components/schemas/CaseStatus'
+        materialType:
+          $ref: '#/components/schemas/MaterialType'
         tasks:
           type: array
           items:
@@ -452,7 +498,72 @@ components:
         - created
         - deadline
         - status
+        - materialType
         - tasks
+
+    CaseRequest:
+      type: object
+      properties:
+        title:
+          type: string
+          description: Case title (free form, not tied to the bibliographic title of any of the faustnumbers)
+        details:
+          type: string
+          description: Case details (free form)
+        primaryFaust:
+          type: string
+          description: Faustnumber for the primary manifestations, typically one of the paperbooks
+        relatedFausts:
+          type: array
+          items:
+            type: string
+          description: Other faustnumbers that should link to the review produced by this case
+          minItems: 0
+        reviewer:
+          type: integer
+          description: ID of assigned reviewer
+        subjects:
+          type: array
+          items:
+            type: integer
+          minItems: 0
+          description: IDs of subjects covered by the work to review
+        deadline:
+          type: string
+          format: date
+          nullable: true
+          description: Date of delivery
+        status:
+          $ref: '#/components/schemas/CaseStatus'
+        materialType:
+          $ref: '#/components/schemas/MaterialType'
+
+    CaseStatus:
+      type: string
+      enum:
+        - 'CREATED'
+        - 'REJECTED'
+        - 'ASSIGNED'
+        - 'PENDING_APPROVAL'
+        - 'PENDING_ISSUES'
+        - 'DONE'
+        - 'CLOSED'
+      description: |
+        Enum describing the overall state of this case
+        * CREATED = Case has been created but still needs refinement
+        * ASSIGNED = Case has been assigned and is in progress
+        * REJECTED = Case has been assigned and rejected by the reviewer
+        * PENDING_APPROVAL = reviewer has completed all tasks, editor needs to approve
+        * PENDING_ISSUES = review could not be approved, further actions needed by the editor and/or reviewer
+        * DONE = All tasks is approved and either done or closed
+        * CLOSED = Case has been closed, individual task states is undefined
+
+    MaterialType:
+      type: string
+      enum:
+        - 'BOOK'
+        - 'MOVIE'
+        - 'MULTIMEDIA'
 
     Task:
       type: object
