@@ -380,6 +380,8 @@ components:
           description: Assigned to reviewer on this date
         status:
           $ref: '#/components/schemas/CaseStatus'
+        materialType:
+          $ref: '#/components/schemas/MaterialType'
       required:
         - id
         - title
@@ -387,6 +389,7 @@ components:
         - relatedFausts
         - created
         - status
+        - materialType
 
     Case:
       type: object
@@ -435,6 +438,8 @@ components:
           description: Assigned to reviewer on this date
         status:
           $ref: '#/components/schemas/CaseStatus'
+        materialType:
+          $ref: '#/components/schemas/MaterialType'
         tasks:
           type: array
           items:
@@ -450,6 +455,7 @@ components:
         - created
         - deadline
         - status
+        - materialType
         - tasks
 
     CaseStatus:
@@ -471,6 +477,13 @@ components:
         * PENDING_ISSUES = review could not be approved, further actions needed by the editor and/or reviewer
         * DONE = All tasks is approved and either done or closed
         * CLOSED = Case has been closed, individual task states is undefined
+
+    MaterialType:
+      type: string
+      enum:
+        - 'BOOK'
+        - 'MOVIE'
+        - 'MULTIMEDIA'
 
     Task:
       type: object
