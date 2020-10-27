@@ -195,7 +195,7 @@ components:
         address2:
           type: string
         zip:
-          type: integer
+          type: string
         city:
           type: string
       required:
