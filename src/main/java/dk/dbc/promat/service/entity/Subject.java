@@ -80,16 +80,18 @@ public class Subject {
 
         Subject subject = (Subject) o;
 
-        if (id != subject.id) return false;
-        if (parentId != subject.parentId) return false;
-        return name.equals(subject.name);
+        if (!id.equals(subject.id)) return false;
+        if (!name.equals(subject.name)) return false;
+        if (path != null ? !path.equals(subject.path) : subject.path != null) return false;
+        return parentId != null ? parentId.equals(subject.parentId) : subject.parentId == null;
     }
 
     @Override
     public int hashCode() {
-        int result = (int) (id ^ (id >>> 32));
+        int result = id.hashCode();
         result = 31 * result + name.hashCode();
-        result = 31 * result + (int) (parentId ^ (parentId >>> 32));
+        result = 31 * result + (path != null ? path.hashCode() : 0);
+        result = 31 * result + (parentId != null ? parentId.hashCode() : 0);
         return result;
     }
 
@@ -98,6 +100,7 @@ public class Subject {
         return "Subject{" +
                 "id=" + id +
                 ", name='" + name + '\'' +
+                ", path='" + path + '\'' +
                 ", parentId=" + parentId +
                 '}';
     }

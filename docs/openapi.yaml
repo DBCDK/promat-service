@@ -34,15 +34,6 @@ paths:
           schema:
             type: string
             format: date
-        - name: subjectId
-          in: query
-          required: false
-          description: Optional filter on subject ID,
-                       meaning only reviewers matching one or more subjects will be returned.
-          schema:
-            type: array
-            items:
-              type: integer
       responses:
         '200':
           description: successful operation
