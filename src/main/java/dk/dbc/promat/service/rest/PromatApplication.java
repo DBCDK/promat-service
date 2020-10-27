@@ -5,6 +5,7 @@
 
 package dk.dbc.promat.service.rest;
 
+import dk.dbc.promat.service.api.Subjects;
 import org.glassfish.jersey.jackson.JacksonFeature;
 
 import javax.ws.rs.ApplicationPath;
@@ -13,7 +14,7 @@ import java.util.Set;
 
 @ApplicationPath("/v1/api")
 public class PromatApplication extends Application {
-    private static final Set<Class<?>> classes = Set.of(JacksonFeature.class);
+    private static final Set<Class<?>> classes = Set.of(JacksonFeature.class, Subjects.class);
 
     @Override
     public Set<Class<?>> getClasses() {

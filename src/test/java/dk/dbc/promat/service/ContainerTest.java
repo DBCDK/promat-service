@@ -6,7 +6,15 @@
 package dk.dbc.promat.service;
 
 import com.opentable.db.postgres.embedded.EmbeddedPostgres;
+import dk.dbc.commons.jdbc.util.JDBCUtil;
 import dk.dbc.httpclient.HttpClient;
+import java.io.File;
+import java.io.InputStream;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import org.flywaydb.core.internal.jdbc.JdbcUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.Testcontainers;
@@ -68,5 +76,9 @@ public abstract class ContainerTest {
         } catch (ClassNotFoundException | SQLException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    protected static void executeScript(Connection connection, URL script) throws IOException, SQLException, URISyntaxException {
+        JDBCUtil.executeScript(connection, new File(script.toURI()), StandardCharsets.UTF_8.name());
     }
 }
