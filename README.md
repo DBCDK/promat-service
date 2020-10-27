@@ -6,6 +6,8 @@ Promat service
 **Environment variables**
 
 * PROMAT_DB_URL database URL (USER:PASSWORD@HOST:PORT/DBNAME) of the underlying promat database.
+* OPENSEARCH_SERVICE_URL opensearch service url
+* WORK_PRESENTATION_SERVICE_URL work-presentation service url
 
 ### API
 
