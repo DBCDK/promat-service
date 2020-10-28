@@ -1,8 +1,9 @@
 package dk.dbc.promat.service.entity;
 
+import java.time.LocalDate;
 import java.util.Collection;
-import java.util.Date;
 import java.util.List;
+import javax.json.bind.annotation.JsonbDateFormat;
 import javax.persistence.Embedded;
 import javax.persistence.Entity;
 import javax.persistence.Id;
@@ -11,8 +12,6 @@ import javax.persistence.JoinTable;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
-import javax.persistence.Temporal;
-import javax.persistence.TemporalType;
 @NamedQueries({
         @NamedQuery(
                 name = Reviewer.GET_ALL_REVIEWERS_NAME,
@@ -39,11 +38,10 @@ public class Reviewer {
     private String institution;
     private Integer paycode;
 
-    @Temporal(TemporalType.TIMESTAMP)
-    private Date hiatus_begin;
+    @JsonbDateFormat
+    private LocalDate hiatus_begin;
 
-    @Temporal(TemporalType.TIMESTAMP)
-    private Date hiatus_end;
+    private LocalDate hiatus_end;
 
     @OneToMany
     @JoinTable (
@@ -117,19 +115,19 @@ public class Reviewer {
         this.paycode = paycode;
     }
 
-    public Date getHiatus_begin() {
+    public LocalDate getHiatus_begin() {
         return hiatus_begin;
     }
 
-    public void setHiatus_begin(Date hiatus_begin) {
+    public void setHiatus_begin(LocalDate hiatus_begin) {
         this.hiatus_begin = hiatus_begin;
     }
 
-    public Date getHiatus_end() {
+    public LocalDate getHiatus_end() {
         return hiatus_end;
     }
 
-    public void setHiatus_end(Date hiatus_end) {
+    public void setHiatus_end(LocalDate hiatus_end) {
         this.hiatus_end = hiatus_end;
     }
 
@@ -178,6 +176,16 @@ public class Reviewer {
 
     public Reviewer withSubjects(List<Subject> subjects) {
         this.subjects = subjects;
+        return this;
+    }
+
+    public Reviewer withHiatus_begin(LocalDate hiatus_begin) {
+        this.hiatus_begin = hiatus_begin;
+        return this;
+    }
+
+    public Reviewer withHiatus_end(LocalDate hiatus_end) {
+        this.hiatus_end = hiatus_end;
         return this;
     }
 
