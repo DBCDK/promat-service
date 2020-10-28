@@ -26,8 +26,9 @@ CREATE TABLE reviewer
 
 CREATE TABLE reviewersubjects
 (
-    subject_id  int not null,
-    reviewer_id int,
+    subject_id  int NOT NULL,
+    reviewer_id int NOT NULL,
+    primary key (subject_id, reviewer_id),
     FOREIGN KEY (subject_id) REFERENCES subject (id),
     FOREIGN KEY (reviewer_id) REFERENCES reviewer (id)
 );
