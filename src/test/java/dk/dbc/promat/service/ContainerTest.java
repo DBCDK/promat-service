@@ -5,10 +5,12 @@
 
 package dk.dbc.promat.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.opentable.db.postgres.embedded.EmbeddedPostgres;
 import dk.dbc.commons.jdbc.util.JDBCUtil;
 import dk.dbc.httpclient.HttpClient;
 import dk.dbc.httpclient.HttpGet;
+import dk.dbc.promat.service.rest.JsonMapperProvider;
 import dk.dbc.promat.service.rest.SubjectsIT;
 import java.io.File;
 import java.net.URISyntaxException;
@@ -33,6 +35,7 @@ import java.time.Duration;
 public abstract class ContainerTest {
     private static final Logger LOGGER = LoggerFactory.getLogger(ContainerTest.class);
     private static boolean setupDone;
+    protected static final ObjectMapper mapper = new JsonMapperProvider().getObjectMapper();
 
     static final EmbeddedPostgres pg = pgStart();
 

@@ -1,4 +1,4 @@
-package dk.dbc.promat.service.entity;
+package dk.dbc.promat.service.persistence;
 
 import javax.persistence.Embeddable;
 
@@ -6,7 +6,7 @@ import javax.persistence.Embeddable;
 public class Address {
     private String address1;
     private String address2;
-    private Integer zip;
+    private String zip;
     private String city;
 
     public String getAddress1() {
@@ -17,7 +17,7 @@ public class Address {
         return address2;
     }
 
-    public Integer getZip() {
+    public String getZip() {
         return zip;
     }
 
@@ -33,7 +33,7 @@ public class Address {
         this.address2 = address2;
     }
 
-    public void setZip(Integer zip) {
+    public void setZip(String zip) {
         this.zip = zip;
     }
 
@@ -51,7 +51,7 @@ public class Address {
         return this;
     }
 
-    public Address withZip(Integer zip) {
+    public Address withZip(String zip) {
         this.zip = zip;
         return this;
     }

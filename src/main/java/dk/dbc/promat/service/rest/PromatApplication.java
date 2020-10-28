@@ -16,9 +16,13 @@ import java.util.Set;
 @ApplicationPath("/v1/api")
 public class PromatApplication extends Application {
     private static final Set<Class<?>> classes = Set.of(JacksonFeature.class, Subjects.class, Reviewers.class);
+    private static final Set<Object> singletons = Set.of(new JsonMapperProvider());
 
     @Override
     public Set<Class<?>> getClasses() {
         return classes;
     }
+
+    @Override
+    public Set<Object> getSingletons() { return singletons; }
 }

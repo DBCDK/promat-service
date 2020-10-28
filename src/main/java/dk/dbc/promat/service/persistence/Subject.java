@@ -1,4 +1,4 @@
-package dk.dbc.promat.service.entity;
+package dk.dbc.promat.service.persistence;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import javax.persistence.Entity;

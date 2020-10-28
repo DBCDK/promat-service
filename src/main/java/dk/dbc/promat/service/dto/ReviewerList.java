@@ -1,6 +1,6 @@
 package dk.dbc.promat.service.dto;
 
-import dk.dbc.promat.service.entity.Reviewer;
+import dk.dbc.promat.service.persistence.Reviewer;
 import java.util.List;
 
 public class ReviewerList {

@@ -1,7 +1,7 @@
 package dk.dbc.promat.service.api;
 
 import dk.dbc.promat.service.dto.SubjectList;
-import dk.dbc.promat.service.entity.Subject;
+import dk.dbc.promat.service.persistence.Subject;
 import dk.dbc.promat.service.persistence.PromatEntityManager;
 import javax.ejb.Stateless;
 import javax.inject.Inject;

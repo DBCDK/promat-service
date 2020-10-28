@@ -1,6 +1,6 @@
 package dk.dbc.promat.service.dto;
 
-import dk.dbc.promat.service.entity.Subject;
+import dk.dbc.promat.service.persistence.Subject;
 import java.util.List;
 
 public class SubjectList {

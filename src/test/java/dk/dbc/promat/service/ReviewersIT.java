@@ -1,22 +1,23 @@
 package dk.dbc.promat.service;
 
-import dk.dbc.commons.jsonb.JSONBContext;
-import dk.dbc.commons.jsonb.JSONBException;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import dk.dbc.promat.service.dto.ReviewerList;
-import dk.dbc.promat.service.entity.Address;
-import dk.dbc.promat.service.entity.Reviewer;
-import dk.dbc.promat.service.entity.Subject;
+import dk.dbc.promat.service.persistence.Address;
+import dk.dbc.promat.service.persistence.Reviewer;
+import dk.dbc.promat.service.persistence.Subject;
+import java.time.LocalDate;
 import java.util.List;
 import org.junit.jupiter.api.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 
 public class ReviewersIT extends ContainerTest {
-    private final JSONBContext jsonbContext = new JSONBContext();
 
     @Test
-    public void crude_test() throws JSONBException {
+    public void crude_test() throws JsonProcessingException {
         ReviewerList expected = new ReviewerList().withReviewers(
                 List.of(
                         new Reviewer()
@@ -27,7 +28,7 @@ public class ReviewersIT extends ContainerTest {
                                 .withAddress(
                                         new Address()
                                                 .withAddress1("Lillegade 1")
-                                                .withZip(9999)
+                                                .withZip("9999")
                                                 .withCity("Lilleved")
 
                                 )
@@ -44,19 +45,18 @@ public class ReviewersIT extends ContainerTest {
                                                         .withName("Multimedie")
                                         )
                                 )
+                                .withHiatus_begin(LocalDate.parse("2020-10-28"))
+                                .withHiatus_end(LocalDate.parse("2020-11-01"))
                 )
         );
 
-        ReviewerList actual = jsonbContext.unmarshall(
+        ReviewerList actual = mapper.readValue(
                 get(String.format("%s/%s", promatServiceBaseUrl, "v1/api/reviewers")),
                 ReviewerList.class
         );
 
-
         assertThat("List of reviewers is just 'Hans Hansen'",
                 actual.toString(),
                 is(expected.toString()));
-
     }
-
 }

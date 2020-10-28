@@ -1,4 +1,4 @@
-package dk.dbc.promat.service.entity;
+package dk.dbc.promat.service.persistence;
 
 import java.time.LocalDate;
 import java.util.Collection;

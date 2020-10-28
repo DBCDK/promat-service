@@ -16,12 +16,12 @@ CREATE TABLE reviewer
     phone        text,
     address1     text               NOT NULL,
     address2     text,
-    zip          int                NOT NULL,
+    zip          text               NOT NULL,
     city         text               NOT NULL,
     institution  text               NOT NULL,
     paycode      int,
-    hiatus_begin TIMESTAMP WITH TIME ZONE,
-    hiatus_end   TIMESTAMP WITH TIME ZONE
+    hiatus_begin date,
+    hiatus_end   date
 );
 
 CREATE TABLE reviewersubjects

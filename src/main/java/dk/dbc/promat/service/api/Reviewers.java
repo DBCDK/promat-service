@@ -1,7 +1,7 @@
 package dk.dbc.promat.service.api;
 
 import dk.dbc.promat.service.dto.ReviewerList;
-import dk.dbc.promat.service.entity.Reviewer;
+import dk.dbc.promat.service.persistence.Reviewer;
 import dk.dbc.promat.service.persistence.PromatEntityManager;
 import javax.ejb.Stateless;
 import javax.inject.Inject;

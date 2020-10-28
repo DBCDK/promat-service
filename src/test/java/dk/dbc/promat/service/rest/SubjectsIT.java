@@ -4,7 +4,7 @@ import dk.dbc.commons.jsonb.JSONBContext;
 import dk.dbc.commons.jsonb.JSONBException;
 import dk.dbc.promat.service.ContainerTest;
 import dk.dbc.promat.service.dto.SubjectList;
-import dk.dbc.promat.service.entity.Subject;
+import dk.dbc.promat.service.persistence.Subject;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
