@@ -52,9 +52,6 @@ public class Records {
             LOGGER.info("Opensearch for id={} or is={}", id, id);
             OpensearchSearchResponse response = opensearchConnector.search(new OpensearchQuery()
                     .withCombiner(OpensearchQueryCombiner.OR)
-                    .withAgency("010100")
-                    .withProfile("dbckat")
-                    .withRepository("rawrepo_basis")
                     .withId(id)
                     .withIs(id));
 

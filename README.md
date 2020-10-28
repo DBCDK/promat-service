@@ -7,6 +7,9 @@ Promat service
 
 * PROMAT_DB_URL database URL (USER:PASSWORD@HOST:PORT/DBNAME) of the underlying promat database.
 * OPENSEARCH_SERVICE_URL opensearch service url
+* OPENSEARCH_PROFILE opensearch profile (optional, default is 'test')
+* OPENSEARCH_AGENCY opensearch agency (optional, default is '100200')
+* OPENSEARCH_REPOSITORY opensearch profile (optional, default is 'rawrepo_basis')
 * WORK_PRESENTATION_SERVICE_URL work-presentation service url
 
 ### API
