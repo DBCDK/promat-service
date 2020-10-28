@@ -3,7 +3,7 @@ package dk.dbc.promat.service.dto;
 import java.util.List;
 import java.util.Objects;
 
-public class RecordsListDto {
+public class RecordsListDto implements Dto {
 
     private int numFound;
     private List<RecordDto> records;

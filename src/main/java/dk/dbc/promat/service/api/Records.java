@@ -15,8 +15,11 @@ import dk.dbc.opensearch.workpresentation.WorkPresentationConnectorException;
 import dk.dbc.opensearch.workpresentation.WorkPresentationQuery;
 import dk.dbc.opensearch.workpresentation.model.WorkPresentationRecord;
 import dk.dbc.opensearch.workpresentation.model.WorkPresentationWork;
+import dk.dbc.promat.service.dto.Dto;
 import dk.dbc.promat.service.dto.RecordDto;
 import dk.dbc.promat.service.dto.RecordsListDto;
+import dk.dbc.promat.service.dto.ServiceErrorCode;
+import dk.dbc.promat.service.dto.ServiceErrorDto;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,7 +46,7 @@ public class Records {
     @Inject
     public WorkPresentationConnector workPresentationConnector;
 
-    public RecordsListDto resolveId(String id) throws Exception{
+    public Dto resolveId(String id) throws Exception{
         try {
 
             // Get records that either match directly on the id (faust) or with the id as the isbn number
@@ -58,7 +61,7 @@ public class Records {
 
             if(!response.getError().isEmpty()) {
                 LOGGER.info("Opensearch error: {}", response.getError());
-                return new RecordsListDto();
+                return new ServiceErrorDto().withCode(ServiceErrorCode.FAILED).withCause("Opensearch error").withDetails(response.getError());
             }
 
             OpensearchResult result = response.getResult();
@@ -94,32 +97,35 @@ public class Records {
                 }
             }
 
+            LOGGER.info("Id resolved into a list of {} manifestations related by work", relatedByWork.size());
             return new RecordsListDto()
                     .withNumFound(relatedByWork.size())
                     .withRecords(relatedByWork);
         } catch(OpensearchConnectorException opensearchConnectorException) {
             LOGGER.info("Caught OpensearchConnectorException: {}", opensearchConnectorException.getMessage());
-            throw new Exception(opensearchConnectorException.getMessage());
+            throw opensearchConnectorException;
         } catch(WorkPresentationConnectorException workPresentationConnectorException) {
             LOGGER.info("Caught WorkPresentationConnectorException: {}", workPresentationConnectorException.getMessage());
-            throw new Exception(workPresentationConnectorException.getMessage());
+            throw workPresentationConnectorException;
         }
     }
 
     @GET
     @Path("{id}")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response getRecords(@PathParam("id") final String id) throws JSONBException {
+    public Response getRecords(@PathParam("id") final String id) throws Exception {
         LOGGER.info("getRecords/{}", id);
 
         // Find every record with that belongs to any work that matches the given id
         try {
-            RecordsListDto dto = resolveId(id);
-            LOGGER.info("Resolved id into a list of {} related manifestations", dto.getNumFound());
-            return Response.ok(jsonbContext.marshall(dto)).build();
+            Dto dto = resolveId(id);
+            if(dto.getClass().equals(RecordsListDto.class)) {
+                return Response.ok(dto).build();
+            }
+            return Response.status(400).entity(dto).build();
         } catch(Exception exception) {
             LOGGER.info("Caught exception: {}", exception.getMessage());
-            return Response.status(500, exception.getMessage()).build();
+            throw exception;
         }
     }
 }

@@ -2,7 +2,7 @@ package dk.dbc.promat.service.dto;
 
 import java.util.Objects;
 
-public class RecordDto {
+public class RecordDto implements Dto {
 
     private String faust;
     private boolean isPrimary;
