@@ -80,7 +80,6 @@ public class Records {
                         LOGGER.info("Presenting work for faust {} in agency {}", faust, agency);
                         WorkPresentationWork work = workPresentationConnector.presentWorks(new WorkPresentationQuery()
                                 .withAgencyId(agency)
-                                .withProfile("test")  // Todo: work-presentation-service is work-in-progress. Replace with good profile later
                                 .withManifestation(faust));
 
                         LOGGER.info("Work returned {} manifestations with primary manifestation={}", work.getRecords().length, work.getManifestation());

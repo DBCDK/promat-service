@@ -13,6 +13,7 @@ docker run --rm --name promat-service -d \
     -e OPENSEARCH_AGENCY=${OPENSEARCH_AGENCY} \
     -e OPENSEARCH_REPOSITORY=${OPENSEARCH_REPOSITORY} \
     -e WORK_PRESENTATION_SERVICE_URL=${WORK_PRESENTATION_SERVICE_URL} \
+    -e WORK_PRESENTATION_PROFILE=${WORK_PRESENTATION_PROFILE} \
     -p ${promat_service_port}:8080 \
     $@ \
     docker-io.dbc.dk/promat-service:devel
