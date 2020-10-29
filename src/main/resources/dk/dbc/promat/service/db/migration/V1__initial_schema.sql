@@ -19,7 +19,7 @@ CREATE TABLE reviewer
     zip          text               NOT NULL,
     city         text               NOT NULL,
     institution  text               NOT NULL,
-    paycode      int,
+    paycode      int                NOT NULL,
     hiatus_begin date,
     hiatus_end   date
 );
