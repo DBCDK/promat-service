@@ -96,6 +96,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/RecordsList'
+        '400':
+          description: Error while resolving the id
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
 
   /cases:
     get:
@@ -365,7 +371,7 @@ components:
       type: object
       properties:
         faust:
-          type: integer
+          type: string
           description: Faustnumber
         isPrimary:
           type: boolean
