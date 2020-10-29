@@ -7,14 +7,11 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.ext.ContextResolver;
 import javax.ws.rs.ext.Provider;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 @Provider
 @Produces({ MediaType.APPLICATION_JSON })
 public class JsonMapperProvider implements ContextResolver<ObjectMapper> {
     private final ObjectMapper objectMapper;
-    private static final Logger LOGGER = LoggerFactory.getLogger(JsonMapperProvider.class);
 
     public JsonMapperProvider() {
         objectMapper = new ObjectMapper();
