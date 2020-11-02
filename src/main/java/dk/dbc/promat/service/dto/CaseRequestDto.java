@@ -2,7 +2,7 @@ package dk.dbc.promat.service.dto;
 
 import dk.dbc.promat.service.persistence.CaseStatus;
 import dk.dbc.promat.service.persistence.MaterialType;
-import dk.dbc.promat.service.entity.Subject;
+import dk.dbc.promat.service.persistence.Subject;
 
 import java.util.Arrays;
 import java.util.Objects;
@@ -17,11 +17,13 @@ public class CaseRequestDto implements Dto {
 
     private String[] relatedFausts;
 
-    private int reviewer;
+    private Integer reviewer = null;
 
     private Subject[] subjects;
 
     private String deadline;
+
+    private String assigned;
 
     private CaseStatus status;
 
@@ -59,11 +61,11 @@ public class CaseRequestDto implements Dto {
         this.relatedFausts = relatedFausts;
     }
 
-    public int getReviewer() {
+    public Integer getReviewer() {
         return reviewer;
     }
 
-    public void setReviewer(int reviewer) {
+    public void setReviewer(Integer reviewer) {
         this.reviewer = reviewer;
     }
 
@@ -81,6 +83,14 @@ public class CaseRequestDto implements Dto {
 
     public void setDeadline(String deadline) {
         this.deadline = deadline;
+    }
+
+    public String getAssigned() {
+        return assigned;
+    }
+
+    public void setAssigned(String assigned) {
+        this.assigned = assigned;
     }
 
     public CaseStatus getStatus() {
@@ -120,7 +130,7 @@ public class CaseRequestDto implements Dto {
         return this;
     }
 
-    public CaseRequestDto withReviewer(int reviewer) {
+    public CaseRequestDto withReviewer(Integer reviewer) {
         this.reviewer = reviewer;
         return this;
     }
@@ -132,6 +142,11 @@ public class CaseRequestDto implements Dto {
 
     public CaseRequestDto withDeadline(String deadline) {
         this.deadline = deadline;
+        return this;
+    }
+
+    public CaseRequestDto withAssigned(String assigned) {
+        this.assigned = assigned;
         return this;
     }
 
@@ -155,6 +170,7 @@ public class CaseRequestDto implements Dto {
                 ", reviewer=" + reviewer +
                 ", subjects=" + Arrays.toString(subjects) +
                 ", deadline='" + deadline + '\'' +
+                ", assigned='" + assigned + '\'' +
                 ", status=" + status +
                 ", materialType=" + materialType +
                 '}';
@@ -172,13 +188,14 @@ public class CaseRequestDto implements Dto {
                 Arrays.equals(relatedFausts, that.relatedFausts) &&
                 Arrays.equals(subjects, that.subjects) &&
                 Objects.equals(deadline, that.deadline) &&
+                Objects.equals(assigned, that.assigned) &&
                 status == that.status &&
                 materialType == that.materialType;
     }
 
     @Override
     public int hashCode() {
-        int result = Objects.hash(title, details, primaryFaust, reviewer, deadline, status, materialType);
+        int result = Objects.hash(title, details, primaryFaust, reviewer, deadline, assigned, status, materialType);
         result = 31 * result + Arrays.hashCode(relatedFausts);
         result = 31 * result + Arrays.hashCode(subjects);
         return result;

@@ -10,6 +10,8 @@
   <persistence-unit name="promatPU" transaction-type="JTA">
     <jta-data-source>jdbc/promat</jta-data-source>
     <shared-cache-mode>DISABLE_SELECTIVE</shared-cache-mode>
+    <class>dk.dbc.promat.service.persistence.JsonStringArrayConverter</class>
+    <class>dk.dbc.promat.service.persistence.Case</class>
     <properties>
       <property name="javax.persistence.schema-generation.database.action" value="none"/>
       <property name="eclipselink.cache.coordination.protocol" value="fish.payara.persistence.eclipselink.cache.coordination.HazelcastPublishingTransportManager"/>

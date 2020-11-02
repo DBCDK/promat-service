@@ -525,6 +525,11 @@ components:
             type: integer
           minItems: 0
           description: IDs of subjects covered by the work to review
+        assigned:
+          type: string
+          format: date
+          nullable: true
+          description: Assigned to reviewer on this date
         deadline:
           type: string
           format: date
