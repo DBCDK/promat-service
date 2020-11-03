@@ -60,7 +60,7 @@ public class Cases {
                     .entity(entity)
                     .build();
         } catch(Exception exception) {
-            LOGGER.info("Caught exception: {}", exception.getMessage());
+            LOGGER.error("Caught exception: {}", exception.getMessage());
             throw exception;
         }
     }
