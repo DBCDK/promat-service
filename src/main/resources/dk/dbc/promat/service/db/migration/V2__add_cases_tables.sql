@@ -21,14 +21,14 @@ CREATE TABLE cases
     details         text                    NOT NULL,
     primaryFaust    text                    NOT NULL,
     relatedFausts   jsonb                   NOT NULL,
-    reviewer        integer,
+    reviewer_id     integer,
     created         date                    NOT NULL,
     deadline        date,
     assigned        date,
     status          text                    NOT NULL,
     materialType    text                    NOT NULL,
 
-    FOREIGN KEY     (reviewer)              REFERENCES Reviewer (id),
+    FOREIGN KEY     (reviewer_id)           REFERENCES Reviewer (id),
     CHECK ( CheckNoOpenCaseWithFaust(primaryFaust) )
 );
 

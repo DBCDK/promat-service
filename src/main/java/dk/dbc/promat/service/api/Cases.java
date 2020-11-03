@@ -6,6 +6,7 @@ import dk.dbc.promat.service.persistence.Case;
 import dk.dbc.promat.service.dto.CaseRequestDto;
 import dk.dbc.promat.service.persistence.CaseStatus;
 import dk.dbc.promat.service.persistence.PromatEntityManager;
+import dk.dbc.promat.service.persistence.Reviewer;
 import dk.dbc.promat.service.persistence.Subject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -81,6 +82,19 @@ public class Cases {
             subjects.add(subject);
         }
 
+        // Map reviewer id to existing reviewer
+        Reviewer reviewer = null;
+        if( dto.getReviewer() != null ) {
+            reviewer = entityManager.find(Reviewer.class, 1);//dto.getReviewer());
+            if(reviewer == null) {
+                ServiceErrorDto err = new ServiceErrorDto()
+                        .withCode(ServiceErrorCode.INVALID_REQUEST)
+                        .withCause("No such reviewer")
+                        .withDetails(String.format("Field 'reviewer' contains id {} which does not exist", dto.getReviewer()));
+                return Response.status(400).entity(err).build();
+            }
+        }
+
         // Create case
         try {
             Case entity = new Case()
@@ -88,7 +102,7 @@ public class Cases {
             .withDetails(dto.getDetails())
             .withPrimaryFaust(dto.getPrimaryFaust())
             .withRelatedFausts(Arrays.asList(dto.getRelatedFausts()))
-            .withReviewer(dto.getReviewer())
+            .withReviewer(reviewer)
             .withSubjects(subjects)
             .withCreated(LocalDate.now())
             .withDeadline(LocalDate.parse(dto.getDeadline()))

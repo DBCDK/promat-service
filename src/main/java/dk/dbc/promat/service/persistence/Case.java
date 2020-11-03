@@ -12,6 +12,7 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.persistence.OneToMany;
+import javax.persistence.OneToOne;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.persistence.criteria.CriteriaBuilder;
@@ -43,7 +44,8 @@ public class Case {
     @Convert(converter = JsonStringArrayConverter.class)
     private List<String> relatedFausts;
 
-    private Integer reviewer;
+    @OneToOne
+    private Reviewer reviewer;
 
     @OneToMany
     @JoinTable(
@@ -113,11 +115,11 @@ public class Case {
         this.relatedFausts = relatedFausts;
     }
 
-    public Integer getReviewer() {
+    public Reviewer getReviewer() {
         return reviewer;
     }
 
-    public void setReviewer(Integer reviewer) {
+    public void setReviewer(Reviewer reviewer) {
         this.reviewer = reviewer;
     }
 
@@ -202,7 +204,7 @@ public class Case {
         return this;
     }
 
-    public Case withReviewer(Integer reviewer) {
+    public Case withReviewer(Reviewer reviewer) {
         this.reviewer = reviewer;
         return this;
     }
