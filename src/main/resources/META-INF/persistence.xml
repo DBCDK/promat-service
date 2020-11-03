@@ -4,14 +4,16 @@
   ~ See license text in LICENSE.txt or at https://opensource.dbc.dk/licenses/gpl-3.0/
   -->
 
-<persistence xmlns="http://xmlns.jcp.org/xml/ns/persistence"
-             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-             xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/persistence http://java.sun.com/xml/ns/persistence/persistence_2_1.xsd"
-             version="2.1">
+<persistence version="2.2"
+             xmlns="http://xmlns.jcp.org/xml/ns/persistence" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/persistence http://xmlns.jcp.org/xml/ns/persistence/persistence_2_2.xsd">
   <persistence-unit name="promatPU" transaction-type="JTA">
     <jta-data-source>jdbc/promat</jta-data-source>
+    <shared-cache-mode>DISABLE_SELECTIVE</shared-cache-mode>
     <properties>
       <property name="javax.persistence.schema-generation.database.action" value="none"/>
+      <property name="eclipselink.cache.coordination.protocol" value="fish.payara.persistence.eclipselink.cache.coordination.HazelcastPublishingTransportManager"/>
+      <property name="eclipselink.cache.coordination.channel" value="promatPUChannel"/>
     </properties>
   </persistence-unit>
 </persistence>
