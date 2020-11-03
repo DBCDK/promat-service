@@ -16,6 +16,9 @@ CREATE TABLE cases
     FOREIGN KEY     (reviewer)              REFERENCES Reviewer (id)
 );
 
+-- Set starting point for new case id's
+ALTER SEQUENCE cases_id_seq RESTART WITH 500000;
+
 -- Table holding tasks for cases
 CREATE TABLE task
 (
