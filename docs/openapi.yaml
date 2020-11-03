@@ -320,10 +320,10 @@ components:
       type: string
       enum:
         - INVALID_QUERY_PARAM   # One of the query parameters is invalid
-        - INVALID_REQUEST_BODY  # Request body contains invalid fields or id's
+        - INVALID_REQUEST       # Request body contains invalid fields or id's
         - CASE_EXISTS           # Active case for this/these faust/fausts exists
         - INVALID_STATE         # Change to a new state was not possible or invalid
-        - FAILED                # Some error occurred while updating the item
+        - FAILED                # Some error occurred
 
     SubjectList:
       type: object

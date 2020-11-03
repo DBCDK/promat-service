@@ -46,14 +46,14 @@ public class Cases {
         // Check for required data when creating a new case
         if( dto.getTitle() == null || dto.getTitle().isEmpty() ) {
             ServiceErrorDto err = new ServiceErrorDto()
-                    .withCode(ServiceErrorCode.INVALID_REQUEST_BODY)
+                    .withCode(ServiceErrorCode.INVALID_REQUEST)
                     .withCause("Missing required field in the request data")
                     .withDetails("Field 'title' must be supplied when creating a new case");
             return Response.status(400).entity(err).build();
         }
         if( dto.getPrimaryFaust() == null || dto.getPrimaryFaust().isEmpty() ) {
             ServiceErrorDto err = new ServiceErrorDto()
-                    .withCode(ServiceErrorCode.INVALID_REQUEST_BODY)
+                    .withCode(ServiceErrorCode.INVALID_REQUEST)
                     .withCause("Missing required field in the request data")
                     .withDetails("Field 'primaryFaust' must be supplied when creating a new case");
             return Response.status(400).entity(err).build();
@@ -65,7 +65,7 @@ public class Cases {
             Subject subject = entityManager.find(Subject.class, subjectId);
             if( subject == null ) {
                 ServiceErrorDto err = new ServiceErrorDto()
-                        .withCode(ServiceErrorCode.INVALID_REQUEST_BODY)
+                        .withCode(ServiceErrorCode.INVALID_REQUEST)
                         .withCause("No such subject")
                         .withDetails(String.format("Field 'subject' contains id {} which does not exist", subjectId));
                 return Response.status(400).entity(err).build();
