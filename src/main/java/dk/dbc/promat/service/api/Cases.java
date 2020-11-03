@@ -1,6 +1,5 @@
 package dk.dbc.promat.service.api;
 
-import dk.dbc.invariant.InvariantUtil;
 import dk.dbc.promat.service.dto.ServiceErrorCode;
 import dk.dbc.promat.service.dto.ServiceErrorDto;
 import dk.dbc.promat.service.persistence.Case;
@@ -8,14 +7,13 @@ import dk.dbc.promat.service.dto.CaseRequestDto;
 import dk.dbc.promat.service.persistence.CaseStatus;
 import dk.dbc.promat.service.persistence.PromatEntityManager;
 import dk.dbc.promat.service.persistence.Subject;
-import dk.dbc.promat.service.persistence.Task;
-import org.checkerframework.checker.units.qual.A;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.ejb.Stateless;
 import javax.inject.Inject;
 import javax.persistence.EntityManager;
+import javax.persistence.Query;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -25,8 +23,6 @@ import javax.ws.rs.core.Response;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashSet;
-import java.util.stream.Collectors;
 
 @Stateless
 @Path("cases")
@@ -57,6 +53,18 @@ public class Cases {
                     .withCause("Missing required field in the request data")
                     .withDetails("Field 'primaryFaust' must be supplied when creating a new case");
             return Response.status(400).entity(err).build();
+        }
+
+        // Check that no existing case exists with the same primary faustnumber
+        // and a state other than CLOSED or DONE
+        Query q = entityManager.createNativeQuery("SELECT CheckNoOpenCaseWithFaust(?)");
+        q.setParameter(1, dto.getPrimaryFaust());
+        if((boolean) q.getSingleResult() == false) {
+            ServiceErrorDto err = new ServiceErrorDto()
+                    .withCode(ServiceErrorCode.CASE_EXISTS)
+                    .withCause("Case exists")
+                    .withDetails(String.format("Case with primary faust {} and status not DONE or CLOSED exists", dto.getPrimaryFaust()));
+            return Response.status(409).entity(err).build();
         }
 
         // Map subject ids to existing subjects
@@ -96,8 +104,12 @@ public class Cases {
                     .entity(entity)
                     .build();
         } catch(Exception exception) {
-            LOGGER.error("Caught exception: {}", exception.getMessage());
-            throw exception;
+            LOGGER.error("Caught unexpected exception: {} of type {}", exception.getMessage(), exception.toString());
+            ServiceErrorDto err = new ServiceErrorDto()
+                    .withCode(ServiceErrorCode.FAILED)
+                    .withCause("Request failed")
+                    .withDetails(exception.getMessage());
+            return Response.serverError().entity(err).build();
         }
     }
 }
