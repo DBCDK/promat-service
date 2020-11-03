@@ -32,8 +32,8 @@ public class Cases {
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public Response getRecords(CaseRequestDto dto) {
-        LOGGER.info("cases/{}", dto);
+    public Response postCase(CaseRequestDto dto) {
+        LOGGER.info("cases/ (POST) body: {}", dto);
 
         // Todo: Check if there is any existing cases for the same primary faustnumber
         //       not in status CLOSED or DONE
