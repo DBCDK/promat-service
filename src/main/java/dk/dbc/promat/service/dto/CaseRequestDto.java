@@ -19,7 +19,7 @@ public class CaseRequestDto implements Dto {
 
     private Integer reviewer = null;
 
-    private Subject[] subjects;
+    private int[] subjects;
 
     private String deadline;
 
@@ -69,11 +69,11 @@ public class CaseRequestDto implements Dto {
         this.reviewer = reviewer;
     }
 
-    public Subject[] getSubjects() {
+    public int[] getSubjects() {
         return subjects;
     }
 
-    public void setSubjects(Subject[] subjects) {
+    public void setSubjects(int[] subjects) {
         this.subjects = subjects;
     }
 
@@ -135,7 +135,7 @@ public class CaseRequestDto implements Dto {
         return this;
     }
 
-    public CaseRequestDto withSubjects(Subject[] subjects) {
+    public CaseRequestDto withSubjects(int[] subjects) {
         this.subjects = subjects;
         return this;
     }
