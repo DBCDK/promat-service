@@ -53,13 +53,10 @@ public class Case {
     )
     private List<Subject> subjects;
 
-    @JsonbDateFormat
     private LocalDate created;
 
-    @JsonbDateFormat
     private LocalDate deadline;
 
-    @JsonbDateFormat
     private LocalDate assigned;
 
     @Enumerated(EnumType.STRING)
