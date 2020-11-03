@@ -1,3 +1,18 @@
+CREATE OR REPLACE FUNCTION CheckNoOpenCaseWithFaust(
+    faust text)
+    RETURNS bool AS $$
+BEGIN
+    RETURN NOT EXISTS (
+            SELECT *
+            FROM cases
+            WHERE primaryFaust = faust
+              AND status <> 'CLOSED'
+              AND status <> 'DONE'
+        );
+END
+$$
+LANGUAGE plpgsql;
+
 -- Table holding all cases
 CREATE TABLE cases
 (
@@ -13,7 +28,8 @@ CREATE TABLE cases
     status          text                    NOT NULL,
     materialType    text                    NOT NULL,
 
-    FOREIGN KEY     (reviewer)              REFERENCES Reviewer (id)
+    FOREIGN KEY     (reviewer)              REFERENCES Reviewer (id),
+    CHECK ( CheckNoOpenCaseWithFaust(primaryFaust) )
 );
 
 -- Set starting point for new case id's

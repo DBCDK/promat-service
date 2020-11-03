@@ -59,9 +59,6 @@ public class Cases {
             return Response.status(400).entity(err).build();
         }
 
-        // Todo: Check if there is any existing cases for the same primary faustnumber
-        //       not in status CLOSED or DONE
-
         // Map subject ids to existing subjects
         ArrayList<Subject> subjects = new ArrayList<>();
         for(int subjectId : dto.getSubjects()) {
