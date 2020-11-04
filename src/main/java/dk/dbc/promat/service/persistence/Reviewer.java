@@ -1,17 +1,17 @@
 package dk.dbc.promat.service.persistence;
 
-import java.time.LocalDate;
-import java.util.Collection;
-import java.util.List;
 import javax.json.bind.annotation.JsonbDateFormat;
+import javax.persistence.DiscriminatorValue;
 import javax.persistence.Embedded;
 import javax.persistence.Entity;
-import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
+import java.time.LocalDate;
+import java.util.Collection;
+import java.util.List;
 @NamedQueries({
         @NamedQuery(
                 name = Reviewer.GET_ALL_REVIEWERS_NAME,
@@ -19,15 +19,13 @@ import javax.persistence.OneToMany;
         )
 })
 @Entity
-public class Reviewer {
+@DiscriminatorValue("REVIEWER")
+public class Reviewer extends PromatUser {
     public static final String GET_ALL_REVIEWERS_NAME =
             "Reviewers.get.all";
     public static final String GET_ALL_REVIEWERS_QUERY =
             "SELECT reviewer FROM Reviewer reviewer ORDER BY reviewer.id ASC";
 
-
-    @Id
-    private Integer id;
     private String firstName;
     private String lastName;
     private String email;
@@ -50,14 +48,6 @@ public class Reviewer {
             inverseJoinColumns = @JoinColumn(name = "subject_id")
     )
     private Collection<Subject> subjects;
-
-    public Integer getId() {
-        return id;
-    }
-
-    public void setId(Integer id) {
-        this.id = id;
-    }
 
     public String getFirstName() {
         return firstName;
