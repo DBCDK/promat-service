@@ -12,7 +12,7 @@ import javax.ws.rs.core.Response;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 
-public class CaseIT extends ContainerTest {
+public class CasesIT extends ContainerTest {
 
     @Test
     public void crude_test() throws JsonProcessingException {
