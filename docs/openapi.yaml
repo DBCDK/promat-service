@@ -627,10 +627,5 @@ components:
           description: The task data
           nullable: true
       required:
-        - id
         - typeOfTask
-        - created
         - paycode
-        - approved
-        - payed
-        - data
