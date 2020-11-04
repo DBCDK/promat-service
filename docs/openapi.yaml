@@ -510,7 +510,6 @@ components:
 
     CaseRequest:
       type: object
-      $ref:
       properties:
         title:
           type: string
@@ -554,6 +553,16 @@ components:
           $ref: '#/components/schemas/CaseStatus'
         materialType:
           $ref: '#/components/schemas/MaterialType'
+        tasks:
+          type: array
+          items:
+            $ref: '#/components/schemas/Task'
+          minItems: 0
+          nullable: true
+      required:
+        - title
+        - primaryFaust
+        - materialType
 
     CaseStatus:
       type: string
