@@ -122,7 +122,7 @@ public class Cases {
             .withCreated(LocalDate.now())
             .withDeadline(dto.getDeadline() == null ? null : LocalDate.parse(dto.getDeadline()))
             .withAssigned(dto.getAssigned() == null ? null : LocalDate.parse(dto.getAssigned()))
-            .withStatus(CaseStatus.CREATED)
+            .withStatus(dto.getStatus() == null ? CaseStatus.CREATED : dto.getStatus())
             .withMaterialType(dto.getMaterialType())
             .withTasks(new ArrayList<>());
 
