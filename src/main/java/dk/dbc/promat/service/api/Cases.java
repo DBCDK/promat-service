@@ -42,6 +42,7 @@ public class Cases {
 
         // Check for required data when creating a new case
         if( dto.getTitle() == null || dto.getTitle().isEmpty() ) {
+            LOGGER.error("Request dto is missing 'title' field");
             ServiceErrorDto err = new ServiceErrorDto()
                     .withCode(ServiceErrorCode.INVALID_REQUEST)
                     .withCause("Missing required field in the request data")
@@ -49,10 +50,19 @@ public class Cases {
             return Response.status(400).entity(err).build();
         }
         if( dto.getPrimaryFaust() == null || dto.getPrimaryFaust().isEmpty() ) {
+            LOGGER.error("Request dto is missing 'primaryFaust' field");
             ServiceErrorDto err = new ServiceErrorDto()
                     .withCode(ServiceErrorCode.INVALID_REQUEST)
                     .withCause("Missing required field in the request data")
                     .withDetails("Field 'primaryFaust' must be supplied when creating a new case");
+            return Response.status(400).entity(err).build();
+        }
+        if( dto.getMaterialType() == null ) {
+            LOGGER.error("Request dto is missing 'materialType' field");
+            ServiceErrorDto err = new ServiceErrorDto()
+                    .withCode(ServiceErrorCode.INVALID_REQUEST)
+                    .withCause("Missing required field in the request data")
+                    .withDetails("Field 'materialType' must be supplied when creating a new case");
             return Response.status(400).entity(err).build();
         }
 
@@ -61,6 +71,7 @@ public class Cases {
         Query q = entityManager.createNativeQuery("SELECT CheckNoOpenCaseWithFaust(?)");
         q.setParameter(1, dto.getPrimaryFaust());
         if((boolean) q.getSingleResult() == false) {
+            LOGGER.error("Case with primaryFaust {} and state <> CLOSED|DONE exists", dto.getPrimaryFaust());
             ServiceErrorDto err = new ServiceErrorDto()
                     .withCode(ServiceErrorCode.CASE_EXISTS)
                     .withCause("Case exists")
@@ -70,16 +81,19 @@ public class Cases {
 
         // Map subject ids to existing subjects
         ArrayList<Subject> subjects = new ArrayList<>();
-        for(int subjectId : dto.getSubjects()) {
-            Subject subject = entityManager.find(Subject.class, subjectId);
-            if( subject == null ) {
-                ServiceErrorDto err = new ServiceErrorDto()
-                        .withCode(ServiceErrorCode.INVALID_REQUEST)
-                        .withCause("No such subject")
-                        .withDetails(String.format("Field 'subject' contains id {} which does not exist", subjectId));
-                return Response.status(400).entity(err).build();
+        if( dto.getSubjects() != null ) {
+            for(int subjectId : dto.getSubjects()) {
+                Subject subject = entityManager.find(Subject.class, subjectId);
+                if(subject == null) {
+                    LOGGER.error("Attempt to resolve subject {} failed. No such subject", subjectId);
+                    ServiceErrorDto err = new ServiceErrorDto()
+                            .withCode(ServiceErrorCode.INVALID_REQUEST)
+                            .withCause("No such subject")
+                            .withDetails(String.format("Field 'subject' contains id {} which does not exist", subjectId));
+                    return Response.status(400).entity(err).build();
+                }
+                subjects.add(subject);
             }
-            subjects.add(subject);
         }
 
         // Map reviewer id to existing reviewer
@@ -87,6 +101,7 @@ public class Cases {
         if( dto.getReviewer() != null ) {
             reviewer = entityManager.find(Reviewer.class, dto.getReviewer());
             if(reviewer == null) {
+                LOGGER.error("Attempt to resolve reviewer {} failed. No such reviewer", dto.getReviewer());
                 ServiceErrorDto err = new ServiceErrorDto()
                         .withCode(ServiceErrorCode.INVALID_REQUEST)
                         .withCause("No such reviewer")
@@ -99,14 +114,14 @@ public class Cases {
         try {
             Case entity = new Case()
             .withTitle(dto.getTitle())
-            .withDetails(dto.getDetails())
+            .withDetails(dto.getDetails() == null ? "" : dto.getDetails())
             .withPrimaryFaust(dto.getPrimaryFaust())
-            .withRelatedFausts(Arrays.asList(dto.getRelatedFausts()))
+            .withRelatedFausts(Arrays.asList(dto.getRelatedFausts() == null ? new String[0] : dto.getRelatedFausts()))
             .withReviewer(reviewer)
             .withSubjects(subjects)
             .withCreated(LocalDate.now())
-            .withDeadline(LocalDate.parse(dto.getDeadline()))
-            .withAssigned(LocalDate.parse(dto.getAssigned()))
+            .withDeadline(dto.getDeadline() == null ? null : LocalDate.parse(dto.getDeadline()))
+            .withAssigned(dto.getAssigned() == null ? null : LocalDate.parse(dto.getAssigned()))
             .withStatus(CaseStatus.CREATED)
             .withMaterialType(dto.getMaterialType())
             .withTasks(new ArrayList<>());
@@ -114,6 +129,7 @@ public class Cases {
             entityManager.persist(entity);
 
             // 201 CREATED
+            LOGGER.info("Created new case for primaryFaust {}", entity.getPrimaryFaust());
             return Response.status(201)
                     .entity(entity)
                     .build();
