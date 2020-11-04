@@ -6,13 +6,16 @@ import dk.dbc.httpclient.HttpPost;
 import dk.dbc.promat.service.ContainerTest;
 import dk.dbc.promat.service.dto.CaseRequestDto;
 import dk.dbc.promat.service.persistence.Case;
+import dk.dbc.promat.service.persistence.CaseStatus;
 import dk.dbc.promat.service.persistence.MaterialType;
 import dk.dbc.promat.service.persistence.Subject;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 import org.junit.jupiter.api.Test;
 import javax.ws.rs.core.Response;
+import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -135,5 +138,45 @@ public class CasesIT extends ContainerTest {
         expected.add(3);
         expected.add(4);
         assertThat("subject ids", actual.equals(expected), is(true) );
+    }
+
+    @Test
+    public void testCreateCaseWithTrivialFields() throws JsonProcessingException {
+
+        CaseRequestDto dto = new CaseRequestDto()
+                .withPrimaryFaust("32345678")
+                .withTitle("Title for 32345678")
+                .withDetails("Details for 32345678")
+                .withMaterialType(MaterialType.BOOK)
+                .withAssigned("2020-04-11")
+                .withDeadline("2020-04-12")
+                .withRelatedFausts(new String[] {"42345678", "52345678"})
+                .withStatus(CaseStatus.ASSIGNED);
+
+        HttpPost httpPost = new HttpPost(httpClient)
+                .withBaseUrl(promatServiceBaseUrl)
+                .withPathElements("v1", "api", "cases")
+                .withData(dto, "application/json");
+
+        Response response = httpClient.execute(httpPost);
+        assertThat("status code", response.getStatus(), is(201));
+
+        String obj = response.readEntity(String.class);
+        Case created = mapper.readValue(obj, Case.class);
+
+        assertThat(created.getPrimaryFaust(), is("32345678"));
+        assertThat(created.getTitle(), is("Title for 32345678"));
+        assertThat(created.getDetails(), is("Details for 32345678"));
+        assertThat(created.getMaterialType(), is(MaterialType.BOOK));
+        assertThat(created.getCreated(), is(LocalDate.now()));
+        assertThat(created.getAssigned(), is(LocalDate.parse("2020-04-11")));
+        assertThat(created.getDeadline(), is(LocalDate.parse("2020-04-12")));
+        assertThat(created.getRelatedFausts().
+                stream()
+                .sorted()
+                .collect(Collectors.toList())
+                .equals(Arrays.stream(new String[]{"42345678", "52345678"})
+                        .collect(Collectors.toList())), is(true));
+        assertThat(created.getStatus(), is(CaseStatus.ASSIGNED));
     }
 }
