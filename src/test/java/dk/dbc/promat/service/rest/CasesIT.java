@@ -6,12 +6,17 @@ import dk.dbc.httpclient.HttpGet;
 import dk.dbc.httpclient.HttpPost;
 import dk.dbc.promat.service.ContainerTest;
 import dk.dbc.promat.service.dto.CaseRequestDto;
+import dk.dbc.promat.service.dto.TaskDto;
 import dk.dbc.promat.service.persistence.Case;
 import dk.dbc.promat.service.persistence.CaseStatus;
 import dk.dbc.promat.service.persistence.MaterialType;
+import dk.dbc.promat.service.persistence.Paycode;
 import dk.dbc.promat.service.persistence.Subject;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
+
+import dk.dbc.promat.service.persistence.TaskType;
+import org.hamcrest.core.IsNull;
 import org.junit.jupiter.api.Test;
 import javax.ws.rs.core.Response;
 import java.time.LocalDate;
@@ -223,6 +228,69 @@ public class CasesIT extends ContainerTest {
 
         // Get the case we created
         httpGet = new HttpGet(httpClient)
+                .withBaseUrl(promatServiceBaseUrl)
+                .withPathElements("v1", "api", "cases", created.getId().toString());
+
+        response = httpClient.execute(httpGet);
+        assertThat("status code", response.getStatus(), is(200));
+
+        // Verify that the case matches the created case
+        obj = response.readEntity(String.class);
+        Case fetched = mapper.readValue(obj, Case.class);
+        assertThat("fetched case is same as created", created.equals(fetched), is(true));
+    }
+
+    @Test
+    public void testCreateCaseWithTasks() throws JsonProcessingException {
+
+        // Create case
+        CaseRequestDto dto = new CaseRequestDto()
+                .withPrimaryFaust("92345678")
+                .withTitle("Title for 62345678")
+                .withDetails("Details for 62345678")
+                .withMaterialType(MaterialType.BOOK)
+                .withReviewer(1)
+                .withSubjects(new int[] {3, 4})
+                .withAssigned("2020-04-11")
+                .withDeadline("2020-04-12")
+                .withRelatedFausts(new String[] {"03345678", "04345678"})
+                .withStatus(CaseStatus.ASSIGNED)
+                .withTasks(new TaskDto[] {
+                        new TaskDto()
+                                .withPaycode(Paycode.NONE)
+                                .withTypeOfTask(TaskType.NONE),
+                        new TaskDto()
+                                .withPaycode(Paycode.NONE)
+                                .withTypeOfTask(TaskType.NONE)
+                });
+
+        HttpPost httpPost = new HttpPost(httpClient)
+                .withBaseUrl(promatServiceBaseUrl)
+                .withPathElements("v1", "api", "cases")
+                .withData(dto, "application/json");
+
+        Response response = httpClient.execute(httpPost);
+        assertThat("status code", response.getStatus(), is(201));
+
+        // Verify that the case has some data and a list with 2 tasks
+        String obj = response.readEntity(String.class);
+        Case created = mapper.readValue(obj, Case.class);
+        assertThat("has 2 tasks", created.getTasks().size(), is(2));
+
+        // Check the created tasks
+        assertThat("task 1 type", created.getTasks().get(0).getTypeOfTask(), is(TaskType.NONE));
+        assertThat("task 1 paycode", created.getTasks().get(0).getPaycode(), is(Paycode.NONE));
+        assertThat("task 1 created", created.getTasks().get(0).getCreated(), is(LocalDate.now()));
+        assertThat("task 1 approved", created.getTasks().get(0).getApproved(), is(IsNull.nullValue()));
+        assertThat("task 1 payed", created.getTasks().get(0).getPayed(), is(IsNull.nullValue()));
+        assertThat("task 2 type", created.getTasks().get(1).getTypeOfTask(), is(TaskType.NONE));
+        assertThat("task 2 paycode", created.getTasks().get(1).getPaycode(), is(Paycode.NONE));
+        assertThat("task 2 created", created.getTasks().get(1).getCreated(), is(LocalDate.now()));
+        assertThat("task 2 approved", created.getTasks().get(1).getApproved(), is(IsNull.nullValue()));
+        assertThat("task 2 payed", created.getTasks().get(1).getPayed(), is(IsNull.nullValue()));
+
+        // Get the case we created
+        HttpGet httpGet= new HttpGet(httpClient)
                 .withBaseUrl(promatServiceBaseUrl)
                 .withPathElements("v1", "api", "cases", created.getId().toString());
 
