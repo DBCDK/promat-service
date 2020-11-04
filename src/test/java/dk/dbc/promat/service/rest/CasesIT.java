@@ -164,14 +164,14 @@ public class CasesIT extends ContainerTest {
         String obj = response.readEntity(String.class);
         Case created = mapper.readValue(obj, Case.class);
 
-        assertThat(created.getPrimaryFaust(), is("32345678"));
-        assertThat(created.getTitle(), is("Title for 32345678"));
-        assertThat(created.getDetails(), is("Details for 32345678"));
-        assertThat(created.getMaterialType(), is(MaterialType.BOOK));
-        assertThat(created.getCreated(), is(LocalDate.now()));
-        assertThat(created.getAssigned(), is(LocalDate.parse("2020-04-11")));
-        assertThat(created.getDeadline(), is(LocalDate.parse("2020-04-12")));
-        assertThat(created.getRelatedFausts().
+        assertThat("primaryFaust", created.getPrimaryFaust(), is("32345678"));
+        assertThat("title", created.getTitle(), is("Title for 32345678"));
+        assertThat("details", created.getDetails(), is("Details for 32345678"));
+        assertThat("materialType", created.getMaterialType(), is(MaterialType.BOOK));
+        assertThat("created", created.getCreated(), is(LocalDate.now()));
+        assertThat("assigned", created.getAssigned(), is(LocalDate.parse("2020-04-11")));
+        assertThat("deadline", created.getDeadline(), is(LocalDate.parse("2020-04-12")));
+        assertThat("relatedFausts", created.getRelatedFausts().
                 stream()
                 .sorted()
                 .collect(Collectors.toList())
