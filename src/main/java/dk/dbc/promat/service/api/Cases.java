@@ -1,5 +1,7 @@
 package dk.dbc.promat.service.api;
 
+import dk.dbc.promat.service.dto.Dto;
+import dk.dbc.promat.service.dto.RecordsListDto;
 import dk.dbc.promat.service.dto.ServiceErrorCode;
 import dk.dbc.promat.service.dto.ServiceErrorDto;
 import dk.dbc.promat.service.persistence.Case;
@@ -16,8 +18,10 @@ import javax.inject.Inject;
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -140,6 +144,28 @@ public class Cases {
                     .withCause("Request failed")
                     .withDetails(exception.getMessage());
             return Response.serverError().entity(err).build();
+        }
+    }
+
+    @GET
+    @Path("{id}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response getCase(@PathParam("id") final Integer id) throws Exception {
+        LOGGER.info("getCase/{}", id);
+
+        // Find and return the requested case
+        try {
+
+            Case requested = entityManager.find(Case.class, id);
+            if( requested == null ) {
+                LOGGER.info("Requested case {} does not exist", id);
+                return Response.status(204).build();
+            }
+
+            return Response.status(200).entity(requested).build();
+        } catch(Exception exception) {
+            LOGGER.info("Caught exception: {}", exception.getMessage());
+            throw exception;
         }
     }
 }

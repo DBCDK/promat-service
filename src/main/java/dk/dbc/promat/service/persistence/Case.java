@@ -249,23 +249,42 @@ public class Case {
         if(this == o) return true;
         if(o == null || getClass() != o.getClass()) return false;
         Case aCase = (Case) o;
-        return id == aCase.id &&
-                reviewer == aCase.reviewer &&
+        return id.equals(aCase.id) &&
                 title.equals(aCase.title) &&
-                details.equals(aCase.details) &&
+                Objects.equals(details, aCase.details) &&
                 primaryFaust.equals(aCase.primaryFaust) &&
-                relatedFausts.equals(aCase.relatedFausts) &&
-                subjects.equals(aCase.subjects) &&
-                created.equals(aCase.created) &&
+                Objects.equals(relatedFausts, aCase.relatedFausts) &&
+                Objects.equals(reviewer, aCase.reviewer) &&
+                Objects.equals(subjects, aCase.subjects) &&
+                Objects.equals(created, aCase.created) &&
                 Objects.equals(deadline, aCase.deadline) &&
                 Objects.equals(assigned, aCase.assigned) &&
                 status == aCase.status &&
                 materialType == aCase.materialType &&
-                tasks.equals(aCase.tasks);
+                Objects.equals(tasks, aCase.tasks);
     }
 
     @Override
     public int hashCode() {
         return Objects.hash(id, title, details, primaryFaust, relatedFausts, reviewer, subjects, created, deadline, assigned, status, materialType, tasks);
+    }
+
+    @Override
+    public String toString() {
+        return "Case{" +
+                "id=" + id +
+                ", title='" + title + '\'' +
+                ", details='" + details + '\'' +
+                ", primaryFaust='" + primaryFaust + '\'' +
+                ", relatedFausts=" + relatedFausts +
+                ", reviewer=" + reviewer +
+                ", subjects=" + subjects +
+                ", created=" + created +
+                ", deadline=" + deadline +
+                ", assigned=" + assigned +
+                ", status=" + status +
+                ", materialType=" + materialType +
+                ", tasks=" + tasks +
+                '}';
     }
 }

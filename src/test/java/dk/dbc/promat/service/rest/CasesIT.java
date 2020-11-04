@@ -2,6 +2,7 @@ package dk.dbc.promat.service.rest;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 
+import dk.dbc.httpclient.HttpGet;
 import dk.dbc.httpclient.HttpPost;
 import dk.dbc.promat.service.ContainerTest;
 import dk.dbc.promat.service.dto.CaseRequestDto;
@@ -178,5 +179,59 @@ public class CasesIT extends ContainerTest {
                 .equals(Arrays.stream(new String[]{"42345678", "52345678"})
                         .collect(Collectors.toList())), is(true));
         assertThat(created.getStatus(), is(CaseStatus.ASSIGNED));
+    }
+
+    @Test
+    public void testGetCase() throws JsonProcessingException {
+
+        // Create case
+        CaseRequestDto dto = new CaseRequestDto()
+                .withPrimaryFaust("62345678")
+                .withTitle("Title for 62345678")
+                .withDetails("Details for 62345678")
+                .withMaterialType(MaterialType.BOOK)
+                .withReviewer(1)
+                .withSubjects(new int[] {3, 4})
+                .withAssigned("2020-04-11")
+                .withDeadline("2020-04-12")
+                .withRelatedFausts(new String[] {"72345678", "82345678"})
+                .withStatus(CaseStatus.ASSIGNED);
+
+        HttpPost httpPost = new HttpPost(httpClient)
+                .withBaseUrl(promatServiceBaseUrl)
+                .withPathElements("v1", "api", "cases")
+                .withData(dto, "application/json");
+
+        Response response = httpClient.execute(httpPost);
+        assertThat("status code", response.getStatus(), is(201));
+
+        // Verify that the case has some data
+        String obj = response.readEntity(String.class);
+        Case created = mapper.readValue(obj, Case.class);
+
+        assertThat("primary faust", created.getPrimaryFaust(), is("62345678"));
+        assertThat("title", created.getTitle(), is("Title for 62345678"));
+        assertThat("details", created.getDetails(), is("Details for 62345678"));
+
+        // Get case with nonexisting id, expect 204 (NOT FOUND)
+        HttpGet httpGet = new HttpGet(httpClient)
+                .withBaseUrl(promatServiceBaseUrl)
+                .withPathElements("v1", "api", "cases", "1234");
+
+        response = httpClient.execute(httpGet);
+        assertThat("status code", response.getStatus(), is(204));
+
+        // Get the case we created
+        httpGet = new HttpGet(httpClient)
+                .withBaseUrl(promatServiceBaseUrl)
+                .withPathElements("v1", "api", "cases", created.getId().toString());
+
+        response = httpClient.execute(httpGet);
+        assertThat("status code", response.getStatus(), is(200));
+
+        // Verify that the case matches the created case
+        obj = response.readEntity(String.class);
+        Case fetched = mapper.readValue(obj, Case.class);
+        assertThat("fetched case is same as created", created.equals(fetched), is(true));
     }
 }
