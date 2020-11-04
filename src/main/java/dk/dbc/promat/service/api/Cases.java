@@ -85,7 +85,7 @@ public class Cases {
         // Map reviewer id to existing reviewer
         Reviewer reviewer = null;
         if( dto.getReviewer() != null ) {
-            reviewer = entityManager.find(Reviewer.class, 1);//dto.getReviewer());
+            reviewer = entityManager.find(Reviewer.class, dto.getReviewer());
             if(reviewer == null) {
                 ServiceErrorDto err = new ServiceErrorDto()
                         .withCode(ServiceErrorCode.INVALID_REQUEST)
