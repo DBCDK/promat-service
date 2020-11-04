@@ -392,6 +392,7 @@ components:
 
     CaseSummary:
       type: object
+      nullable: true
       properties:
         id:
           type: integer
@@ -507,6 +508,7 @@ components:
 
     CaseRequest:
       type: object
+      $ref:
       properties:
         title:
           type: string
@@ -514,6 +516,7 @@ components:
         details:
           type: string
           description: Case details (free form)
+          nullable: true
         primaryFaust:
           type: string
           description: Faustnumber for the primary manifestations, typically one of the paperbooks
@@ -521,16 +524,19 @@ components:
           type: array
           items:
             type: string
-          description: Other faustnumbers that should link to the review produced by this case
           minItems: 0
+          nullable: true
+          description: Other faustnumbers that should link to the review produced by this case
         reviewer:
           type: integer
+          nullable: true
           description: ID of assigned reviewer
         subjects:
           type: array
           items:
             type: integer
           minItems: 0
+          nullable: true
           description: IDs of subjects covered by the work to review
         assigned:
           type: string
@@ -549,6 +555,7 @@ components:
 
     CaseStatus:
       type: string
+      nullable: true
       enum:
         - 'CREATED'
         - 'REJECTED'
