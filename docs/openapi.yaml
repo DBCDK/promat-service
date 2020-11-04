@@ -605,9 +605,9 @@ components:
           nullable: true
           description: Date when first added to a periods payroll. This value must not change hereafter
         data:
-          type: array
-          items:
-            $ref: '#/components/schemas/TaskField'
+          type: string
+          description: The task data
+          nullable: true
       required:
         - id
         - typeOfTask
@@ -616,23 +616,3 @@ components:
         - approved
         - payed
         - data
-
-    TaskField:
-      type: object
-      properties:
-        id:
-          type: integer
-          description: Task data id
-        typeOfField:
-          type: string
-          enum:
-            - 'NONE'  # Todo: define field types (aka. template fields)
-        data:
-          type: string
-          description: The fields value
-          nullable: true
-      required:
-        - id
-        - typeOfData
-        - data
-
