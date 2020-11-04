@@ -38,7 +38,13 @@ ALTER SEQUENCE cases_id_seq RESTART WITH 500000;
 -- Table holding tasks for cases
 CREATE TABLE task
 (
-    id              serial  PRIMARY KEY     NOT NULL
+    id              serial  PRIMARY KEY     NOT NULL,
+    typeOfTask      text                    NOT NULL,
+    created         date                    NOT NULL,
+    paycode         text                    NOT NULL,
+    approved        date,
+    payed           date,
+    data            text
 );
 
 CREATE TABLE casesubjects

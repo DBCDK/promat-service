@@ -4,12 +4,14 @@ import dk.dbc.promat.service.dto.Dto;
 import dk.dbc.promat.service.dto.RecordsListDto;
 import dk.dbc.promat.service.dto.ServiceErrorCode;
 import dk.dbc.promat.service.dto.ServiceErrorDto;
+import dk.dbc.promat.service.dto.TaskDto;
 import dk.dbc.promat.service.persistence.Case;
 import dk.dbc.promat.service.dto.CaseRequestDto;
 import dk.dbc.promat.service.persistence.CaseStatus;
 import dk.dbc.promat.service.persistence.PromatEntityManager;
 import dk.dbc.promat.service.persistence.Reviewer;
 import dk.dbc.promat.service.persistence.Subject;
+import dk.dbc.promat.service.persistence.Task;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -114,6 +116,17 @@ public class Cases {
             }
         }
 
+        // Create tasks if any is given
+        ArrayList<Task> tasks = new ArrayList<>();
+        if( dto.getTasks() != null ) {
+            for(TaskDto task : dto.getTasks()) {
+                tasks.add(new Task()
+                        .withPaycode(task.getPaycode())
+                        .withTypeOfTask(task.getTypeOfTask())
+                        .withCreated(LocalDate.now()));
+            }
+        }
+
         // Create case
         try {
             Case entity = new Case()
@@ -128,7 +141,7 @@ public class Cases {
             .withAssigned(dto.getAssigned() == null ? null : LocalDate.parse(dto.getAssigned()))
             .withStatus(dto.getStatus() == null ? CaseStatus.CREATED : dto.getStatus())
             .withMaterialType(dto.getMaterialType())
-            .withTasks(new ArrayList<>());
+            .withTasks(tasks);
 
             entityManager.persist(entity);
 

@@ -29,6 +29,8 @@ public class CaseRequestDto implements Dto {
 
     private MaterialType materialType;
 
+    private TaskDto[] tasks;
+
     public String getTitle() {
         return title;
     }
@@ -109,6 +111,14 @@ public class CaseRequestDto implements Dto {
         this.materialType = materialType;
     }
 
+    public TaskDto[] getTasks() {
+        return tasks;
+    }
+
+    public void setTasks(TaskDto[] tasks) {
+        this.tasks = tasks;
+    }
+
     public CaseRequestDto withTitle(String title) {
         this.title = title;
         return this;
@@ -157,6 +167,11 @@ public class CaseRequestDto implements Dto {
 
     public CaseRequestDto withMaterialType(MaterialType materialType) {
         this.materialType = materialType;
+        return this;
+    }
+
+    public CaseRequestDto withTasks(TaskDto[] tasks) {
+        this.tasks = tasks;
         return this;
     }
 

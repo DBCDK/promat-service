@@ -1,6 +1,6 @@
 package dk.dbc.promat.service.persistence;
 
-import javax.json.bind.annotation.JsonbDateFormat;
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Convert;
 import javax.persistence.Entity;
@@ -13,9 +13,7 @@ import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
-import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
-import javax.persistence.criteria.CriteriaBuilder;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Objects;
@@ -67,7 +65,7 @@ public class Case {
     @Enumerated(EnumType.STRING)
     private MaterialType materialType;
 
-    @OneToMany
+    @OneToMany(cascade = CascadeType.PERSIST)
     @JoinTable(
             name = "caseTasks",
             joinColumns = @JoinColumn(name = "case_id"),
