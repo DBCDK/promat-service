@@ -4,5 +4,8 @@
     "jdbc/promat": {
       "url": "${PROMAT_DB_URL}"
     }
+  },
+  "hazelcast": {
+    "clusterName": "${PROMAT_CLUSTER_NAME}"
   }
 }

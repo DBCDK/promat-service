@@ -12,11 +12,6 @@ import dk.dbc.httpclient.HttpClient;
 import dk.dbc.httpclient.HttpGet;
 import dk.dbc.promat.service.rest.JsonMapperProvider;
 import dk.dbc.promat.service.rest.SubjectsIT;
-import java.io.File;
-import java.net.URISyntaxException;
-import java.net.URL;
-import java.nio.charset.StandardCharsets;
-import javax.ws.rs.core.Response;
 import org.junit.jupiter.api.BeforeAll;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,8 +20,13 @@ import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.output.Slf4jLogConsumer;
 import org.testcontainers.containers.wait.strategy.Wait;
 
+import javax.ws.rs.core.Response;
+import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -56,6 +56,7 @@ public abstract class ContainerTest {
                         pg.getPort()))
                 .withEnv("OPENSEARCH_SERVICE_URL", "")
                 .withEnv("WORK_PRESENTATION_SERVICE_URL", "")
+                .withEnv("PROMAT_CLUSTER_NAME", "")
                 .withExposedPorts(8080)
                 .waitingFor(Wait.forHttp("/openapi"))
                 .withStartupTimeout(Duration.ofMinutes(2));
