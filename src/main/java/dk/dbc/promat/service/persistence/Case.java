@@ -65,7 +65,7 @@ public class Case {
     @Enumerated(EnumType.STRING)
     private MaterialType materialType;
 
-    @OneToMany(cascade = CascadeType.PERSIST)
+    @OneToMany(cascade = CascadeType.ALL)
     @JoinTable(
             name = "caseTasks",
             joinColumns = @JoinColumn(name = "case_id"),
