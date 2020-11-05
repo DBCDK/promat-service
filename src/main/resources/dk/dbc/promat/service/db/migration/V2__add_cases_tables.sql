@@ -43,7 +43,8 @@ CREATE TABLE task
     paycode         text                    NOT NULL,
     approved        date,
     payed           date,
-    data            text
+    data            text,
+    targetFausts    jsonb
 );
 
 CREATE TABLE casesubjects

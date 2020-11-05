@@ -258,7 +258,8 @@ public class CasesIT extends ContainerTest {
                 .withTasks(Arrays.asList(
                         new TaskDto()
                                 .withPaycode(Paycode.NONE)
-                                .withTypeOfTask(TaskType.NONE),
+                                .withTypeOfTask(TaskType.NONE)
+                                .withTargetFausts(Arrays.asList(new String[] {"04345678", "14345678"})),
                         new TaskDto()
                                 .withPaycode(Paycode.NONE)
                                 .withTypeOfTask(TaskType.NONE)
@@ -277,17 +278,30 @@ public class CasesIT extends ContainerTest {
         Case created = mapper.readValue(obj, Case.class);
         assertThat("has 2 tasks", created.getTasks().size(), is(2));
 
-        // Check the created tasks
+        // Check the first created task
         assertThat("task 1 type", created.getTasks().get(0).getTypeOfTask(), is(TaskType.NONE));
         assertThat("task 1 paycode", created.getTasks().get(0).getPaycode(), is(Paycode.NONE));
         assertThat("task 1 created", created.getTasks().get(0).getCreated(), is(LocalDate.now()));
         assertThat("task 1 approved", created.getTasks().get(0).getApproved(), is(IsNull.nullValue()));
         assertThat("task 1 payed", created.getTasks().get(0).getPayed(), is(IsNull.nullValue()));
+        assertThat("task 1 targetFausts", created.getTasks().get(0).getTargetFausts(), is(IsNull.notNullValue()));
+        assertThat("task 1 targetFausts size", created.getTasks().get(0).getTargetFausts().size(), is(2));
+        assertThat("task 1 targetFausts contains", created.getTasks().get(0).getTargetFausts()
+                        .stream().sorted().collect(Collectors.toList()).toString(),
+                is(Arrays.asList(new String [] {"04345678", "14345678"})
+                        .stream().sorted().collect(Collectors.toList()).toString()));
+        assertThat("related fausts contains", created.getRelatedFausts()
+                        .stream().sorted().collect(Collectors.toList()).toString(),
+                is(Arrays.asList(new String [] {"03345678", "04345678", "14345678"})
+                        .stream().sorted().collect(Collectors.toList()).toString()));
+
+        // Check the second created task
         assertThat("task 2 type", created.getTasks().get(1).getTypeOfTask(), is(TaskType.NONE));
         assertThat("task 2 paycode", created.getTasks().get(1).getPaycode(), is(Paycode.NONE));
         assertThat("task 2 created", created.getTasks().get(1).getCreated(), is(LocalDate.now()));
         assertThat("task 2 approved", created.getTasks().get(1).getApproved(), is(IsNull.nullValue()));
         assertThat("task 2 payed", created.getTasks().get(1).getPayed(), is(IsNull.nullValue()));
+        assertThat("task 2 targetFausts", created.getTasks().get(1).getTargetFausts(), is(IsNull.nullValue()));
 
         // Get the case we created
         HttpGet httpGet= new HttpGet(httpClient)

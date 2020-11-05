@@ -3,6 +3,7 @@ package dk.dbc.promat.service.dto;
 import dk.dbc.promat.service.persistence.Paycode;
 import dk.dbc.promat.service.persistence.TaskType;
 
+import java.util.List;
 import java.util.Objects;
 
 public class TaskDto {
@@ -10,6 +11,8 @@ public class TaskDto {
     private TaskType typeOfTask;
 
     private Paycode paycode;
+
+    private List<String> targetFausts;
 
     public TaskType getTypeOfTask() {
         return typeOfTask;
@@ -27,13 +30,26 @@ public class TaskDto {
         this.paycode = paycode;
     }
 
-    public TaskDto withTypeOfTask( TaskType typeOfTask) {
+    public List<String> getTargetFausts() {
+        return targetFausts;
+    }
+
+    public void setTargetFausts(List<String> targetFausts) {
+        this.targetFausts = targetFausts;
+    }
+
+    public TaskDto withTypeOfTask(TaskType typeOfTask) {
         this.typeOfTask = typeOfTask;
         return this;
     }
 
     public TaskDto withPaycode(Paycode paycode) {
         this.paycode = paycode;
+        return this;
+    }
+
+    public TaskDto withTargetFausts(List<String> targetFausts) {
+        this.targetFausts = targetFausts;
         return this;
     }
 

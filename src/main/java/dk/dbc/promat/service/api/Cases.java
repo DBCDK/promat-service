@@ -147,6 +147,10 @@ public class Cases {
             }
         }
 
+        // We may have to add more related faustnumbers when creating tasks
+        ArrayList<String> relatedFausts = new ArrayList<>();
+        relatedFausts.addAll(dto.getRelatedFausts() == null ? new ArrayList<>() : dto.getRelatedFausts());
+
         // Create tasks if any is given
         ArrayList<Task> tasks = new ArrayList<>();
         if( dto.getTasks() != null ) {
@@ -154,7 +158,14 @@ public class Cases {
                 tasks.add(new Task()
                         .withPaycode(task.getPaycode())
                         .withTypeOfTask(task.getTypeOfTask())
-                        .withCreated(LocalDate.now()));
+                        .withCreated(LocalDate.now())
+                        .withTargetFausts(task.getTargetFausts() == null ? null : task.getTargetFausts()));
+
+                for( String faust : (task.getTargetFausts() == null ? new ArrayList<String>() : task.getTargetFausts())) {
+                    if( !relatedFausts.contains(faust) ) {
+                        relatedFausts.add(faust);
+                    }
+                }
             }
         }
 
@@ -164,7 +175,7 @@ public class Cases {
             .withTitle(dto.getTitle())
             .withDetails(dto.getDetails() == null ? "" : dto.getDetails())
             .withPrimaryFaust(dto.getPrimaryFaust())
-            .withRelatedFausts(dto.getRelatedFausts() == null ? new ArrayList<>() : dto.getRelatedFausts())
+            .withRelatedFausts(relatedFausts)
             .withReviewer(reviewer)
             .withSubjects(subjects)
             .withCreated(LocalDate.now())

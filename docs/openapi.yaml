@@ -622,6 +622,13 @@ components:
           format: date
           nullable: true
           description: Date when first added to a periods payroll. This value must not change hereafter
+        targetFausts:
+          type: array
+          items:
+            type: string
+          nullable: true
+          minItems: 0
+          description: If data produced by this task only relates to some of the cases related faustnumbers. These numbers must be listed here
         data:
           type: string
           description: The task data

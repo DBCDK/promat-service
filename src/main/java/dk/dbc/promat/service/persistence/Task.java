@@ -1,10 +1,13 @@
 package dk.dbc.promat.service.persistence;
 
+import javax.persistence.Column;
+import javax.persistence.Convert;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Objects;
 
 @Entity
@@ -25,6 +28,10 @@ public class Task {
     private LocalDate payed;
 
     private String data;
+
+    @Column(columnDefinition = "jsonb")
+    @Convert(converter = JsonStringArrayConverter.class)
+    private List<String> targetFausts;
 
     public int getId() {
         return id;
@@ -82,6 +89,14 @@ public class Task {
         this.data = data;
     }
 
+    public List<String> getTargetFausts() {
+        return targetFausts;
+    }
+
+    public void setTargetFausts(List<String> targetFausts) {
+        this.targetFausts = targetFausts;
+    }
+
     public Task withId(int id) {
         this.id = id;
         return this;
@@ -118,6 +133,11 @@ public class Task {
         return this;
     }
 
+    public Task withTargetFausts(List<String> targetFausts) {
+        this.targetFausts = targetFausts;
+        return this;
+    }
+
     @Override
     public boolean equals(Object o) {
         if(this == o) return true;
@@ -129,11 +149,12 @@ public class Task {
                 paycode == task.paycode &&
                 Objects.equals(approved, task.approved) &&
                 Objects.equals(payed, task.payed) &&
-                Objects.equals(data, task.data);
+                Objects.equals(data, task.data) &&
+                Objects.equals(targetFausts, task.targetFausts);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, typeOfTask, created, paycode, approved, payed, data);
+        return Objects.hash(id, typeOfTask, created, paycode, approved, payed, data, targetFausts);
     }
 }
