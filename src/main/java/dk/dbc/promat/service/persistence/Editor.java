@@ -2,7 +2,6 @@ package dk.dbc.promat.service.persistence;
 
 import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
-import java.util.Objects;
 
 @Entity
 @DiscriminatorValue("EDITOR")
@@ -28,7 +27,7 @@ public class Editor extends PromatUser {
         if (!firstName.equals(editor.firstName)) return false;
         if (!lastName.equals(editor.lastName)) return false;
         if (!email.equals(editor.email)) return false;
-        return !Objects.equals(phone, editor.phone);
+        return phone != null ? phone.equals(editor.phone) : editor.phone == null;
     }
 
     @Override

@@ -1,6 +1,11 @@
 ALTER TABLE reviewer RENAME TO promatuser;
 ALTER TABLE promatuser ADD COLUMN role TEXT NOT NULL;
 ALTER TABLE promatuser ADD CONSTRAINT promatuser_role_constraint CHECK (role IN ('EDITOR', 'REVIEWER'));
+ALTER TABLE promatuser ALTER COLUMN address1 DROP NOT NULL;
+ALTER TABLE promatuser ALTER COLUMN zip DROP NOT NULL;
+ALTER TABLE promatuser ALTER COLUMN city DROP NOT NULL;
+ALTER TABLE promatuser ALTER COLUMN institution DROP NOT NULL;
+ALTER TABLE promatuser ALTER COLUMN paycode DROP NOT NULL;
 CREATE INDEX ON promatuser(role);
 ALTER TABLE reviewersubjects DROP CONSTRAINT reviewersubjects_subject_id_fkey;
 ALTER TABLE reviewersubjects ADD CONSTRAINT  reviewersubjects_subject_id_fkey FOREIGN KEY(subject_id) REFERENCES subject(id) ON DELETE CASCADE;
