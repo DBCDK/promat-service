@@ -6,8 +6,7 @@ BEGIN
             SELECT *
             FROM cases
             WHERE primaryFaust = faust
-              AND status <> 'CLOSED'
-              AND status <> 'DONE'
+              AND status NOT IN ('CLOSED', 'DONE')
         );
 END
 $$
