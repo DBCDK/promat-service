@@ -165,7 +165,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Case'
-        '204':
+        '404':
           description: Case could not be found
 
     post:
