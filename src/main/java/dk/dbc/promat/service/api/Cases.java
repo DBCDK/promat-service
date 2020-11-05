@@ -85,6 +85,21 @@ public class Cases {
             return Response.status(409).entity(err).build();
         }
 
+        // Check for acceptable status code
+        if( dto.getStatus() != null ) {
+            switch( dto.getStatus() ) {
+                case CREATED:  // Default status
+                case ASSIGNED: // A check is made later to make sure we can mark the case as assigned
+                    break;
+                default:
+                    ServiceErrorDto err = new ServiceErrorDto()
+                            .withCode(ServiceErrorCode.INVALID_STATE)
+                            .withCause("Invalid state")
+                            .withDetails(String.format("Case status {} is not allowed when creating a new case", dto.getStatus()));
+                    return Response.status(400).entity(err).build();
+            }
+        }
+
         // Map subject ids to existing subjects
         ArrayList<Subject> subjects = new ArrayList<>();
         if( dto.getSubjects() != null ) {
@@ -102,8 +117,12 @@ public class Cases {
             }
         }
 
-        // Map reviewer id to existing reviewer
+        // Map reviewer id to existing reviewer.
+        // If an reviewer has been assigned, then set or modify the status of the case and the assigned field.
+        // If no reviwer is given, check that the status is not ASSIGNED - that would be a mess
         Reviewer reviewer = null;
+        LocalDate assigned = dto.getAssigned() == null ? null : LocalDate.parse(dto.getAssigned());
+        CaseStatus status = dto.getStatus() == null ? CaseStatus.CREATED : dto.getStatus();
         if( dto.getReviewer() != null ) {
             reviewer = entityManager.find(Reviewer.class, dto.getReviewer());
             if(reviewer == null) {
@@ -112,6 +131,17 @@ public class Cases {
                         .withCode(ServiceErrorCode.INVALID_REQUEST)
                         .withCause("No such reviewer")
                         .withDetails(String.format("Field 'reviewer' contains id {} which does not exist", dto.getReviewer()));
+                return Response.status(400).entity(err).build();
+            }
+            assigned = LocalDate.now();
+            status = CaseStatus.ASSIGNED;
+        } else {
+            if( status.equals(CaseStatus.ASSIGNED) ) {
+                LOGGER.error("Attempt to set status ASSIGNED with no reviewer", dto.getReviewer());
+                ServiceErrorDto err = new ServiceErrorDto()
+                        .withCode(ServiceErrorCode.INVALID_STATE)
+                        .withCause("Invalid state")
+                        .withDetails("Case status ASSIGNED is not possible without a reviewer");
                 return Response.status(400).entity(err).build();
             }
         }
@@ -138,8 +168,8 @@ public class Cases {
             .withSubjects(subjects)
             .withCreated(LocalDate.now())
             .withDeadline(dto.getDeadline() == null ? null : LocalDate.parse(dto.getDeadline()))
-            .withAssigned(dto.getAssigned() == null ? null : LocalDate.parse(dto.getAssigned()))
-            .withStatus(dto.getStatus() == null ? CaseStatus.CREATED : dto.getStatus())
+            .withAssigned(assigned)
+            .withStatus(status)
             .withMaterialType(dto.getMaterialType())
             .withTasks(tasks);
 

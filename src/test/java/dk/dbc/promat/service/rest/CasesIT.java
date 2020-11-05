@@ -157,7 +157,7 @@ public class CasesIT extends ContainerTest {
                 .withAssigned("2020-04-11")
                 .withDeadline("2020-04-12")
                 .withRelatedFausts(new String[] {"42345678", "52345678"})
-                .withStatus(CaseStatus.ASSIGNED);
+                .withStatus(CaseStatus.CREATED);
 
         HttpPost httpPost = new HttpPost(httpClient)
                 .withBaseUrl(promatServiceBaseUrl)
@@ -183,7 +183,7 @@ public class CasesIT extends ContainerTest {
                 .collect(Collectors.toList())
                 .equals(Arrays.stream(new String[]{"42345678", "52345678"})
                         .collect(Collectors.toList())), is(true));
-        assertThat(created.getStatus(), is(CaseStatus.ASSIGNED));
+        assertThat(created.getStatus(), is(CaseStatus.CREATED));
     }
 
     @Test
@@ -246,8 +246,8 @@ public class CasesIT extends ContainerTest {
         // Create case
         CaseRequestDto dto = new CaseRequestDto()
                 .withPrimaryFaust("92345678")
-                .withTitle("Title for 62345678")
-                .withDetails("Details for 62345678")
+                .withTitle("Title for 92345678")
+                .withDetails("Details for 92345678")
                 .withMaterialType(MaterialType.BOOK)
                 .withReviewer(1)
                 .withSubjects(new int[] {3, 4})
@@ -301,5 +301,53 @@ public class CasesIT extends ContainerTest {
         obj = response.readEntity(String.class);
         Case fetched = mapper.readValue(obj, Case.class);
         assertThat("fetched case is same as created", created.equals(fetched), is(true));
+    }
+
+    @Test
+    public void testCreateCaseWithInvalidStatus() {
+
+        // Create case with status ASSIGNED but no reviewer given
+        CaseRequestDto dto = new CaseRequestDto()
+                .withPrimaryFaust("05345678")
+                .withTitle("Title for 05345678")
+                .withDetails("Details for 05345678")
+                .withMaterialType(MaterialType.BOOK)
+                .withAssigned("2020-04-11")
+                .withDeadline("2020-04-12")
+                .withRelatedFausts(new String[] {"06345678", "07345678"})
+                .withStatus(CaseStatus.ASSIGNED);
+
+        HttpPost httpPost = new HttpPost(httpClient)
+                .withBaseUrl(promatServiceBaseUrl)
+                .withPathElements("v1", "api", "cases")
+                .withData(dto, "application/json");
+
+        Response response = httpClient.execute(httpPost);
+        assertThat("status code", response.getStatus(), is(400));
+
+        // Change status to DONE (which is even worse)
+        dto.setStatus(CaseStatus.DONE);
+
+        httpPost = new HttpPost(httpClient)
+                .withBaseUrl(promatServiceBaseUrl)
+                .withPathElements("v1", "api", "cases")
+                .withData(dto, "application/json");
+
+        response = httpClient.execute(httpPost);
+        assertThat("status code", response.getStatus(), is(400));
+
+        // Get frustrated and remove the status
+        dto.setStatus(null);
+
+        httpPost = new HttpPost(httpClient)
+                .withBaseUrl(promatServiceBaseUrl)
+                .withPathElements("v1", "api", "cases")
+                .withData(dto, "application/json");
+
+        response = httpClient.execute(httpPost);
+        assertThat("status code", response.getStatus(), is(201));
+
+        // Tests for valid state CREATED and ASSIGNED with an reviewer set is
+        // covered in previous tests
     }
 }
