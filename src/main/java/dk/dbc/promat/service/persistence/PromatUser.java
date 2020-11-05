@@ -29,6 +29,8 @@ public abstract class PromatUser {
     @Convert(converter = RoleConverter.class)
     protected Role role;
 
+    boolean active;
+
     protected String firstName;
     protected String lastName;
     protected String email;
@@ -40,6 +42,14 @@ public abstract class PromatUser {
 
     public void setId(Integer id) {
         this.id = id;
+    }
+
+    public boolean isActive() {
+        return active;
+    }
+
+    public void setActive(boolean active) {
+        this.active = active;
     }
 
     public String getFirstName() {

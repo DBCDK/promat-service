@@ -1,4 +1,5 @@
 ALTER TABLE reviewer RENAME TO promatuser;
+ALTER TABLE promatuser ADD COLUMN active BOOLEAN DEFAULT TRUE;
 ALTER TABLE promatuser ADD COLUMN role TEXT NOT NULL;
 ALTER TABLE promatuser ADD CONSTRAINT promatuser_role_constraint CHECK (role IN ('EDITOR', 'REVIEWER'));
 ALTER TABLE promatuser ALTER COLUMN address1 DROP NOT NULL;

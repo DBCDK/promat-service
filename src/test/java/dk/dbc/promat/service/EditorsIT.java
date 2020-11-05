@@ -19,6 +19,7 @@ public class EditorsIT extends ContainerTest {
     void getEditor() {
         final Editor expectedEditor = new Editor();
         expectedEditor.setId(10);
+        expectedEditor.setActive(true);
         expectedEditor.setFirstName("Ed");
         expectedEditor.setLastName("Itor");
         expectedEditor.setEmail("ed.itor@dbc.dk");

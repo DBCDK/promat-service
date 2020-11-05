@@ -98,6 +98,11 @@ public class Reviewer extends PromatUser {
         return this;
     }
 
+    public Reviewer withActive(boolean active) {
+        this.active = active;
+        return this;
+    }
+
     public Reviewer withFirstName(String firstName) {
         this.firstName = firstName;
         return this;
@@ -151,6 +156,7 @@ public class Reviewer extends PromatUser {
         Reviewer reviewer = (Reviewer) o;
 
         if (!id.equals(reviewer.id)) return false;
+        if (active != reviewer.active) return false;
         if (!firstName.equals(reviewer.firstName)) return false;
         if (!lastName.equals(reviewer.lastName)) return false;
         if (!email.equals(reviewer.email)) return false;
@@ -167,6 +173,7 @@ public class Reviewer extends PromatUser {
     @Override
     public int hashCode() {
         int result = id.hashCode();
+        result = 31 * result + (active ? 1 : 0);
         result = 31 * result + firstName.hashCode();
         result = 31 * result + lastName.hashCode();
         result = 31 * result + email.hashCode();
@@ -184,6 +191,7 @@ public class Reviewer extends PromatUser {
     public String toString() {
         return "Reviewer{" +
                 "id=" + id +
+                ", active=" + active +
                 ", firstName='" + firstName + '\'' +
                 ", lastName='" + lastName + '\'' +
                 ", email='" + email + '\'' +
