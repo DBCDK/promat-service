@@ -5,6 +5,7 @@ import dk.dbc.promat.service.persistence.MaterialType;
 import dk.dbc.promat.service.persistence.Subject;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Objects;
 
 public class CaseRequestDto implements Dto {
@@ -15,11 +16,11 @@ public class CaseRequestDto implements Dto {
 
     private String primaryFaust;
 
-    private String[] relatedFausts;
+    private List<String> relatedFausts;
 
     private Integer reviewer = null;
 
-    private int[] subjects;
+    private List<Integer> subjects;
 
     private String deadline;
 
@@ -29,7 +30,7 @@ public class CaseRequestDto implements Dto {
 
     private MaterialType materialType;
 
-    private TaskDto[] tasks;
+    private List<TaskDto> tasks;
 
     public String getTitle() {
         return title;
@@ -55,11 +56,11 @@ public class CaseRequestDto implements Dto {
         this.primaryFaust = primaryFaust;
     }
 
-    public String[] getRelatedFausts() {
+    public List<String> getRelatedFausts() {
         return relatedFausts;
     }
 
-    public void setRelatedFausts(String[] relatedFausts) {
+    public void setRelatedFausts(List<String> relatedFausts) {
         this.relatedFausts = relatedFausts;
     }
 
@@ -71,11 +72,11 @@ public class CaseRequestDto implements Dto {
         this.reviewer = reviewer;
     }
 
-    public int[] getSubjects() {
+    public List<Integer> getSubjects() {
         return subjects;
     }
 
-    public void setSubjects(int[] subjects) {
+    public void setSubjects(List<Integer> subjects) {
         this.subjects = subjects;
     }
 
@@ -111,11 +112,11 @@ public class CaseRequestDto implements Dto {
         this.materialType = materialType;
     }
 
-    public TaskDto[] getTasks() {
+    public List<TaskDto> getTasks() {
         return tasks;
     }
 
-    public void setTasks(TaskDto[] tasks) {
+    public void setTasks(List<TaskDto> tasks) {
         this.tasks = tasks;
     }
 
@@ -134,7 +135,7 @@ public class CaseRequestDto implements Dto {
         return this;
     }
 
-    public CaseRequestDto withRelatedFausts(String[] relatedFausts)
+    public CaseRequestDto withRelatedFausts(List<String> relatedFausts)
     {
         this.relatedFausts = relatedFausts;
         return this;
@@ -145,7 +146,7 @@ public class CaseRequestDto implements Dto {
         return this;
     }
 
-    public CaseRequestDto withSubjects(int[] subjects) {
+    public CaseRequestDto withSubjects(List<Integer> subjects) {
         this.subjects = subjects;
         return this;
     }
@@ -170,7 +171,7 @@ public class CaseRequestDto implements Dto {
         return this;
     }
 
-    public CaseRequestDto withTasks(TaskDto[] tasks) {
+    public CaseRequestDto withTasks(List<TaskDto> tasks) {
         this.tasks = tasks;
         return this;
     }
@@ -181,13 +182,14 @@ public class CaseRequestDto implements Dto {
                 "title='" + title + '\'' +
                 ", details='" + details + '\'' +
                 ", primaryFaust='" + primaryFaust + '\'' +
-                ", relatedFausts=" + Arrays.toString(relatedFausts) +
+                ", relatedFausts=" + relatedFausts +
                 ", reviewer=" + reviewer +
-                ", subjects=" + Arrays.toString(subjects) +
+                ", subjects=" + subjects +
                 ", deadline='" + deadline + '\'' +
                 ", assigned='" + assigned + '\'' +
                 ", status=" + status +
                 ", materialType=" + materialType +
+                ", tasks=" + tasks +
                 '}';
     }
 
@@ -196,23 +198,22 @@ public class CaseRequestDto implements Dto {
         if(this == o) return true;
         if(o == null || getClass() != o.getClass()) return false;
         CaseRequestDto that = (CaseRequestDto) o;
-        return reviewer == that.reviewer &&
-                Objects.equals(title, that.title) &&
+        return title.equals(that.title) &&
                 Objects.equals(details, that.details) &&
-                Objects.equals(primaryFaust, that.primaryFaust) &&
-                Arrays.equals(relatedFausts, that.relatedFausts) &&
-                Arrays.equals(subjects, that.subjects) &&
+                primaryFaust.equals(that.primaryFaust) &&
+                Objects.equals(relatedFausts, that.relatedFausts) &&
+                Objects.equals(reviewer, that.reviewer) &&
+                Objects.equals(subjects, that.subjects) &&
                 Objects.equals(deadline, that.deadline) &&
                 Objects.equals(assigned, that.assigned) &&
                 status == that.status &&
-                materialType == that.materialType;
+                materialType == that.materialType &&
+                Objects.equals(tasks, that.tasks);
     }
 
     @Override
     public int hashCode() {
-        int result = Objects.hash(title, details, primaryFaust, reviewer, deadline, assigned, status, materialType);
-        result = 31 * result + Arrays.hashCode(relatedFausts);
-        result = 31 * result + Arrays.hashCode(subjects);
+        int result = Objects.hash(title, details, primaryFaust, relatedFausts, reviewer, subjects, deadline, assigned, status, materialType, tasks);
         return result;
     }
 }

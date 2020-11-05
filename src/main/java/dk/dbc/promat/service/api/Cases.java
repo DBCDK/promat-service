@@ -30,6 +30,7 @@ import javax.ws.rs.core.Response;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 @Stateless
 @Path("cases")
@@ -163,7 +164,7 @@ public class Cases {
             .withTitle(dto.getTitle())
             .withDetails(dto.getDetails() == null ? "" : dto.getDetails())
             .withPrimaryFaust(dto.getPrimaryFaust())
-            .withRelatedFausts(Arrays.asList(dto.getRelatedFausts() == null ? new String[0] : dto.getRelatedFausts()))
+            .withRelatedFausts(dto.getRelatedFausts() == null ? new ArrayList<>() : dto.getRelatedFausts())
             .withReviewer(reviewer)
             .withSubjects(subjects)
             .withCreated(LocalDate.now())

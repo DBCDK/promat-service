@@ -116,7 +116,7 @@ public class CasesIT extends ContainerTest {
                 .withTitle("Title for 22345678")
                 .withMaterialType(MaterialType.BOOK)
                 .withReviewer(1)
-                .withSubjects(new int[] {3, 4});
+                .withSubjects(Arrays.asList(3, 4));
 
         HttpPost httpPost = new HttpPost(httpClient)
                 .withBaseUrl(promatServiceBaseUrl)
@@ -156,7 +156,7 @@ public class CasesIT extends ContainerTest {
                 .withMaterialType(MaterialType.BOOK)
                 .withAssigned("2020-04-11")
                 .withDeadline("2020-04-12")
-                .withRelatedFausts(new String[] {"42345678", "52345678"})
+                .withRelatedFausts(Arrays.asList("42345678", "52345678"))
                 .withStatus(CaseStatus.CREATED);
 
         HttpPost httpPost = new HttpPost(httpClient)
@@ -196,10 +196,10 @@ public class CasesIT extends ContainerTest {
                 .withDetails("Details for 62345678")
                 .withMaterialType(MaterialType.BOOK)
                 .withReviewer(1)
-                .withSubjects(new int[] {3, 4})
+                .withSubjects(Arrays.asList(3, 4))
                 .withAssigned("2020-04-11")
                 .withDeadline("2020-04-12")
-                .withRelatedFausts(new String[] {"72345678", "82345678"})
+                .withRelatedFausts(Arrays.asList("72345678", "82345678"))
                 .withStatus(CaseStatus.ASSIGNED);
 
         HttpPost httpPost = new HttpPost(httpClient)
@@ -250,19 +250,19 @@ public class CasesIT extends ContainerTest {
                 .withDetails("Details for 92345678")
                 .withMaterialType(MaterialType.BOOK)
                 .withReviewer(1)
-                .withSubjects(new int[] {3, 4})
+                .withSubjects(Arrays.asList(3, 4))
                 .withAssigned("2020-04-11")
                 .withDeadline("2020-04-12")
-                .withRelatedFausts(new String[] {"03345678", "04345678"})
+                .withRelatedFausts(Arrays.asList("03345678", "04345678"))
                 .withStatus(CaseStatus.ASSIGNED)
-                .withTasks(new TaskDto[] {
+                .withTasks(Arrays.asList(
                         new TaskDto()
                                 .withPaycode(Paycode.NONE)
                                 .withTypeOfTask(TaskType.NONE),
                         new TaskDto()
                                 .withPaycode(Paycode.NONE)
                                 .withTypeOfTask(TaskType.NONE)
-                });
+                ));
 
         HttpPost httpPost = new HttpPost(httpClient)
                 .withBaseUrl(promatServiceBaseUrl)
@@ -314,7 +314,7 @@ public class CasesIT extends ContainerTest {
                 .withMaterialType(MaterialType.BOOK)
                 .withAssigned("2020-04-11")
                 .withDeadline("2020-04-12")
-                .withRelatedFausts(new String[] {"06345678", "07345678"})
+                .withRelatedFausts(Arrays.asList("06345678", "07345678"))
                 .withStatus(CaseStatus.ASSIGNED);
 
         HttpPost httpPost = new HttpPost(httpClient)
