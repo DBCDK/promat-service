@@ -161,9 +161,11 @@ public class Cases {
                         .withCreated(LocalDate.now())
                         .withTargetFausts(task.getTargetFausts() == null ? null : task.getTargetFausts()));
 
-                for( String faust : (task.getTargetFausts() == null ? new ArrayList<String>() : task.getTargetFausts())) {
-                    if( !relatedFausts.contains(faust) ) {
-                        relatedFausts.add(faust);
+                if( task.getTargetFausts() != null ) {
+                    for(String faust : task.getTargetFausts() ) {
+                        if(!relatedFausts.contains(faust)) {
+                            relatedFausts.add(faust);
+                        }
                     }
                 }
             }
