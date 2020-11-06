@@ -258,11 +258,11 @@ public class CasesIT extends ContainerTest {
                 .withTasks(Arrays.asList(
                         new TaskDto()
                                 .withPaycode(Paycode.NONE)
-                                .withTypeOfTask(TaskType.NONE)
+                                .withTypeOfTask(TaskType.ABOUT)
                                 .withTargetFausts(Arrays.asList(new String[] {"04345678", "14345678"})),
                         new TaskDto()
                                 .withPaycode(Paycode.NONE)
-                                .withTypeOfTask(TaskType.NONE)
+                                .withTypeOfTask(TaskType.BKM)
                 ));
 
         HttpPost httpPost = new HttpPost(httpClient)
@@ -279,7 +279,7 @@ public class CasesIT extends ContainerTest {
         assertThat("has 2 tasks", created.getTasks().size(), is(2));
 
         // Check the first created task
-        assertThat("task 1 type", created.getTasks().get(0).getTypeOfTask(), is(TaskType.NONE));
+        assertThat("task 1 type", created.getTasks().get(0).getTypeOfTask(), is(TaskType.ABOUT));
         assertThat("task 1 paycode", created.getTasks().get(0).getPaycode(), is(Paycode.NONE));
         assertThat("task 1 created", created.getTasks().get(0).getCreated(), is(LocalDate.now()));
         assertThat("task 1 approved", created.getTasks().get(0).getApproved(), is(IsNull.nullValue()));
@@ -296,7 +296,7 @@ public class CasesIT extends ContainerTest {
                         .stream().sorted().collect(Collectors.toList()).toString()));
 
         // Check the second created task
-        assertThat("task 2 type", created.getTasks().get(1).getTypeOfTask(), is(TaskType.NONE));
+        assertThat("task 2 type", created.getTasks().get(1).getTypeOfTask(), is(TaskType.BKM));
         assertThat("task 2 paycode", created.getTasks().get(1).getPaycode(), is(Paycode.NONE));
         assertThat("task 2 created", created.getTasks().get(1).getCreated(), is(LocalDate.now()));
         assertThat("task 2 approved", created.getTasks().get(1).getApproved(), is(IsNull.nullValue()));

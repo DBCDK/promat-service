@@ -599,10 +599,7 @@ components:
           type: integer
           description: Task id
         typeOfTask:
-          type: string
-          enum:
-            - 'NONE'  # Todo: define needed task types
-          description: Type of task
+          $ref: '#/components/schemas/TaskType'
         created:
           type: string
           format: date
@@ -636,3 +633,23 @@ components:
       required:
         - typeOfTask
         - paycode
+
+    TaskType:
+      type: string
+      enum:
+        - 'BKM'
+        - 'TOPICS'
+        - 'AGE'
+        - 'LEVEL_TARGET'
+        - 'METAKOMPAS'
+        - 'BUGGI'
+        - 'ABOUT'
+      description: |
+        Enum describing the type of task
+        * BKM = Decide if this material is relevant for libraries
+        * TOPICS = One or more topics (emneord)
+        * AGE = Relevant agegroup
+        * LEVEL_TARGET = Lexical level and/or target audience
+        * METAKOMPAS = Special topics for Metakompasset
+        * BUGGI = Special topics for Buggi
+        * ABOUT = Short note to be added to records with targeted faustnumbers
