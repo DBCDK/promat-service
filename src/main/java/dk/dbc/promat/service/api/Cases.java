@@ -73,17 +73,34 @@ public class Cases {
             return Response.status(400).entity(err).build();
         }
 
-        // Check that no existing case exists with the same primary faustnumber
-        // and a state other than CLOSED or DONE
+        // Check that no existing case exists with the same primary or related faustnumber
+        // as the given primary faustnumber and a state other than CLOSED or DONE
         Query q = entityManager.createNativeQuery("SELECT CheckNoOpenCaseWithFaust(?)");
         q.setParameter(1, dto.getPrimaryFaust());
         if((boolean) q.getSingleResult() == false) {
-            LOGGER.error("Case with primaryFaust {} and state <> CLOSED|DONE exists", dto.getPrimaryFaust());
+            LOGGER.error("Case with primary or related Faust {} and state <> CLOSED|DONE exists", dto.getPrimaryFaust());
             ServiceErrorDto err = new ServiceErrorDto()
                     .withCode(ServiceErrorCode.CASE_EXISTS)
                     .withCause("Case exists")
-                    .withDetails(String.format("Case with primary faust {} and status not DONE or CLOSED exists", dto.getPrimaryFaust()));
+                    .withDetails(String.format("Case with primary or related faust {} and status not DONE or CLOSED exists", dto.getPrimaryFaust()));
             return Response.status(409).entity(err).build();
+        }
+
+        // Check that no existing case exists with the same primary or related faustnumber
+        // as the given relasted fasutnumbers and a state other than CLOSED or DONE
+        if(dto.getRelatedFausts() != null && dto.getRelatedFausts().size() > 0) {
+            q = entityManager.createNativeQuery("SELECT CheckNoOpenCaseWithFaust(?)");
+            for(String faust : dto.getRelatedFausts()) {
+                q.setParameter(1, faust);
+                if((boolean) q.getSingleResult() == false) {
+                    LOGGER.error("Case with primary or related {} and state <> CLOSED|DONE exists", faust);
+                    ServiceErrorDto err = new ServiceErrorDto()
+                            .withCode(ServiceErrorCode.CASE_EXISTS)
+                            .withCause("Case exists")
+                            .withDetails(String.format("Case with primary or related faust {} and status not DONE or CLOSED exists", dto.getPrimaryFaust()));
+                    return Response.status(409).entity(err).build();
+                }
+            }
         }
 
         // Check for acceptable status code

@@ -76,6 +76,78 @@ public class CasesIT extends ContainerTest {
     }
 
     @Test
+    public void testCreateCaseForExistingPrimaryFaust() {
+
+        // First case
+        CaseRequestDto dto = new CaseRequestDto()
+                .withPrimaryFaust("08345678")
+                .withRelatedFausts(Arrays.asList(new String[] {"09345678", "00145678"}))
+                .withTitle("Title for 06345678")
+                .withMaterialType(MaterialType.BOOK);
+
+        HttpPost httpPost = new HttpPost(httpClient)
+                .withBaseUrl(promatServiceBaseUrl)
+                .withPathElements("v1", "api", "cases")
+                .withData(dto, "application/json");
+
+        Response response = httpClient.execute(httpPost);
+        assertThat("status code", response.getStatus(), is(201));
+
+        // New case with primary faust 08345678 (exists as primary faust)
+        dto.setTitle("New title for 08345678");
+        dto.setMaterialType(MaterialType.MOVIE);
+
+        httpPost = new HttpPost(httpClient)
+                .withBaseUrl(promatServiceBaseUrl)
+                .withPathElements("v1", "api", "cases")
+                .withData(dto, "application/json");
+
+        response = httpClient.execute(httpPost);
+        assertThat("status code", response.getStatus(), is(409));
+
+        // New case with primary faust 07345678 (exists as related faust)
+        dto.setPrimaryFaust("09345678");
+        dto.setTitle("New title for 09345678");
+        dto.setMaterialType(MaterialType.MOVIE);
+
+        httpPost = new HttpPost(httpClient)
+                .withBaseUrl(promatServiceBaseUrl)
+                .withPathElements("v1", "api", "cases")
+                .withData(dto, "application/json");
+
+        response = httpClient.execute(httpPost);
+        assertThat("status code", response.getStatus(), is(409));
+
+        // New case with primary faust 00245678 and related faust 00145678 (related faust exists)
+        dto.setPrimaryFaust("00245678");
+        dto.setTitle("New title for 00245678");
+        dto.setRelatedFausts(Arrays.asList(new String[] {"00145678"}));
+        dto.setMaterialType(MaterialType.MOVIE);
+
+        httpPost = new HttpPost(httpClient)
+                .withBaseUrl(promatServiceBaseUrl)
+                .withPathElements("v1", "api", "cases")
+                .withData(dto, "application/json");
+
+        response = httpClient.execute(httpPost);
+        assertThat("status code", response.getStatus(), is(409));
+
+        // New case with primary faust 00245678 and related faust 00345678 (all is good)
+        dto.setPrimaryFaust("00245678");
+        dto.setTitle("New title for 00245678");
+        dto.setRelatedFausts(Arrays.asList(new String[] {"00345678"}));
+        dto.setMaterialType(MaterialType.MOVIE);
+
+        httpPost = new HttpPost(httpClient)
+                .withBaseUrl(promatServiceBaseUrl)
+                .withPathElements("v1", "api", "cases")
+                .withData(dto, "application/json");
+
+        response = httpClient.execute(httpPost);
+        assertThat("status code", response.getStatus(), is(201));
+    }
+
+    @Test
     public void testCreateCaseForExistingFaust() {
 
         // First case with faust 12345678

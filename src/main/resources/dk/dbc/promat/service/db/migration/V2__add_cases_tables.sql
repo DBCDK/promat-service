@@ -3,11 +3,10 @@ CREATE OR REPLACE FUNCTION CheckNoOpenCaseWithFaust(
     RETURNS bool AS $$
 BEGIN
     RETURN NOT EXISTS (
-            SELECT *
-            FROM cases
-            WHERE primaryFaust = faust
-              AND status NOT IN ('CLOSED', 'DONE')
-        );
+        SELECT *
+          FROM cases
+         WHERE (primaryFaust = faust OR relatedFausts ? faust)
+           AND status NOT IN ('CLOSED', 'DONE'));
 END
 $$
 LANGUAGE plpgsql;
