@@ -12,7 +12,13 @@ import dk.dbc.httpclient.HttpClient;
 import dk.dbc.httpclient.HttpGet;
 import dk.dbc.promat.service.rest.JsonMapperProvider;
 import dk.dbc.promat.service.rest.SubjectsIT;
+import java.util.HashMap;
+import java.util.Map;
+import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
+import javax.persistence.Persistence;
 import org.junit.jupiter.api.BeforeAll;
+import org.postgresql.ds.PGSimpleDataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.Testcontainers;
@@ -32,6 +38,11 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.time.Duration;
 
+import static org.eclipse.persistence.config.PersistenceUnitProperties.JDBC_DRIVER;
+import static org.eclipse.persistence.config.PersistenceUnitProperties.JDBC_PASSWORD;
+import static org.eclipse.persistence.config.PersistenceUnitProperties.JDBC_URL;
+import static org.eclipse.persistence.config.PersistenceUnitProperties.JDBC_USER;
+
 public abstract class ContainerTest {
     private static final Logger LOGGER = LoggerFactory.getLogger(ContainerTest.class);
     private static boolean setupDone;
@@ -46,6 +57,7 @@ public abstract class ContainerTest {
     protected static final GenericContainer promatServiceContainer;
     protected static final String promatServiceBaseUrl;
     protected static final HttpClient httpClient;
+    protected static EntityManager entityManager;
 
     static {
         promatServiceContainer = new GenericContainer("docker-io.dbc.dk/promat-service:devel")
@@ -57,6 +69,9 @@ public abstract class ContainerTest {
                 .withEnv("OPENSEARCH_SERVICE_URL", "")
                 .withEnv("WORK_PRESENTATION_SERVICE_URL", "")
                 .withEnv("PROMAT_CLUSTER_NAME", "")
+                .withEnv("MAIL_HOST", "mailhost")
+                .withEnv("MAIL_USER", "mail.user")
+                .withEnv("MAIL_FROM", "some@address.dk")
                 .withExposedPorts(8080)
                 .waitingFor(Wait.forHttp("/openapi"))
                 .withStartupTimeout(Duration.ofMinutes(2));
@@ -73,10 +88,33 @@ public abstract class ContainerTest {
             Connection connection = connectToPromatDB();
             executeScript(connection, SubjectsIT.class.getResource("/dk/dbc/promat/service/db/subjects/subjectsdump.sql"));
             executeScript(connection, SubjectsIT.class.getResource("/dk/dbc/promat/service/db/subjects/reviewersdump.sql"));
+            entityManager = createEntityManager(getDataSource(),
+                    "promatITPU");
             setupDone = true;
         } else {
             LOGGER.info("Database populate already done.");
         }
+    }
+
+    private static EntityManager createEntityManager(
+            PGSimpleDataSource dataSource, String persistenceUnitName) {
+        Map<String, String> entityManagerProperties = new HashMap<>();
+        entityManagerProperties.put(JDBC_USER, dataSource.getUser());
+        entityManagerProperties.put(JDBC_PASSWORD, dataSource.getPassword());
+        entityManagerProperties.put(JDBC_URL, dataSource.getUrl());
+        entityManagerProperties.put(JDBC_DRIVER, "org.postgresql.Driver");
+        entityManagerProperties.put("eclipselink.logging.level", "FINE");
+        EntityManagerFactory factory = Persistence.createEntityManagerFactory(persistenceUnitName,
+                entityManagerProperties);
+        return factory.createEntityManager(entityManagerProperties);
+    }
+
+    private static PGSimpleDataSource getDataSource() {
+        final PGSimpleDataSource datasource = new PGSimpleDataSource();
+        datasource.setURL( pg.getJdbcUrl("postgres", "postgres"));
+        datasource.setUser("postgres");
+        datasource.setPassword("");
+        return datasource;
     }
 
     private static EmbeddedPostgres pgStart() {

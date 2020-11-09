@@ -16,4 +16,10 @@
       <property name="eclipselink.cache.coordination.channel" value="promatPUChannel"/>
     </properties>
   </persistence-unit>
+  <persistence-unit name="promatITPU" transaction-type="RESOURCE_LOCAL">
+    <class>dk.dbc.promat.service.persistence.Notification</class>
+    <properties>
+      <property name="javax.persistence.schema-generation.database.action" value="none"/>
+    </properties>
+  </persistence-unit>
 </persistence>
