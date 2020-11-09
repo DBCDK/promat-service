@@ -9,6 +9,7 @@ import java.util.Properties;
 import javax.mail.Message;
 import javax.mail.MessagingException;
 import javax.mail.Session;
+import javax.persistence.TypedQuery;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.jvnet.mock_javamail.Mailbox;
@@ -33,34 +34,8 @@ public class ScheduledNotificationSenderIT extends ContainerTest {
     }
 
     @Test
-    public void test_that_notifications_are_popped_and_sent() throws MessagingException {
-        entityManager.getTransaction().begin();
-        List<Notification> notifications = List.of(
-                new Notification()
-                        .withToAddress("test1@test.dk")
-                        .withSubject("test1")
-                        .withBodyText("<b> test1 </b>")
-                        .withStatus(NotificationStatus.PENDING),
-
-                new Notification()
-                        .withToAddress("test2@test.dk")
-                        .withSubject("test2")
-                        .withBodyText("<b> test2 </b>")
-                        .withStatus(NotificationStatus.ERROR),
-
-                new Notification()
-                        .withToAddress("test3@test.dk")
-                        .withSubject("test3")
-                        .withBodyText("<b> test3 </b>")
-                        .withStatus(NotificationStatus.PENDING));
-
-        for (Notification notification: notifications) {
-            entityManager.persist(notification);
-        }
-
-        entityManager.getTransaction().commit();
-
-        ScheduledNotificationSender scheduledNotificationSender = new ScheduledNotificationSender();
+    public void test_that_notifications_are_popped_and_sent() throws MessagingException, InterruptedException {
+            ScheduledNotificationSender scheduledNotificationSender = new ScheduledNotificationSender();
         scheduledNotificationSender.entityManager = entityManager;
         scheduledNotificationSender.mailManager = mailManager;
         scheduledNotificationSender.processNotifications();

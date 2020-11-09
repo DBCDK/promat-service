@@ -10,6 +10,7 @@ import com.opentable.db.postgres.embedded.EmbeddedPostgres;
 import dk.dbc.commons.jdbc.util.JDBCUtil;
 import dk.dbc.httpclient.HttpClient;
 import dk.dbc.httpclient.HttpGet;
+import dk.dbc.promat.service.batch.ScheduledNotificationSenderIT;
 import dk.dbc.promat.service.rest.JsonMapperProvider;
 import dk.dbc.promat.service.rest.SubjectsIT;
 import java.util.HashMap;
@@ -79,6 +80,8 @@ public abstract class ContainerTest {
         promatServiceBaseUrl = "http://" + promatServiceContainer.getContainerIpAddress() +
                 ":" + promatServiceContainer.getMappedPort(8080);
         httpClient = HttpClient.create(HttpClient.newClient());
+        LOGGER.info("Postres url is:{}", String.format("postgres:@host.testcontainers.internal:%s/postgres",
+                pg.getPort()));
     }
 
     @BeforeAll
@@ -88,6 +91,7 @@ public abstract class ContainerTest {
             Connection connection = connectToPromatDB();
             executeScript(connection, SubjectsIT.class.getResource("/dk/dbc/promat/service/db/subjects/subjectsdump.sql"));
             executeScript(connection, SubjectsIT.class.getResource("/dk/dbc/promat/service/db/subjects/reviewersdump.sql"));
+            executeScript(connection, ScheduledNotificationSenderIT.class.getResource("/dk/dbc/promat/service/db/notification/notification.sql"));
             entityManager = createEntityManager(getDataSource(),
                     "promatITPU");
             setupDone = true;
