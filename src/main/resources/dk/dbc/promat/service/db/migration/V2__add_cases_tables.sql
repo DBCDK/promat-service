@@ -30,6 +30,9 @@ CREATE TABLE cases
     CHECK ( CheckNoOpenCaseWithFaust(primaryFaust) )
 );
 
+CREATE INDEX ON cases (primaryFaust);
+CREATE INDEX ON cases USING GIN (relatedFausts);
+
 -- Set starting point for new case id's
 ALTER SEQUENCE cases_id_seq RESTART WITH 500000;
 
