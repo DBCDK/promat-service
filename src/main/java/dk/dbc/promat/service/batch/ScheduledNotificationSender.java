@@ -9,6 +9,8 @@ import dk.dbc.promat.service.persistence.PromatEntityManager;
 import javax.ejb.Schedule;
 import javax.ejb.Singleton;
 import javax.ejb.Startup;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
 import javax.inject.Inject;
 import javax.mail.MessagingException;
 import javax.persistence.EntityManager;
@@ -20,8 +22,6 @@ import org.slf4j.LoggerFactory;
 @Singleton
 public class ScheduledNotificationSender {
     private static final Logger LOGGER = LoggerFactory.getLogger(ScheduledNotificationSender.class);
-    protected MailSender mailSender;
-    protected Sender sender;
 
     @Inject
     @PromatEntityManager
@@ -30,24 +30,19 @@ public class ScheduledNotificationSender {
     @Inject
     MailManager mailManager;
 
-    @Schedule(second = "0", minute = "0", hour = "1")
+    @Schedule(second = "0", minute = "*", hour = "*")
     public void processNotifications() {
-        entityManager.getTransaction().begin();
-        Notification notification = pop();
-        while (notification != null) {
+        LOGGER.info("Checkin for notifications");
+        TypedQuery<Notification> namedQuery = entityManager
+                .createNamedQuery(Notification.POP_FROM_NOTIFCATION_QUEUE_NAME, Notification.class);
+        for (Notification notification : namedQuery.getResultList()) {
             try {
-                LOGGER.info("Popped:{}", notification);
                 notify(notification);
-                LOGGER.info("Notified:{}", notification);
                 entityManager.remove(notification);
             } catch (MessagingException e) {
-                LOGGER.info("Setting error");
                 setError(notification);
-                LOGGER.info("Error sat");
             }
-            notification = pop();
         }
-        entityManager.getTransaction().commit();
     }
 
     private void setError(Notification notification) {
@@ -59,20 +54,13 @@ public class ScheduledNotificationSender {
     private void notify(Notification notification) throws MessagingException {
         mailManager.newMail()
                 .withRecipients(notification.getToAddress())
+                .withSubject(notification.getSubject())
                 .withBodyText(notification.getBodyText())
                 .withHeaders(
                         new Headers()
                                 .withHeader("Content-type", "text/HTML; charset=UTF-8").build()
                 )
                 .build().send();
-    }
-
-    private Notification pop() {
-        TypedQuery<Notification> namedQuery = entityManager
-                .createNamedQuery(Notification.POP_FROM_NOTIFCATION_QUEUE_NAME, Notification.class);
-
-        return namedQuery.getResultList().size()==0?null:namedQuery.getResultList().get(0);
-
     }
 
 }
