@@ -296,7 +296,7 @@ public class CasesIT extends ContainerTest {
                 .withPathElements("v1", "api", "cases", "1234");
 
         response = httpClient.execute(httpGet);
-        assertThat("status code", response.getStatus(), is(204));
+        assertThat("status code", response.getStatus(), is(404));
 
         // Get the case we created
         httpGet = new HttpGet(httpClient)

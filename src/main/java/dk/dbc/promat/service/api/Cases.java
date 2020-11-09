@@ -225,7 +225,7 @@ public class Cases {
     @Path("{id}")
     @Produces(MediaType.APPLICATION_JSON)
     public Response getCase(@PathParam("id") final Integer id) throws Exception {
-        LOGGER.info("getCase/{}", id);
+        LOGGER.info("cases/{}", id);
 
         // Find and return the requested case
         try {
@@ -233,7 +233,7 @@ public class Cases {
             Case requested = entityManager.find(Case.class, id);
             if( requested == null ) {
                 LOGGER.info("Requested case {} does not exist", id);
-                return Response.status(204).build();
+                return Response.status(404).build();
             }
 
             return Response.status(200).entity(requested).build();
