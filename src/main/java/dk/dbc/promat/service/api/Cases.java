@@ -1,17 +1,19 @@
 package dk.dbc.promat.service.api;
 
-import dk.dbc.promat.service.dto.Dto;
-import dk.dbc.promat.service.dto.RecordsListDto;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import dk.dbc.promat.service.dto.CaseSummaryList;
 import dk.dbc.promat.service.dto.ServiceErrorCode;
 import dk.dbc.promat.service.dto.ServiceErrorDto;
 import dk.dbc.promat.service.dto.TaskDto;
 import dk.dbc.promat.service.persistence.Case;
 import dk.dbc.promat.service.dto.CaseRequestDto;
 import dk.dbc.promat.service.persistence.CaseStatus;
+import dk.dbc.promat.service.persistence.CaseView;
 import dk.dbc.promat.service.persistence.PromatEntityManager;
 import dk.dbc.promat.service.persistence.Reviewer;
 import dk.dbc.promat.service.persistence.Subject;
 import dk.dbc.promat.service.persistence.Task;
+import dk.dbc.promat.service.rest.JsonMapperProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,15 +27,14 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 
 @Stateless
-@Path("cases")
+@Path("")
 public class Cases {
     private static final Logger LOGGER = LoggerFactory.getLogger(Cases.class);
 
@@ -42,6 +43,7 @@ public class Cases {
     EntityManager entityManager;
 
     @POST
+    @Path("cases")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Response postCase(CaseRequestDto dto) {
@@ -222,7 +224,7 @@ public class Cases {
     }
 
     @GET
-    @Path("{id}")
+    @Path("cases/{id}")
     @Produces(MediaType.APPLICATION_JSON)
     public Response getCase(@PathParam("id") final Integer id) throws Exception {
         LOGGER.info("cases/{}", id);
@@ -237,6 +239,40 @@ public class Cases {
             }
 
             return Response.status(200).entity(requested).build();
+        } catch(Exception exception) {
+            LOGGER.info("Caught exception: {}", exception.getMessage());
+            throw exception;
+        }
+    }
+
+    @GET
+    @Path("cases")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response listCases(@QueryParam("faust") final String faust) throws Exception {
+        LOGGER.info("cases/?{}", faust);
+
+        try {
+
+            CaseSummaryList cases = new CaseSummaryList();
+
+            // Get (active) case which includes the given faustnumber
+            // Todo: Use query for case with faust number. Using id given in faust param. for initial test only
+            Case found = entityManager.find(Case.class, Integer.parseInt(faust));
+            if( found != null ) {
+                LOGGER.info("Found case {} which includes faust number {}", found.getId(), faust);
+                cases.getCases().add(found);
+            }
+
+            // Return the found cases as a list of CaseSummary entities
+            //
+            // Note that the http status is set to 404 (NOT FOUND) if no case matched the query
+            // this is to allow a quick(er) check for existing cases by using HEAD and checking
+            // the statuscode instead of deserializing the response body and looking at numFound
+            ObjectMapper mapper = new JsonMapperProvider().getObjectMapper();
+            return Response.status(cases.getNumFound() > 0 ? 200 : 404)
+                    .entity(mapper.writerWithView(CaseView.CaseSummary.class)
+                            .writeValueAsString(cases)).build();
+
         } catch(Exception exception) {
             LOGGER.info("Caught exception: {}", exception.getMessage());
             throw exception;

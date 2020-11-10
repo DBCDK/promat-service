@@ -139,6 +139,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CaseSummaryList'
+        '404':
+          description: No cases matched the given search parameter.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CaseSummaryList'
     post:
       tags:
         - cases
