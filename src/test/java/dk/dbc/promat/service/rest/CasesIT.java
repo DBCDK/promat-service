@@ -2,7 +2,6 @@ package dk.dbc.promat.service.rest;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 
-import dk.dbc.httpclient.HttpGet;
 import dk.dbc.httpclient.HttpPost;
 import dk.dbc.promat.service.ContainerTest;
 import dk.dbc.promat.service.dto.CaseRequestDto;
@@ -291,19 +290,11 @@ public class CasesIT extends ContainerTest {
         assertThat("details", created.getDetails(), is("Details for 62345678"));
 
         // Get case with nonexisting id, expect 204 (NOT FOUND)
-        HttpGet httpGet = new HttpGet(httpClient)
-                .withBaseUrl(promatServiceBaseUrl)
-                .withPathElements("v1", "api", "cases", "1234");
-
-        response = httpClient.execute(httpGet);
+        response = getResponse("v1/api/cases/1234");
         assertThat("status code", response.getStatus(), is(404));
 
         // Get the case we created
-        httpGet = new HttpGet(httpClient)
-                .withBaseUrl(promatServiceBaseUrl)
-                .withPathElements("v1", "api", "cases", created.getId().toString());
-
-        response = httpClient.execute(httpGet);
+        response = getResponse("v1/api/cases/" + created.getId());
         assertThat("status code", response.getStatus(), is(200));
 
         // Verify that the case matches the created case
@@ -376,11 +367,7 @@ public class CasesIT extends ContainerTest {
         assertThat("task 2 targetFausts", created.getTasks().get(1).getTargetFausts(), is(IsNull.nullValue()));
 
         // Get the case we created
-        HttpGet httpGet= new HttpGet(httpClient)
-                .withBaseUrl(promatServiceBaseUrl)
-                .withPathElements("v1", "api", "cases", created.getId().toString());
-
-        response = httpClient.execute(httpGet);
+        response = getResponse("v1/api/cases/" + created.getId().toString());
         assertThat("status code", response.getStatus(), is(200));
 
         // Verify that the case matches the created case
