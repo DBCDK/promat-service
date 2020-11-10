@@ -16,6 +16,7 @@ import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.output.Slf4jLogConsumer;
 import org.testcontainers.containers.wait.strategy.Wait;
 import java.time.Duration;
+import java.util.Map;
 
 
 public abstract class ContainerTest extends IntegrationTest {
@@ -64,5 +65,15 @@ public abstract class ContainerTest extends IntegrationTest {
                 .withBaseUrl(promatServiceBaseUrl)
                 .withPathElements(path)
                 .execute();
+    }
+
+    public Response getResponse(String path, Map<String, Object> queryParameters) {
+        HttpGet httpGet = new HttpGet(httpClient)
+                .withBaseUrl(promatServiceBaseUrl)
+                .withPathElements(path);
+
+        httpGet.getQueryParameters().putAll(queryParameters);
+
+        return httpGet.execute();
     }
 }
