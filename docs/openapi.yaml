@@ -9,6 +9,8 @@ info:
   version: 1.0-SNAPSHOT
 
 tags:
+  - name: editors
+    description: Users approving professional reviews
   - name: reviewers
     description: Users writing professional reviews
   - name: subjects
@@ -49,6 +51,29 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ServiceError'
+
+  /editors/{id}:
+    get:
+      tags:
+        - editors
+      summary: Returns an editor with a given ID
+      operationId: getEditor
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            description: Editor ID
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Editor'
+        '404':
+          description: Editor not found
 
   /subjects:
     get:
@@ -302,6 +327,25 @@ components:
         - institution
         - paycode
         - subjects
+
+    Editor:
+      type: object
+      properties:
+        id:
+          type: integer
+        firstName:
+          type: string
+        lastName:
+          type: string
+        email:
+          type: string
+        phone:
+          type: string
+      required:
+        - id
+        - firstName
+        - lastName
+        - email
 
     ServiceError:
       type: object

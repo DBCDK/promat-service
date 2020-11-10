@@ -12,6 +12,8 @@ import dk.dbc.httpclient.HttpClient;
 import dk.dbc.httpclient.HttpGet;
 import dk.dbc.promat.service.rest.JsonMapperProvider;
 import dk.dbc.promat.service.rest.SubjectsIT;
+import org.glassfish.jersey.client.ClientConfig;
+import org.glassfish.jersey.jackson.JacksonFeature;
 import org.junit.jupiter.api.BeforeAll;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -63,7 +65,8 @@ public abstract class ContainerTest {
         promatServiceContainer.start();
         promatServiceBaseUrl = "http://" + promatServiceContainer.getContainerIpAddress() +
                 ":" + promatServiceContainer.getMappedPort(8080);
-        httpClient = HttpClient.create(HttpClient.newClient());
+        httpClient = HttpClient.create(HttpClient.newClient(
+                new ClientConfig().register(new JacksonFeature())));
     }
 
     @BeforeAll
@@ -72,7 +75,7 @@ public abstract class ContainerTest {
             LOGGER.info("Populating database for test");
             Connection connection = connectToPromatDB();
             executeScript(connection, SubjectsIT.class.getResource("/dk/dbc/promat/service/db/subjects/subjectsdump.sql"));
-            executeScript(connection, SubjectsIT.class.getResource("/dk/dbc/promat/service/db/subjects/reviewersdump.sql"));
+            executeScript(connection, SubjectsIT.class.getResource("/dk/dbc/promat/service/db/subjects/promatusers.sql"));
             setupDone = true;
         } else {
             LOGGER.info("Database populate already done.");
@@ -108,5 +111,20 @@ public abstract class ContainerTest {
                 .withBaseUrl(uri)
                 .execute();
         return response.readEntity(String.class);
+    }
+
+    public <T> T get(String path, Class<T> tClass) {
+        return new HttpGet(httpClient)
+                .withBaseUrl(promatServiceBaseUrl)
+                .withPathElements(path)
+                .execute()
+                .readEntity(tClass);
+    }
+
+    public Response getResponse(String path) {
+        return new HttpGet(httpClient)
+                .withBaseUrl(promatServiceBaseUrl)
+                .withPathElements(path)
+                .execute();
     }
 }

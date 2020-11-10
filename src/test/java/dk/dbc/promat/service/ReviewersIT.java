@@ -5,9 +5,10 @@ import dk.dbc.promat.service.dto.ReviewerList;
 import dk.dbc.promat.service.persistence.Address;
 import dk.dbc.promat.service.persistence.Reviewer;
 import dk.dbc.promat.service.persistence.Subject;
+import org.junit.jupiter.api.Test;
+
 import java.time.LocalDate;
 import java.util.List;
-import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
@@ -20,6 +21,7 @@ public class ReviewersIT extends ContainerTest {
                 List.of(
                         new Reviewer()
                                 .withId(1)
+                                .withActive(true)
                                 .withFirstName("Hans")
                                 .withLastName("Hansen")
                                 .withEmail("hans@hansen.dk")
