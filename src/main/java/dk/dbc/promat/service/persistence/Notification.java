@@ -1,35 +1,32 @@
 package dk.dbc.promat.service.persistence;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.LockModeType;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
+import javax.persistence.PrePersist;
 
 @NamedQueries({
         @NamedQuery(
-                name = Notification.POP_FROM_NOTIFCATION_QUEUE_NAME,
-                query = Notification.POP_FROM_NOTIFCATION_QUEUE_QUERY
-        ),
-        @NamedQuery(
-                name = Notification.SET_STATUS_ERROR_NAME,
-                query = Notification.SET_STATUS_ERROR_QUERY
+                name = Notification.SELECT_FROM_NOTIFCATION_QUEUE_NAME,
+                query = Notification.SELECT_FROM_NOTIFCATION_QUEUE_QUERY,
+                lockMode = LockModeType.PESSIMISTIC_WRITE
         )
 })
 @Entity
 public class Notification {
-    public static final String POP_FROM_NOTIFCATION_QUEUE_NAME = "pop.from.notification.queue";
-    public static final String POP_FROM_NOTIFCATION_QUEUE_QUERY =
-            "SELECT notification FROM Notification notification " +
-                    "WHERE notification.status = dk.dbc.promat.service.persistence.NotificationStatus.PENDING" +
-                    " ORDER BY notification.id ASC";
-    public static final String SET_STATUS_ERROR_NAME = "set.error.status";
-    public static final String SET_STATUS_ERROR_QUERY =
-            "UPDATE Notification SET status=dk.dbc.promat.service.persistence.NotificationStatus.ERROR WHERE id=:id";
+    public static final String SELECT_FROM_NOTIFCATION_QUEUE_NAME = "select.from.notification.queue";
+    public static final String SELECT_FROM_NOTIFCATION_QUEUE_QUERY =
+            "SELECT notification FROM  Notification notification " +
+                    "WHERE notification.status = :status " +
+                    " ORDER BY notification.id asc ";
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -37,11 +34,18 @@ public class Notification {
     String toAddress;
     String subject;
     String bodyText;
-    LocalDate created = LocalDate.now();
+
+    @Column(updatable = false)
+    LocalDateTime created;
 
 
     @Enumerated(EnumType.ORDINAL)
     NotificationStatus status;
+
+    @PrePersist
+    public void prePersist() {
+        created = LocalDateTime.now();
+    }
 
     public Integer getId() {
         return id;
@@ -82,11 +86,11 @@ public class Notification {
     public void setStatus(NotificationStatus status) {
         this.status = status;
     }
-    public LocalDate getCreated() {
+    public LocalDateTime getCreated() {
         return created;
     }
 
-    public void setCreated(LocalDate created) {
+    public void setCreated(LocalDateTime created) {
         this.created = created;
     }
 
@@ -105,7 +109,7 @@ public class Notification {
         return this;
     }
 
-    public Notification withCreated(LocalDate created) {
+    public Notification withCreated(LocalDateTime created) {
         this.created = created;
         return this;
     }
