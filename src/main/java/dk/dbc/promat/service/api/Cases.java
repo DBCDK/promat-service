@@ -1,6 +1,7 @@
 package dk.dbc.promat.service.api;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import dk.dbc.commons.jsonb.JSONBContext;
 import dk.dbc.promat.service.dto.CaseSummaryList;
 import dk.dbc.promat.service.dto.ServiceErrorCode;
 import dk.dbc.promat.service.dto.ServiceErrorDto;
@@ -21,6 +22,7 @@ import javax.ejb.Stateless;
 import javax.inject.Inject;
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
+import javax.persistence.TypedQuery;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -36,6 +38,7 @@ import java.util.ArrayList;
 @Stateless
 @Path("")
 public class Cases {
+    private static final JSONBContext JSONB_CONTEXT = new JSONBContext();
     private static final Logger LOGGER = LoggerFactory.getLogger(Cases.class);
 
     @Inject
@@ -256,12 +259,10 @@ public class Cases {
             CaseSummaryList cases = new CaseSummaryList();
 
             // Get (active) case which includes the given faustnumber
-            // Todo: Use query for case with faust number. Using id given in faust param. for initial test only
-            Case found = entityManager.find(Case.class, Integer.parseInt(faust));
-            if( found != null ) {
-                LOGGER.info("Found case {} which includes faust number {}", found.getId(), faust);
-                cases.getCases().add(found);
-            }
+            TypedQuery<Case> query = entityManager.createNamedQuery(Case.GET_CASE_WITH_FAUST_NAME, Case.class);
+            query.setParameter("primaryFaust", faust);
+            query.setParameter("relatedFaust", JSONB_CONTEXT.marshall(faust));
+            cases.getCases().addAll(query.getResultList());
 
             // Return the found cases as a list of CaseSummary entities
             //

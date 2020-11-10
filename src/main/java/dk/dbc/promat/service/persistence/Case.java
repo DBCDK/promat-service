@@ -13,12 +13,21 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
+import javax.persistence.NamedQueries;
+import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Objects;
+
+@NamedQueries({
+        @NamedQuery(
+                name = Case.GET_CASE_WITH_FAUST_NAME,
+                query = Case.GET_CASE_WITH_FAUST_QUERY
+        )
+})
 
 /** Entity for table holding cases
  *
@@ -29,6 +38,14 @@ import java.util.Objects;
 @Entity
 @Table(name = "cases")
 public class Case {
+
+    public static final String GET_CASE_WITH_FAUST_NAME =
+            "Case.get.with.faust";
+    public static final String GET_CASE_WITH_FAUST_QUERY =
+            "SELECT c " +
+              "FROM Case c " +
+             "WHERE (c.primaryFaust = :primaryFaust OR FUNCTION('jsonb_contains', c.relatedFausts, CAST(:relatedFaust AS JSONB))) " +
+               "AND c.status NOT IN (dk.dbc.promat.service.persistence.CaseStatus.CLOSED, dk.dbc.promat.service.persistence.CaseStatus.DONE)";
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
