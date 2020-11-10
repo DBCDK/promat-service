@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 public class CasesIT extends ContainerTest {
@@ -422,5 +423,57 @@ public class CasesIT extends ContainerTest {
 
         // Tests for valid state CREATED and ASSIGNED with an reviewer set is
         // covered in previous tests
+    }
+
+    @Test
+    public void testCheckCaseWithFaustExists() throws JsonProcessingException {
+
+        // Create two cases
+        CaseRequestDto dto = new CaseRequestDto()
+                .withPrimaryFaust("98765432")
+                .withTitle("Title for 98765432")
+                .withDetails("Details for 98765432")
+                .withMaterialType(MaterialType.BOOK)
+                .withReviewer(1)
+                .withSubjects(Arrays.asList(3, 4))
+                .withAssigned("2020-04-11")
+                .withDeadline("2020-04-12")
+                .withRelatedFausts(Arrays.asList("987654321", "987654322"))
+                .withStatus(CaseStatus.ASSIGNED);
+
+        HttpPost httpPost = new HttpPost(httpClient)
+                .withBaseUrl(promatServiceBaseUrl)
+                .withPathElements("v1", "api", "cases")
+                .withData(dto, "application/json");
+
+        Response response = httpClient.execute(httpPost);
+        assertThat("status code", response.getStatus(), is(201));
+
+        dto.setPrimaryFaust("87654321");
+        dto.setTitle("Title for 87654321");
+        dto.setRelatedFausts(Arrays.asList("876543211", "876543212"));
+
+        httpPost = new HttpPost(httpClient)
+                .withBaseUrl(promatServiceBaseUrl)
+                .withPathElements("v1", "api", "cases")
+                .withData(dto, "application/json");
+
+        response = httpClient.execute(httpPost);
+        assertThat("status code", response.getStatus(), is(201));
+
+        // Check if various fausts exists
+        // (DBC's HttpClient currently do not support HEAD operations, so we use GET and throw away the response body)
+        response = getResponse("v1/api/cases", Map.of("faust","98765432"));
+        assertThat("status code", response.getStatus(), is(200));
+
+        response = getResponse("v1/api/cases", Map.of("faust","987654322"));
+        assertThat("status code", response.getStatus(), is(200));
+
+        response = getResponse("v1/api/cases", Map.of("faust","876543212"));
+        assertThat("status code", response.getStatus(), is(200));
+
+        // Check a faustnumber that does not exist
+        response = getResponse("v1/api/cases", Map.of("faust","876543213"));
+        assertThat("status code", response.getStatus(), is(404));
     }
 }
