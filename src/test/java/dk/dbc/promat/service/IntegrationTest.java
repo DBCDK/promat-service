@@ -93,7 +93,7 @@ public class IntegrationTest {
             migrate(dataSource);
             Connection connection = connectToPromatDB();
             executeScript(connection, SubjectsIT.class.getResource("/dk/dbc/promat/service/db/subjects/subjectsdump.sql"));
-            executeScript(connection, SubjectsIT.class.getResource("/dk/dbc/promat/service/db/subjects/reviewersdump.sql"));
+            executeScript(connection, SubjectsIT.class.getResource("/dk/dbc/promat/service/db/subjects/promatusers.sql"));
             executeScript(connection, ScheduledNotificationSenderIT.class.getResource("/dk/dbc/promat/service/db/notification/notification.sql"));
             entityManager = createEntityManager(getDataSource(),
                     "promatITPU");
