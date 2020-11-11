@@ -1,5 +1,7 @@
 package dk.dbc.promat.service.templating;
 
+import dk.dbc.promat.service.persistence.Case;
+import dk.dbc.promat.service.persistence.Notification;
 import dk.dbc.promat.service.persistence.Reviewer;
 import gg.jte.CodeResolver;
 import gg.jte.ContentType;
@@ -11,21 +13,24 @@ import java.nio.file.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class Template {
-    private static final Logger LOGGER = LoggerFactory.getLogger(Template.class);
+public class Render {
+    private static final Logger LOGGER = LoggerFactory.getLogger(Render.class);
     private CodeResolver codeResolver;
     private TemplateEngine templateEngine;
-    public Template() {
-        String path = Template.class.getResource("/jte/templates/").getPath();
+    public Render() {
+        String path = Render.class.getResource("/jte/templates/").getPath();
         LOGGER.info("Using templates at: {}", path);
         codeResolver= new DirectoryCodeResolver(Path.of(path));
         templateEngine = TemplateEngine.create(codeResolver, ContentType.Html);
     }
 
-    public String mail(String template, Reviewer reviewer) {
+    public Notification mail(String template, Case assignedCase) {
         TemplateOutput output = new StringOutput();
-        templateEngine.render(template, reviewer, output);
-        return output.toString();
+        templateEngine.render(template, assignedCase, output);
+        return new Notification()
+                .withBodyText(output.toString())
+                .withSubject("Ny ProMat anmeldelse")
+                .withToAddress(assignedCase.getReviewer().getEmail());
     }
 
 }
