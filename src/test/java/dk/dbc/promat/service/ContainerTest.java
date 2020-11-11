@@ -6,50 +6,19 @@
 package dk.dbc.promat.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.opentable.db.postgres.embedded.EmbeddedPostgres;
-import dk.dbc.commons.jdbc.util.JDBCUtil;
-import dk.dbc.httpclient.HttpClient;
-import dk.dbc.httpclient.HttpGet;
-import dk.dbc.promat.service.batch.ScheduledNotificationSenderIT;
 import dk.dbc.promat.service.rest.JsonMapperProvider;
-import dk.dbc.promat.service.rest.SubjectsIT;
-import java.util.HashMap;
-import java.util.Map;
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.Persistence;
-import org.junit.jupiter.api.BeforeAll;
-import org.postgresql.ds.PGSimpleDataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.Testcontainers;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.output.Slf4jLogConsumer;
 import org.testcontainers.containers.wait.strategy.Wait;
-
-import javax.ws.rs.core.Response;
-import java.io.File;
-import java.io.IOException;
-import java.io.UncheckedIOException;
-import java.net.URISyntaxException;
-import java.net.URL;
-import java.nio.charset.StandardCharsets;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
 import java.time.Duration;
 
-import static org.eclipse.persistence.config.PersistenceUnitProperties.JDBC_DRIVER;
-import static org.eclipse.persistence.config.PersistenceUnitProperties.JDBC_PASSWORD;
-import static org.eclipse.persistence.config.PersistenceUnitProperties.JDBC_URL;
-import static org.eclipse.persistence.config.PersistenceUnitProperties.JDBC_USER;
 
-public abstract class ContainerTest {
+public abstract class ContainerTest extends IntegrationTest {
     private static final Logger LOGGER = LoggerFactory.getLogger(ContainerTest.class);
-    private static boolean setupDone;
     protected static final ObjectMapper mapper = new JsonMapperProvider().getObjectMapper();
-
-    static final EmbeddedPostgres pg = pgStart();
 
     static {
         Testcontainers.exposeHostPorts(pg.getPort());
@@ -57,8 +26,6 @@ public abstract class ContainerTest {
 
     protected static final GenericContainer promatServiceContainer;
     protected static final String promatServiceBaseUrl;
-    protected static final HttpClient httpClient;
-    protected static EntityManager entityManager;
 
     static {
         promatServiceContainer = new GenericContainer("docker-io.dbc.dk/promat-service:devel")
@@ -79,76 +46,5 @@ public abstract class ContainerTest {
         promatServiceContainer.start();
         promatServiceBaseUrl = "http://" + promatServiceContainer.getContainerIpAddress() +
                 ":" + promatServiceContainer.getMappedPort(8080);
-        httpClient = HttpClient.create(HttpClient.newClient());
-        LOGGER.info("Postres url is:{}", String.format("postgres:@host.testcontainers.internal:%s/postgres",
-                pg.getPort()));
-    }
-
-    @BeforeAll
-    public static void setUp() throws SQLException, IOException, URISyntaxException {
-        if (!setupDone) {
-            LOGGER.info("Populating database for test");
-            Connection connection = connectToPromatDB();
-            executeScript(connection, SubjectsIT.class.getResource("/dk/dbc/promat/service/db/subjects/subjectsdump.sql"));
-            executeScript(connection, SubjectsIT.class.getResource("/dk/dbc/promat/service/db/subjects/reviewersdump.sql"));
-            executeScript(connection, ScheduledNotificationSenderIT.class.getResource("/dk/dbc/promat/service/db/notification/notification.sql"));
-            entityManager = createEntityManager(getDataSource(),
-                    "promatITPU");
-            setupDone = true;
-        } else {
-            LOGGER.info("Database populate already done.");
-        }
-    }
-
-    private static EntityManager createEntityManager(
-            PGSimpleDataSource dataSource, String persistenceUnitName) {
-        Map<String, String> entityManagerProperties = new HashMap<>();
-        entityManagerProperties.put(JDBC_USER, dataSource.getUser());
-        entityManagerProperties.put(JDBC_PASSWORD, dataSource.getPassword());
-        entityManagerProperties.put(JDBC_URL, dataSource.getUrl());
-        entityManagerProperties.put(JDBC_DRIVER, "org.postgresql.Driver");
-        entityManagerProperties.put("eclipselink.logging.level", "FINE");
-        EntityManagerFactory factory = Persistence.createEntityManagerFactory(persistenceUnitName,
-                entityManagerProperties);
-        return factory.createEntityManager(entityManagerProperties);
-    }
-
-    private static PGSimpleDataSource getDataSource() {
-        final PGSimpleDataSource datasource = new PGSimpleDataSource();
-        datasource.setURL( pg.getJdbcUrl("postgres", "postgres"));
-        datasource.setUser("postgres");
-        datasource.setPassword("");
-        return datasource;
-    }
-
-    private static EmbeddedPostgres pgStart() {
-        try {
-            return EmbeddedPostgres.start();
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        }
-    }
-
-    protected static Connection connectToPromatDB() {
-        try {
-            Class.forName("org.postgresql.Driver");
-            final String dbUrl = String.format("jdbc:postgresql://localhost:%s/postgres", pg.getPort());
-            final Connection connection = DriverManager.getConnection(dbUrl, "postgres", "");
-            connection.setAutoCommit(true);
-            return connection;
-        } catch (ClassNotFoundException | SQLException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    protected static void executeScript(Connection connection, URL script) throws IOException, SQLException, URISyntaxException {
-        JDBCUtil.executeScript(connection, new File(script.toURI()), StandardCharsets.UTF_8.name());
-    }
-
-    public String get(String uri) {
-        final Response response = new HttpGet(httpClient)
-                .withBaseUrl(uri)
-                .execute();
-        return response.readEntity(String.class);
     }
 }

@@ -5,5 +5,5 @@ CREATE TABLE notification
     subject text NOT NULL,
     bodytext text NOT NULL,
     status int NOT NULL,
-    created timestamp NOT NULL
+    created timestamp with time zone NOT NULL
 );

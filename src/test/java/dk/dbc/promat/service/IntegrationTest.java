@@ -1,0 +1,124 @@
+package dk.dbc.promat.service;
+
+import com.opentable.db.postgres.embedded.EmbeddedPostgres;
+import dk.dbc.commons.jdbc.util.JDBCUtil;
+import dk.dbc.httpclient.HttpClient;
+import dk.dbc.httpclient.HttpGet;
+import dk.dbc.promat.service.batch.ScheduledNotificationSenderIT;
+import dk.dbc.promat.service.db.DatabaseMigrator;
+import dk.dbc.promat.service.rest.SubjectsIT;
+import java.io.File;
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.util.HashMap;
+import java.util.Map;
+import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
+import javax.persistence.Persistence;
+import javax.sql.DataSource;
+import javax.ws.rs.core.Response;
+import org.junit.jupiter.api.BeforeAll;
+import org.postgresql.ds.PGSimpleDataSource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import static org.eclipse.persistence.config.PersistenceUnitProperties.JDBC_DRIVER;
+import static org.eclipse.persistence.config.PersistenceUnitProperties.JDBC_PASSWORD;
+import static org.eclipse.persistence.config.PersistenceUnitProperties.JDBC_URL;
+import static org.eclipse.persistence.config.PersistenceUnitProperties.JDBC_USER;
+
+public class IntegrationTest {
+    private static final Logger LOGGER = LoggerFactory.getLogger(ContainerTest.class);
+    static final EmbeddedPostgres pg = pgStart();
+    protected static final HttpClient httpClient;
+    protected static EntityManager entityManager;
+    private static boolean setupDone;
+
+    static {
+        httpClient = HttpClient.create(HttpClient.newClient());
+        LOGGER.info("Postres url is:{}", String.format("postgres:@host.testcontainers.internal:%s/postgres",
+                pg.getPort()));
+    }
+
+    private static EmbeddedPostgres pgStart() {
+        try {
+            return EmbeddedPostgres.start();
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+    }
+
+    private static PGSimpleDataSource getDataSource() {
+        final PGSimpleDataSource datasource = new PGSimpleDataSource();
+        datasource.setURL( pg.getJdbcUrl("postgres", "postgres"));
+        datasource.setUser("postgres");
+        datasource.setPassword("");
+        return datasource;
+    }
+
+    protected static Connection connectToPromatDB() {
+        try {
+            Class.forName("org.postgresql.Driver");
+            final String dbUrl = String.format("jdbc:postgresql://localhost:%s/postgres", pg.getPort());
+            final Connection connection = DriverManager.getConnection(dbUrl, "postgres", "");
+            connection.setAutoCommit(true);
+            return connection;
+        } catch (ClassNotFoundException | SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    protected static void executeScript(Connection connection, URL script) throws IOException, SQLException, URISyntaxException {
+        JDBCUtil.executeScript(connection, new File(script.toURI()), StandardCharsets.UTF_8.name());
+    }
+
+    public String get(String uri) {
+        final Response response = new HttpGet(httpClient)
+                .withBaseUrl(uri)
+                .execute();
+        return response.readEntity(String.class);
+    }
+
+    @BeforeAll
+    public static void setUp() throws SQLException, IOException, URISyntaxException, InterruptedException {
+        if (!setupDone) {
+            LOGGER.info("Populating database for test");
+            DataSource dataSource = getDataSource();
+            migrate(dataSource);
+            Connection connection = connectToPromatDB();
+            executeScript(connection, SubjectsIT.class.getResource("/dk/dbc/promat/service/db/subjects/subjectsdump.sql"));
+            executeScript(connection, SubjectsIT.class.getResource("/dk/dbc/promat/service/db/subjects/reviewersdump.sql"));
+            executeScript(connection, ScheduledNotificationSenderIT.class.getResource("/dk/dbc/promat/service/db/notification/notification.sql"));
+            entityManager = createEntityManager(getDataSource(),
+                    "promatITPU");
+            setupDone = true;
+            LOGGER.info("Populating database tables done");
+        } else {
+            LOGGER.info("Database populate already done.");
+        }
+    }
+
+    private static EntityManager createEntityManager(
+            PGSimpleDataSource dataSource, String persistenceUnitName) {
+        Map<String, String> entityManagerProperties = new HashMap<>();
+        entityManagerProperties.put(JDBC_USER, dataSource.getUser());
+        entityManagerProperties.put(JDBC_PASSWORD, dataSource.getPassword());
+        entityManagerProperties.put(JDBC_URL, dataSource.getUrl());
+        entityManagerProperties.put(JDBC_DRIVER, "org.postgresql.Driver");
+        entityManagerProperties.put("eclipselink.logging.level", "FINE");
+        EntityManagerFactory factory = Persistence.createEntityManagerFactory(persistenceUnitName,
+                entityManagerProperties);
+        return factory.createEntityManager(entityManagerProperties);
+    }
+
+    public static void migrate(DataSource dataSource) {
+        DatabaseMigrator databaseMigrator = new DatabaseMigrator(dataSource);
+        databaseMigrator.migrate();
+    }
+}

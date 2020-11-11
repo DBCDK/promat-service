@@ -10,7 +10,6 @@ import javax.ejb.Singleton;
 import javax.ejb.Startup;
 import javax.inject.Inject;
 import javax.persistence.EntityManager;
-import javax.persistence.Query;
 import javax.persistence.TypedQuery;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,7 +31,7 @@ public class ScheduledNotificationSender {
         LOGGER.info("Checking for notifications");
         Notification notification = pop();
         while (notification != null) {
-            LOGGER.info("Notifying: {}", notification);
+            LOGGER.info("Notifying: '{}' on subject '{}'", notification.getToAddress(), notification.getSubject());
             notificationSender.notifyMailRecipient(notification);
             notification = pop();
         }
@@ -42,8 +41,8 @@ public class ScheduledNotificationSender {
         TypedQuery<Notification> query = entityManager
                 .createQuery(Notification.SELECT_FROM_NOTIFCATION_QUEUE_QUERY, Notification.class);
         query.setParameter("status", NotificationStatus.PENDING);
-        query.setMaxResults(0);
+        query.setMaxResults(1);
         List<Notification> notifications = query.getResultList();
-        return (notifications == null || notifications.isEmpty()) ? null : notifications.get(0);
+        return (notifications.isEmpty()) ? null : notifications.get(0);
     }
 }

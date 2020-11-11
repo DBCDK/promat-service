@@ -2,7 +2,7 @@ package dk.dbc.promat.service.batch;
 
 import dk.dbc.commons.persistence.TransactionScopedPersistenceContext;
 import dk.dbc.mail.MailManager;
-import dk.dbc.promat.service.ContainerTest;
+import dk.dbc.promat.service.IntegrationTest;
 import dk.dbc.promat.service.persistence.Notification;
 import dk.dbc.promat.service.persistence.NotificationStatus;
 import java.util.List;
@@ -19,7 +19,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 
 
-public class ScheduledNotificationSenderIT extends ContainerTest {
+public class ScheduledNotificationSenderIT extends IntegrationTest {
     static MailManager mailManager;
     static {
         Properties props = System.getProperties();
