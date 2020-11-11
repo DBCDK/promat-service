@@ -9,6 +9,8 @@ info:
   version: 1.0-SNAPSHOT
 
 tags:
+  - name: editors
+    description: Users approving professional reviews
   - name: reviewers
     description: Users writing professional reviews
   - name: subjects
@@ -49,6 +51,29 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ServiceError'
+
+  /editors/{id}:
+    get:
+      tags:
+        - editors
+      summary: Returns an editor with a given ID
+      operationId: getEditor
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            description: Editor ID
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Editor'
+        '404':
+          description: Editor not found
 
   /subjects:
     get:
@@ -132,6 +157,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Case'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
         '409':
           description: Conflict. A case with a status other than DONE or CLOSED already exists
           content:
@@ -159,6 +190,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Case'
+        '404':
+          description: Case could not be found
 
     post:
       tags:
@@ -295,6 +328,25 @@ components:
         - paycode
         - subjects
 
+    Editor:
+      type: object
+      properties:
+        id:
+          type: integer
+        firstName:
+          type: string
+        lastName:
+          type: string
+        email:
+          type: string
+        phone:
+          type: string
+      required:
+        - id
+        - firstName
+        - lastName
+        - email
+
     ServiceError:
       type: object
       properties:
@@ -313,10 +365,11 @@ components:
     ServiceErrorCode:
       type: string
       enum:
-        - INVALID_QUERY_PARAM
+        - INVALID_QUERY_PARAM   # One of the query parameters is invalid
+        - INVALID_REQUEST       # Request body contains invalid fields or id's
         - CASE_EXISTS           # Active case for this/these faust/fausts exists
         - INVALID_STATE         # Change to a new state was not possible or invalid
-        - FAILED                # Some error occurred while updating the item
+        - FAILED                # Some error occurred
 
     SubjectList:
       type: object
@@ -385,6 +438,7 @@ components:
 
     CaseSummary:
       type: object
+      nullable: true
       properties:
         id:
           type: integer
@@ -507,6 +561,7 @@ components:
         details:
           type: string
           description: Case details (free form)
+          nullable: true
         primaryFaust:
           type: string
           description: Faustnumber for the primary manifestations, typically one of the paperbooks
@@ -514,17 +569,25 @@ components:
           type: array
           items:
             type: string
-          description: Other faustnumbers that should link to the review produced by this case
           minItems: 0
+          nullable: true
+          description: Other faustnumbers that should link to the review produced by this case
         reviewer:
           type: integer
+          nullable: true
           description: ID of assigned reviewer
         subjects:
           type: array
           items:
             type: integer
           minItems: 0
+          nullable: true
           description: IDs of subjects covered by the work to review
+        assigned:
+          type: string
+          format: date
+          nullable: true
+          description: Assigned to reviewer on this date
         deadline:
           type: string
           format: date
@@ -534,9 +597,20 @@ components:
           $ref: '#/components/schemas/CaseStatus'
         materialType:
           $ref: '#/components/schemas/MaterialType'
+        tasks:
+          type: array
+          items:
+            $ref: '#/components/schemas/Task'
+          minItems: 0
+          nullable: true
+      required:
+        - title
+        - primaryFaust
+        - materialType
 
     CaseStatus:
       type: string
+      nullable: true
       enum:
         - 'CREATED'
         - 'REJECTED'
@@ -569,10 +643,7 @@ components:
           type: integer
           description: Task id
         typeOfTask:
-          type: string
-          enum:
-            - 'NONE'  # Todo: define needed task types
-          description: Type of task
+          $ref: '#/components/schemas/TaskType'
         created:
           type: string
           format: date
@@ -592,35 +663,37 @@ components:
           format: date
           nullable: true
           description: Date when first added to a periods payroll. This value must not change hereafter
-        data:
+        targetFausts:
           type: array
           items:
-            $ref: '#/components/schemas/TaskField'
-      required:
-        - id
-        - typeOfTask
-        - created
-        - paycode
-        - approved
-        - payed
-        - data
-
-    TaskField:
-      type: object
-      properties:
-        id:
-          type: integer
-          description: Task data id
-        typeOfField:
-          type: string
-          enum:
-            - 'NONE'  # Todo: define field types (aka. template fields)
+            type: string
+          nullable: true
+          minItems: 0
+          description: If data produced by this task only relates to some of the cases related faustnumbers. These numbers must be listed here
         data:
           type: string
-          description: The fields value
+          description: The task data
           nullable: true
       required:
-        - id
-        - typeOfData
-        - data
+        - typeOfTask
+        - paycode
 
+    TaskType:
+      type: string
+      enum:
+        - 'BKM'
+        - 'TOPICS'
+        - 'AGE'
+        - 'LEVEL_TARGET'
+        - 'METAKOMPAS'
+        - 'BUGGI'
+        - 'ABOUT'
+      description: |
+        Enum describing the type of task
+        * BKM = Decide if this material is relevant for libraries
+        * TOPICS = One or more topics (emneord)
+        * AGE = Relevant agegroup
+        * LEVEL_TARGET = Lexical level and/or target audience
+        * METAKOMPAS = Special topics for Metakompasset
+        * BUGGI = Special topics for Buggi
+        * ABOUT = Short note to be added to records with targeted faustnumbers

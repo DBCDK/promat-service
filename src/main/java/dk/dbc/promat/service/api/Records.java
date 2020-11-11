@@ -97,10 +97,10 @@ public class Records {
                     .withNumFound(relatedByWork.size())
                     .withRecords(relatedByWork);
         } catch(OpensearchConnectorException opensearchConnectorException) {
-            LOGGER.info("Caught OpensearchConnectorException: {}", opensearchConnectorException.getMessage());
+            LOGGER.error("Caught OpensearchConnectorException: {}", opensearchConnectorException.getMessage());
             throw opensearchConnectorException;
         } catch(WorkPresentationConnectorException workPresentationConnectorException) {
-            LOGGER.info("Caught WorkPresentationConnectorException: {}", workPresentationConnectorException.getMessage());
+            LOGGER.error("Caught WorkPresentationConnectorException: {}", workPresentationConnectorException.getMessage());
             throw workPresentationConnectorException;
         }
     }

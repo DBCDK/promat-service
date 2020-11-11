@@ -6,7 +6,9 @@
 package dk.dbc.promat.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import dk.dbc.httpclient.HttpGet;
 import dk.dbc.promat.service.rest.JsonMapperProvider;
+import javax.ws.rs.core.Response;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.Testcontainers;
@@ -46,5 +48,21 @@ public abstract class ContainerTest extends IntegrationTest {
         promatServiceContainer.start();
         promatServiceBaseUrl = "http://" + promatServiceContainer.getContainerIpAddress() +
                 ":" + promatServiceContainer.getMappedPort(8080);
+    }
+
+
+    public <T> T get(String path, Class<T> tClass) {
+        return new HttpGet(httpClient)
+                .withBaseUrl(promatServiceBaseUrl)
+                .withPathElements(path)
+                .execute()
+                .readEntity(tClass);
+    }
+
+    public Response getResponse(String path) {
+        return new HttpGet(httpClient)
+                .withBaseUrl(promatServiceBaseUrl)
+                .withPathElements(path)
+                .execute();
     }
 }

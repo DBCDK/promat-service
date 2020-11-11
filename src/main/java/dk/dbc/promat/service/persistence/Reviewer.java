@@ -1,17 +1,17 @@
 package dk.dbc.promat.service.persistence;
 
-import java.time.LocalDate;
-import java.util.Collection;
-import java.util.List;
 import javax.json.bind.annotation.JsonbDateFormat;
+import javax.persistence.DiscriminatorValue;
 import javax.persistence.Embedded;
 import javax.persistence.Entity;
-import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
+import java.time.LocalDate;
+import java.util.Collection;
+import java.util.List;
 @NamedQueries({
         @NamedQuery(
                 name = Reviewer.GET_ALL_REVIEWERS_NAME,
@@ -19,19 +19,13 @@ import javax.persistence.OneToMany;
         )
 })
 @Entity
-public class Reviewer {
+@DiscriminatorValue("REVIEWER")
+public class Reviewer extends PromatUser {
     public static final String GET_ALL_REVIEWERS_NAME =
             "Reviewers.get.all";
     public static final String GET_ALL_REVIEWERS_QUERY =
             "SELECT reviewer FROM Reviewer reviewer ORDER BY reviewer.id ASC";
 
-
-    @Id
-    private Integer id;
-    private String firstName;
-    private String lastName;
-    private String email;
-    private String phone;
 
     @Embedded
     private Address address;
@@ -50,46 +44,6 @@ public class Reviewer {
             inverseJoinColumns = @JoinColumn(name = "subject_id")
     )
     private Collection<Subject> subjects;
-
-    public Integer getId() {
-        return id;
-    }
-
-    public void setId(Integer id) {
-        this.id = id;
-    }
-
-    public String getFirstName() {
-        return firstName;
-    }
-
-    public void setFirstName(String firstName) {
-        this.firstName = firstName;
-    }
-
-    public String getLastName() {
-        return lastName;
-    }
-
-    public void setLastName(String lastName) {
-        this.lastName = lastName;
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
-    public String getPhone() {
-        return phone;
-    }
-
-    public void setPhone(String phone) {
-        this.phone = phone;
-    }
 
     public Address getAddress() {
         return address;
@@ -141,6 +95,11 @@ public class Reviewer {
 
     public Reviewer withId(Integer id) {
         this.id = id;
+        return this;
+    }
+
+    public Reviewer withActive(boolean active) {
+        this.active = active;
         return this;
     }
 
@@ -197,6 +156,7 @@ public class Reviewer {
         Reviewer reviewer = (Reviewer) o;
 
         if (!id.equals(reviewer.id)) return false;
+        if (active != reviewer.active) return false;
         if (!firstName.equals(reviewer.firstName)) return false;
         if (!lastName.equals(reviewer.lastName)) return false;
         if (!email.equals(reviewer.email)) return false;
@@ -213,6 +173,7 @@ public class Reviewer {
     @Override
     public int hashCode() {
         int result = id.hashCode();
+        result = 31 * result + (active ? 1 : 0);
         result = 31 * result + firstName.hashCode();
         result = 31 * result + lastName.hashCode();
         result = 31 * result + email.hashCode();
@@ -230,6 +191,7 @@ public class Reviewer {
     public String toString() {
         return "Reviewer{" +
                 "id=" + id +
+                ", active=" + active +
                 ", firstName='" + firstName + '\'' +
                 ", lastName='" + lastName + '\'' +
                 ", email='" + email + '\'' +

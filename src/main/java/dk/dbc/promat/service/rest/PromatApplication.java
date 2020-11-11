@@ -5,9 +5,11 @@
 
 package dk.dbc.promat.service.rest;
 
+import dk.dbc.promat.service.api.Editors;
+import dk.dbc.promat.service.api.Records;
 import dk.dbc.promat.service.api.Reviewers;
 import dk.dbc.promat.service.api.Subjects;
-import dk.dbc.promat.service.api.Records;
+import dk.dbc.promat.service.api.Cases;
 import org.glassfish.jersey.jackson.JacksonFeature;
 
 import javax.ws.rs.ApplicationPath;
@@ -16,7 +18,8 @@ import java.util.Set;
 
 @ApplicationPath("/v1/api")
 public class PromatApplication extends Application {
-    private static final Set<Class<?>> classes = Set.of(JacksonFeature.class, Subjects.class, Reviewers.class, Records.class);
+    private static final Set<Class<?>> classes = Set.of(
+            Cases.class, Editors.class, JacksonFeature.class, Records.class, Reviewers.class, Subjects.class);
     private static final Set<Object> singletons = Set.of(new JsonMapperProvider());
 
     @Override
