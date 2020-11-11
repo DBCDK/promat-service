@@ -52,7 +52,6 @@ public abstract class ContainerTest extends IntegrationTest {
                 ":" + promatServiceContainer.getMappedPort(8080);
     }
 
-
     public <T> T get(String path, Class<T> tClass) {
         return new HttpGet(httpClient)
                 .withBaseUrl(promatServiceBaseUrl)

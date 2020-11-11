@@ -36,11 +36,11 @@ public class CasesIT extends ContainerTest {
         assertThat("status code", postResponse("v1/api/cases", dto).getStatus(), is(400));
 
         // title set
-        dto.setTitle("Title for 02345678");
+        dto.setTitle("Title for 1001111");
         assertThat("status code", postResponse("v1/api/cases", dto).getStatus(), is(400));
 
         // primaryFaust set
-        dto.setPrimaryFaust("02345678");
+        dto.setPrimaryFaust("1001111");
         assertThat("status code", postResponse("v1/api/cases", dto).getStatus(), is(400));
 
         // materialType set
@@ -51,45 +51,36 @@ public class CasesIT extends ContainerTest {
         // Check that the returned object has title, primary faust and materialtype set
         String obj = response.readEntity(String.class);
         PromatCase created = mapper.readValue(obj, PromatCase.class);
-        assertThat("primary faust", created.getPrimaryFaust(), is("02345678"));
-        assertThat("title", created.getTitle(), is("Title for 02345678"));
+        assertThat("primary faust", created.getPrimaryFaust(), is("1001111"));
+        assertThat("title", created.getTitle(), is("Title for 1001111"));
         assertThat("materialType", created.getMaterialType(), is(MaterialType.BOOK));
     }
 
     @Test
     public void testCreateCaseForExistingPrimaryFaust() {
 
-        // First case
+        // New case with primary faust 001111 which already exists
         CaseRequestDto dto = new CaseRequestDto()
-                .withPrimaryFaust("08345678")
-                .withRelatedFausts(Arrays.asList(new String[] {"09345678", "00145678"}))
-                .withTitle("Title for 06345678")
-                .withMaterialType(MaterialType.BOOK);
-        assertThat("status code", postResponse("v1/api/cases", dto).getStatus(), is(201));
+                .withPrimaryFaust("001111")
+                .withRelatedFausts(Arrays.asList(new String[] {"002222", "003333"}))
+                .withTitle("Title for 001111")
+                .withMaterialType(MaterialType.MOVIE);
 
-        // New case with primary faust 08345678 (exists as primary faust)
-        dto.setTitle("New title for 08345678");
-        dto.setMaterialType(MaterialType.MOVIE);
         assertThat("status code", postResponse("v1/api/cases", dto).getStatus(), is(409));
 
-        // New case with primary faust 07345678 (exists as related faust)
-        dto.setPrimaryFaust("09345678");
-        dto.setTitle("New title for 09345678");
-        dto.setMaterialType(MaterialType.MOVIE);
+        // New case with primary faust 002222 which exists as related faust
+        dto.setPrimaryFaust("002222");
+        dto.setTitle("New title for 002222");
         assertThat("status code", postResponse("v1/api/cases", dto).getStatus(), is(409));
 
-        // New case with primary faust 00245678 and related faust 00145678 (related faust exists)
-        dto.setPrimaryFaust("00245678");
-        dto.setTitle("New title for 00245678");
-        dto.setRelatedFausts(Arrays.asList(new String[] {"00145678"}));
-        dto.setMaterialType(MaterialType.MOVIE);
+        // New case with primary faust 2004444 and related faust 002222 which exists as related faust
+        dto.setPrimaryFaust("204444");
+        dto.setTitle("New title for 2004444");
+        dto.setRelatedFausts(Arrays.asList(new String[] {"002222"}));
         assertThat("status code", postResponse("v1/api/cases", dto).getStatus(), is(409));
 
-        // New case with primary faust 00245678 and related faust 00345678 (all is good)
-        dto.setPrimaryFaust("00245678");
-        dto.setTitle("New title for 00245678");
-        dto.setRelatedFausts(Arrays.asList(new String[] {"00345678"}));
-        dto.setMaterialType(MaterialType.MOVIE);
+        // New case with primary faust 2004444 and related faust 2005555 (all is good)
+        dto.setRelatedFausts(Arrays.asList(new String[] {"2005555"}));
         assertThat("status code", postResponse("v1/api/cases", dto).getStatus(), is(201));
     }
 
@@ -100,18 +91,19 @@ public class CasesIT extends ContainerTest {
         // being injected by the dumpfiles also used by the reviewer and subject tests
 
         CaseRequestDto dto = new CaseRequestDto()
-                .withPrimaryFaust("22345678")
-                .withTitle("Title for 22345678")
+                .withPrimaryFaust("3001111")
+                .withTitle("Title for 3001111")
                 .withMaterialType(MaterialType.BOOK)
                 .withReviewer(1)
                 .withSubjects(Arrays.asList(3, 4));
+
         Response response = postResponse("v1/api/cases", dto);
         assertThat("status code", response.getStatus(), is(201));
 
         String obj = response.readEntity(String.class);
         PromatCase created = mapper.readValue(obj, PromatCase.class);
-        assertThat("primary faust", created.getPrimaryFaust(), is("22345678"));
-        assertThat("title", created.getTitle(), is("Title for 22345678"));
+        assertThat("primary faust", created.getPrimaryFaust(), is("3001111"));
+        assertThat("title", created.getTitle(), is("Title for 3001111"));
         assertThat("materialType", created.getMaterialType(), is(MaterialType.BOOK));
 
         assertThat("reviwer id", created.getReviewer().getId(), is(1));
@@ -132,13 +124,13 @@ public class CasesIT extends ContainerTest {
     public void testCreateCaseWithTrivialFields() throws JsonProcessingException {
 
         CaseRequestDto dto = new CaseRequestDto()
-                .withPrimaryFaust("32345678")
-                .withTitle("Title for 32345678")
-                .withDetails("Details for 32345678")
+                .withPrimaryFaust("4001111")
+                .withTitle("Title for 4001111")
+                .withDetails("Details for 4001111")
                 .withMaterialType(MaterialType.BOOK)
                 .withAssigned("2020-04-11")
                 .withDeadline("2020-04-12")
-                .withRelatedFausts(Arrays.asList("42345678", "52345678"))
+                .withRelatedFausts(Arrays.asList("4002222", "4003333"))
                 .withStatus(CaseStatus.CREATED);
 
         Response response = postResponse("v1/api/cases", dto);
@@ -147,9 +139,9 @@ public class CasesIT extends ContainerTest {
         String obj = response.readEntity(String.class);
         PromatCase created = mapper.readValue(obj, PromatCase.class);
 
-        assertThat("primaryFaust", created.getPrimaryFaust(), is("32345678"));
-        assertThat("title", created.getTitle(), is("Title for 32345678"));
-        assertThat("details", created.getDetails(), is("Details for 32345678"));
+        assertThat("primaryFaust", created.getPrimaryFaust(), is("4001111"));
+        assertThat("title", created.getTitle(), is("Title for 4001111"));
+        assertThat("details", created.getDetails(), is("Details for 4001111"));
         assertThat("materialType", created.getMaterialType(), is(MaterialType.BOOK));
         assertThat("created", created.getCreated(), is(LocalDate.now()));
         assertThat("assigned", created.getAssigned(), is(LocalDate.parse("2020-04-11")));
@@ -158,7 +150,7 @@ public class CasesIT extends ContainerTest {
                 stream()
                 .sorted()
                 .collect(Collectors.toList())
-                .equals(Arrays.stream(new String[]{"42345678", "52345678"})
+                .equals(Arrays.stream(new String[]{"4002222", "4003333"})
                         .collect(Collectors.toList())), is(true));
         assertThat(created.getStatus(), is(CaseStatus.CREATED));
     }
@@ -166,42 +158,13 @@ public class CasesIT extends ContainerTest {
     @Test
     public void testGetCase() throws JsonProcessingException {
 
-        // Create case
-        CaseRequestDto dto = new CaseRequestDto()
-                .withPrimaryFaust("62345678")
-                .withTitle("Title for 62345678")
-                .withDetails("Details for 62345678")
-                .withMaterialType(MaterialType.BOOK)
-                .withReviewer(1)
-                .withSubjects(Arrays.asList(3, 4))
-                .withAssigned("2020-04-11")
-                .withDeadline("2020-04-12")
-                .withRelatedFausts(Arrays.asList("72345678", "82345678"))
-                .withStatus(CaseStatus.ASSIGNED);
-
-        Response response = postResponse("v1/api/cases", dto);
-        assertThat("status code", response.getStatus(), is(201));
-
-        // Verify that the case has some data
-        String obj = response.readEntity(String.class);
-        PromatCase created = mapper.readValue(obj, PromatCase.class);
-
-        assertThat("primary faust", created.getPrimaryFaust(), is("62345678"));
-        assertThat("title", created.getTitle(), is("Title for 62345678"));
-        assertThat("details", created.getDetails(), is("Details for 62345678"));
-
-        // Get case with nonexisting id, expect 204 (NOT FOUND)
-        response = getResponse("v1/api/cases/1234");
+        // Get case with nonexisting id, expect 404 (NOT FOUND)
+        Response response = getResponse("v1/api/cases/1234");
         assertThat("status code", response.getStatus(), is(404));
 
-        // Get the case we created
-        response = getResponse("v1/api/cases/" + created.getId());
+        // Get an existing case
+        response = getResponse("v1/api/cases/1");
         assertThat("status code", response.getStatus(), is(200));
-
-        // Verify that the case matches the created case
-        obj = response.readEntity(String.class);
-        PromatCase fetched = mapper.readValue(obj, PromatCase.class);
-        assertThat("fetched case is same as created", created.equals(fetched), is(true));
     }
 
     @Test
@@ -209,21 +172,21 @@ public class CasesIT extends ContainerTest {
 
         // Create case
         CaseRequestDto dto = new CaseRequestDto()
-                .withPrimaryFaust("92345678")
-                .withTitle("Title for 92345678")
-                .withDetails("Details for 92345678")
+                .withPrimaryFaust("6001111")
+                .withTitle("Title for 6001111")
+                .withDetails("Details for 6001111")
                 .withMaterialType(MaterialType.BOOK)
                 .withReviewer(1)
                 .withSubjects(Arrays.asList(3, 4))
                 .withAssigned("2020-04-11")
                 .withDeadline("2020-04-12")
-                .withRelatedFausts(Arrays.asList("03345678", "04345678"))
+                .withRelatedFausts(Arrays.asList("6002222", "6003333"))
                 .withStatus(CaseStatus.ASSIGNED)
                 .withTasks(Arrays.asList(
                         new TaskDto()
                                 .withPaycode(Paycode.NONE)
                                 .withTypeOfTask(TaskType.ABOUT)
-                                .withTargetFausts(Arrays.asList(new String[] {"04345678", "14345678"})),
+                                .withTargetFausts(Arrays.asList(new String[] {"6002222", "6004444"})),
                         new TaskDto()
                                 .withPaycode(Paycode.NONE)
                                 .withTypeOfTask(TaskType.BKM)
@@ -247,11 +210,11 @@ public class CasesIT extends ContainerTest {
         assertThat("task 1 targetFausts size", created.getTasks().get(0).getTargetFausts().size(), is(2));
         assertThat("task 1 targetFausts contains", created.getTasks().get(0).getTargetFausts()
                         .stream().sorted().collect(Collectors.toList()).toString(),
-                is(Arrays.asList(new String [] {"04345678", "14345678"})
+                is(Arrays.asList(new String [] {"6002222", "6004444"})
                         .stream().sorted().collect(Collectors.toList()).toString()));
         assertThat("related fausts contains", created.getRelatedFausts()
                         .stream().sorted().collect(Collectors.toList()).toString(),
-                is(Arrays.asList(new String [] {"03345678", "04345678", "14345678"})
+                is(Arrays.asList(new String [] {"6002222", "6003333", "6004444"})
                         .stream().sorted().collect(Collectors.toList()).toString()));
 
         // Check the second created task
@@ -277,13 +240,13 @@ public class CasesIT extends ContainerTest {
 
         // Create case with status ASSIGNED but no reviewer given
         CaseRequestDto dto = new CaseRequestDto()
-                .withPrimaryFaust("05345678")
-                .withTitle("Title for 05345678")
-                .withDetails("Details for 05345678")
+                .withPrimaryFaust("7001111")
+                .withTitle("Title for 7001111")
+                .withDetails("Details for 7001111")
                 .withMaterialType(MaterialType.BOOK)
                 .withAssigned("2020-04-11")
                 .withDeadline("2020-04-12")
-                .withRelatedFausts(Arrays.asList("06345678", "07345678"))
+                .withRelatedFausts(Arrays.asList("7002222", "7003333"))
                 .withStatus(CaseStatus.ASSIGNED);
 
         assertThat("status code", postResponse("v1/api/cases", dto).getStatus(), is(400));
@@ -303,39 +266,19 @@ public class CasesIT extends ContainerTest {
     @Test
     public void testCheckCaseWithFaustExists() throws JsonProcessingException {
 
-        // Create two cases
-        CaseRequestDto dto = new CaseRequestDto()
-                .withPrimaryFaust("98765432")
-                .withTitle("Title for 98765432")
-                .withDetails("Details for 98765432")
-                .withMaterialType(MaterialType.BOOK)
-                .withReviewer(1)
-                .withSubjects(Arrays.asList(3, 4))
-                .withAssigned("2020-04-11")
-                .withDeadline("2020-04-12")
-                .withRelatedFausts(Arrays.asList("987654321", "987654322"))
-                .withStatus(CaseStatus.ASSIGNED);
-
-        assertThat("status code", postResponse("v1/api/cases", dto).getStatus(), is(201));
-
-        dto.setPrimaryFaust("87654321");
-        dto.setTitle("Title for 87654321");
-        dto.setRelatedFausts(Arrays.asList("876543211", "876543212"));
-        assertThat("status code", postResponse("v1/api/cases", dto).getStatus(), is(201));
-
-        // Check if various fausts exists
+        // Check if various fausts exists.
         // (DBC's HttpClient currently do not support HEAD operations, so we use GET and throw away the response body)
-        Response response = getResponse("v1/api/cases", Map.of("faust","98765432"));
-        assertThat("status code", response.getStatus(), is(200));
 
-        response = getResponse("v1/api/cases", Map.of("faust","987654322"));
-        assertThat("status code", response.getStatus(), is(200));
+        // Case with id 1, primary faust
+        assertThat("status code", getResponse("v1/api/cases", Map.of("faust","001111")).getStatus(), is(200));
 
-        response = getResponse("v1/api/cases", Map.of("faust","876543212"));
-        assertThat("status code", response.getStatus(), is(200));
+        // Case with id 1, related faust
+        assertThat("status code", getResponse("v1/api/cases", Map.of("faust","002222")).getStatus(), is(200));
+
+        // Case with id 2, related faust
+        assertThat("status code", getResponse("v1/api/cases", Map.of("faust","006666")).getStatus(), is(200));
 
         // Check a faustnumber that does not exist
-        response = getResponse("v1/api/cases", Map.of("faust","876543213"));
-        assertThat("status code", response.getStatus(), is(404));
+        assertThat("status code", getResponse("v1/api/cases", Map.of("faust","007777")).getStatus(), is(404));
     }
 }
