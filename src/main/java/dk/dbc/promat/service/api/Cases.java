@@ -6,7 +6,7 @@ import dk.dbc.promat.service.dto.CaseSummaryList;
 import dk.dbc.promat.service.dto.ServiceErrorCode;
 import dk.dbc.promat.service.dto.ServiceErrorDto;
 import dk.dbc.promat.service.dto.TaskDto;
-import dk.dbc.promat.service.persistence.Case;
+import dk.dbc.promat.service.persistence.PromatCase;
 import dk.dbc.promat.service.dto.CaseRequestDto;
 import dk.dbc.promat.service.persistence.CaseStatus;
 import dk.dbc.promat.service.persistence.CaseView;
@@ -195,7 +195,7 @@ public class Cases {
 
         // Create case
         try {
-            Case entity = new Case()
+            PromatCase entity = new PromatCase()
             .withTitle(dto.getTitle())
             .withDetails(dto.getDetails() == null ? "" : dto.getDetails())
             .withPrimaryFaust(dto.getPrimaryFaust())
@@ -235,7 +235,7 @@ public class Cases {
         // Find and return the requested case
         try {
 
-            Case requested = entityManager.find(Case.class, id);
+            PromatCase requested = entityManager.find(PromatCase.class, id);
             if( requested == null ) {
                 LOGGER.info("Requested case {} does not exist", id);
                 return Response.status(404).build();
@@ -259,7 +259,7 @@ public class Cases {
             CaseSummaryList cases = new CaseSummaryList();
 
             // Get (active) case which includes the given faustnumber
-            TypedQuery<Case> query = entityManager.createNamedQuery(Case.GET_CASE_WITH_FAUST_NAME, Case.class);
+            TypedQuery<PromatCase> query = entityManager.createNamedQuery(PromatCase.GET_CASE_WITH_FAUST_NAME, PromatCase.class);
             query.setParameter("primaryFaust", faust);
             query.setParameter("relatedFaust", JSONB_CONTEXT.marshall(faust));
             cases.getCases().addAll(query.getResultList());

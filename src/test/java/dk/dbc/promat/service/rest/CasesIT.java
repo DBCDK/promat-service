@@ -5,7 +5,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import dk.dbc.promat.service.ContainerTest;
 import dk.dbc.promat.service.dto.CaseRequestDto;
 import dk.dbc.promat.service.dto.TaskDto;
-import dk.dbc.promat.service.persistence.Case;
+import dk.dbc.promat.service.persistence.PromatCase;
 import dk.dbc.promat.service.persistence.CaseStatus;
 import dk.dbc.promat.service.persistence.MaterialType;
 import dk.dbc.promat.service.persistence.Paycode;
@@ -50,7 +50,7 @@ public class CasesIT extends ContainerTest {
 
         // Check that the returned object has title, primary faust and materialtype set
         String obj = response.readEntity(String.class);
-        Case created = mapper.readValue(obj, Case.class);
+        PromatCase created = mapper.readValue(obj, PromatCase.class);
         assertThat("primary faust", created.getPrimaryFaust(), is("02345678"));
         assertThat("title", created.getTitle(), is("Title for 02345678"));
         assertThat("materialType", created.getMaterialType(), is(MaterialType.BOOK));
@@ -109,7 +109,7 @@ public class CasesIT extends ContainerTest {
         assertThat("status code", response.getStatus(), is(201));
 
         String obj = response.readEntity(String.class);
-        Case created = mapper.readValue(obj, Case.class);
+        PromatCase created = mapper.readValue(obj, PromatCase.class);
         assertThat("primary faust", created.getPrimaryFaust(), is("22345678"));
         assertThat("title", created.getTitle(), is("Title for 22345678"));
         assertThat("materialType", created.getMaterialType(), is(MaterialType.BOOK));
@@ -145,7 +145,7 @@ public class CasesIT extends ContainerTest {
         assertThat("status code", response.getStatus(), is(201));
 
         String obj = response.readEntity(String.class);
-        Case created = mapper.readValue(obj, Case.class);
+        PromatCase created = mapper.readValue(obj, PromatCase.class);
 
         assertThat("primaryFaust", created.getPrimaryFaust(), is("32345678"));
         assertThat("title", created.getTitle(), is("Title for 32345678"));
@@ -184,7 +184,7 @@ public class CasesIT extends ContainerTest {
 
         // Verify that the case has some data
         String obj = response.readEntity(String.class);
-        Case created = mapper.readValue(obj, Case.class);
+        PromatCase created = mapper.readValue(obj, PromatCase.class);
 
         assertThat("primary faust", created.getPrimaryFaust(), is("62345678"));
         assertThat("title", created.getTitle(), is("Title for 62345678"));
@@ -200,7 +200,7 @@ public class CasesIT extends ContainerTest {
 
         // Verify that the case matches the created case
         obj = response.readEntity(String.class);
-        Case fetched = mapper.readValue(obj, Case.class);
+        PromatCase fetched = mapper.readValue(obj, PromatCase.class);
         assertThat("fetched case is same as created", created.equals(fetched), is(true));
     }
 
@@ -234,7 +234,7 @@ public class CasesIT extends ContainerTest {
 
         // Verify that the case has some data and a list with 2 tasks
         String obj = response.readEntity(String.class);
-        Case created = mapper.readValue(obj, Case.class);
+        PromatCase created = mapper.readValue(obj, PromatCase.class);
         assertThat("has 2 tasks", created.getTasks().size(), is(2));
 
         // Check the first created task
@@ -268,7 +268,7 @@ public class CasesIT extends ContainerTest {
 
         // Verify that the case matches the created case
         obj = response.readEntity(String.class);
-        Case fetched = mapper.readValue(obj, Case.class);
+        PromatCase fetched = mapper.readValue(obj, PromatCase.class);
         assertThat("fetched case is same as created", created.equals(fetched), is(true));
     }
 

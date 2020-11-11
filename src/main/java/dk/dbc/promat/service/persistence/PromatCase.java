@@ -17,15 +17,14 @@ import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
-import javax.persistence.Table;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Objects;
 
 @NamedQueries({
         @NamedQuery(
-                name = Case.GET_CASE_WITH_FAUST_NAME,
-                query = Case.GET_CASE_WITH_FAUST_QUERY
+                name = PromatCase.GET_CASE_WITH_FAUST_NAME,
+                query = PromatCase.GET_CASE_WITH_FAUST_QUERY
         )
 })
 
@@ -36,14 +35,13 @@ import java.util.Objects;
  *  plural form used here.
  */
 @Entity
-@Table(name = "cases")
-public class Case {
+public class PromatCase {
 
     public static final String GET_CASE_WITH_FAUST_NAME =
-            "Case.get.with.faust";
+            "PromatCase.get.with.faust";
     public static final String GET_CASE_WITH_FAUST_QUERY =
             "SELECT c " +
-              "FROM Case c " +
+              "FROM PromatCase c " +
              "WHERE (c.primaryFaust = :primaryFaust OR FUNCTION('jsonb_contains', c.relatedFausts, CAST(:relatedFaust AS JSONB))) " +
                "AND c.status NOT IN (dk.dbc.promat.service.persistence.CaseStatus.CLOSED, dk.dbc.promat.service.persistence.CaseStatus.DONE)";
 
@@ -209,67 +207,67 @@ public class Case {
         this.tasks = tasks;
     }
 
-    public Case withId(Integer id) {
+    public PromatCase withId(Integer id) {
         this.id = id;
         return this;
     }
 
-    public Case withTitle(String title) {
+    public PromatCase withTitle(String title) {
         this.title = title;
         return this;
     }
 
-    public Case withDetails(String details) {
+    public PromatCase withDetails(String details) {
         this.details = details;
         return this;
     }
 
-    public Case withPrimaryFaust(String primaryFaust) {
+    public PromatCase withPrimaryFaust(String primaryFaust) {
         this.primaryFaust = primaryFaust;
         return this;
     }
 
-    public Case withRelatedFausts(List<String> relatedFausts) {
+    public PromatCase withRelatedFausts(List<String> relatedFausts) {
         this.relatedFausts = relatedFausts;
         return this;
     }
 
-    public Case withReviewer(Reviewer reviewer) {
+    public PromatCase withReviewer(Reviewer reviewer) {
         this.reviewer = reviewer;
         return this;
     }
 
-    public Case withSubjects(List<Subject> subjects) {
+    public PromatCase withSubjects(List<Subject> subjects) {
         this.subjects = subjects;
         return this;
     }
 
-    public Case withCreated(LocalDate created) {
+    public PromatCase withCreated(LocalDate created) {
         this.created = created;
         return this;
     }
 
-    public Case withDeadline(LocalDate deadline) {
+    public PromatCase withDeadline(LocalDate deadline) {
         this.deadline = deadline;
         return this;
     }
 
-    public Case withAssigned(LocalDate assigned) {
+    public PromatCase withAssigned(LocalDate assigned) {
         this.assigned = assigned;
         return this;
     }
 
-    public Case withStatus(CaseStatus status) {
+    public PromatCase withStatus(CaseStatus status) {
         this.status = status;
         return this;
     }
 
-    public Case withMaterialType(MaterialType materialType) {
+    public PromatCase withMaterialType(MaterialType materialType) {
         this.materialType = materialType;
         return this;
     }
 
-    public Case withTasks(List<Task> tasks) {
+    public PromatCase withTasks(List<Task> tasks) {
         this.tasks = tasks;
         return this;
     }
@@ -278,7 +276,7 @@ public class Case {
     public boolean equals(Object o) {
         if(this == o) return true;
         if(o == null || getClass() != o.getClass()) return false;
-        Case aCase = (Case) o;
+        PromatCase aCase = (PromatCase) o;
         return id.equals(aCase.id) &&
                 title.equals(aCase.title) &&
                 Objects.equals(details, aCase.details) &&
