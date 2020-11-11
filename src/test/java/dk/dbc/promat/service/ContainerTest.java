@@ -7,6 +7,7 @@ package dk.dbc.promat.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dk.dbc.httpclient.HttpGet;
+import dk.dbc.httpclient.HttpPost;
 import dk.dbc.promat.service.rest.JsonMapperProvider;
 import javax.ws.rs.core.Response;
 import org.slf4j.Logger;
@@ -75,5 +76,13 @@ public abstract class ContainerTest extends IntegrationTest {
         httpGet.getQueryParameters().putAll(queryParameters);
 
         return httpGet.execute();
+    }
+
+    public <T> Response postResponse(String path, T body) {
+        HttpPost httpPost = new HttpPost(httpClient)
+                .withBaseUrl(promatServiceBaseUrl)
+                .withPathElements(path)
+                .withData(body, "application/json");
+        return httpClient.execute(httpPost);
     }
 }

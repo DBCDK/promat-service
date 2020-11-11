@@ -2,7 +2,6 @@ package dk.dbc.promat.service.rest;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 
-import dk.dbc.httpclient.HttpPost;
 import dk.dbc.promat.service.ContainerTest;
 import dk.dbc.promat.service.dto.CaseRequestDto;
 import dk.dbc.promat.service.dto.TaskDto;
@@ -34,40 +33,22 @@ public class CasesIT extends ContainerTest {
         CaseRequestDto dto = new CaseRequestDto();
 
         // Empty dto
-        HttpPost httpPost = new HttpPost(httpClient)
-                .withBaseUrl(promatServiceBaseUrl)
-                .withPathElements("v1", "api", "cases")
-                .withData(dto, "application/json");
-        Response response = httpClient.execute(httpPost);
-        assertThat("status code", response.getStatus(), is(400));
+        assertThat("status code", postResponse("v1/api/cases", dto).getStatus(), is(400));
 
         // title set
         dto.setTitle("Title for 02345678");
-        httpPost = new HttpPost(httpClient)
-                .withBaseUrl(promatServiceBaseUrl)
-                .withPathElements("v1", "api", "cases")
-                .withData(dto, "application/json");
-        response = httpClient.execute(httpPost);
-        assertThat("status code", response.getStatus(), is(400));
+        assertThat("status code", postResponse("v1/api/cases", dto).getStatus(), is(400));
 
         // primaryFaust set
         dto.setPrimaryFaust("02345678");
-        httpPost = new HttpPost(httpClient)
-                .withBaseUrl(promatServiceBaseUrl)
-                .withPathElements("v1", "api", "cases")
-                .withData(dto, "application/json");
-        response = httpClient.execute(httpPost);
-        assertThat("status code", response.getStatus(), is(400));
+        assertThat("status code", postResponse("v1/api/cases", dto).getStatus(), is(400));
 
         // materialType set
         dto.setMaterialType(MaterialType.BOOK);
-        httpPost = new HttpPost(httpClient)
-                .withBaseUrl(promatServiceBaseUrl)
-                .withPathElements("v1", "api", "cases")
-                .withData(dto, "application/json");
-        response = httpClient.execute(httpPost);
+        Response response = postResponse("v1/api/cases", dto);
         assertThat("status code", response.getStatus(), is(201));
 
+        // Check that the returned object has title, primary faust and materialtype set
         String obj = response.readEntity(String.class);
         Case created = mapper.readValue(obj, Case.class);
         assertThat("primary faust", created.getPrimaryFaust(), is("02345678"));
@@ -84,97 +65,32 @@ public class CasesIT extends ContainerTest {
                 .withRelatedFausts(Arrays.asList(new String[] {"09345678", "00145678"}))
                 .withTitle("Title for 06345678")
                 .withMaterialType(MaterialType.BOOK);
-
-        HttpPost httpPost = new HttpPost(httpClient)
-                .withBaseUrl(promatServiceBaseUrl)
-                .withPathElements("v1", "api", "cases")
-                .withData(dto, "application/json");
-
-        Response response = httpClient.execute(httpPost);
-        assertThat("status code", response.getStatus(), is(201));
+        assertThat("status code", postResponse("v1/api/cases", dto).getStatus(), is(201));
 
         // New case with primary faust 08345678 (exists as primary faust)
         dto.setTitle("New title for 08345678");
         dto.setMaterialType(MaterialType.MOVIE);
-
-        httpPost = new HttpPost(httpClient)
-                .withBaseUrl(promatServiceBaseUrl)
-                .withPathElements("v1", "api", "cases")
-                .withData(dto, "application/json");
-
-        response = httpClient.execute(httpPost);
-        assertThat("status code", response.getStatus(), is(409));
+        assertThat("status code", postResponse("v1/api/cases", dto).getStatus(), is(409));
 
         // New case with primary faust 07345678 (exists as related faust)
         dto.setPrimaryFaust("09345678");
         dto.setTitle("New title for 09345678");
         dto.setMaterialType(MaterialType.MOVIE);
-
-        httpPost = new HttpPost(httpClient)
-                .withBaseUrl(promatServiceBaseUrl)
-                .withPathElements("v1", "api", "cases")
-                .withData(dto, "application/json");
-
-        response = httpClient.execute(httpPost);
-        assertThat("status code", response.getStatus(), is(409));
+        assertThat("status code", postResponse("v1/api/cases", dto).getStatus(), is(409));
 
         // New case with primary faust 00245678 and related faust 00145678 (related faust exists)
         dto.setPrimaryFaust("00245678");
         dto.setTitle("New title for 00245678");
         dto.setRelatedFausts(Arrays.asList(new String[] {"00145678"}));
         dto.setMaterialType(MaterialType.MOVIE);
-
-        httpPost = new HttpPost(httpClient)
-                .withBaseUrl(promatServiceBaseUrl)
-                .withPathElements("v1", "api", "cases")
-                .withData(dto, "application/json");
-
-        response = httpClient.execute(httpPost);
-        assertThat("status code", response.getStatus(), is(409));
+        assertThat("status code", postResponse("v1/api/cases", dto).getStatus(), is(409));
 
         // New case with primary faust 00245678 and related faust 00345678 (all is good)
         dto.setPrimaryFaust("00245678");
         dto.setTitle("New title for 00245678");
         dto.setRelatedFausts(Arrays.asList(new String[] {"00345678"}));
         dto.setMaterialType(MaterialType.MOVIE);
-
-        httpPost = new HttpPost(httpClient)
-                .withBaseUrl(promatServiceBaseUrl)
-                .withPathElements("v1", "api", "cases")
-                .withData(dto, "application/json");
-
-        response = httpClient.execute(httpPost);
-        assertThat("status code", response.getStatus(), is(201));
-    }
-
-    @Test
-    public void testCreateCaseForExistingFaust() {
-
-        // First case with faust 12345678
-        CaseRequestDto dto = new CaseRequestDto()
-                .withPrimaryFaust("12345678")
-                .withTitle("Title for 12345678")
-                .withMaterialType(MaterialType.BOOK);
-
-        HttpPost httpPost = new HttpPost(httpClient)
-                .withBaseUrl(promatServiceBaseUrl)
-                .withPathElements("v1", "api", "cases")
-                .withData(dto, "application/json");
-
-        Response response = httpClient.execute(httpPost);
-        assertThat("status code", response.getStatus(), is(201));
-
-        // New case with faust 12345678 (exists)
-        dto.setTitle("New title for 12345678");
-        dto.setMaterialType(MaterialType.MOVIE);
-
-        httpPost = new HttpPost(httpClient)
-                .withBaseUrl(promatServiceBaseUrl)
-                .withPathElements("v1", "api", "cases")
-                .withData(dto, "application/json");
-
-        response = httpClient.execute(httpPost);
-        assertThat("status code", response.getStatus(), is(409));
+        assertThat("status code", postResponse("v1/api/cases", dto).getStatus(), is(201));
     }
 
     @Test
@@ -189,13 +105,7 @@ public class CasesIT extends ContainerTest {
                 .withMaterialType(MaterialType.BOOK)
                 .withReviewer(1)
                 .withSubjects(Arrays.asList(3, 4));
-
-        HttpPost httpPost = new HttpPost(httpClient)
-                .withBaseUrl(promatServiceBaseUrl)
-                .withPathElements("v1", "api", "cases")
-                .withData(dto, "application/json");
-
-        Response response = httpClient.execute(httpPost);
+        Response response = postResponse("v1/api/cases", dto);
         assertThat("status code", response.getStatus(), is(201));
 
         String obj = response.readEntity(String.class);
@@ -231,12 +141,7 @@ public class CasesIT extends ContainerTest {
                 .withRelatedFausts(Arrays.asList("42345678", "52345678"))
                 .withStatus(CaseStatus.CREATED);
 
-        HttpPost httpPost = new HttpPost(httpClient)
-                .withBaseUrl(promatServiceBaseUrl)
-                .withPathElements("v1", "api", "cases")
-                .withData(dto, "application/json");
-
-        Response response = httpClient.execute(httpPost);
+        Response response = postResponse("v1/api/cases", dto);
         assertThat("status code", response.getStatus(), is(201));
 
         String obj = response.readEntity(String.class);
@@ -274,12 +179,7 @@ public class CasesIT extends ContainerTest {
                 .withRelatedFausts(Arrays.asList("72345678", "82345678"))
                 .withStatus(CaseStatus.ASSIGNED);
 
-        HttpPost httpPost = new HttpPost(httpClient)
-                .withBaseUrl(promatServiceBaseUrl)
-                .withPathElements("v1", "api", "cases")
-                .withData(dto, "application/json");
-
-        Response response = httpClient.execute(httpPost);
+        Response response = postResponse("v1/api/cases", dto);
         assertThat("status code", response.getStatus(), is(201));
 
         // Verify that the case has some data
@@ -329,12 +229,7 @@ public class CasesIT extends ContainerTest {
                                 .withTypeOfTask(TaskType.BKM)
                 ));
 
-        HttpPost httpPost = new HttpPost(httpClient)
-                .withBaseUrl(promatServiceBaseUrl)
-                .withPathElements("v1", "api", "cases")
-                .withData(dto, "application/json");
-
-        Response response = httpClient.execute(httpPost);
+        Response response = postResponse("v1/api/cases", dto);
         assertThat("status code", response.getStatus(), is(201));
 
         // Verify that the case has some data and a list with 2 tasks
@@ -391,35 +286,15 @@ public class CasesIT extends ContainerTest {
                 .withRelatedFausts(Arrays.asList("06345678", "07345678"))
                 .withStatus(CaseStatus.ASSIGNED);
 
-        HttpPost httpPost = new HttpPost(httpClient)
-                .withBaseUrl(promatServiceBaseUrl)
-                .withPathElements("v1", "api", "cases")
-                .withData(dto, "application/json");
-
-        Response response = httpClient.execute(httpPost);
-        assertThat("status code", response.getStatus(), is(400));
+        assertThat("status code", postResponse("v1/api/cases", dto).getStatus(), is(400));
 
         // Change status to DONE (which is even worse)
         dto.setStatus(CaseStatus.DONE);
-
-        httpPost = new HttpPost(httpClient)
-                .withBaseUrl(promatServiceBaseUrl)
-                .withPathElements("v1", "api", "cases")
-                .withData(dto, "application/json");
-
-        response = httpClient.execute(httpPost);
-        assertThat("status code", response.getStatus(), is(400));
+        assertThat("status code", postResponse("v1/api/cases", dto).getStatus(), is(400));
 
         // Get frustrated and remove the status
         dto.setStatus(null);
-
-        httpPost = new HttpPost(httpClient)
-                .withBaseUrl(promatServiceBaseUrl)
-                .withPathElements("v1", "api", "cases")
-                .withData(dto, "application/json");
-
-        response = httpClient.execute(httpPost);
-        assertThat("status code", response.getStatus(), is(201));
+        assertThat("status code", postResponse("v1/api/cases", dto).getStatus(), is(201));
 
         // Tests for valid state CREATED and ASSIGNED with an reviewer set is
         // covered in previous tests
@@ -441,29 +316,16 @@ public class CasesIT extends ContainerTest {
                 .withRelatedFausts(Arrays.asList("987654321", "987654322"))
                 .withStatus(CaseStatus.ASSIGNED);
 
-        HttpPost httpPost = new HttpPost(httpClient)
-                .withBaseUrl(promatServiceBaseUrl)
-                .withPathElements("v1", "api", "cases")
-                .withData(dto, "application/json");
-
-        Response response = httpClient.execute(httpPost);
-        assertThat("status code", response.getStatus(), is(201));
+        assertThat("status code", postResponse("v1/api/cases", dto).getStatus(), is(201));
 
         dto.setPrimaryFaust("87654321");
         dto.setTitle("Title for 87654321");
         dto.setRelatedFausts(Arrays.asList("876543211", "876543212"));
-
-        httpPost = new HttpPost(httpClient)
-                .withBaseUrl(promatServiceBaseUrl)
-                .withPathElements("v1", "api", "cases")
-                .withData(dto, "application/json");
-
-        response = httpClient.execute(httpPost);
-        assertThat("status code", response.getStatus(), is(201));
+        assertThat("status code", postResponse("v1/api/cases", dto).getStatus(), is(201));
 
         // Check if various fausts exists
         // (DBC's HttpClient currently do not support HEAD operations, so we use GET and throw away the response body)
-        response = getResponse("v1/api/cases", Map.of("faust","98765432"));
+        Response response = getResponse("v1/api/cases", Map.of("faust","98765432"));
         assertThat("status code", response.getStatus(), is(200));
 
         response = getResponse("v1/api/cases", Map.of("faust","987654322"));
