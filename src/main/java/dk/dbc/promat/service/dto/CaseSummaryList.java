@@ -7,8 +7,6 @@ import java.util.List;
 
 public class CaseSummaryList {
 
-    private int numFound = 0;
-
     private List<PromatCase> cases = new ArrayList<>();
 
     public int getNumFound() {
