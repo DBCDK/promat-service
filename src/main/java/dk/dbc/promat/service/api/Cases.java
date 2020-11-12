@@ -23,6 +23,10 @@ import javax.inject.Inject;
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
 import javax.persistence.TypedQuery;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Predicate;
+import javax.persistence.criteria.Root;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -34,6 +38,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.List;
 
 @Stateless
 @Path("")
@@ -251,18 +256,64 @@ public class Cases {
     @GET
     @Path("cases")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response listCases(@QueryParam("faust") final String faust) throws Exception {
-        LOGGER.info("cases/?{}", faust);
+    public Response listCases(@QueryParam("faust") final String faust,
+                              @QueryParam("status") final String status) throws Exception {
+        LOGGER.info("cases/?faust={}|status={}",
+                faust,
+                status == null ? "null" : status);
 
         try {
 
-            CaseSummaryList cases = new CaseSummaryList();
+            // Initialize query and criteriabuilder
+            CriteriaBuilder builder = entityManager.getCriteriaBuilder();
+            CriteriaQuery criteriaQuery = builder.createQuery();
+            Root<PromatCase> root = criteriaQuery.from(PromatCase.class);
+            criteriaQuery.select(root);
 
-            // Get (active) case which includes the given faustnumber
-            TypedQuery<PromatCase> query = entityManager.createNamedQuery(PromatCase.GET_CASE_WITH_FAUST_NAME, PromatCase.class);
-            query.setParameter("primaryFaust", faust);
-            query.setParameter("relatedFaust", JSONB_CONTEXT.marshall(faust));
+            // List of all predicates to be AND'ed together on the final query
+            List<Predicate> allPredicates = new ArrayList<>();
+
+            // Add relevant clauses
+            if( faust != null ) {
+
+                // Get case with given primary or related
+                Predicate primaryFaustPredicat = builder.equal(root.get("primaryFaust"), builder.literal(faust));
+                Predicate relatedFaustsPredicat = builder.isTrue(builder.function("JsonbContainsFromString", Boolean.class, root.get("relatedFausts"), builder.literal(faust)));
+                Predicate faustPredicate = builder.or(primaryFaustPredicat, relatedFaustsPredicat);
+
+                // And status not CLOSED or DONE
+                CriteriaBuilder.In<CaseStatus> inClause = builder.in(root.get("status"));
+                inClause.value(CaseStatus.CLOSED);
+                inClause.value(CaseStatus.DONE);
+                Predicate statusPredicate = builder.not(inClause);
+
+                allPredicates.add(builder.and(faustPredicate, statusPredicate));
+
+            } else if( status != null ) {
+
+                // Allthough jax.rs actually supports having multiple get arguments with the same name
+                // "?status=CREATED&status=ASSIGNED" this is not a safe implementation since other
+                // frameworks (React/NextJS or others) may have difficulties handling this. So instead
+                // a list of statuses is expected to be given as a comma separated list
+
+                // Get cases with the given set of statuses
+                List<Predicate> statusPredicates = new ArrayList<>();
+                for(String oneStatus : status.split(",")) {
+                    statusPredicates.add(builder.equal(root.get("status"), CaseStatus.valueOf(oneStatus)));
+                }
+
+                allPredicates.add(builder.or(statusPredicates.toArray(Predicate[]::new)));
+            }
+
+            // Combine all where clauses together with AND and add them to the query
+            Predicate finalPredicate = builder.and(allPredicates.toArray(Predicate[]::new));
+            criteriaQuery.where(finalPredicate);
+
+            // Complete and execute the query
+            TypedQuery<PromatCase> query = entityManager.createQuery(criteriaQuery);
+            CaseSummaryList cases = new CaseSummaryList();
             cases.getCases().addAll(query.getResultList());
+            cases.setNumFound(cases.getCases().size());
 
             // Return the found cases as a list of CaseSummary entities
             //

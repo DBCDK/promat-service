@@ -7,10 +7,16 @@ import java.util.List;
 
 public class CaseSummaryList {
 
+    private int numFound = 0;
+
     private List<PromatCase> cases = new ArrayList<>();
 
     public int getNumFound() {
         return cases.size();
+    }
+
+    public void setNumFound(int numFound) {
+        this.numFound = numFound;
     }
 
     public List<PromatCase> getCases() {
@@ -23,6 +29,11 @@ public class CaseSummaryList {
 
     public CaseSummaryList withCases(List<PromatCase> cases) {
         this.cases = cases;
+        return this;
+    }
+
+    public CaseSummaryList withNumFound(int numFound) {
+        this.numFound = numFound;
         return this;
     }
 }

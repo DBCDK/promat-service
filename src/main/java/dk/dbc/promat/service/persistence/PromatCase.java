@@ -21,13 +21,6 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Objects;
 
-@NamedQueries({
-        @NamedQuery(
-                name = PromatCase.GET_CASE_WITH_FAUST_NAME,
-                query = PromatCase.GET_CASE_WITH_FAUST_QUERY
-        )
-})
-
 /** Entity for table holding cases
  *
  *  Correct table name 'case' is a reserved word and would
@@ -36,14 +29,6 @@ import java.util.Objects;
  */
 @Entity
 public class PromatCase {
-
-    public static final String GET_CASE_WITH_FAUST_NAME =
-            "PromatCase.get.with.faust";
-    public static final String GET_CASE_WITH_FAUST_QUERY =
-            "SELECT c " +
-              "FROM PromatCase c " +
-             "WHERE (c.primaryFaust = :primaryFaust OR FUNCTION('jsonb_contains', c.relatedFausts, CAST(:relatedFaust AS JSONB))) " +
-               "AND c.status NOT IN (dk.dbc.promat.service.persistence.CaseStatus.CLOSED, dk.dbc.promat.service.persistence.CaseStatus.DONE)";
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

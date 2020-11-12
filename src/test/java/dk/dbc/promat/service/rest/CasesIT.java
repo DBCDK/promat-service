@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 
 import dk.dbc.promat.service.ContainerTest;
 import dk.dbc.promat.service.dto.CaseRequestDto;
+import dk.dbc.promat.service.dto.CaseSummaryList;
 import dk.dbc.promat.service.dto.TaskDto;
 import dk.dbc.promat.service.persistence.PromatCase;
 import dk.dbc.promat.service.persistence.CaseStatus;
@@ -12,6 +13,7 @@ import dk.dbc.promat.service.persistence.Paycode;
 import dk.dbc.promat.service.persistence.Subject;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
+import static org.hamcrest.Matchers.greaterThan;
 
 import dk.dbc.promat.service.persistence.TaskType;
 import org.hamcrest.core.IsNull;
@@ -280,5 +282,39 @@ public class CasesIT extends ContainerTest {
 
         // Check a faustnumber that does not exist
         assertThat("status code", getResponse("v1/api/cases", Map.of("faust","007777")).getStatus(), is(404));
+    }
+
+    @Test
+    public void testGetCasesWithStatus() throws JsonProcessingException {
+
+        // Cases with status CREATED
+        // There are 8 cases preloaded into the database, others may have been created
+        // by previously run tests
+        Response response = getResponse("v1/api/cases", Map.of("status","CREATED"));
+        assertThat("status code", response.getStatus(), is(200));
+        String obj = response.readEntity(String.class);
+        CaseSummaryList fetched = mapper.readValue(obj, CaseSummaryList.class);
+        assertThat("Number of cases with status CREATED", fetched.getNumFound(), is(greaterThan(8)));
+
+        // Cases with status CREATED
+        response = getResponse("v1/api/cases", Map.of("status","CLOSED"));
+        assertThat("status code", response.getStatus(), is(200));
+        obj = response.readEntity(String.class);
+        fetched = mapper.readValue(obj, CaseSummaryList.class);
+        assertThat("Number of cases with status CREATED", fetched.getNumFound(), is(1));
+
+        // Cases with status REJECTED
+        response = getResponse("v1/api/cases", Map.of("status","REJECTED"));
+        assertThat("status code", response.getStatus(), is(404));
+        obj = response.readEntity(String.class);
+        fetched = mapper.readValue(obj, CaseSummaryList.class);
+        assertThat("Number of cases with status CREATED", fetched.getNumFound(), is(0));
+
+        // Cases with status CLOSED or DONE
+        response = getResponse("v1/api/cases", Map.of("status","CLOSED,DONE"));
+        assertThat("status code", response.getStatus(), is(200));
+        obj = response.readEntity(String.class);
+        fetched = mapper.readValue(obj, CaseSummaryList.class);
+        assertThat("Number of cases with status CLOSED or DONE", fetched.getNumFound(), is(2));
     }
 }
