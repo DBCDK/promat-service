@@ -127,11 +127,30 @@ paths:
       operationId: getCasesForFaust
       parameters:
         - in: query
-          name: number
-          required: true
+          name: faust
+          required: false
           schema:
             type: string
-            description: Faustnumber that most be covered by the cases returned
+          description: Faustnumber that most be covered by the cases returned
+        - in: query
+          name: status
+          required: false
+          schema:
+            type: string
+            $ref: '#/components/schemas/CaseStatus'
+          description: One or more statuses of the cases returned. The list is commaseparated
+        - in: query
+          name: limit
+          required: false
+          schema:
+            type: integer
+          description: Maximum number of cases returned
+        - in: query
+          name: from
+          required: false
+          schema:
+            type: integer
+          description: Return cases with an id greater than this number
       responses:
         '200':
           description: successful operation
