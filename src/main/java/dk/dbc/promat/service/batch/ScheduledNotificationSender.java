@@ -1,5 +1,6 @@
 package dk.dbc.promat.service.batch;
 
+import dk.dbc.promat.service.cluster.ServerRole;
 import dk.dbc.promat.service.persistence.Notification;
 import dk.dbc.promat.service.persistence.NotificationStatus;
 import dk.dbc.promat.service.persistence.PromatEntityManager;
@@ -26,14 +27,19 @@ public class ScheduledNotificationSender {
     @PromatEntityManager
     EntityManager entityManager;
 
+    @Inject
+    ServerRole serverRole;
+
     @Schedule(second = "0", minute = "*", hour = "*")
     public void processNotifications() {
-        LOGGER.info("Checking for notifications");
-        Notification notification = pop();
-        while (notification != null) {
-            LOGGER.info("Notifying: '{}' on subject '{}'", notification.getToAddress(), notification.getSubject());
-            notificationSender.notifyMailRecipient(notification);
-            notification = pop();
+        if (serverRole == ServerRole.PRIMARY) {
+            LOGGER.info("Checking for notifications");
+            Notification notification = pop();
+            while (notification != null) {
+                LOGGER.info("Notifying: '{}' on subject '{}'", notification.getToAddress(), notification.getSubject());
+                notificationSender.notifyMailRecipient(notification);
+                notification = pop();
+            }
         }
     }
 

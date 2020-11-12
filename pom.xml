@@ -125,7 +125,6 @@
       <version>1.6.0</version>
       <scope>test</scope>
     </dependency>
-
     <dependency>
       <groupId>jakarta.activation</groupId>
       <artifactId>jakarta.activation-api</artifactId>
@@ -148,6 +147,11 @@
       <groupId>gg.jte</groupId>
       <artifactId>jte</artifactId>
       <version>1.4.0</version>
+    </dependency>
+    <dependency>
+      <groupId>org.eclipse.microprofile</groupId>
+      <artifactId>microprofile</artifactId>
+      <type>pom</type>
     </dependency>
   </dependencies>
 

@@ -42,6 +42,7 @@ public abstract class ContainerTest extends IntegrationTest {
                 .withEnv("MAIL_HOST", "mailhost")
                 .withEnv("MAIL_USER", "mail.user")
                 .withEnv("MAIL_FROM", "some@address.dk")
+                .withEnv("HOSTNAME", "promat-0")
                 .withExposedPorts(8080)
                 .waitingFor(Wait.forHttp("/openapi"))
                 .withStartupTimeout(Duration.ofMinutes(2));

@@ -3,6 +3,7 @@ package dk.dbc.promat.service.batch;
 import dk.dbc.commons.persistence.TransactionScopedPersistenceContext;
 import dk.dbc.mail.MailManager;
 import dk.dbc.promat.service.IntegrationTest;
+import dk.dbc.promat.service.cluster.ServerRole;
 import dk.dbc.promat.service.persistence.Notification;
 import dk.dbc.promat.service.persistence.NotificationStatus;
 import java.util.List;
@@ -41,6 +42,7 @@ public class ScheduledNotificationSenderIT extends IntegrationTest {
 
         ScheduledNotificationSender scheduledNotificationSender = new ScheduledNotificationSender();
         scheduledNotificationSender.entityManager = entityManager;
+        scheduledNotificationSender.serverRole = ServerRole.PRIMARY;
         NotificationSender notificationSender = new NotificationSender();
         scheduledNotificationSender.notificationSender = notificationSender;
         scheduledNotificationSender.notificationSender.mailManager = mailManager;
