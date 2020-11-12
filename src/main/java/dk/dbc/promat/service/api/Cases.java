@@ -269,6 +269,16 @@ public class Cases {
                 limit == null ? "null" : limit,
                 from == null ? "null" : from);
 
+        // Prevent accidental 'fetch all cases' if no filters has been given
+        if((faust == null || faust.isEmpty()) && (status == null || status.isEmpty())) {
+            ServiceErrorDto err = new ServiceErrorDto()
+                    .withCode(ServiceErrorCode.INVALID_REQUEST)
+                    .withCause("Missing a required field in the request data")
+                    .withDetails("At least one filter must be given (faust, status)");
+            return Response.status(400).entity(err).build();
+        }
+
+        // Select and return cases
         try {
 
             // Initialize query and criteriabuilder

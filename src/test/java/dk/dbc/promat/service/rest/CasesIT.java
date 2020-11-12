@@ -337,6 +337,13 @@ public class CasesIT extends ContainerTest {
     }
 
     @Test
+    public void testGetCasesWithNoFilters() throws JsonProcessingException {
+        assertThat("status code", getResponse("v1/api/cases").getStatus(), is(400));
+        assertThat("status code", getResponse("v1/api/cases", Map.of("faust", "  ")).getStatus(), is(404));
+        assertThat("status code", getResponse("v1/api/cases", Map.of("status", "  ")).getStatus(), is(500));
+    }
+
+    @Test
     public void testGetCasesWithLimitAndFrom() throws JsonProcessingException {
 
         // Get 4 cases with status CREATED from id 1
