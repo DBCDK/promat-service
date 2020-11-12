@@ -13,7 +13,7 @@ import dk.dbc.promat.service.persistence.Paycode;
 import dk.dbc.promat.service.persistence.Subject;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
-import static org.hamcrest.Matchers.greaterThan;
+import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 
 import dk.dbc.promat.service.persistence.TaskType;
 import org.hamcrest.core.IsNull;
@@ -294,7 +294,7 @@ public class CasesIT extends ContainerTest {
         assertThat("status code", response.getStatus(), is(200));
         String obj = response.readEntity(String.class);
         CaseSummaryList fetched = mapper.readValue(obj, CaseSummaryList.class);
-        assertThat("Number of cases with status CREATED", fetched.getNumFound(), is(greaterThan(8)));
+        assertThat("Number of cases with status CREATED", fetched.getNumFound(), is(greaterThanOrEqualTo(8)));
 
         // Cases with status CREATED
         response = getResponse("v1/api/cases", Map.of("status","CLOSED"));
@@ -324,8 +324,61 @@ public class CasesIT extends ContainerTest {
         // Get 4 cases with status CREATED - there is 8 or more in the database
         Response response = getResponse("v1/api/cases", Map.of("status", "CREATED", "limit", 4));
         assertThat("status code", response.getStatus(), is(200));
+
         String obj = response.readEntity(String.class);
         CaseSummaryList fetched = mapper.readValue(obj, CaseSummaryList.class);
         assertThat("Number of cases with status CREATED", fetched.getNumFound(), is(4));
+
+        // Check id ordering
+        assertThat(fetched.getCases().get(0).getId(), is(1));
+        assertThat(fetched.getCases().get(1).getId(), is(2));
+        assertThat(fetched.getCases().get(2).getId(), is(3));
+        assertThat(fetched.getCases().get(3).getId(), is(5));
     }
+
+    @Test
+    public void testGetCasesWithLimitAndFrom() throws JsonProcessingException {
+
+        // Get 4 cases with status CREATED from id 1
+        Response response = getResponse("v1/api/cases", Map.of("status", "CREATED", "limit", 4, "from", 0));
+        assertThat("status code", response.getStatus(), is(200));
+        String obj = response.readEntity(String.class);
+        CaseSummaryList fetched = mapper.readValue(obj, CaseSummaryList.class);
+        assertThat("Number of cases with status CREATED", fetched.getNumFound(), is(4));
+
+        // Check id ordering
+        assertThat(fetched.getCases().get(0).getId(), is(1));
+        assertThat(fetched.getCases().get(1).getId(), is(2));
+        assertThat(fetched.getCases().get(2).getId(), is(3));
+        assertThat(fetched.getCases().get(3).getId(), is(5));
+
+        // Get 4 cases with status CREATED from id 7
+        response = getResponse("v1/api/cases", Map.of("status", "CREATED", "limit", 4, "from", 5));
+        assertThat("status code", response.getStatus(), is(200));
+        obj = response.readEntity(String.class);
+        fetched = mapper.readValue(obj, CaseSummaryList.class);
+        assertThat("Number of cases with status CREATED", fetched.getNumFound(), is(4));
+
+        // Check id ordering
+        assertThat(fetched.getCases().get(0).getId(), is(7));
+        assertThat(fetched.getCases().get(1).getId(), is(8));
+        assertThat(fetched.getCases().get(2).getId(), is(10));
+        assertThat(fetched.getCases().get(3).getId(), is(11));
+
+        // Get All cases with status created, then get the last few of them
+        response = getResponse("v1/api/cases", Map.of("status", "CREATED"));
+        assertThat("status code", response.getStatus(), is(200));
+        obj = response.readEntity(String.class);
+        fetched = mapper.readValue(obj, CaseSummaryList.class);
+        assertThat("Number of cases with status CREATED", fetched.getNumFound(), is(greaterThanOrEqualTo(8)));
+        int lastId = fetched.getCases().get(fetched.getCases().size() - 1).getId();
+
+        response = getResponse("v1/api/cases", Map.of("status", "CREATED", "limit", 4, "from", lastId - 1));
+        assertThat("status code", response.getStatus(), is(200));
+        obj = response.readEntity(String.class);
+        fetched = mapper.readValue(obj, CaseSummaryList.class);
+        assertThat("Number of cases with status CREATED", fetched.getNumFound(), is(1));
+        assertThat(fetched.getCases().get(0).getId(), is(lastId));
+    }
+
 }

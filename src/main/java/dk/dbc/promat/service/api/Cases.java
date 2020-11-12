@@ -261,11 +261,13 @@ public class Cases {
     @Produces(MediaType.APPLICATION_JSON)
     public Response listCases(@QueryParam("faust") final String faust,
                               @QueryParam("status") final String status,
-                              @QueryParam("limit") Integer limit) throws Exception {
-        LOGGER.info("cases/?faust={}|status={}|limit={}",
+                              @QueryParam("limit") final Integer limit,
+                              @QueryParam("from") final Integer from) throws Exception {
+        LOGGER.info("cases/?faust={}|status={}|limit={}|from={}",
                 faust,
                 status == null ? "null" : status,
-                limit == null ? "null" : limit);
+                limit == null ? "null" : limit,
+                from == null ? "null" : from);
 
         try {
 
@@ -310,13 +312,21 @@ public class Cases {
                 allPredicates.add(builder.or(statusPredicates.toArray(Predicate[]::new)));
             }
 
+            // If a starting id has been given, add this
+            if( from != null ) {
+                allPredicates.add(builder.gt(root.get("id"), builder.literal(from)));
+            }
+
             // Combine all where clauses together with AND and add them to the query
             Predicate finalPredicate = builder.and(allPredicates.toArray(Predicate[]::new));
             criteriaQuery.where(finalPredicate);
 
-            // Complete and execute the query
+            // Complete the query by adding limits and ordering
+            criteriaQuery.orderBy(builder.asc(root.get("id")));
             TypedQuery<PromatCase> query = entityManager.createQuery(criteriaQuery);
             query.setMaxResults(limit == null ? DEFAULT_CASES_LIMIT : limit);
+
+            // Execute the query
             CaseSummaryList cases = new CaseSummaryList();
             cases.getCases().addAll(query.getResultList());
             cases.setNumFound(cases.getCases().size());
