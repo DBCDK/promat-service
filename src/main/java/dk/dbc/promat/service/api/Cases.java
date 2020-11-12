@@ -50,6 +50,9 @@ public class Cases {
     @PromatEntityManager
     EntityManager entityManager;
 
+    // Default number of results when getting cases
+    private static final int DEFAULT_CASES_LIMIT = 100;
+
     @POST
     @Path("cases")
     @Consumes(MediaType.APPLICATION_JSON)
@@ -257,10 +260,12 @@ public class Cases {
     @Path("cases")
     @Produces(MediaType.APPLICATION_JSON)
     public Response listCases(@QueryParam("faust") final String faust,
-                              @QueryParam("status") final String status) throws Exception {
-        LOGGER.info("cases/?faust={}|status={}",
+                              @QueryParam("status") final String status,
+                              @QueryParam("limit") Integer limit) throws Exception {
+        LOGGER.info("cases/?faust={}|status={}|limit={}",
                 faust,
-                status == null ? "null" : status);
+                status == null ? "null" : status,
+                limit == null ? "null" : limit);
 
         try {
 
@@ -311,6 +316,7 @@ public class Cases {
 
             // Complete and execute the query
             TypedQuery<PromatCase> query = entityManager.createQuery(criteriaQuery);
+            query.setMaxResults(limit == null ? DEFAULT_CASES_LIMIT : limit);
             CaseSummaryList cases = new CaseSummaryList();
             cases.getCases().addAll(query.getResultList());
             cases.setNumFound(cases.getCases().size());

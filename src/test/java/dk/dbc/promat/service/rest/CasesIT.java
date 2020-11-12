@@ -317,4 +317,15 @@ public class CasesIT extends ContainerTest {
         fetched = mapper.readValue(obj, CaseSummaryList.class);
         assertThat("Number of cases with status CLOSED or DONE", fetched.getNumFound(), is(2));
     }
+
+    @Test
+    public void testGetCasesWithLimit() throws JsonProcessingException {
+
+        // Get 4 cases with status CREATED - there is 8 or more in the database
+        Response response = getResponse("v1/api/cases", Map.of("status", "CREATED", "limit", 4));
+        assertThat("status code", response.getStatus(), is(200));
+        String obj = response.readEntity(String.class);
+        CaseSummaryList fetched = mapper.readValue(obj, CaseSummaryList.class);
+        assertThat("Number of cases with status CREATED", fetched.getNumFound(), is(4));
+    }
 }
