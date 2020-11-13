@@ -37,7 +37,6 @@ import java.util.List;
 @Path("records")
 public class Records {
     private static final Logger LOGGER = LoggerFactory.getLogger(Records.class);
-    private final JSONBContext jsonbContext = new JSONBContext();
 
     @Inject
     public OpensearchConnector opensearchConnector;

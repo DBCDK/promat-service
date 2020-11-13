@@ -43,7 +43,6 @@ import java.util.List;
 @Stateless
 @Path("")
 public class Cases {
-    private static final JSONBContext JSONB_CONTEXT = new JSONBContext();
     private static final Logger LOGGER = LoggerFactory.getLogger(Cases.class);
 
     @Inject
