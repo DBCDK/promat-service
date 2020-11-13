@@ -1,6 +1,6 @@
-@import dk.dbc.promat.service.persistence.Case
+@import dk.dbc.promat.service.persistence.PromatCase
 @import dk.dbc.promat.service.templating.Formatting
-@param Case assignedCase
+@param PromatCase assignedCase
 <p><b>Kære ${assignedCase.getReviewer().getFirstName()} ${assignedCase.getReviewer().getLastName()}</b></p>
 
 <p>

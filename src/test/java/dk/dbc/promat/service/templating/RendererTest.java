@@ -1,8 +1,8 @@
 package dk.dbc.promat.service.templating;
 
-import dk.dbc.promat.service.persistence.Case;
 import dk.dbc.promat.service.persistence.Notification;
 import dk.dbc.promat.service.persistence.NotificationType;
+import dk.dbc.promat.service.persistence.PromatCase;
 import dk.dbc.promat.service.persistence.Reviewer;
 import java.time.LocalDate;
 import org.junit.jupiter.api.Test;
@@ -15,7 +15,7 @@ public class RendererTest {
 
     @Test
     public void simpleTest() {
-        Case aCase = new Case()
+        PromatCase aCase = new PromatCase()
                 .withDeadline(LocalDate.of(2021, 1, 16))
                 .withTitle("En ny spændende bog der skal anmeldes")
                 .withReviewer(
