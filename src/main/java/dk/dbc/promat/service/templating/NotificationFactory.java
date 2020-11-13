@@ -23,7 +23,7 @@ public class NotificationFactory {
     public Notification of(NotificationType notificationType, Object model) {
         Notification notification = new Notification();
         switch(notificationType) {
-            case CASE_CREATED:
+            case CASE_ASSIGNED:
                 return notification
                         .withToAddress(((Case) model).getReviewer().getEmail())
                         .withSubject("Ny promat anmeldelse")
