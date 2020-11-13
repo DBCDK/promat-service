@@ -1,5 +1,5 @@
 -- Helper function to call jsonb_contains on jsonb data from
--- within the javacode using Hibernate CriterianBuilder which does
+-- within the javacode using CriterianBuilder which does
 -- not (at time of writing) supports json data types
 CREATE OR REPLACE FUNCTION JsonbContainsFromString(
     json JSONB,
