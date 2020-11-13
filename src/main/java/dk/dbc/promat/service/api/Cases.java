@@ -1,17 +1,20 @@
 package dk.dbc.promat.service.api;
 
-import dk.dbc.promat.service.dto.Dto;
-import dk.dbc.promat.service.dto.RecordsListDto;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import dk.dbc.commons.jsonb.JSONBContext;
+import dk.dbc.promat.service.dto.CaseSummaryList;
 import dk.dbc.promat.service.dto.ServiceErrorCode;
 import dk.dbc.promat.service.dto.ServiceErrorDto;
 import dk.dbc.promat.service.dto.TaskDto;
-import dk.dbc.promat.service.persistence.Case;
+import dk.dbc.promat.service.persistence.PromatCase;
 import dk.dbc.promat.service.dto.CaseRequestDto;
 import dk.dbc.promat.service.persistence.CaseStatus;
+import dk.dbc.promat.service.persistence.CaseView;
 import dk.dbc.promat.service.persistence.PromatEntityManager;
 import dk.dbc.promat.service.persistence.Reviewer;
 import dk.dbc.promat.service.persistence.Subject;
 import dk.dbc.promat.service.persistence.Task;
+import dk.dbc.promat.service.rest.JsonMapperProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -19,29 +22,39 @@ import javax.ejb.Stateless;
 import javax.inject.Inject;
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
+import javax.persistence.TypedQuery;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Predicate;
+import javax.persistence.criteria.Root;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 @Stateless
-@Path("cases")
+@Path("")
 public class Cases {
+    private static final JSONBContext JSONB_CONTEXT = new JSONBContext();
     private static final Logger LOGGER = LoggerFactory.getLogger(Cases.class);
 
     @Inject
     @PromatEntityManager
     EntityManager entityManager;
 
+    // Default number of results when getting cases
+    private static final int DEFAULT_CASES_LIMIT = 100;
+
     @POST
+    @Path("cases")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Response postCase(CaseRequestDto dto) {
@@ -190,7 +203,7 @@ public class Cases {
 
         // Create case
         try {
-            Case entity = new Case()
+            PromatCase entity = new PromatCase()
             .withTitle(dto.getTitle())
             .withDetails(dto.getDetails() == null ? "" : dto.getDetails())
             .withPrimaryFaust(dto.getPrimaryFaust())
@@ -222,21 +235,124 @@ public class Cases {
     }
 
     @GET
-    @Path("{id}")
+    @Path("cases/{id}")
     @Produces(MediaType.APPLICATION_JSON)
     public Response getCase(@PathParam("id") final Integer id) throws Exception {
-        LOGGER.info("getCase/{}", id);
+        LOGGER.info("cases/{}", id);
 
         // Find and return the requested case
         try {
 
-            Case requested = entityManager.find(Case.class, id);
+            PromatCase requested = entityManager.find(PromatCase.class, id);
             if( requested == null ) {
                 LOGGER.info("Requested case {} does not exist", id);
-                return Response.status(204).build();
+                return Response.status(404).build();
             }
 
             return Response.status(200).entity(requested).build();
+        } catch(Exception exception) {
+            LOGGER.info("Caught exception: {}", exception.getMessage());
+            throw exception;
+        }
+    }
+
+    @GET
+    @Path("cases")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response listCases(@QueryParam("faust") final String faust,
+                              @QueryParam("status") final String status,
+                              @QueryParam("limit") final Integer limit,
+                              @QueryParam("from") final Integer from) throws Exception {
+        LOGGER.info("cases/?faust={}|status={}|limit={}|from={}",
+                faust,
+                status == null ? "null" : status,
+                limit == null ? "null" : limit,
+                from == null ? "null" : from);
+
+        // Select and return cases
+        try {
+
+            // Initialize query and criteriabuilder
+            CriteriaBuilder builder = entityManager.getCriteriaBuilder();
+            CriteriaQuery criteriaQuery = builder.createQuery();
+            Root<PromatCase> root = criteriaQuery.from(PromatCase.class);
+            criteriaQuery.select(root);
+
+            // List of all predicates to be AND'ed together on the final query
+            List<Predicate> allPredicates = new ArrayList<>();
+
+            // Add relevant clauses
+            if(faust != null && !faust.isBlank() && !faust.isEmpty()) {
+
+                // Get case with given primary or related
+                Predicate primaryFaustPredicat = builder.equal(root.get("primaryFaust"), builder.literal(faust));
+                Predicate relatedFaustsPredicat = builder.isTrue(builder.function("JsonbContainsFromString", Boolean.class, root.get("relatedFausts"), builder.literal(faust)));
+                Predicate faustPredicate = builder.or(primaryFaustPredicat, relatedFaustsPredicat);
+
+                // And status not CLOSED or DONE
+                CriteriaBuilder.In<CaseStatus> inClause = builder.in(root.get("status"));
+                inClause.value(CaseStatus.CLOSED);
+                inClause.value(CaseStatus.DONE);
+                Predicate statusPredicate = builder.not(inClause);
+
+                allPredicates.add(builder.and(faustPredicate, statusPredicate));
+
+            } else if(status != null && !status.isBlank() && !status.isEmpty()) {
+
+                // Allthough jax.rs actually supports having multiple get arguments with the same name
+                // "?status=CREATED&status=ASSIGNED" this is not a safe implementation since other
+                // frameworks (React/NextJS or others) may have difficulties handling this. So instead
+                // a list of statuses is expected to be given as a comma separated list
+
+                // Get cases with the given set of statuses
+                List<Predicate> statusPredicates = new ArrayList<>();
+                for(String oneStatus : status.split(",")) {
+                    try {
+                        statusPredicates.add(builder.equal(root.get("status"), CaseStatus.valueOf(oneStatus)));
+                    } catch (IllegalArgumentException ex) {
+                        LOGGER.error("Invalid status code '{}' in request for cases with status", oneStatus);
+                        ServiceErrorDto err = new ServiceErrorDto()
+                                .withCode(ServiceErrorCode.INVALID_REQUEST)
+                                .withCause("Request failed")
+                                .withDetails("Invalid case status code");
+                        return Response.serverError().entity(err).build();
+                    }
+                }
+
+                allPredicates.add(builder.or(statusPredicates.toArray(Predicate[]::new)));
+            }
+
+            // If a starting id has been given, add this
+            if( from != null ) {
+                allPredicates.add(builder.gt(root.get("id"), builder.literal(from)));
+            }
+
+            // Combine all where clauses together with AND and add them to the query
+            if(allPredicates.size() > 0) {
+                Predicate finalPredicate = builder.and(allPredicates.toArray(Predicate[]::new));
+                criteriaQuery.where(finalPredicate);
+            }
+
+            // Complete the query by adding limits and ordering
+            criteriaQuery.orderBy(builder.asc(root.get("id")));
+            TypedQuery<PromatCase> query = entityManager.createQuery(criteriaQuery);
+            query.setMaxResults(limit == null ? DEFAULT_CASES_LIMIT : limit);
+
+            // Execute the query
+            CaseSummaryList cases = new CaseSummaryList();
+            cases.getCases().addAll(query.getResultList());
+            cases.setNumFound(cases.getCases().size());
+
+            // Return the found cases as a list of CaseSummary entities
+            //
+            // Note that the http status is set to 404 (NOT FOUND) if no case matched the query
+            // this is to allow a quick(er) check for existing cases by using HEAD and checking
+            // the statuscode instead of deserializing the response body and looking at numFound
+            ObjectMapper mapper = new JsonMapperProvider().getObjectMapper();
+            return Response.status(cases.getNumFound() > 0 ? 200 : 404)
+                    .entity(mapper.writerWithView(CaseView.CaseSummary.class)
+                            .writeValueAsString(cases)).build();
+
         } catch(Exception exception) {
             LOGGER.info("Caught exception: {}", exception.getMessage());
             throw exception;

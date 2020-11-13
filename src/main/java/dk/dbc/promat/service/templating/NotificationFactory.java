@@ -1,8 +1,8 @@
 package dk.dbc.promat.service.templating;
 
-import dk.dbc.promat.service.persistence.Case;
 import dk.dbc.promat.service.persistence.Notification;
 import dk.dbc.promat.service.persistence.NotificationType;
+import dk.dbc.promat.service.persistence.PromatCase;
 
 public class NotificationFactory {
     private final Renderer renderer;
@@ -25,7 +25,7 @@ public class NotificationFactory {
         switch(notificationType) {
             case CASE_ASSIGNED:
                 return notification
-                        .withToAddress(((Case) model).getReviewer().getEmail())
+                        .withToAddress(((PromatCase) model).getReviewer().getEmail())
                         .withSubject("Ny promat anmeldelse")
                         .withBodyText(renderer.render("reviewer_assign_to_case.jte", model));
             default: return null;
