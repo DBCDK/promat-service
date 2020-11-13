@@ -2,21 +2,19 @@ package dk.dbc.promat.service.templating;
 
 import dk.dbc.promat.service.persistence.Case;
 import dk.dbc.promat.service.persistence.Notification;
+import dk.dbc.promat.service.persistence.NotificationType;
 import dk.dbc.promat.service.persistence.Reviewer;
 import java.time.LocalDate;
 import org.junit.jupiter.api.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 
 
-public class RenderTest {
+public class RendererTest {
 
     @Test
     public void simpleTest() {
-        Render render = new Render();
         Case aCase = new Case()
                 .withDeadline(LocalDate.of(2021, 1, 16))
                 .withTitle("En ny spændende bog der skal anmeldes")
@@ -24,9 +22,10 @@ public class RenderTest {
                         new Reviewer()
                                 .withFirstName("Hans")
                                 .withLastName("Hansen")
+                                .withEmail("hans@hansen.dk")
                 );
 
-        Notification notification = render.mail("reviewer_assign_to_case.jte", aCase);
+        Notification notification = NotificationFactory.getInstance().of(NotificationType.CASE_CREATED, aCase);
         assertThat("Mailtext", notification.getBodyText(), is(
                 "<p><b>Kære Hans Hansen</b></p>\n" +
                 "\n" +
@@ -41,6 +40,9 @@ public class RenderTest {
                 "<p>Med velig hilsen,<br/>\n" +
                 "ProMat redaktionen\n" +
                 "</p>"));
+
+        assertThat("Subject", notification.getSubject(), is("Ny promat anmeldelse"));
+        assertThat("Mail address", notification.getToAddress(), is("hans@hansen.dk"));
     }
 
 }

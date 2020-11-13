@@ -1,5 +1,6 @@
 package dk.dbc.promat.service.persistence;
 
+import dk.dbc.promat.service.templating.NotificationFactory;
 import java.time.LocalDateTime;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -117,6 +118,10 @@ public class Notification {
     public Notification withStatus(NotificationStatus status) {
         this.status = status;
         return this;
+    }
+
+    public Notification of(NotificationType notifcationType, Case aCase) {
+        return NotificationFactory.getInstance().of(notifcationType, aCase);
     }
 
     @Override

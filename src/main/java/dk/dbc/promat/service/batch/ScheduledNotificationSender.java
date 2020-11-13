@@ -30,7 +30,7 @@ public class ScheduledNotificationSender {
     @Inject
     ServerRole serverRole;
 
-    @Schedule(second = "0", minute = "*", hour = "*")
+    @Schedule(second = "0", minute = "*/5", hour = "*")
     public void processNotifications() {
         if (serverRole == ServerRole.PRIMARY) {
             LOGGER.info("Checking for notifications");
