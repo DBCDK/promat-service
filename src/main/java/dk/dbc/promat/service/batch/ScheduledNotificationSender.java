@@ -31,7 +31,7 @@ public class ScheduledNotificationSender {
     ServerRole serverRole;
 
     @Schedule(second = "0", minute = "*/5", hour = "*")
-    public void processNotifications() {
+    public void processNotifications() throws InterruptedException {
         if (serverRole == ServerRole.PRIMARY) {
             LOGGER.info("Checking for notifications");
             Notification notification = pop();
