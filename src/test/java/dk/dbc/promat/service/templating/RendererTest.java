@@ -25,7 +25,7 @@ public class RendererTest {
                                 .withEmail("hans@hansen.dk")
                 );
 
-        Notification notification = NotificationFactory.getInstance().of(NotificationType.CASE_CREATED, aCase);
+        Notification notification = Notification.of(NotificationType.CASE_ASSIGNED, aCase);
         assertThat("Mailtext", notification.getBodyText(), is(
                 "<p><b>Kære Hans Hansen</b></p>\n" +
                 "\n" +

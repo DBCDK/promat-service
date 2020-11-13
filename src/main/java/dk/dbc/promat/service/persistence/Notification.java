@@ -120,7 +120,7 @@ public class Notification {
         return this;
     }
 
-    public Notification of(NotificationType notifcationType, Case aCase) {
+    public static Notification of(NotificationType notifcationType, Case aCase) {
         return NotificationFactory.getInstance().of(notifcationType, aCase);
     }
 
