@@ -337,10 +337,28 @@ public class CasesIT extends ContainerTest {
     }
 
     @Test
-    public void testGetCasesWithNoFilters() throws JsonProcessingException {
-        assertThat("status code", getResponse("v1/api/cases").getStatus(), is(400));
-        assertThat("status code", getResponse("v1/api/cases", Map.of("faust", "  ")).getStatus(), is(404));
-        assertThat("status code", getResponse("v1/api/cases", Map.of("status", "  ")).getStatus(), is(500));
+    public void testGetCasesWithNoOrInvalidFilters() throws JsonProcessingException {
+
+        Response response = getResponse("v1/api/cases");
+        assertThat("status code", response.getStatus(), is(200));
+        String obj = response.readEntity(String.class);
+        CaseSummaryList fetched = mapper.readValue(obj, CaseSummaryList.class);
+        assertThat("Number of cases with no filters", fetched.getNumFound(), is(greaterThanOrEqualTo(11)));
+
+        response = getResponse("v1/api/cases", Map.of("faust", "  "));
+        assertThat("status code", response.getStatus(), is(200));
+        obj = response.readEntity(String.class);
+        fetched = mapper.readValue(obj, CaseSummaryList.class);
+        assertThat("Number of cases with status as blankspaces", fetched.getNumFound(), is(greaterThanOrEqualTo(11)));
+
+        response = getResponse("v1/api/cases", Map.of("status", "  "));
+        assertThat("status code", response.getStatus(), is(200));
+        obj = response.readEntity(String.class);
+        fetched = mapper.readValue(obj, CaseSummaryList.class);
+        assertThat("Number of cases with status as blankspaces", fetched.getNumFound(), is(greaterThanOrEqualTo(11)));
+
+        response = getResponse("v1/api/cases", Map.of("status", "NO_SUCH_STATUS"));
+        assertThat("status code", response.getStatus(), is(500));
     }
 
     @Test

@@ -269,15 +269,6 @@ public class Cases {
                 limit == null ? "null" : limit,
                 from == null ? "null" : from);
 
-        // Prevent accidental 'fetch all cases' if no filters has been given
-        if((faust == null || faust.isEmpty()) && (status == null || status.isEmpty())) {
-            ServiceErrorDto err = new ServiceErrorDto()
-                    .withCode(ServiceErrorCode.INVALID_REQUEST)
-                    .withCause("Missing a required field in the request data")
-                    .withDetails("At least one filter must be given (faust, status)");
-            return Response.status(400).entity(err).build();
-        }
-
         // Select and return cases
         try {
 
@@ -291,7 +282,7 @@ public class Cases {
             List<Predicate> allPredicates = new ArrayList<>();
 
             // Add relevant clauses
-            if( faust != null ) {
+            if(faust != null && !faust.isBlank() && !faust.isEmpty()) {
 
                 // Get case with given primary or related
                 Predicate primaryFaustPredicat = builder.equal(root.get("primaryFaust"), builder.literal(faust));
@@ -306,7 +297,7 @@ public class Cases {
 
                 allPredicates.add(builder.and(faustPredicate, statusPredicate));
 
-            } else if( status != null ) {
+            } else if(status != null && !status.isBlank() && !status.isEmpty()) {
 
                 // Allthough jax.rs actually supports having multiple get arguments with the same name
                 // "?status=CREATED&status=ASSIGNED" this is not a safe implementation since other
@@ -316,7 +307,16 @@ public class Cases {
                 // Get cases with the given set of statuses
                 List<Predicate> statusPredicates = new ArrayList<>();
                 for(String oneStatus : status.split(",")) {
-                    statusPredicates.add(builder.equal(root.get("status"), CaseStatus.valueOf(oneStatus)));
+                    try {
+                        statusPredicates.add(builder.equal(root.get("status"), CaseStatus.valueOf(oneStatus)));
+                    } catch (IllegalArgumentException ex) {
+                        LOGGER.error("Invalid status code '{}' in request for cases with status", oneStatus);
+                        ServiceErrorDto err = new ServiceErrorDto()
+                                .withCode(ServiceErrorCode.INVALID_REQUEST)
+                                .withCause("Request failed")
+                                .withDetails("Invalid case status code");
+                        return Response.serverError().entity(err).build();
+                    }
                 }
 
                 allPredicates.add(builder.or(statusPredicates.toArray(Predicate[]::new)));
@@ -328,8 +328,10 @@ public class Cases {
             }
 
             // Combine all where clauses together with AND and add them to the query
-            Predicate finalPredicate = builder.and(allPredicates.toArray(Predicate[]::new));
-            criteriaQuery.where(finalPredicate);
+            if(allPredicates.size() > 0) {
+                Predicate finalPredicate = builder.and(allPredicates.toArray(Predicate[]::new));
+                criteriaQuery.where(finalPredicate);
+            }
 
             // Complete the query by adding limits and ordering
             criteriaQuery.orderBy(builder.asc(root.get("id")));
