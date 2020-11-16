@@ -29,7 +29,7 @@ public class NotificationSender {
 
 
     @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-    public void notifyMailRecipient(Notification notification) throws InterruptedException {
+    public void notifyMailRecipient(Notification notification) {
         try {
             mailManager.newMail()
                     .withRecipients(notification.getToAddress())
@@ -44,7 +44,6 @@ public class NotificationSender {
             entityManager.merge(notification);
         } catch (MessagingException e) {
             LOGGER.error("Unable to send mail. Notification:{}",notification.toString());
-            Thread.sleep(1000);
             notification.setStatus(NotificationStatus.ERROR);
             entityManager.merge(notification);
 
