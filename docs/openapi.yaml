@@ -601,6 +601,10 @@ components:
           type: integer
           nullable: true
           description: ID of assigned reviewer
+        editor:
+          type: integer
+          nullable: true
+          description: ID of assigned editor
         subjects:
           type: array
           items:
