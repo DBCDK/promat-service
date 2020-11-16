@@ -6,6 +6,7 @@ import dk.dbc.promat.service.dto.CaseSummaryList;
 import dk.dbc.promat.service.dto.ServiceErrorCode;
 import dk.dbc.promat.service.dto.ServiceErrorDto;
 import dk.dbc.promat.service.dto.TaskDto;
+import dk.dbc.promat.service.persistence.Editor;
 import dk.dbc.promat.service.persistence.PromatCase;
 import dk.dbc.promat.service.dto.CaseRequestDto;
 import dk.dbc.promat.service.persistence.CaseStatus;
@@ -147,7 +148,7 @@ public class Cases {
             }
         }
 
-        // Map reviewer id to existing reviewer.
+        // Map reviewer id to existing reviewer (promatuser)
         // If an reviewer has been assigned, then set or modify the status of the case and the assigned field.
         // If no reviwer is given, check that the status is not ASSIGNED - that would be a mess
         Reviewer reviewer = null;
@@ -156,11 +157,11 @@ public class Cases {
         if( dto.getReviewer() != null ) {
             reviewer = entityManager.find(Reviewer.class, dto.getReviewer());
             if(reviewer == null) {
-                LOGGER.error("Attempt to resolve reviewer {} failed. No such reviewer", dto.getReviewer());
+                LOGGER.error("Attempt to resolve reviewer {} failed. No such user", dto.getReviewer());
                 ServiceErrorDto err = new ServiceErrorDto()
                         .withCode(ServiceErrorCode.INVALID_REQUEST)
                         .withCause("No such reviewer")
-                        .withDetails(String.format("Field 'reviewer' contains id {} which does not exist", dto.getReviewer()));
+                        .withDetails(String.format("Field 'reviewer' contains user id {} which does not exist", dto.getReviewer()));
                 return Response.status(400).entity(err).build();
             }
             assigned = LocalDate.now();
@@ -172,6 +173,20 @@ public class Cases {
                         .withCode(ServiceErrorCode.INVALID_STATE)
                         .withCause("Invalid state")
                         .withDetails("Case status ASSIGNED is not possible without a reviewer");
+                return Response.status(400).entity(err).build();
+            }
+        }
+
+        // Map editor to existing editor (promatuser)
+        Editor editor = null;
+        if( dto.getEditor() != null ) {
+            editor= entityManager.find(Editor.class, dto.getEditor());
+            if( editor == null ) {
+                LOGGER.error("Attempt to resolve editor {} failed. No such user", dto.getEditor());
+                ServiceErrorDto err = new ServiceErrorDto()
+                        .withCode(ServiceErrorCode.INVALID_REQUEST)
+                        .withCause("No such editor")
+                        .withDetails(String.format("Field 'editor' contains user id {} which does not exist", dto.getEditor()));
                 return Response.status(400).entity(err).build();
             }
         }
@@ -208,6 +223,7 @@ public class Cases {
             .withPrimaryFaust(dto.getPrimaryFaust())
             .withRelatedFausts(relatedFausts)
             .withReviewer(reviewer)
+            .withEditor(editor)
             .withSubjects(subjects)
             .withCreated(LocalDate.now())
             .withDeadline(dto.getDeadline() == null ? null : LocalDate.parse(dto.getDeadline()))
