@@ -276,12 +276,14 @@ public class Cases {
     public Response listCases(@QueryParam("faust") final String faust,
                               @QueryParam("status") final String status,
                               @QueryParam("editor") final Integer editor,
+                              @QueryParam("title") final String title,
                               @QueryParam("limit") final Integer limit,
                               @QueryParam("from") final Integer from) throws Exception {
-        LOGGER.info("cases/?faust={}|status={}|editor={}|limit={}|from={}",
-                faust,
+        LOGGER.info("cases/?faust={}|status={}|editor={}|title={}|limit={}|from={}",
+                faust == null ? "null" : faust,
                 status == null ? "null" : status,
                 editor == null ? "null" : editor,
+                title == null ? "null" : title,
                 limit == null ? "null" : limit,
                 from == null ? "null" : from);
 
@@ -343,6 +345,14 @@ public class Cases {
             // Get cases with given editor
             if(editor != null && editor > 0) {
                 allPredicates.add(builder.equal(root.get("editor").get("id"), editor));
+            }
+
+            // Get cases with a title that matches (entire, or part of) the given title
+            if(title != null && !title.isBlank() && !title.isEmpty()) {
+                allPredicates.add(builder
+                        .like(builder
+                                .lower(root
+                                        .get("title")), builder.literal("%" + title.toLowerCase() + "%")));
             }
 
             // If a starting id has been given, add this
