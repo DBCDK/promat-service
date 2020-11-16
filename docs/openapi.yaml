@@ -131,7 +131,7 @@ paths:
           required: false
           schema:
             type: string
-          description: Faustnumber that most be covered by the cases returned
+          description: Faustnumber that must be covered by the cases returned
         - in: query
           name: status
           required: false
@@ -139,6 +139,12 @@ paths:
             type: string
             $ref: '#/components/schemas/CaseStatus'
           description: One or more statuses of the cases returned. The list is commaseparated
+        - in: query
+            name: editor
+            required: false
+            schema:
+              type: integer
+            description: Editor that must be assigned to this case
         - in: query
           name: limit
           required: false

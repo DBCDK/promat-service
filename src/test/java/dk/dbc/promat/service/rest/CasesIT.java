@@ -108,7 +108,7 @@ public class CasesIT extends ContainerTest {
         assertThat("primary faust", created.getPrimaryFaust(), is("3001111"));
         assertThat("title", created.getTitle(), is("Title for 3001111"));
         assertThat("materialType", created.getMaterialType(), is(MaterialType.BOOK));
-
+        assertThat("status", created.getStatus(), is(CaseStatus.ASSIGNED));
         assertThat("reviwer id", created.getReviewer().getId(), is(1));
         assertThat("reviwer firstname", created.getReviewer().getFirstName(), is("Hans"));
 
@@ -408,6 +408,36 @@ public class CasesIT extends ContainerTest {
         fetched = mapper.readValue(obj, CaseSummaryList.class);
         assertThat("Number of cases with status CREATED", fetched.getNumFound(), is(1));
         assertThat(fetched.getCases().get(0).getId(), is(lastId));
+    }
+
+    @Test
+    public void testGetCasesWithEditor() throws JsonProcessingException {
+
+        // Cases with editor '9999' (no such user)
+        Response response = getResponse("v1/api/cases", Map.of("editor", 9999));
+        assertThat("status code", response.getStatus(), is(404));
+
+        // Cases with editor '5' (not an editor)
+        response = getResponse("v1/api/cases", Map.of("editor", 5));
+        assertThat("status code", response.getStatus(), is(404));
+
+        // Cases with editor '10'
+        response = getResponse("v1/api/cases", Map.of("editor", 10));
+        assertThat("status code", response.getStatus(), is(200));
+        String obj = response.readEntity(String.class);
+        CaseSummaryList fetched = mapper.readValue(obj, CaseSummaryList.class);
+        assertThat("Number of cases with editor 10", fetched.getNumFound(), is(1));
+
+        // Cases with editor '11' and status 'REJECTED' (no cases with status REJECTED)
+        response = getResponse("v1/api/cases", Map.of("editor", 11, "status", "REJECTED"));
+        assertThat("status code", response.getStatus(), is(404));
+
+        // Cases with editor '11' and status 'CREATED'
+        response = getResponse("v1/api/cases", Map.of("editor", 11, "status", "CREATED"));
+        assertThat("status code", response.getStatus(), is(200));
+        obj = response.readEntity(String.class);
+        fetched = mapper.readValue(obj, CaseSummaryList.class);
+        assertThat("Number of cases with editor 10", fetched.getNumFound(), is(1));
     }
 
 }
