@@ -449,6 +449,24 @@ public class Cases {
             // can be updated on a case, some forbidden fields will trigger an error but most
             // fields not accepted will be silently ignored.
 
+            // Errorchecking when trying to update fields managed by the backend solely
+            if(dto.getAssigned() != null) {
+                LOGGER.info("Attempt to set 'assigned' on case {}", id);
+                ServiceErrorDto err = new ServiceErrorDto()
+                        .withCode(ServiceErrorCode.INVALID_REQUEST)
+                        .withCause("Forbidden field")
+                        .withDetails(String.format("Setting the value of 'assigned' is not allowed"));
+                return Response.status(404).entity(err).build();
+            }
+            if(dto.getStatus() != null) {
+                LOGGER.info("Attempt to set 'status' on case {}", id);
+                ServiceErrorDto err = new ServiceErrorDto()
+                        .withCode(ServiceErrorCode.INVALID_REQUEST)
+                        .withCause("Forbidden field")
+                        .withDetails(String.format("Setting the value of 'status' is not allowed"));
+                return Response.status(404).entity(err).build();
+            }
+
             // Fetch an existing entity with the given id
             PromatCase existing = entityManager.find(PromatCase.class, id);
             if( existing == null ) {
@@ -493,29 +511,10 @@ public class Cases {
             //       * assigned;
             //       * status;
 
-            // Errorchecking when trying to update fields managed by the backend solely
-            if(dto.getAssigned() != null) {
-                LOGGER.info("Attempt to set 'assigned' on case {}", id);
-                ServiceErrorDto err = new ServiceErrorDto()
-                        .withCode(ServiceErrorCode.INVALID_REQUEST)
-                        .withCause("Forbidden field")
-                        .withDetails(String.format("Setting the value of 'assigned' is not allowed"));
-                return Response.status(404).entity(err).build();
-            }
-            if(dto.getStatus() != null) {
-                LOGGER.info("Attempt to set 'status' on case {}", id);
-                ServiceErrorDto err = new ServiceErrorDto()
-                        .withCode(ServiceErrorCode.INVALID_REQUEST)
-                        .withCause("Forbidden field")
-                        .withDetails(String.format("Setting the value of 'status' is not allowed"));
-                return Response.status(404).entity(err).build();
-            }
-
             return Response.ok().build();
         } catch(Exception exception) {
             LOGGER.error("Caught exception: {}", exception.getMessage());
             throw exception;
         }
     }
-
 }

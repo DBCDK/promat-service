@@ -474,9 +474,10 @@ public class CasesIT extends ContainerTest {
     @Test
     public void testEditCase() {
 
+        // Update of unknown case - should return 404 NOT FOUND
         CaseRequestDto dto = new CaseRequestDto();
-        Response response = postResponse("v1/api/cases/12", dto);
-        assertThat("status code", response.getStatus(), is(200));
+        Response response = postResponse("v1/api/cases/9876", dto);
+        assertThat("status code", response.getStatus(), is(404));
 
 
     }
