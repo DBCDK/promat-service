@@ -67,7 +67,7 @@ public class Cases {
 
         // Check for required data when creating a new case
         if( dto.getTitle() == null || dto.getTitle().isEmpty() ) {
-            LOGGER.error("Request dto is missing 'title' field");
+            LOGGER.info("Request dto is missing 'title' field");
             ServiceErrorDto err = new ServiceErrorDto()
                     .withCode(ServiceErrorCode.INVALID_REQUEST)
                     .withCause("Missing required field in the request data")
@@ -75,7 +75,7 @@ public class Cases {
             return Response.status(400).entity(err).build();
         }
         if( dto.getPrimaryFaust() == null || dto.getPrimaryFaust().isEmpty() ) {
-            LOGGER.error("Request dto is missing 'primaryFaust' field");
+            LOGGER.info("Request dto is missing 'primaryFaust' field");
             ServiceErrorDto err = new ServiceErrorDto()
                     .withCode(ServiceErrorCode.INVALID_REQUEST)
                     .withCause("Missing required field in the request data")
@@ -83,7 +83,7 @@ public class Cases {
             return Response.status(400).entity(err).build();
         }
         if( dto.getMaterialType() == null ) {
-            LOGGER.error("Request dto is missing 'materialType' field");
+            LOGGER.info("Request dto is missing 'materialType' field");
             ServiceErrorDto err = new ServiceErrorDto()
                     .withCode(ServiceErrorCode.INVALID_REQUEST)
                     .withCause("Missing required field in the request data")
@@ -98,7 +98,7 @@ public class Cases {
         Query q = entityManager.createNativeQuery("SELECT CheckNoOpenCaseWithFaust(?)");
         q.setParameter(1, dto.getPrimaryFaust());
         if((boolean) q.getSingleResult() == false) {
-            LOGGER.error("Case with primary or related Faust {} and state <> CLOSED|DONE exists", dto.getPrimaryFaust());
+            LOGGER.info("Case with primary or related Faust {} and state <> CLOSED|DONE exists", dto.getPrimaryFaust());
             ServiceErrorDto err = new ServiceErrorDto()
                     .withCode(ServiceErrorCode.CASE_EXISTS)
                     .withCause("Case exists")
@@ -113,7 +113,7 @@ public class Cases {
             for(String faust : dto.getRelatedFausts()) {
                 q.setParameter(1, faust);
                 if((boolean) q.getSingleResult() == false) {
-                    LOGGER.error("Case with primary or related {} and state <> CLOSED|DONE exists", faust);
+                    LOGGER.info("Case with primary or related {} and state <> CLOSED|DONE exists", faust);
                     ServiceErrorDto err = new ServiceErrorDto()
                             .withCode(ServiceErrorCode.CASE_EXISTS)
                             .withCause("Case exists")
@@ -144,7 +144,7 @@ public class Cases {
             for(int subjectId : dto.getSubjects()) {
                 Subject subject = entityManager.find(Subject.class, subjectId);
                 if(subject == null) {
-                    LOGGER.error("Attempt to resolve subject {} failed. No such subject", subjectId);
+                    LOGGER.info("Attempt to resolve subject {} failed. No such subject", subjectId);
                     ServiceErrorDto err = new ServiceErrorDto()
                             .withCode(ServiceErrorCode.INVALID_REQUEST)
                             .withCause("No such subject")
@@ -164,7 +164,7 @@ public class Cases {
         if( dto.getReviewer() != null ) {
             reviewer = entityManager.find(Reviewer.class, dto.getReviewer());
             if(reviewer == null) {
-                LOGGER.error("Attempt to resolve reviewer {} failed. No such user", dto.getReviewer());
+                LOGGER.info("Attempt to resolve reviewer {} failed. No such user", dto.getReviewer());
                 ServiceErrorDto err = new ServiceErrorDto()
                         .withCode(ServiceErrorCode.INVALID_REQUEST)
                         .withCause("No such reviewer")
@@ -175,7 +175,7 @@ public class Cases {
             status = CaseStatus.ASSIGNED;
         } else {
             if( status.equals(CaseStatus.ASSIGNED) ) {
-                LOGGER.error("Attempt to set status ASSIGNED with no reviewer", dto.getReviewer());
+                LOGGER.info("Attempt to set status ASSIGNED with no reviewer", dto.getReviewer());
                 ServiceErrorDto err = new ServiceErrorDto()
                         .withCode(ServiceErrorCode.INVALID_STATE)
                         .withCause("Invalid state")
@@ -189,7 +189,7 @@ public class Cases {
         if( dto.getEditor() != null ) {
             editor= entityManager.find(Editor.class, dto.getEditor());
             if( editor == null ) {
-                LOGGER.error("Attempt to resolve editor {} failed. No such user", dto.getEditor());
+                LOGGER.info("Attempt to resolve editor {} failed. No such user", dto.getEditor());
                 ServiceErrorDto err = new ServiceErrorDto()
                         .withCode(ServiceErrorCode.INVALID_REQUEST)
                         .withCause("No such editor")
@@ -274,7 +274,7 @@ public class Cases {
 
             return Response.status(200).entity(requested).build();
         } catch(Exception exception) {
-            LOGGER.info("Caught exception: {}", exception.getMessage());
+            LOGGER.error("Caught exception: {}", exception.getMessage());
             throw exception;
         }
     }
@@ -339,7 +339,7 @@ public class Cases {
                     try {
                         statusPredicates.add(builder.equal(root.get("status"), CaseStatus.valueOf(oneStatus)));
                     } catch (IllegalArgumentException ex) {
-                        LOGGER.error("Invalid status code '{}' in request for cases with status", oneStatus);
+                        LOGGER.info("Invalid status code '{}' in request for cases with status", oneStatus);
                         ServiceErrorDto err = new ServiceErrorDto()
                                 .withCode(ServiceErrorCode.INVALID_REQUEST)
                                 .withCause("Request failed")
@@ -396,7 +396,7 @@ public class Cases {
                             .writeValueAsString(cases)).build();
 
         } catch(Exception exception) {
-            LOGGER.info("Caught exception: {}", exception.getMessage());
+            LOGGER.error("Caught exception: {}", exception.getMessage());
             throw exception;
         }
     }
