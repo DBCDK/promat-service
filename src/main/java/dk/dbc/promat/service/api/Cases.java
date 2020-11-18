@@ -311,7 +311,6 @@ public class Cases {
             // Get case with given primary or related
             if(faust != null && !faust.isBlank() && !faust.isEmpty()) {
 
-
                 Predicate primaryFaustPredicat = builder.equal(root.get("primaryFaust"), builder.literal(faust));
                 Predicate relatedFaustsPredicat = builder.isTrue(builder.function("JsonbContainsFromString", Boolean.class, root.get("relatedFausts"), builder.literal(faust)));
                 Predicate faustPredicate = builder.or(primaryFaustPredicat, relatedFaustsPredicat);
@@ -323,7 +322,6 @@ public class Cases {
                 Predicate statusPredicate = builder.not(inClause);
 
                 allPredicates.add(builder.and(faustPredicate, statusPredicate));
-
             }
 
             // Get cases with given set of statuses
