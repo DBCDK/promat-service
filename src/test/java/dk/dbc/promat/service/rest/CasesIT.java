@@ -513,7 +513,7 @@ public class CasesIT extends ContainerTest {
         assertThat("status code", response.getStatus(), is(201));
         PromatCase created = mapper.readValue(response.readEntity(String.class), PromatCase.class);
 
-        // Update title - should return 200 OK
+        // Update case - should return 200 OK
         dto = new CaseRequestDto()
                 .withTitle("New title for 8001111")
                 .withDetails("New details for 8001111")
