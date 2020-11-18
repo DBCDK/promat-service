@@ -51,6 +51,10 @@ public class PromatCase {
     @JsonView({CaseView.Case.class})
     private Reviewer reviewer;
 
+    @OneToOne
+    @JsonView({CaseView.Case.class})
+    private Editor editor;
+
     @OneToMany
     @JoinTable(
             name = "caseSubjects",
@@ -132,6 +136,14 @@ public class PromatCase {
 
     public void setReviewer(Reviewer reviewer) {
         this.reviewer = reviewer;
+    }
+
+    public Editor getEditor() {
+        return editor;
+    }
+
+    public void setEditor(Editor editor) {
+        this.editor = editor;
     }
 
     public List<Subject> getSubjects() {
@@ -220,6 +232,11 @@ public class PromatCase {
         return this;
     }
 
+    public PromatCase withEditor(Editor editor) {
+        this.editor = editor;
+        return this;
+    }
+
     public PromatCase withSubjects(List<Subject> subjects) {
         this.subjects = subjects;
         return this;
@@ -266,6 +283,7 @@ public class PromatCase {
                 primaryFaust.equals(aCase.primaryFaust) &&
                 Objects.equals(relatedFausts, aCase.relatedFausts) &&
                 Objects.equals(reviewer, aCase.reviewer) &&
+                Objects.equals(editor, aCase.editor) &&
                 Objects.equals(subjects, aCase.subjects) &&
                 Objects.equals(created, aCase.created) &&
                 Objects.equals(deadline, aCase.deadline) &&
@@ -277,7 +295,7 @@ public class PromatCase {
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, title, details, primaryFaust, relatedFausts, reviewer, subjects, created, deadline, assigned, status, materialType, tasks);
+        return Objects.hash(id, title, details, primaryFaust, relatedFausts, reviewer, editor, subjects, created, deadline, assigned, status, materialType, tasks);
     }
 
     @Override
@@ -289,6 +307,7 @@ public class PromatCase {
                 ", primaryFaust='" + primaryFaust + '\'' +
                 ", relatedFausts=" + relatedFausts +
                 ", reviewer=" + reviewer +
+                ", editor=" + editor +
                 ", subjects=" + subjects +
                 ", created=" + created +
                 ", deadline=" + deadline +

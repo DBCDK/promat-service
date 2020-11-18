@@ -87,7 +87,7 @@ public class CasesIT extends ContainerTest {
     }
 
     @Test
-    public void testCreateCaseWithSubjectAndReviewer() throws JsonProcessingException {
+    public void testCreateCaseWithSubjectAndReviewerAndEditor() throws JsonProcessingException {
 
         // Note: This test depends on subjects with id 3 and 4, and reviewer with id 1
         // being injected by the dumpfiles also used by the reviewer and subject tests
@@ -97,6 +97,7 @@ public class CasesIT extends ContainerTest {
                 .withTitle("Title for 3001111")
                 .withMaterialType(MaterialType.BOOK)
                 .withReviewer(1)
+                .withEditor(10)
                 .withSubjects(Arrays.asList(3, 4));
 
         Response response = postResponse("v1/api/cases", dto);
@@ -110,6 +111,9 @@ public class CasesIT extends ContainerTest {
 
         assertThat("reviwer id", created.getReviewer().getId(), is(1));
         assertThat("reviwer firstname", created.getReviewer().getFirstName(), is("Hans"));
+
+        assertThat("editor id", created.getEditor().getId(), is(10));
+        assertThat("editor firstname", created.getEditor().getFirstName(), is("Ed"));
 
         assertThat("subjects size", created.getSubjects().size(), is(2));
         List<Integer> actual = created.getSubjects()
