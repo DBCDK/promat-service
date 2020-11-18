@@ -471,4 +471,13 @@ public class CasesIT extends ContainerTest {
         assertThat("Number of cases with editor 10", fetched.getNumFound(), is(1));
     }
 
+    @Test
+    public void testEditCase() {
+
+        CaseRequestDto dto = new CaseRequestDto();
+        Response response = postResponse("v1/api/cases/12", dto);
+        assertThat("status code", response.getStatus(), is(200));
+
+
+    }
 }

@@ -32,6 +32,7 @@ import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
+import javax.ws.rs.PATCH;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -434,4 +435,15 @@ public class Cases {
                 return "";
         }
     }
+
+    @POST
+    @Path("cases/{id}")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response patchCase(@PathParam("id") final Integer id, CaseRequestDto dto) {
+        LOGGER.info("cases/{} (POST) body: {}", id, dto);
+
+        return Response.ok().build();
+    }
+
 }
