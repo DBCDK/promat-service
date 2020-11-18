@@ -440,4 +440,33 @@ public class CasesIT extends ContainerTest {
         assertThat("Number of cases with editor 10", fetched.getNumFound(), is(1));
     }
 
+    @Test
+    public void testGetCasesWithTitle() throws JsonProcessingException {
+
+        // Cases with part of title 'no_such_title'
+        Response response = getResponse("v1/api/cases", Map.of("title", "no_such_title"));
+        assertThat("status code", response.getStatus(), is(404));
+
+        // Cases with part of title 'Title'
+        response = getResponse("v1/api/cases", Map.of("title", "Title"));
+        assertThat("status code", response.getStatus(), is(200));
+        String obj = response.readEntity(String.class);
+        CaseSummaryList fetched = mapper.readValue(obj, CaseSummaryList.class);
+        assertThat("Number of cases with editor 10", fetched.getNumFound(), is(greaterThanOrEqualTo(11)));
+
+        // Cases with part of title 'title' (lowercase starting 't')
+        response = getResponse("v1/api/cases", Map.of("title", "title"));
+        assertThat("status code", response.getStatus(), is(200));
+        obj = response.readEntity(String.class);
+        fetched = mapper.readValue(obj, CaseSummaryList.class);
+        assertThat("Number of cases with editor 10", fetched.getNumFound(), is(greaterThanOrEqualTo(11)));
+
+        // Cases with full title 'Title for 001111'
+        response = getResponse("v1/api/cases", Map.of("title", "Title for 001111"));
+        assertThat("status code", response.getStatus(), is(200));
+        obj = response.readEntity(String.class);
+        fetched = mapper.readValue(obj, CaseSummaryList.class);
+        assertThat("Number of cases with editor 10", fetched.getNumFound(), is(1));
+    }
+
 }

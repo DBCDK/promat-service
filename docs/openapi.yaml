@@ -140,11 +140,17 @@ paths:
             $ref: '#/components/schemas/CaseStatus'
           description: One or more statuses of the cases returned. The list is commaseparated
         - in: query
-            name: editor
-            required: false
-            schema:
-              type: integer
-            description: Editor that must be assigned to this case
+          name: editor
+          required: false
+          schema:
+            type: integer
+          description: Editor that must be assigned to the cases returned
+        - in: query
+          name: title
+          required: false
+          schema:
+            type: string
+          description: Entire or part of title of the cases returned
         - in: query
           name: limit
           required: false
