@@ -428,7 +428,7 @@ public class CasesIT extends ContainerTest {
         assertThat("status code", response.getStatus(), is(200));
         String obj = response.readEntity(String.class);
         CaseSummaryList fetched = mapper.readValue(obj, CaseSummaryList.class);
-        assertThat("Number of cases with editor 10", fetched.getNumFound(), is(1));
+        assertThat("Number of cases with editor 10", fetched.getNumFound(), is(greaterThanOrEqualTo(1)));
 
         // Cases with editor '11' and status 'REJECTED' (no cases with status REJECTED)
         response = getResponse("v1/api/cases", Map.of("editor", 11, "status", "REJECTED"));
@@ -472,13 +472,103 @@ public class CasesIT extends ContainerTest {
     }
 
     @Test
-    public void testEditCase() {
+    public void testEditCase() throws JsonProcessingException {
 
         // Update of unknown case - should return 404 NOT FOUND
         CaseRequestDto dto = new CaseRequestDto();
         Response response = postResponse("v1/api/cases/9876", dto);
         assertThat("status code", response.getStatus(), is(404));
 
+        // Attemtp to set field 'assigned' - should return 400 BAD REQUEST
+        dto = new CaseRequestDto().withAssigned("2020-11-18");
+        response = postResponse("v1/api/cases/1", dto);
+        assertThat("status code", response.getStatus(), is(400));
 
+        // Attemtp to set field 'status' - should return 400 BAD REQUEST
+        dto = new CaseRequestDto().withStatus(CaseStatus.ASSIGNED);
+        response = postResponse("v1/api/cases/1", dto);
+        assertThat("status code", response.getStatus(), is(400));
+
+        // Create a new case
+        dto = new CaseRequestDto()
+                .withTitle("Title for 8001111")
+                .withDetails("Details for 8001111")
+                .withPrimaryFaust("8001111")
+                .withRelatedFausts(Arrays.asList("8002222", "8003333"))
+                .withReviewer(1)
+                .withEditor(10)
+                .withSubjects(Arrays.asList(3, 4))
+                .withDeadline("2020-12-18")
+                .withMaterialType(MaterialType.BOOK)
+                .withTasks(Arrays.asList(
+                        new TaskDto()
+                                .withPaycode(Paycode.NONE)
+                                .withTypeOfTask(TaskType.ABOUT)
+                                .withTargetFausts(Arrays.asList(new String[] {"8002222", "8004444"})),
+                        new TaskDto()
+                                .withPaycode(Paycode.NONE)
+                                .withTypeOfTask(TaskType.BKM)
+                ));
+        response = postResponse("v1/api/cases", dto);
+        assertThat("status code", response.getStatus(), is(201));
+        PromatCase created = mapper.readValue(response.readEntity(String.class), PromatCase.class);
+
+        // Update title - should return 200 OK
+        dto = new CaseRequestDto()
+                .withTitle("New title for 8001111")
+                .withDetails("New details for 8001111")
+                .withPrimaryFaust("8002222")
+                .withRelatedFausts(Arrays.asList("8001111", "8003333", "8004444"))
+                .withReviewer(1) // Todo: change reviewer
+                .withEditor(10) // Todo: change editor
+                .withSubjects(Arrays.asList(3, 4)) // Todo: change subjects
+                .withDeadline("2021-01-18")
+                .withMaterialType(MaterialType.MULTIMEDIA)
+                .withTasks(Arrays.asList(
+                        new TaskDto()
+                                .withPaycode(Paycode.NONE)
+                                .withTypeOfTask(TaskType.ABOUT)
+                                .withTargetFausts(Arrays.asList(new String[] {"8001111", "8004444"})),
+                        new TaskDto()
+                                .withPaycode(Paycode.NONE)
+                                .withTypeOfTask(TaskType.BKM),
+                        new TaskDto()
+                                .withPaycode(Paycode.NONE)
+                                .withTypeOfTask(TaskType.BUGGI)
+                ));
+        response = postResponse("v1/api/cases/" + created.getId(), dto);
+        assertThat("status code", response.getStatus(), is(200));
+        PromatCase updated = mapper.readValue(response.readEntity(String.class), PromatCase.class);
+
+        assertThat("updated case did not change id", updated.getId(), is(created.getId()));
+        assertThat("updated title", updated.getTitle(), is("New title for 8001111"));
+        assertThat("updated details", updated.getDetails(), is("New details for 8001111"));
+        assertThat("updated primary faust", updated.getPrimaryFaust(), is("8002222"));
+        assertThat("updated relatedFausts", updated.getRelatedFausts().
+                stream()
+                .sorted()
+                .collect(Collectors.toList())
+                .equals(Arrays.stream(new String[]{"8001111", "8003333", "8004444"})
+                        .collect(Collectors.toList())), is(true));
+        assertThat("updated reviewer", updated.getReviewer().getId(), is(1)); // Todo: will change
+        assertThat("updated editor", updated.getEditor().getId(), is(10)); // Todo: will change
+        assertThat("updated subjects size", updated.getSubjects().size(), is(2)); // Todo: will change
+        List<Integer> actual = created.getSubjects()
+                .stream()
+                .sorted(Comparator.comparingInt(Subject::getId))
+                .map(s -> s.getId()).collect(Collectors.toList());
+        List<Integer> expected = new ArrayList<Integer>();
+        expected.add(3);
+        expected.add(4);
+        assertThat("updated subject ids", actual.equals(expected), is(true) );
+        assertThat("updated deadline", updated.getDeadline(),  is(LocalDate.parse("2021-01-18")));
+        assertThat("updated materialtype", updated.getMaterialType(), is(MaterialType.MULTIMEDIA));
+        assertThat("updated tasks (should remain unchanged)", updated.getTasks().equals(created.getTasks()));
+
+        // Fetch the case, check that it matches the updated case
+        response = getResponse("v1/api/cases/" + created.getId().toString());
+        assertThat("status code", response.getStatus(), is(200));
+        PromatCase fetched = mapper.readValue(response.readEntity(String.class), PromatCase.class);
+        assertThat("fetched case is same as updated", updated.equals(fetched), is(true));
     }
 }

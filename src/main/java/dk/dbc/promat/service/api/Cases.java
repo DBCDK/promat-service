@@ -454,7 +454,7 @@ public class Cases {
                         .withCode(ServiceErrorCode.INVALID_REQUEST)
                         .withCause("Forbidden field")
                         .withDetails(String.format("Setting the value of 'assigned' is not allowed"));
-                return Response.status(404).entity(err).build();
+                return Response.status(400).entity(err).build();
             }
             if(dto.getStatus() != null) {
                 LOGGER.info("Attempt to set 'status' on case {}", id);
@@ -462,7 +462,7 @@ public class Cases {
                         .withCode(ServiceErrorCode.INVALID_REQUEST)
                         .withCause("Forbidden field")
                         .withDetails(String.format("Setting the value of 'status' is not allowed"));
-                return Response.status(404).entity(err).build();
+                return Response.status(400).entity(err).build();
             }
 
             // Fetch an existing entity with the given id
@@ -484,9 +484,11 @@ public class Cases {
                 existing.setDetails(dto.getDetails());
             }
             if(dto.getPrimaryFaust() != null) {
+                // Todo: Check that this faustnumber is not in use on any other open case
                 existing.setPrimaryFaust(dto.getPrimaryFaust());
             }
             if(dto.getRelatedFausts() != null) {
+                // Todo: Check that these faustnumbers is not in use on any other open case
                 existing.setRelatedFausts(dto.getRelatedFausts());
             }
             if(dto.getReviewer() != null) {
@@ -509,7 +511,7 @@ public class Cases {
             //       * assigned;
             //       * status;
 
-            return Response.ok().build();
+            return Response.ok(existing).build();
         } catch(Exception exception) {
             LOGGER.error("Caught exception: {}", exception.getMessage());
             throw exception;
