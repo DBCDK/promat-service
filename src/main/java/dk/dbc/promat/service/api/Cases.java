@@ -1,7 +1,6 @@
 package dk.dbc.promat.service.api;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import dk.dbc.commons.jsonb.JSONBContext;
 import dk.dbc.promat.service.dto.CaseSummaryList;
 import dk.dbc.promat.service.dto.ServiceErrorCode;
 import dk.dbc.promat.service.dto.ServiceErrorDto;
@@ -276,11 +275,13 @@ public class Cases {
     @Produces(MediaType.APPLICATION_JSON)
     public Response listCases(@QueryParam("faust") final String faust,
                               @QueryParam("status") final String status,
+                              @QueryParam("editor") final Integer editor,
                               @QueryParam("limit") final Integer limit,
                               @QueryParam("from") final Integer from) throws Exception {
-        LOGGER.info("cases/?faust={}|status={}|limit={}|from={}",
+        LOGGER.info("cases/?faust={}|status={}|editor={}|limit={}|from={}",
                 faust,
                 status == null ? "null" : status,
+                editor == null ? "null" : editor,
                 limit == null ? "null" : limit,
                 from == null ? "null" : from);
 
@@ -296,10 +297,10 @@ public class Cases {
             // List of all predicates to be AND'ed together on the final query
             List<Predicate> allPredicates = new ArrayList<>();
 
-            // Add relevant clauses
+            // Get case with given primary or related
             if(faust != null && !faust.isBlank() && !faust.isEmpty()) {
 
-                // Get case with given primary or related
+
                 Predicate primaryFaustPredicat = builder.equal(root.get("primaryFaust"), builder.literal(faust));
                 Predicate relatedFaustsPredicat = builder.isTrue(builder.function("JsonbContainsFromString", Boolean.class, root.get("relatedFausts"), builder.literal(faust)));
                 Predicate faustPredicate = builder.or(primaryFaustPredicat, relatedFaustsPredicat);
@@ -312,14 +313,16 @@ public class Cases {
 
                 allPredicates.add(builder.and(faustPredicate, statusPredicate));
 
-            } else if(status != null && !status.isBlank() && !status.isEmpty()) {
+            }
+
+            // Get cases with given set of statuses
+            if(status != null && !status.isBlank() && !status.isEmpty()) {
 
                 // Allthough jax.rs actually supports having multiple get arguments with the same name
                 // "?status=CREATED&status=ASSIGNED" this is not a safe implementation since other
                 // frameworks (React/NextJS or others) may have difficulties handling this. So instead
                 // a list of statuses is expected to be given as a comma separated list
 
-                // Get cases with the given set of statuses
                 List<Predicate> statusPredicates = new ArrayList<>();
                 for(String oneStatus : status.split(",")) {
                     try {
@@ -335,6 +338,11 @@ public class Cases {
                 }
 
                 allPredicates.add(builder.or(statusPredicates.toArray(Predicate[]::new)));
+            }
+
+            // Get cases with given editor
+            if(editor != null && editor > 0) {
+                allPredicates.add(builder.equal(root.get("editor").get("id"), editor));
             }
 
             // If a starting id has been given, add this
