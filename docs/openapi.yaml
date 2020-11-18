@@ -255,6 +255,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Case'
+        '404':
+          description: No case with the given id exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
         '409':
           description: Case could not be updated, check ServiceError in body for specifics
           content:
