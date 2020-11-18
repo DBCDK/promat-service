@@ -48,6 +48,32 @@ public class ReviewersIT extends ContainerTest {
                                 .withHiatus_begin(LocalDate.parse("2020-10-28"))
                                 .withHiatus_end(LocalDate.parse("2020-11-01"))
                                 .withAccepts(List.of(Reviewer.Accepts.MULTIMEDIA,
+                                        Reviewer.Accepts.PS4, Reviewer.Accepts.PS5)),
+                        new Reviewer()
+                                .withId(2)
+                                .withActive(true)
+                                .withFirstName("Ole")
+                                .withLastName("Olsen")
+                                .withEmail("ole@olsen.dk")
+                                .withAddress(
+                                        new Address()
+                                                .withAddress1("Storegade 99")
+                                                .withZip("1111")
+                                                .withCity("Storeved")
+
+                                )
+                                .withInstitution("Ole Olsens Goodies")
+                                .withPaycode(0)
+                                .withSubjects(
+                                        List.of(
+                                                new Subject()
+                                                        .withId(5)
+                                                        .withName("Multimedie")
+                                        )
+                                )
+                                .withHiatus_begin(LocalDate.parse("2020-11-28"))
+                                .withHiatus_end(LocalDate.parse("2020-12-01"))
+                                .withAccepts(List.of(Reviewer.Accepts.MULTIMEDIA,
                                         Reviewer.Accepts.PS4, Reviewer.Accepts.PS5))
                 )
         );
@@ -56,6 +82,8 @@ public class ReviewersIT extends ContainerTest {
                 get(String.format("%s/%s", promatServiceBaseUrl, "v1/api/reviewers")),
                 ReviewerList.class);
 
-        assertThat("List of reviewers is just 'Hans Hansen'", actual, is(expected));
+        assertThat("List of reviewers is just 'Hans Hansen' and 'Ole Olsen'",
+                actual.toString(),
+                is(expected.toString()));
     }
 }
