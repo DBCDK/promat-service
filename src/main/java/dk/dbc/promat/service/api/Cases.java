@@ -32,7 +32,6 @@ import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
-import javax.ws.rs.PATCH;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -138,39 +137,25 @@ public class Cases {
             }
         }
 
-        // Map subject ids to existing subjects
-        ArrayList<Subject> subjects = new ArrayList<>();
-        if( dto.getSubjects() != null ) {
-            for(int subjectId : dto.getSubjects()) {
-                Subject subject = entityManager.find(Subject.class, subjectId);
-                if(subject == null) {
-                    LOGGER.info("Attempt to resolve subject {} failed. No such subject", subjectId);
-                    ServiceErrorDto err = new ServiceErrorDto()
-                            .withCode(ServiceErrorCode.INVALID_REQUEST)
-                            .withCause("No such subject")
-                            .withDetails(String.format("Field 'subject' contains id {} which does not exist", subjectId));
-                    return Response.status(400).entity(err).build();
-                }
-                subjects.add(subject);
-            }
+        // Map foreign entities
+        ArrayList<Subject> subjects;
+        Reviewer reviewer;
+        Editor editor;
+        try {
+            subjects = resolveSubjects(dto.getSubjects());
+            reviewer = resolveReviewer(dto.getReviewer());
+            editor = resolveEditor(dto.getEditor());
+        } catch(ServiceErrorException serviceErrorException) {
+            return Response.status(400).entity(serviceErrorException.getServiceErrorDto()).build();
         }
 
-        // Map reviewer id to existing reviewer (promatuser)
+        // Handle possible change of case status due to assigning an editor.
+        //
         // If an reviewer has been assigned, then set or modify the status of the case and the assigned field.
         // If no reviwer is given, check that the status is not ASSIGNED - that would be a mess
-        Reviewer reviewer = null;
         LocalDate assigned = dto.getAssigned() == null ? null : LocalDate.parse(dto.getAssigned());
         CaseStatus status = dto.getStatus() == null ? CaseStatus.CREATED : dto.getStatus();
-        if( dto.getReviewer() != null ) {
-            reviewer = entityManager.find(Reviewer.class, dto.getReviewer());
-            if(reviewer == null) {
-                LOGGER.info("Attempt to resolve reviewer {} failed. No such user", dto.getReviewer());
-                ServiceErrorDto err = new ServiceErrorDto()
-                        .withCode(ServiceErrorCode.INVALID_REQUEST)
-                        .withCause("No such reviewer")
-                        .withDetails(String.format("Field 'reviewer' contains user id {} which does not exist", dto.getReviewer()));
-                return Response.status(400).entity(err).build();
-            }
+        if( reviewer != null ) {
             assigned = LocalDate.now();
             status = CaseStatus.ASSIGNED;
         } else {
@@ -180,20 +165,6 @@ public class Cases {
                         .withCode(ServiceErrorCode.INVALID_STATE)
                         .withCause("Invalid state")
                         .withDetails("Case status ASSIGNED is not possible without a reviewer");
-                return Response.status(400).entity(err).build();
-            }
-        }
-
-        // Map editor to existing editor (promatuser)
-        Editor editor = null;
-        if( dto.getEditor() != null ) {
-            editor= entityManager.find(Editor.class, dto.getEditor());
-            if( editor == null ) {
-                LOGGER.info("Attempt to resolve editor {} failed. No such user", dto.getEditor());
-                ServiceErrorDto err = new ServiceErrorDto()
-                        .withCode(ServiceErrorCode.INVALID_REQUEST)
-                        .withCause("No such editor")
-                        .withDetails(String.format("Field 'editor' contains user id {} which does not exist", dto.getEditor()));
                 return Response.status(400).entity(err).build();
             }
         }
@@ -492,13 +463,13 @@ public class Cases {
                 existing.setRelatedFausts(dto.getRelatedFausts());
             }
             if(dto.getReviewer() != null) {
-                // Todo: Resolve and update reviewer
+                existing.setReviewer(resolveReviewer(dto.getReviewer()));
             }
             if(dto.getEditor() != null) {
-                // Todo: Resolve and update editor
+                existing.setEditor(resolveEditor(dto.getEditor()));
             }
             if(dto.getSubjects() != null) {
-                // Todo: Resolve and update subjects
+                existing.setSubjects(resolveSubjects(dto.getSubjects()));
             }
             if(dto.getDeadline() != null) {
                 existing.setDeadline(LocalDate.parse(dto.getDeadline()));
@@ -512,9 +483,65 @@ public class Cases {
             //       * status;
 
             return Response.ok(existing).build();
-        } catch(Exception exception) {
+        } catch(ServiceErrorException serviceErrorException) {
+            return Response.status(400).entity(serviceErrorException.getServiceErrorDto()).build();
+        }
+        catch(Exception exception) {
             LOGGER.error("Caught exception: {}", exception.getMessage());
             throw exception;
         }
+    }
+
+    public Reviewer resolveReviewer(Integer reviewerId) throws ServiceErrorException {
+        if(reviewerId == null) {
+            return null;
+        }
+
+        Reviewer reviewer = entityManager.find(Reviewer.class, reviewerId);
+        if( reviewer == null ) {
+            LOGGER.info("Attempt to resolve reviewer {} failed. No such user", reviewerId);
+            throw new ServiceErrorException("Attempt to resolve reviewer failed")
+                    .withCode(ServiceErrorCode.INVALID_REQUEST)
+                    .withCause("No such reviewer")
+                    .withDetails(String.format("Field 'reviewer' contains user id {} which does not exist", reviewerId));
+        }
+        return reviewer;
+    }
+
+    public Editor resolveEditor(Integer editorId) throws ServiceErrorException {
+        if(editorId == null) {
+            return null;
+        }
+
+        Editor editor = entityManager.find(Editor.class, editorId);
+        if( editor == null ) {
+            LOGGER.info("Attempt to resolve editor {} failed. No such user", editorId);
+            throw new ServiceErrorException("Attempt to resolve editor failed")
+                    .withCode(ServiceErrorCode.INVALID_REQUEST)
+                    .withCause("No such editor")
+                    .withDetails(String.format("Field 'editor' contains user id {} which does not exist", editorId));
+        }
+        return editor;
+    }
+
+    public ArrayList<Subject> resolveSubjects(List<Integer> subjectIds) throws ServiceErrorException {
+        ArrayList<Subject> subjects = new ArrayList<>();
+
+        if(subjectIds == null || subjectIds.size() == 0) {
+            return subjects;
+        }
+
+        for(int subjectId : subjectIds) {
+            Subject subject = entityManager.find(Subject.class, subjectId);
+            if(subject == null) {
+                LOGGER.info("Attempt to resolve subject {} failed. No such subject", subjectId);
+                throw new ServiceErrorException("Attempt to resolve subject failed")
+                        .withCode(ServiceErrorCode.INVALID_REQUEST)
+                        .withCause("No such subject")
+                        .withDetails(String.format("Field 'subject' contains id {} which does not exist", subjectId));
+            }
+            subjects.add(subject);
+        }
+        return subjects;
     }
 }
