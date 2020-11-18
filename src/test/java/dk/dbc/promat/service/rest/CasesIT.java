@@ -489,6 +489,21 @@ public class CasesIT extends ContainerTest {
         response = postResponse("v1/api/cases/1", dto);
         assertThat("status code", response.getStatus(), is(400));
 
+        // Attemtp to set field 'reviewer' with non existing reviewer - should return 400 BAD REQUEST
+        dto = new CaseRequestDto().withReviewer(9999);
+        response = postResponse("v1/api/cases/1", dto);
+        assertThat("status code", response.getStatus(), is(400));
+
+        // Attemtp to set field 'editor' with non existing editor - should return 400 BAD REQUEST
+        dto = new CaseRequestDto().withEditor(9999);
+        response = postResponse("v1/api/cases/1", dto);
+        assertThat("status code", response.getStatus(), is(400));
+
+        // Attemtp to set field 'subject' with non existing subject - should return 400 BAD REQUEST
+        dto = new CaseRequestDto().withSubjects(Arrays.asList(9999));
+        response = postResponse("v1/api/cases/1", dto);
+        assertThat("status code", response.getStatus(), is(400));
+
         // Create a new case
         dto = new CaseRequestDto()
                 .withTitle("Title for 8001111")
@@ -519,9 +534,9 @@ public class CasesIT extends ContainerTest {
                 .withDetails("New details for 8001111")
                 .withPrimaryFaust("8002222")
                 .withRelatedFausts(Arrays.asList("8001111", "8003333", "8004444"))
-                .withReviewer(1) // Todo: change reviewer
-                .withEditor(10) // Todo: change editor
-                .withSubjects(Arrays.asList(3, 4)) // Todo: change subjects
+                .withReviewer(2)
+                .withEditor(11)
+                .withSubjects(Arrays.asList(5))
                 .withDeadline("2021-01-18")
                 .withMaterialType(MaterialType.MULTIMEDIA)
                 .withTasks(Arrays.asList(
@@ -550,16 +565,15 @@ public class CasesIT extends ContainerTest {
                 .collect(Collectors.toList())
                 .equals(Arrays.stream(new String[]{"8001111", "8003333", "8004444"})
                         .collect(Collectors.toList())), is(true));
-        assertThat("updated reviewer", updated.getReviewer().getId(), is(1)); // Todo: will change
-        assertThat("updated editor", updated.getEditor().getId(), is(10)); // Todo: will change
-        assertThat("updated subjects size", updated.getSubjects().size(), is(2)); // Todo: will change
-        List<Integer> actual = created.getSubjects()
+        assertThat("updated reviewer", updated.getReviewer().getId(), is(2));
+        assertThat("updated editor", updated.getEditor().getId(), is(11));
+        assertThat("updated subjects size", updated.getSubjects().size(), is(1));
+        List<Integer> actual = updated.getSubjects()
                 .stream()
                 .sorted(Comparator.comparingInt(Subject::getId))
                 .map(s -> s.getId()).collect(Collectors.toList());
         List<Integer> expected = new ArrayList<Integer>();
-        expected.add(3);
-        expected.add(4);
+        expected.add(5);
         assertThat("updated subject ids", actual.equals(expected), is(true) );
         assertThat("updated deadline", updated.getDeadline(),  is(LocalDate.parse("2021-01-18")));
         assertThat("updated materialtype", updated.getMaterialType(), is(MaterialType.MULTIMEDIA));
@@ -570,5 +584,8 @@ public class CasesIT extends ContainerTest {
         assertThat("status code", response.getStatus(), is(200));
         PromatCase fetched = mapper.readValue(response.readEntity(String.class), PromatCase.class);
         assertThat("fetched case is same as updated", updated.equals(fetched), is(true));
+
+        // Todo: add test for updating with primary- or related faustnumbers that exists on
+        //       other open cases
     }
 }
