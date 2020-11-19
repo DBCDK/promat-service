@@ -7,6 +7,7 @@ package dk.dbc.promat.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dk.dbc.httpclient.HttpGet;
+import dk.dbc.httpclient.HttpPost;
 import dk.dbc.promat.service.rest.JsonMapperProvider;
 import javax.ws.rs.core.Response;
 import org.slf4j.Logger;
@@ -16,6 +17,8 @@ import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.output.Slf4jLogConsumer;
 import org.testcontainers.containers.wait.strategy.Wait;
 import java.time.Duration;
+import java.util.List;
+import java.util.Map;
 
 
 public abstract class ContainerTest extends IntegrationTest {
@@ -50,7 +53,6 @@ public abstract class ContainerTest extends IntegrationTest {
                 ":" + promatServiceContainer.getMappedPort(8080);
     }
 
-
     public <T> T get(String path, Class<T> tClass) {
         return new HttpGet(httpClient)
                 .withBaseUrl(promatServiceBaseUrl)
@@ -64,5 +66,23 @@ public abstract class ContainerTest extends IntegrationTest {
                 .withBaseUrl(promatServiceBaseUrl)
                 .withPathElements(path)
                 .execute();
+    }
+
+    public Response getResponse(String path, Map<String, Object> queryParameter) {
+        HttpGet httpGet = new HttpGet(httpClient)
+                .withBaseUrl(promatServiceBaseUrl)
+                .withPathElements(path);
+
+        httpGet.getQueryParameters().putAll(queryParameter);
+
+        return httpGet.execute();
+    }
+
+    public <T> Response postResponse(String path, T body) {
+        HttpPost httpPost = new HttpPost(httpClient)
+                .withBaseUrl(promatServiceBaseUrl)
+                .withPathElements(path)
+                .withData(body, "application/json");
+        return httpClient.execute(httpPost);
     }
 }

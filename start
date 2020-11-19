@@ -15,7 +15,10 @@ docker run --rm --name promat-service -d \
     -e OPENSEARCH_REPOSITORY=${OPENSEARCH_REPOSITORY} \
     -e WORK_PRESENTATION_SERVICE_URL=${WORK_PRESENTATION_SERVICE_URL} \
     -e WORK_PRESENTATION_PROFILE=${WORK_PRESENTATION_PROFILE} \
-    -e PROMAT_CLUSTER_NAME=${promat_cluster_name} \
+    -e PROMAT_CLUSTER_NAME=${PROMAT_CLUSTER_NAME} \
+    -e MAIL_HOST=${MAIL_HOST} \
+    -e MAIL_USER=${MAIL_USER} \
+    -e MAIL_FROM=${MAIL_FROM} \
     -p ${promat_service_port}:8080 \
     $@ \
     docker-io.dbc.dk/promat-service:devel

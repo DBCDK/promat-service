@@ -1,5 +1,7 @@
 package dk.dbc.promat.service.persistence;
 
+import com.fasterxml.jackson.annotation.JsonView;
+
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Convert;
@@ -13,7 +15,6 @@ import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
-import javax.persistence.Table;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Objects;
@@ -25,25 +26,34 @@ import java.util.Objects;
  *  plural form used here.
  */
 @Entity
-@Table(name = "cases")
-public class Case {
+public class PromatCase {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @JsonView({CaseView.CaseSummary.class, CaseView.Case.class})
     private Integer id;
 
+    @JsonView({CaseView.CaseSummary.class, CaseView.Case.class})
     private String title;
 
+    @JsonView({CaseView.CaseSummary.class, CaseView.Case.class})
     private String details;
 
+    @JsonView({CaseView.CaseSummary.class, CaseView.Case.class})
     private String primaryFaust;
 
     @Column(columnDefinition = "jsonb")
     @Convert(converter = JsonStringArrayConverter.class)
+    @JsonView({CaseView.CaseSummary.class, CaseView.Case.class})
     private List<String> relatedFausts;
 
     @OneToOne
+    @JsonView({CaseView.Case.class})
     private Reviewer reviewer;
+
+    @OneToOne
+    @JsonView({CaseView.Case.class})
+    private Editor editor;
 
     @OneToMany
     @JoinTable(
@@ -51,18 +61,24 @@ public class Case {
             joinColumns = @JoinColumn(name = "case_id"),
             inverseJoinColumns = @JoinColumn(name = "subject_id")
     )
+    @JsonView({CaseView.Case.class})
     private List<Subject> subjects;
 
+    @JsonView({CaseView.CaseSummary.class, CaseView.Case.class})
     private LocalDate created;
 
+    @JsonView({CaseView.CaseSummary.class, CaseView.Case.class})
     private LocalDate deadline;
 
+    @JsonView({CaseView.CaseSummary.class, CaseView.Case.class})
     private LocalDate assigned;
 
     @Enumerated(EnumType.STRING)
+    @JsonView({CaseView.CaseSummary.class, CaseView.Case.class})
     private CaseStatus status;
 
     @Enumerated(EnumType.STRING)
+    @JsonView({CaseView.CaseSummary.class, CaseView.Case.class})
     private MaterialType materialType;
 
     @OneToMany(cascade = CascadeType.ALL)
@@ -71,6 +87,7 @@ public class Case {
             joinColumns = @JoinColumn(name = "case_id"),
             inverseJoinColumns = @JoinColumn(name = "task_id")
     )
+    @JsonView({CaseView.Case.class})
     private List<Task> tasks;
 
     public Integer getId() {
@@ -119,6 +136,14 @@ public class Case {
 
     public void setReviewer(Reviewer reviewer) {
         this.reviewer = reviewer;
+    }
+
+    public Editor getEditor() {
+        return editor;
+    }
+
+    public void setEditor(Editor editor) {
+        this.editor = editor;
     }
 
     public List<Subject> getSubjects() {
@@ -177,67 +202,72 @@ public class Case {
         this.tasks = tasks;
     }
 
-    public Case withId(Integer id) {
+    public PromatCase withId(Integer id) {
         this.id = id;
         return this;
     }
 
-    public Case withTitle(String title) {
+    public PromatCase withTitle(String title) {
         this.title = title;
         return this;
     }
 
-    public Case withDetails(String details) {
+    public PromatCase withDetails(String details) {
         this.details = details;
         return this;
     }
 
-    public Case withPrimaryFaust(String primaryFaust) {
+    public PromatCase withPrimaryFaust(String primaryFaust) {
         this.primaryFaust = primaryFaust;
         return this;
     }
 
-    public Case withRelatedFausts(List<String> relatedFausts) {
+    public PromatCase withRelatedFausts(List<String> relatedFausts) {
         this.relatedFausts = relatedFausts;
         return this;
     }
 
-    public Case withReviewer(Reviewer reviewer) {
+    public PromatCase withReviewer(Reviewer reviewer) {
         this.reviewer = reviewer;
         return this;
     }
 
-    public Case withSubjects(List<Subject> subjects) {
+    public PromatCase withEditor(Editor editor) {
+        this.editor = editor;
+        return this;
+    }
+
+    public PromatCase withSubjects(List<Subject> subjects) {
         this.subjects = subjects;
         return this;
     }
 
-    public Case withCreated(LocalDate created) {
+    public PromatCase withCreated(LocalDate created) {
         this.created = created;
         return this;
     }
 
-    public Case withDeadline(LocalDate deadline) {
+    public PromatCase withDeadline(LocalDate deadline) {
         this.deadline = deadline;
         return this;
     }
 
-    public Case withAssigned(LocalDate assigned) {
+    public PromatCase withAssigned(LocalDate assigned) {
         this.assigned = assigned;
         return this;
     }
 
-    public Case withStatus(CaseStatus status) {
+    public PromatCase withStatus(CaseStatus status) {
         this.status = status;
         return this;
     }
 
-    public Case withMaterialType(MaterialType materialType) {
+    public PromatCase withMaterialType(MaterialType materialType) {
         this.materialType = materialType;
         return this;
     }
 
-    public Case withTasks(List<Task> tasks) {
+    public PromatCase withTasks(List<Task> tasks) {
         this.tasks = tasks;
         return this;
     }
@@ -246,13 +276,14 @@ public class Case {
     public boolean equals(Object o) {
         if(this == o) return true;
         if(o == null || getClass() != o.getClass()) return false;
-        Case aCase = (Case) o;
+        PromatCase aCase = (PromatCase) o;
         return id.equals(aCase.id) &&
                 title.equals(aCase.title) &&
                 Objects.equals(details, aCase.details) &&
                 primaryFaust.equals(aCase.primaryFaust) &&
                 Objects.equals(relatedFausts, aCase.relatedFausts) &&
                 Objects.equals(reviewer, aCase.reviewer) &&
+                Objects.equals(editor, aCase.editor) &&
                 Objects.equals(subjects, aCase.subjects) &&
                 Objects.equals(created, aCase.created) &&
                 Objects.equals(deadline, aCase.deadline) &&
@@ -264,7 +295,7 @@ public class Case {
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, title, details, primaryFaust, relatedFausts, reviewer, subjects, created, deadline, assigned, status, materialType, tasks);
+        return Objects.hash(id, title, details, primaryFaust, relatedFausts, reviewer, editor, subjects, created, deadline, assigned, status, materialType, tasks);
     }
 
     @Override
@@ -276,6 +307,7 @@ public class Case {
                 ", primaryFaust='" + primaryFaust + '\'' +
                 ", relatedFausts=" + relatedFausts +
                 ", reviewer=" + reviewer +
+                ", editor=" + editor +
                 ", subjects=" + subjects +
                 ", created=" + created +
                 ", deadline=" + deadline +

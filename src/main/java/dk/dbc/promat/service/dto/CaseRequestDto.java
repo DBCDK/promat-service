@@ -20,6 +20,8 @@ public class CaseRequestDto implements Dto {
 
     private Integer reviewer = null;
 
+    private Integer editor = null;
+
     private List<Integer> subjects;
 
     private String deadline;
@@ -70,6 +72,14 @@ public class CaseRequestDto implements Dto {
 
     public void setReviewer(Integer reviewer) {
         this.reviewer = reviewer;
+    }
+
+    public Integer getEditor() {
+        return editor;
+    }
+
+    public void setEditor(Integer reviewer) {
+        this.editor = reviewer;
     }
 
     public List<Integer> getSubjects() {
@@ -146,6 +156,11 @@ public class CaseRequestDto implements Dto {
         return this;
     }
 
+    public CaseRequestDto withEditor(Integer editor) {
+        this.editor = editor;
+        return this;
+    }
+
     public CaseRequestDto withSubjects(List<Integer> subjects) {
         this.subjects = subjects;
         return this;
@@ -184,6 +199,7 @@ public class CaseRequestDto implements Dto {
                 ", primaryFaust='" + primaryFaust + '\'' +
                 ", relatedFausts=" + relatedFausts +
                 ", reviewer=" + reviewer +
+                ", editor=" + editor +
                 ", subjects=" + subjects +
                 ", deadline='" + deadline + '\'' +
                 ", assigned='" + assigned + '\'' +
@@ -203,6 +219,7 @@ public class CaseRequestDto implements Dto {
                 primaryFaust.equals(that.primaryFaust) &&
                 Objects.equals(relatedFausts, that.relatedFausts) &&
                 Objects.equals(reviewer, that.reviewer) &&
+                Objects.equals(editor, that.editor) &&
                 Objects.equals(subjects, that.subjects) &&
                 Objects.equals(deadline, that.deadline) &&
                 Objects.equals(assigned, that.assigned) &&
@@ -213,7 +230,7 @@ public class CaseRequestDto implements Dto {
 
     @Override
     public int hashCode() {
-        int result = Objects.hash(title, details, primaryFaust, relatedFausts, reviewer, subjects, deadline, assigned, status, materialType, tasks);
+        int result = Objects.hash(title, details, primaryFaust, relatedFausts, reviewer, editor, subjects, deadline, assigned, status, materialType, tasks);
         return result;
     }
 }
