@@ -44,6 +44,9 @@ public class NotificationSender {
             entityManager.merge(notification);
         } catch (MessagingException e) {
             LOGGER.error("Unable to send mail. Notification:{}",notification.toString());
+            notification.setStatus(NotificationStatus.ERROR);
+            entityManager.merge(notification);
+
         }
     }
 }

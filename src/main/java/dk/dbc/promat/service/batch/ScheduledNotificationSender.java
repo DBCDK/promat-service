@@ -31,9 +31,10 @@ public class ScheduledNotificationSender {
     ServerRole serverRole;
 
     @Schedule(second = "0", minute = "*/5", hour = "*")
-    public void processNotifications() {
+    public void processNotifications() throws InterruptedException {
         if (serverRole == ServerRole.PRIMARY) {
             LOGGER.info("Checking for notifications");
+            prepareErrorsForRetry();
             Notification notification = pop();
             while (notification != null) {
                 LOGGER.info("Notifying: '{}' on subject '{}'", notification.getToAddress(), notification.getSubject());
@@ -50,5 +51,14 @@ public class ScheduledNotificationSender {
         query.setMaxResults(1);
         List<Notification> notifications = query.getResultList();
         return (notifications.isEmpty()) ? null : notifications.get(0);
+    }
+
+    private void prepareErrorsForRetry() {
+        TypedQuery<Notification> query = entityManager
+                .createQuery(Notification.SELECT_FROM_NOTIFCATION_QUEUE_QUERY, Notification.class);
+        query.setParameter("status", NotificationStatus.ERROR);
+        for (Notification notification : query.getResultList()) {
+            notification.setStatus(NotificationStatus.PENDING);
+        }
     }
 }
