@@ -1,16 +1,17 @@
 package dk.dbc.promat.service.api;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import dk.dbc.promat.service.dto.CaseRequestDto;
 import dk.dbc.promat.service.dto.CaseSummaryList;
 import dk.dbc.promat.service.dto.ServiceErrorCode;
 import dk.dbc.promat.service.dto.ServiceErrorDto;
 import dk.dbc.promat.service.dto.TaskDto;
-import dk.dbc.promat.service.persistence.Editor;
-import dk.dbc.promat.service.persistence.PromatCase;
-import dk.dbc.promat.service.dto.CaseRequestDto;
 import dk.dbc.promat.service.persistence.CaseStatus;
 import dk.dbc.promat.service.persistence.CaseView;
+import dk.dbc.promat.service.persistence.Editor;
+import dk.dbc.promat.service.persistence.PromatCase;
 import dk.dbc.promat.service.persistence.PromatEntityManager;
+import dk.dbc.promat.service.persistence.Repository;
 import dk.dbc.promat.service.persistence.Reviewer;
 import dk.dbc.promat.service.persistence.Subject;
 import dk.dbc.promat.service.persistence.Task;
@@ -18,6 +19,7 @@ import dk.dbc.promat.service.rest.JsonMapperProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.inject.Inject;
 import javax.persistence.EntityManager;
@@ -48,6 +50,8 @@ public class Cases {
     @Inject
     @PromatEntityManager
     EntityManager entityManager;
+
+    @EJB Repository repository;
 
     // Default number of results when getting cases
     private static final int DEFAULT_CASES_LIMIT = 100;
@@ -84,6 +88,8 @@ public class Cases {
                     .withDetails("Field 'materialType' must be supplied when creating a new case");
             return Response.status(400).entity(err).build();
         }
+
+        repository.getExclusiveAccessToTable(PromatCase.TABLE_NAME);
 
         // Check that no existing case exists with the same primary or related faustnumber
         // as the given primary faustnumber and a state other than CLOSED or DONE
