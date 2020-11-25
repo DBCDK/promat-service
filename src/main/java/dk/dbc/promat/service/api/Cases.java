@@ -177,6 +177,15 @@ public class Cases {
         ArrayList<PromatTask> tasks = new ArrayList<>();
         if( dto.getTasks() != null ) {
             for(TaskDto task : dto.getTasks()) {
+                if(task.getTaskType() == null || task.getTaskFieldType() == null) {
+                    LOGGER.info("Task dto is missing the taskType and/or taskFieldType field");
+                    ServiceErrorDto err = new ServiceErrorDto()
+                            .withCode(ServiceErrorCode.INVALID_REQUEST)
+                            .withCause("Missing required field(s) in the request data")
+                            .withDetails("Fields 'taskType' and 'taskFieldType' must be supplied when creating a new task");
+                    return Response.status(400).entity(err).build();
+                }
+
                 tasks.add(new PromatTask()
                         .withTaskType(task.getTaskType())
                         .withTaskFieldType(task.getTaskFieldType())
@@ -378,7 +387,7 @@ public class Cases {
         LOGGER.info("cases/{} (POST) body: {}", id, dto);
 
         repository.getExclusiveAccessToTable(PromatCase.TABLE_NAME);
-        
+
         try {
 
             // Update strategy is effectively a PATCH update, only a selected number of fields

@@ -588,4 +588,45 @@ public class CasesIT extends ContainerTest {
         // Todo: add test for updating with primary- or related faustnumbers that exists on
         //       other open cases
     }
+
+    @Test
+    public void testCreateCaseWithTasksWithMissingFields() throws JsonProcessingException {
+
+        // Create case without tasktype and taskfieldtype
+        CaseRequestDto dto = new CaseRequestDto()
+                .withPrimaryFaust("9001111")
+                .withTitle("Title for 9001111")
+                .withDetails("Details for 9001111")
+                .withMaterialType(MaterialType.BOOK)
+                .withTasks(Arrays.asList(
+                        new TaskDto()
+                ));
+        assertThat("status code", postResponse("v1/api/cases", dto).getStatus(), is(400));
+
+        // Create case without taskfieldtype
+        dto = new CaseRequestDto()
+                .withPrimaryFaust("9001111")
+                .withTitle("Title for 9001111")
+                .withDetails("Details for 9001111")
+                .withMaterialType(MaterialType.BOOK)
+                .withTasks(Arrays.asList(
+                        new TaskDto()
+                                .withTaskType(TaskType.GROUP_1_LESS_THAN_100_PAGES)
+                ));
+        assertThat("status code", postResponse("v1/api/cases", dto).getStatus(), is(400));
+
+        // Create case with tasktype and taskfieldtype - should succeed now
+        dto = new CaseRequestDto()
+                .withPrimaryFaust("9001111")
+                .withTitle("Title for 9001111")
+                .withDetails("Details for 9001111")
+                .withMaterialType(MaterialType.BOOK)
+                .withTasks(Arrays.asList(
+                        new TaskDto()
+                                .withTaskType(TaskType.GROUP_1_LESS_THAN_100_PAGES)
+                                .withTaskFieldType(TaskFieldType.BRIEF)
+                ));
+        assertThat("status code", postResponse("v1/api/cases", dto).getStatus(), is(201));
+    }
+
 }
