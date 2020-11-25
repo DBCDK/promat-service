@@ -377,6 +377,8 @@ public class Cases {
     public Response patchCase(@PathParam("id") final Integer id, CaseRequestDto dto) {
         LOGGER.info("cases/{} (POST) body: {}", id, dto);
 
+        repository.getExclusiveAccessToTable(PromatCase.TABLE_NAME);
+        
         try {
 
             // Update strategy is effectively a PATCH update, only a selected number of fields
