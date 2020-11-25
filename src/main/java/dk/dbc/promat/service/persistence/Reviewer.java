@@ -1,5 +1,6 @@
 package dk.dbc.promat.service.persistence;
 
+import javax.persistence.Convert;
 import javax.persistence.DiscriminatorValue;
 import javax.persistence.Embedded;
 import javax.persistence.Entity;
@@ -25,6 +26,19 @@ public class Reviewer extends PromatUser {
     public static final String GET_ALL_REVIEWERS_QUERY =
             "SELECT reviewer FROM Reviewer reviewer ORDER BY reviewer.id ASC";
 
+    public enum Accepts {
+        BKM,
+        BOOK,
+        EBOOK,
+        EXPRESS,
+        MOVIE,
+        MULTIMEDIA,
+        PS4,
+        PS5,
+        XBOX_ONE,
+        XBOX_SERIES_X,
+        NINTENDO_SWITCH
+    }
 
     @Embedded
     private Address address;
@@ -41,6 +55,9 @@ public class Reviewer extends PromatUser {
             inverseJoinColumns = @JoinColumn(name = "subject_id")
     )
     private Collection<Subject> subjects;
+
+    @Convert(converter = AcceptsListToJsonArrayConverter.class)
+    private List<Accepts> accepts;
 
     public Address getAddress() {
         return address;
@@ -88,6 +105,14 @@ public class Reviewer extends PromatUser {
 
     public void setSubjects(Collection<Subject> subjects) {
         this.subjects = subjects;
+    }
+
+    public List<Accepts> getAccepts() {
+        return accepts;
+    }
+
+    public void setAccepts(List<Accepts> accepts) {
+        this.accepts = accepts;
     }
 
     public Reviewer withId(Integer id) {
@@ -145,26 +170,59 @@ public class Reviewer extends PromatUser {
         return this;
     }
 
+    public Reviewer withAccepts(List<Accepts> accepts) {
+        this.accepts = accepts;
+        return this;
+    }
+
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
 
         Reviewer reviewer = (Reviewer) o;
 
-        if (!id.equals(reviewer.id)) return false;
-        if (active != reviewer.active) return false;
-        if (!firstName.equals(reviewer.firstName)) return false;
-        if (!lastName.equals(reviewer.lastName)) return false;
-        if (!email.equals(reviewer.email)) return false;
-        if (phone != null ? !phone.equals(reviewer.phone) : reviewer.phone != null) return false;
-        if (!address.equals(reviewer.address)) return false;
-        if (!institution.equals(reviewer.institution)) return false;
-        if (!paycode.equals(reviewer.paycode)) return false;
-        if (hiatus_begin != null ? !hiatus_begin.equals(reviewer.hiatus_begin) : reviewer.hiatus_begin != null)
+        if (!id.equals(reviewer.id)) {
             return false;
-        if (hiatus_end != null ? !hiatus_end.equals(reviewer.hiatus_end) : reviewer.hiatus_end != null) return false;
-        return subjects != null ? subjects.equals(reviewer.subjects) : reviewer.subjects == null;
+        }
+        if (active != reviewer.active) {
+            return false;
+        }
+        if (!firstName.equals(reviewer.firstName)) {
+            return false;
+        }
+        if (!lastName.equals(reviewer.lastName)) {
+            return false;
+        }
+        if (!email.equals(reviewer.email)) {
+            return false;
+        }
+        if (phone != null ? !phone.equals(reviewer.phone) : reviewer.phone != null) {
+            return false;
+        }
+        if (address != null ? !address.equals(reviewer.address) : reviewer.address != null) {
+            return false;
+        }
+        if (institution != null ? !institution.equals(reviewer.institution) : reviewer.institution != null) {
+            return false;
+        }
+        if (paycode != null ? !paycode.equals(reviewer.paycode) : reviewer.paycode != null) {
+            return false;
+        }
+        if (hiatus_begin != null ? !hiatus_begin.equals(reviewer.hiatus_begin) : reviewer.hiatus_begin != null) {
+            return false;
+        }
+        if (hiatus_end != null ? !hiatus_end.equals(reviewer.hiatus_end) : reviewer.hiatus_end != null) {
+            return false;
+        }
+        if (subjects != null ? !subjects.equals(reviewer.subjects) : reviewer.subjects != null) {
+            return false;
+        }
+        return accepts != null ? accepts.equals(reviewer.accepts) : reviewer.accepts == null;
     }
 
     @Override
@@ -181,6 +239,7 @@ public class Reviewer extends PromatUser {
         result = 31 * result + (hiatus_begin != null ? hiatus_begin.hashCode() : 0);
         result = 31 * result + (hiatus_end != null ? hiatus_end.hashCode() : 0);
         result = 31 * result + (subjects != null ? subjects.hashCode() : 0);
+        result = 31 * result + (accepts != null ? accepts.hashCode() : 0);
         return result;
     }
 
@@ -199,6 +258,7 @@ public class Reviewer extends PromatUser {
                 ", hiatus_begin=" + hiatus_begin +
                 ", hiatus_end=" + hiatus_end +
                 ", subjects=" + subjects +
+                ", accepts=" + accepts +
                 '}';
     }
 }

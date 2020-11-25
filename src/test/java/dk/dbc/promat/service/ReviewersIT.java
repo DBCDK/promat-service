@@ -17,7 +17,7 @@ public class ReviewersIT extends ContainerTest {
 
     @Test
     public void crude_test() throws JsonProcessingException {
-        ReviewerList expected = new ReviewerList().withReviewers(
+        final ReviewerList expected = new ReviewerList().withReviewers(
                 List.of(
                         new Reviewer()
                                 .withId(1)
@@ -47,16 +47,15 @@ public class ReviewersIT extends ContainerTest {
                                 )
                                 .withHiatus_begin(LocalDate.parse("2020-10-28"))
                                 .withHiatus_end(LocalDate.parse("2020-11-01"))
+                                .withAccepts(List.of(Reviewer.Accepts.MULTIMEDIA,
+                                        Reviewer.Accepts.PS4, Reviewer.Accepts.PS5))
                 )
         );
 
-        ReviewerList actual = mapper.readValue(
+        final ReviewerList actual = mapper.readValue(
                 get(String.format("%s/%s", promatServiceBaseUrl, "v1/api/reviewers")),
-                ReviewerList.class
-        );
+                ReviewerList.class);
 
-        assertThat("List of reviewers is just 'Hans Hansen'",
-                actual.toString(),
-                is(expected.toString()));
+        assertThat("List of reviewers is just 'Hans Hansen'", actual, is(expected));
     }
 }

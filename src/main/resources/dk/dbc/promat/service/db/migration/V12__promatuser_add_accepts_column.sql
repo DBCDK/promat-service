@@ -1,0 +1,1 @@
+ALTER TABLE promatuser ADD COLUMN accepts JSONB DEFAULT NULL;
