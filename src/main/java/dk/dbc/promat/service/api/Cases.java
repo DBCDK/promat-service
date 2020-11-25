@@ -440,6 +440,9 @@ public class Cases {
             }
             if(dto.getReviewer() != null) {
                 existing.setReviewer(resolveReviewer(dto.getReviewer()));
+                if(existing.getStatus() == CaseStatus.CREATED) {
+                    existing.setStatus(CaseStatus.ASSIGNED);
+                }
             }
             if(dto.getEditor() != null) {
                 existing.setEditor(resolveEditor(dto.getEditor()));
@@ -455,7 +458,6 @@ public class Cases {
             }
 
             // Todo: Handle fields that could/should change implicitly when other fields change value.
-            //       * assigned;
             //       * status;
 
             return Response.ok(existing).build();

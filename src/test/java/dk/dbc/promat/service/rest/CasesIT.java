@@ -510,7 +510,6 @@ public class CasesIT extends ContainerTest {
                 .withDetails("Details for 8001111")
                 .withPrimaryFaust("8001111")
                 .withRelatedFausts(Arrays.asList("8002222", "8003333"))
-                .withReviewer(1)
                 .withEditor(10)
                 .withSubjects(Arrays.asList(3, 4))
                 .withDeadline("2020-12-18")
@@ -534,7 +533,7 @@ public class CasesIT extends ContainerTest {
                 .withDetails("New details for 8001111")
                 .withPrimaryFaust("8002222")
                 .withRelatedFausts(Arrays.asList("8001111", "8003333", "8004444"))
-                .withReviewer(2)
+                .withReviewer(1)
                 .withEditor(11)
                 .withSubjects(Arrays.asList(5))
                 .withDeadline("2021-01-18")
@@ -565,7 +564,8 @@ public class CasesIT extends ContainerTest {
                 .collect(Collectors.toList())
                 .equals(Arrays.stream(new String[]{"8001111", "8003333", "8004444"})
                         .collect(Collectors.toList())), is(true));
-        assertThat("updated reviewer", updated.getReviewer().getId(), is(2));
+        assertThat("updated reviewer", updated.getReviewer().getId(), is(1));
+        assertThat("status changed", updated.getStatus(), is(CaseStatus.ASSIGNED));
         assertThat("updated editor", updated.getEditor().getId(), is(11));
         assertThat("updated subjects size", updated.getSubjects().size(), is(1));
         List<Integer> actual = updated.getSubjects()
