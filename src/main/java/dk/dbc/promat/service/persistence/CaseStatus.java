@@ -6,6 +6,7 @@ public enum CaseStatus {
     ASSIGNED,
     PENDING_APPROVAL,
     PENDING_ISSUES,
+    APPROVED,
     DONE,
     CLOSED
 }

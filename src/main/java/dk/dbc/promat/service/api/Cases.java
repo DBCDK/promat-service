@@ -403,12 +403,12 @@ public class Cases {
                         .withDetails(String.format("Setting the value of 'assigned' is not allowed"));
                 return Response.status(400).entity(err).build();
             }
-            if(dto.getStatus() != null) {
-                LOGGER.info("Attempt to set 'status' on case {}", id);
+            if(dto.getStatus() != null && dto.getStatus() != CaseStatus.CLOSED && dto.getStatus() != CaseStatus.CREATED) {
+                LOGGER.info("Attempt to set forbidden 'status' on case {}", id);
                 ServiceErrorDto err = new ServiceErrorDto()
                         .withCode(ServiceErrorCode.INVALID_REQUEST)
-                        .withCause("Forbidden field")
-                        .withDetails(String.format("Setting the value of 'status' is not allowed"));
+                        .withCause("Forbidden status")
+                        .withDetails(String.format("Setting the value of 'status' to other statuses than CLOSED or CREATED is not allowed"));
                 return Response.status(400).entity(err).build();
             }
 
@@ -456,9 +456,22 @@ public class Cases {
             if(dto.getMaterialType() != null) {
                 existing.setMaterialType(dto.getMaterialType());
             }
-
-            // Todo: Handle fields that could/should change implicitly when other fields change value.
-            //       * status;
+            if(dto.getStatus() != null) {
+                if(dto.getStatus() == CaseStatus.CLOSED) {
+                    existing.setStatus(CaseStatus.CLOSED);
+                } else {
+                    if( existing.getTasks().stream().filter(task -> task.getData() == null || task.getData().isEmpty()).count() == 0) {
+                        if( existing.getTasks().stream().filter(task -> task.getApproved() == null).count() == 0) {
+                            existing.setStatus(CaseStatus.APPROVED);
+                        } else {
+                            existing.setStatus(CaseStatus.PENDING_APPROVAL);
+                        }
+                    } else {
+                        existing.setStatus(CaseStatus.ASSIGNED);
+                    }
+                    // Todo: We may neeed more status handling here when the lifecycle of a task is better defined
+                }
+            }
 
             return Response.ok(existing).build();
         } catch(ServiceErrorException serviceErrorException) {

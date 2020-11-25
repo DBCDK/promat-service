@@ -585,6 +585,25 @@ public class CasesIT extends ContainerTest {
         PromatCase fetched = mapper.readValue(response.readEntity(String.class), PromatCase.class);
         assertThat("fetched case is same as updated", updated.equals(fetched), is(true));
 
+        // Close the case
+        dto.setStatus(CaseStatus.CLOSED);
+        response = postResponse("v1/api/cases/" + created.getId(), dto);
+        assertThat("status code", response.getStatus(), is(200));
+        updated = mapper.readValue(response.readEntity(String.class), PromatCase.class);
+        assertThat("status", updated.getStatus(), is(CaseStatus.CLOSED));
+
+        // Try to reopen the case by changing status to ASSIGNED
+        dto.setStatus(CaseStatus.ASSIGNED);
+        response = postResponse("v1/api/cases/" + created.getId(), dto);
+        assertThat("status code", response.getStatus(), is(400));
+
+        // Reopen the case. The case has been assigned to, so status should move to ASSIGNED
+        dto.setStatus(CaseStatus.CREATED);
+        response = postResponse("v1/api/cases/" + created.getId(), dto);
+        assertThat("status code", response.getStatus(), is(200));
+        updated = mapper.readValue(response.readEntity(String.class), PromatCase.class);
+        assertThat("status", updated.getStatus(), is(CaseStatus.ASSIGNED));
+
         // Todo: add test for updating with primary- or related faustnumbers that exists on
         //       other open cases
     }
