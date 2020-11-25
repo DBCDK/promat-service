@@ -517,12 +517,12 @@ public class CasesIT extends ContainerTest {
                 .withMaterialType(MaterialType.BOOK)
                 .withTasks(Arrays.asList(
                         new TaskDto()
-                                .withPaycode(Paycode.NONE)
-                                .withTypeOfTask(TaskType.ABOUT)
+                                .withTaskType(TaskType.GROUP_1_LESS_THAN_100_PAGES)
+                                .withTaskFieldType(TaskFieldType.BRIEF)
                                 .withTargetFausts(Arrays.asList(new String[] {"8002222", "8004444"})),
                         new TaskDto()
-                                .withPaycode(Paycode.NONE)
-                                .withTypeOfTask(TaskType.BKM)
+                                .withTaskType(TaskType.BKM)
+                                .withTaskFieldType(TaskFieldType.BKM)
                 ));
         response = postResponse("v1/api/cases", dto);
         assertThat("status code", response.getStatus(), is(201));
@@ -541,15 +541,15 @@ public class CasesIT extends ContainerTest {
                 .withMaterialType(MaterialType.MULTIMEDIA)
                 .withTasks(Arrays.asList(
                         new TaskDto()
-                                .withPaycode(Paycode.NONE)
-                                .withTypeOfTask(TaskType.ABOUT)
+                                .withTaskType(TaskType.GROUP_1_LESS_THAN_100_PAGES)
+                                .withTaskFieldType(TaskFieldType.BRIEF)
                                 .withTargetFausts(Arrays.asList(new String[] {"8001111", "8004444"})),
                         new TaskDto()
-                                .withPaycode(Paycode.NONE)
-                                .withTypeOfTask(TaskType.BKM),
+                                .withTaskType(TaskType.BKM)
+                                .withTaskFieldType(TaskFieldType.BKM),
                         new TaskDto()
-                                .withPaycode(Paycode.NONE)
-                                .withTypeOfTask(TaskType.BUGGI)
+                                .withTaskType(TaskType.BUGGI)
+                                .withTaskFieldType(TaskFieldType.NONE)
                 ));
         response = postResponse("v1/api/cases/" + created.getId(), dto);
         assertThat("status code", response.getStatus(), is(200));
