@@ -5,7 +5,7 @@ public enum TaskFieldType {
     BRIEF,
     DESCRIPTION,
     EVALUATION,
-    COMPARISSON,
+    COMPARISON,
     RECOMMENDATION,
     BIBLIOGRAPHIC,
     TOPICS

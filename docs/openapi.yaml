@@ -683,8 +683,10 @@ components:
         id:
           type: integer
           description: Task id
-        typeOfTask:
+        taskType:
           $ref: '#/components/schemas/TaskType'
+        taskFieldType:
+          $ref: '#/components/schemas/TaskFieldType'
         created:
           type: string
           format: date
@@ -722,19 +724,63 @@ components:
     TaskType:
       type: string
       enum:
+        - 'NONE'
+        - 'GROUP_1_LESS_THAN_100_PAGES'
+        - 'GROUP_2_100_UPTO_199_PAGES'
+        - 'GROUP_3_200_UPTO_499_PAGES'
+        - 'GROUP_4_500_OR_MORE_PAGES'
+        - 'MOVIES_GR_1'
+        - 'MOVIES_GR_2'
+        - 'MOVIES_GR_3'
+        - 'MULTIMEDIA_FEE'
+        - 'MULTIMEDIA_FEE_GR2'
+        - 'MOVIE_NON_FICTION_GR1'
+        - 'MOVIE_NON_FICTION_GR2'
+        - 'MOVIE_NON_FICTION_GR3'
+        - 'NO_REVIEW'
+        - 'MUSIC_FEE'
         - 'BKM'
-        - 'TOPICS'
-        - 'AGE'
-        - 'LEVEL_TARGET'
         - 'METAKOMPAS'
         - 'BUGGI'
-        - 'ABOUT'
       description: |
         Enum describing the type of task
+        * NONE = No tasktype set (should not be used)
+        * GROUP_1_LESS_THAN_100_PAGES = Books with less than 100 pages
+        * GROUP_2_100_UPTO_199_PAGES = Books with 100 to 199 pages
+        * GROUP_3_200_UPTO_499_PAGES = Books with 200 to 499 pages
+        * GROUP_4_500_OR_MORE_PAGES = Books with 500 or more pages
+        * MOVIES_GR_1 = Fiction movies, group 1
+        * MOVIES_GR_2 = Fiction movies, group 2
+        * MOVIES_GR_3 = Fiction movies, group 3
+        * MULTIMEDIA_FEE = Multimedia
+        * MULTIMEDIA_FEE_GR2 = Multimedia fee, group 2
+        * MOVIE_NON_FICTION_GR1 = Non-fiction movie, group 1
+        * MOVIE_NON_FICTION_GR2 = Non-fiction movie, group 2
+        * MOVIE_NON_FICTION_GR3 = Non-fiction movie, group 3
+        * NO_REVIEW = Note but no review
+        * MUSIC_FEE = Music (assumed obsolete)
         * BKM = Decide if this material is relevant for libraries
-        * TOPICS = One or more topics (emneord)
-        * AGE = Relevant agegroup
-        * LEVEL_TARGET = Lexical level and/or target audience
         * METAKOMPAS = Special topics for Metakompasset
         * BUGGI = Special topics for Buggi
-        * ABOUT = Short note to be added to records with targeted faustnumbers
+
+    TaskFieldType:
+      type: string
+      enum:
+        - 'NONE'
+        - 'BRIEF'
+        - 'DESCRIPTION'
+        - 'EVALUATION'
+        - 'COMPARISON'
+        - 'RECOMMENDATION'
+        - 'BIBLIOGRAPHIC'
+        - 'TOPICS'
+      description: |
+        Enum describing the type of task field
+        * NONE = No task field type (should not be used)
+        * BRIEF = Brief note to be inserted into targeted records
+        * DESCRIPTION = Description of the material
+        * EVALUATION = Evaluation of the material
+        * COMPARISON = Other works that is comparable to the material
+        * RECOMMENDATION = The reviewers conclusion on the material
+        * BIBLIOGRAPHIC = Bibliographic note for the movie/multimedia material
+        * TOPICS = Suggested topics (semicolon separated) for the material
