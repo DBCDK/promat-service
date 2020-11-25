@@ -1,6 +1,5 @@
 package dk.dbc.promat.service.persistence;
 
-import javax.json.bind.annotation.JsonbDateFormat;
 import javax.persistence.DiscriminatorValue;
 import javax.persistence.Embedded;
 import javax.persistence.Entity;
@@ -32,9 +31,7 @@ public class Reviewer extends PromatUser {
     private String institution;
     private Integer paycode;
 
-    @JsonbDateFormat
     private LocalDate hiatus_begin;
-
     private LocalDate hiatus_end;
 
     @OneToMany
