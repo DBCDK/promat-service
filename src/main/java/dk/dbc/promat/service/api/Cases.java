@@ -14,7 +14,8 @@ import dk.dbc.promat.service.persistence.PromatEntityManager;
 import dk.dbc.promat.service.persistence.Repository;
 import dk.dbc.promat.service.persistence.Reviewer;
 import dk.dbc.promat.service.persistence.Subject;
-import dk.dbc.promat.service.persistence.Task;
+import dk.dbc.promat.service.persistence.PromatTask;
+import dk.dbc.promat.service.persistence.TaskType;
 import dk.dbc.promat.service.rest.JsonMapperProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -201,12 +202,13 @@ public class Cases {
         relatedFausts.addAll(dto.getRelatedFausts() == null ? new ArrayList<>() : dto.getRelatedFausts());
 
         // Create tasks if any is given
-        ArrayList<Task> tasks = new ArrayList<>();
+        ArrayList<PromatTask> tasks = new ArrayList<>();
         if( dto.getTasks() != null ) {
             for(TaskDto task : dto.getTasks()) {
-                tasks.add(new Task()
-                        .withPaycode(task.getPaycode())
-                        .withTypeOfTask(task.getTypeOfTask())
+                tasks.add(new PromatTask()
+                        .withTaskType(task.getTaskType())
+                        .withTaskFieldType(task.getTaskFieldType())
+                        .withPayCode(getPaycodeForTaskType(task.getTaskType()))
                         .withCreated(LocalDate.now())
                         .withTargetFausts(task.getTargetFausts() == null ? null : task.getTargetFausts()));
 
@@ -395,6 +397,41 @@ public class Cases {
         } catch(Exception exception) {
             LOGGER.info("Caught exception: {}", exception.getMessage());
             throw exception;
+        }
+    }
+
+    private String getPaycodeForTaskType(TaskType taskType) {
+        switch(taskType) {
+
+            case GROUP_1_LESS_THAN_100_PAGES: return "1956";
+            case GROUP_2_100_UPTO_199_PAGES: return "1957";
+            case GROUP_3_200_UPTO_499_PAGES: return "1958";
+            case GROUP_4_500_OR_MORE_PAGES: return "1959";
+
+            case MOVIES_GR_1: return "1980";
+            case MOVIES_GR_2: return "1981";
+            case MOVIES_GR_3: return "1982";
+
+            case MULTIMEDIA_FEE: return "1954";
+            case MULTIMEDIA_FEE_GR2: return "1985";
+
+            case MOVIE_NON_FICTION_GR1: return "1979";
+            case MOVIE_NON_FICTION_GR2: return "1983";
+            case MOVIE_NON_FICTION_GR3: return "1984";
+
+            case NO_REVIEW: return "1961";
+
+            case MUSIC_FEE: return "1234";
+
+            case BKM: return "1962";
+
+            case METAKOMPAS: return "1987";
+
+            case BUGGI: return "0000";  // Todo: Update return value when the paycode is known
+
+            case NONE:
+            default:
+                return "";
         }
     }
 }

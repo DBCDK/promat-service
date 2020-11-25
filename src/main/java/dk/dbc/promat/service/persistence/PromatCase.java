@@ -89,7 +89,7 @@ public class PromatCase {
             inverseJoinColumns = @JoinColumn(name = "task_id")
     )
     @JsonView({CaseView.Case.class})
-    private List<Task> tasks;
+    private List<PromatTask> tasks;
 
     public Integer getId() {
         return id;
@@ -195,11 +195,11 @@ public class PromatCase {
         this.materialType = materialType;
     }
 
-    public List<Task> getTasks() {
+    public List<PromatTask> getTasks() {
         return tasks;
     }
 
-    public void setTasks(List<Task> tasks) {
+    public void setTasks(List<PromatTask> tasks) {
         this.tasks = tasks;
     }
 
@@ -268,7 +268,7 @@ public class PromatCase {
         return this;
     }
 
-    public PromatCase withTasks(List<Task> tasks) {
+    public PromatCase withTasks(List<PromatTask> tasks) {
         this.tasks = tasks;
         return this;
     }

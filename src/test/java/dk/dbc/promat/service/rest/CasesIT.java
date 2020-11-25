@@ -9,12 +9,12 @@ import dk.dbc.promat.service.dto.TaskDto;
 import dk.dbc.promat.service.persistence.PromatCase;
 import dk.dbc.promat.service.persistence.CaseStatus;
 import dk.dbc.promat.service.persistence.MaterialType;
-import dk.dbc.promat.service.persistence.Paycode;
 import dk.dbc.promat.service.persistence.Subject;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 
+import dk.dbc.promat.service.persistence.TaskFieldType;
 import dk.dbc.promat.service.persistence.TaskType;
 import org.hamcrest.core.IsNull;
 import org.junit.jupiter.api.Test;
@@ -190,12 +190,12 @@ public class CasesIT extends ContainerTest {
                 .withStatus(CaseStatus.ASSIGNED)
                 .withTasks(Arrays.asList(
                         new TaskDto()
-                                .withPaycode(Paycode.NONE)
-                                .withTypeOfTask(TaskType.ABOUT)
-                                .withTargetFausts(Arrays.asList(new String[] {"6002222", "6004444"})),
+                                .withTaskType(TaskType.GROUP_1_LESS_THAN_100_PAGES)
+                                .withTaskFieldType(TaskFieldType.BRIEF),
                         new TaskDto()
-                                .withPaycode(Paycode.NONE)
-                                .withTypeOfTask(TaskType.BKM)
+                                .withTaskType(TaskType.GROUP_1_LESS_THAN_100_PAGES)
+                                .withTaskFieldType(TaskFieldType.BRIEF)
+                                .withTargetFausts(Arrays.asList(new String[] {"6002222", "6004444"}))
                 ));
 
         Response response = postResponse("v1/api/cases", dto);
@@ -207,14 +207,24 @@ public class CasesIT extends ContainerTest {
         assertThat("has 2 tasks", created.getTasks().size(), is(2));
 
         // Check the first created task
-        assertThat("task 1 type", created.getTasks().get(0).getTypeOfTask(), is(TaskType.ABOUT));
-        assertThat("task 1 paycode", created.getTasks().get(0).getPaycode(), is(Paycode.NONE));
+        assertThat("task 1 type", created.getTasks().get(0).getTaskType(), is(TaskType.GROUP_1_LESS_THAN_100_PAGES));
+        assertThat("task 1 field type", created.getTasks().get(1).getTaskFieldType(), is(TaskFieldType.BRIEF));
+        assertThat("task 1 paycode", created.getTasks().get(0).getPaycode(), is("1956"));
         assertThat("task 1 created", created.getTasks().get(0).getCreated(), is(LocalDate.now()));
         assertThat("task 1 approved", created.getTasks().get(0).getApproved(), is(IsNull.nullValue()));
         assertThat("task 1 payed", created.getTasks().get(0).getPayed(), is(IsNull.nullValue()));
-        assertThat("task 1 targetFausts", created.getTasks().get(0).getTargetFausts(), is(IsNull.notNullValue()));
-        assertThat("task 1 targetFausts size", created.getTasks().get(0).getTargetFausts().size(), is(2));
-        assertThat("task 1 targetFausts contains", created.getTasks().get(0).getTargetFausts()
+        assertThat("task 1 targetFausts", created.getTasks().get(0).getTargetFausts(), is(IsNull.nullValue()));
+
+        // Check the second created task
+        assertThat("task 2 type", created.getTasks().get(1).getTaskType(), is(TaskType.GROUP_1_LESS_THAN_100_PAGES));
+        assertThat("task 2 field type", created.getTasks().get(1).getTaskFieldType(), is(TaskFieldType.BRIEF));
+        assertThat("task 2 paycode", created.getTasks().get(1).getPaycode(), is("1956"));
+        assertThat("task 2 created", created.getTasks().get(1).getCreated(), is(LocalDate.now()));
+        assertThat("task 2 approved", created.getTasks().get(1).getApproved(), is(IsNull.nullValue()));
+        assertThat("task 2 payed", created.getTasks().get(1).getPayed(), is(IsNull.nullValue()));
+        assertThat("task 2 targetFausts", created.getTasks().get(1).getTargetFausts(), is(IsNull.notNullValue()));
+        assertThat("task 2 targetFausts size", created.getTasks().get(1).getTargetFausts().size(), is(2));
+        assertThat("task 2 targetFausts contains", created.getTasks().get(1).getTargetFausts()
                         .stream().sorted().collect(Collectors.toList()).toString(),
                 is(Arrays.asList(new String [] {"6002222", "6004444"})
                         .stream().sorted().collect(Collectors.toList()).toString()));
@@ -222,14 +232,6 @@ public class CasesIT extends ContainerTest {
                         .stream().sorted().collect(Collectors.toList()).toString(),
                 is(Arrays.asList(new String [] {"6002222", "6003333", "6004444"})
                         .stream().sorted().collect(Collectors.toList()).toString()));
-
-        // Check the second created task
-        assertThat("task 2 type", created.getTasks().get(1).getTypeOfTask(), is(TaskType.BKM));
-        assertThat("task 2 paycode", created.getTasks().get(1).getPaycode(), is(Paycode.NONE));
-        assertThat("task 2 created", created.getTasks().get(1).getCreated(), is(LocalDate.now()));
-        assertThat("task 2 approved", created.getTasks().get(1).getApproved(), is(IsNull.nullValue()));
-        assertThat("task 2 payed", created.getTasks().get(1).getPayed(), is(IsNull.nullValue()));
-        assertThat("task 2 targetFausts", created.getTasks().get(1).getTargetFausts(), is(IsNull.nullValue()));
 
         // Get the case we created
         response = getResponse("v1/api/cases/" + created.getId().toString());
