@@ -604,8 +604,24 @@ public class CasesIT extends ContainerTest {
         updated = mapper.readValue(response.readEntity(String.class), PromatCase.class);
         assertThat("status", updated.getStatus(), is(CaseStatus.ASSIGNED));
 
-        // Todo: add test for updating with primary- or related faustnumbers that exists on
-        //       other open cases
+        // Update the case with the dto as-is
+        response = postResponse("v1/api/cases/" + created.getId(), dto);
+        assertThat("status code", response.getStatus(), is(200));
+
+        // Change the primary faustnumber to something completely new
+        dto.setPrimaryFaust("8005555");
+        response = postResponse("v1/api/cases/" + created.getId(), dto);
+        assertThat("status code", response.getStatus(), is(200));
+
+        // Try to change the primary faustnumber to something that exists
+        dto.setPrimaryFaust("001111");
+        response = postResponse("v1/api/cases/" + created.getId(), dto);
+        assertThat("status code", response.getStatus(), is(409));
+
+        // Try to add a faustnumber to related faustnumbers, that exists on an active case
+        dto.setRelatedFausts(Arrays.asList("8001111", "8003333", "8004444", "001111"));
+        response = postResponse("v1/api/cases/" + created.getId(), dto);
+        assertThat("status code", response.getStatus(), is(409));
     }
 
     @Test

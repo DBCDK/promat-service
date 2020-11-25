@@ -431,11 +431,37 @@ public class Cases {
                 existing.setDetails(dto.getDetails());
             }
             if(dto.getPrimaryFaust() != null) {
-                // Todo: Check that this faustnumber is not in use on any other open case
+                Query q = entityManager.createNativeQuery("SELECT CheckNoOpenCaseWithFaust(?, ?)");
+                q.setParameter(1, dto.getPrimaryFaust());
+                q.setParameter(2, existing.getId());
+                if((boolean) q.getSingleResult() == false) {
+                    LOGGER.info("Case with primary or related faust {} and state <> CLOSED|DONE exists", dto.getPrimaryFaust());
+                    ServiceErrorDto err = new ServiceErrorDto()
+                            .withCode(ServiceErrorCode.CASE_EXISTS)
+                            .withCause("Case exists")
+                            .withDetails(String.format("Case with primary or realted faust {} and status not DONE or CLOSED exists", dto.getPrimaryFaust()));
+                    return Response.status(409).entity(err).build();
+                }
+
                 existing.setPrimaryFaust(dto.getPrimaryFaust());
             }
-            if(dto.getRelatedFausts() != null) {
-                // Todo: Check that these faustnumbers is not in use on any other open case
+            if(dto.getRelatedFausts() != null && dto.getRelatedFausts().size() > 0) {
+                Query q = entityManager.createNativeQuery("SELECT CheckNoOpenCaseWithFaust(?, ?)");
+
+                for(String faust : dto.getRelatedFausts()) {
+                    q.setParameter(1, faust);
+                    q.setParameter(2, existing.getId());
+                    if((boolean) q.getSingleResult() == false) {
+                        LOGGER.info("Case with primary or related faust {} and state <> CLOSED|DONE exists", faust);
+                        ServiceErrorDto err = new ServiceErrorDto()
+                                .withCode(ServiceErrorCode.CASE_EXISTS)
+                                .withCause("Case exists")
+                                .withDetails(String.format("Case with primary or related faust {} and status not DONE or CLOSED exists", faust));
+                        return Response.status(409).entity(err).build();
+                    }
+
+                }
+
                 existing.setRelatedFausts(dto.getRelatedFausts());
             }
             if(dto.getReviewer() != null) {
