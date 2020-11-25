@@ -8,5 +8,6 @@ public enum TaskFieldType {
     COMPARISON,
     RECOMMENDATION,
     BIBLIOGRAPHIC,
-    TOPICS
+    TOPICS,
+    BKM
 }

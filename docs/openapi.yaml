@@ -780,9 +780,10 @@ components:
         - 'RECOMMENDATION'
         - 'BIBLIOGRAPHIC'
         - 'TOPICS'
+        - 'BKM'
       description: |
         Enum describing the type of task field
-        * NONE = No task field type (should not be used)
+        * NONE = No task field type (For fields without data: METAKOMPAS, BUGGI)
         * BRIEF = Brief note to be inserted into targeted records
         * DESCRIPTION = Description of the material
         * EVALUATION = Evaluation of the material
@@ -790,3 +791,4 @@ components:
         * RECOMMENDATION = The reviewers conclusion on the material
         * BIBLIOGRAPHIC = Bibliographic note for the movie/multimedia material
         * TOPICS = Suggested topics (semicolon separated) for the material
+        * BKM = BKM assessment
