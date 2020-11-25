@@ -27,6 +27,7 @@ import java.util.Objects;
  */
 @Entity
 public class PromatCase {
+    public static final String TABLE_NAME = "promatcase";
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
