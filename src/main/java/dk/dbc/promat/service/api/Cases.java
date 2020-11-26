@@ -82,9 +82,7 @@ public class Cases {
 
         // Check that no existing case exists with the same primary or related faustnumber
         // as the given primary faustnumber and a state other than CLOSED or DONE
-        Query q = entityManager.createNativeQuery("SELECT CheckNoOpenCaseWithFaust(?)");
-        q.setParameter(1, dto.getPrimaryFaust());
-        if((boolean) q.getSingleResult() == false) {
+        if(!checkNoOpenCaseWithFaust(dto.getPrimaryFaust())) {
             LOGGER.info("Case with primary or related Faust {} and state <> CLOSED|DONE exists", dto.getPrimaryFaust());
             return ServiceErrorDto.CaseExists(String.format("Case with primary or related faust {} and status not DONE or CLOSED exists", dto.getPrimaryFaust()));
         }
@@ -92,13 +90,9 @@ public class Cases {
         // Check that no existing case exists with the same primary or related faustnumber
         // as the given relasted fasutnumbers and a state other than CLOSED or DONE
         if(dto.getRelatedFausts() != null && dto.getRelatedFausts().size() > 0) {
-            q = entityManager.createNativeQuery("SELECT CheckNoOpenCaseWithFaust(?)");
-            for(String faust : dto.getRelatedFausts()) {
-                q.setParameter(1, faust);
-                if((boolean) q.getSingleResult() == false) {
-                    LOGGER.info("Case with primary or related {} and state <> CLOSED|DONE exists", faust);
-                    return ServiceErrorDto.CaseExists(String.format("Case with primary or related faust {} and status not DONE or CLOSED exists", dto.getPrimaryFaust()));
-                }
+            if(!checkNoOpenCaseWithFaust(dto.getRelatedFausts().toArray(String[]::new))) {
+                LOGGER.info("Case with primary or related {} and state <> CLOSED|DONE exists", dto.getRelatedFausts());
+                return ServiceErrorDto.CaseExists(String.format("Case with primary or related faust {} and status not DONE or CLOSED exists", dto.getRelatedFausts()));
             }
         }
 
@@ -379,29 +373,17 @@ public class Cases {
                 existing.setDetails(dto.getDetails());
             }
             if(dto.getPrimaryFaust() != null) {
-                Query q = entityManager.createNativeQuery("SELECT CheckNoOpenCaseWithFaust(?, ?)");
-                q.setParameter(1, dto.getPrimaryFaust());
-                q.setParameter(2, existing.getId());
-                if((boolean) q.getSingleResult() == false) {
+                if(!checkNoOpenCaseWithFaust(existing.getId(), dto.getPrimaryFaust())) {
                     LOGGER.info("Case with primary or related faust {} and state <> CLOSED|DONE exists", dto.getPrimaryFaust());
                     return ServiceErrorDto.CaseExists(String.format("Case with primary or realted faust {} and status not DONE or CLOSED exists", dto.getPrimaryFaust()));
                 }
-
                 existing.setPrimaryFaust(dto.getPrimaryFaust());
             }
             if(dto.getRelatedFausts() != null && dto.getRelatedFausts().size() > 0) {
-                Query q = entityManager.createNativeQuery("SELECT CheckNoOpenCaseWithFaust(?, ?)");
-
-                for(String faust : dto.getRelatedFausts()) {
-                    q.setParameter(1, faust);
-                    q.setParameter(2, existing.getId());
-                    if((boolean) q.getSingleResult() == false) {
-                        LOGGER.info("Case with primary or related faust {} and state <> CLOSED|DONE exists", faust);
-                        return ServiceErrorDto.CaseExists(String.format("Case with primary or related faust {} and status not DONE or CLOSED exists", faust));
-                    }
-
+                if(!checkNoOpenCaseWithFaust(existing.getId(), dto.getRelatedFausts().toArray(String[]::new))) {
+                    LOGGER.info("Case with primary or related faust {} and state <> CLOSED|DONE exists", dto.getPrimaryFaust());
+                    return ServiceErrorDto.CaseExists(String.format("Case with primary or realted faust {} and status not DONE or CLOSED exists", dto.getPrimaryFaust()));
                 }
-
                 existing.setRelatedFausts(dto.getRelatedFausts());
             }
             if(dto.getReviewer() != null) {
@@ -535,5 +517,26 @@ public class Cases {
             default:
                 return "";
         }
+    }
+
+    private boolean checkNoOpenCaseWithFaust(String... fausts) {
+        return checkNoOpenCaseWithFaust(null, fausts);
+    }
+
+    private boolean checkNoOpenCaseWithFaust(Integer caseId, String... fausts) {
+        Query q = entityManager.createNativeQuery("SELECT CheckNoOpenCaseWithFaust(?, ?)");
+
+        // Passing a null parameter is not possible, so if caseId is null, then passing
+        // the id of a non-existing case will yield same results (and id zero never exists)
+        q.setParameter(2, caseId != null ? caseId : 0);
+
+        for( String faust : fausts) {
+            q.setParameter(1, faust);
+            if( (boolean) q.getSingleResult() == false ) {
+                return false;
+            }
+        }
+
+        return true;
     }
 }
