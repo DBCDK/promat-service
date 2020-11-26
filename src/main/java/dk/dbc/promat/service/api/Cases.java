@@ -231,7 +231,7 @@ public class Cases {
                               @QueryParam("editor") final Integer editor,
                               @QueryParam("title") final String title,
                               @QueryParam("limit") final Integer limit,
-                              @QueryParam("from") final Integer from) throws Exception {
+                              @QueryParam("from") final Integer from) {
         LOGGER.info("cases/?faust={}|status={}|editor={}|title={}|limit={}|from={}",
                 faust == null ? "null" : faust,
                 status == null ? "null" : status,
