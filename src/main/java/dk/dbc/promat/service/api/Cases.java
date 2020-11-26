@@ -107,14 +107,19 @@ public class Cases {
             }
         }
 
-        // Map foreign entities
+        // Map foreign entities and create tasks
         ArrayList<Subject> subjects;
         Reviewer reviewer;
         Editor editor;
+        List<PromatTask> tasks;
+        ArrayList<String> relatedFausts = new ArrayList<>(dto.getRelatedFausts() == null
+                ? new ArrayList<>()
+                : dto.getRelatedFausts());
         try {
             subjects = resolveSubjects(dto.getSubjects());
             reviewer = resolveReviewer(dto.getReviewer());
             editor = resolveEditor(dto.getEditor());
+            tasks = createTasks(dto.getTasks(), relatedFausts);
         } catch(ServiceErrorException serviceErrorException) {
             return Response.status(400).entity(serviceErrorException.getServiceErrorDto()).build();
         }
@@ -132,36 +137,6 @@ public class Cases {
             if( status.equals(CaseStatus.ASSIGNED) ) {
                 LOGGER.info("Attempt to set status ASSIGNED with no reviewer", dto.getReviewer());
                 return ServiceErrorDto.InvalidState("Case status ASSIGNED is not possible without a reviewer");
-            }
-        }
-
-        // We may have to add more related faustnumbers when creating tasks
-        ArrayList<String> relatedFausts = new ArrayList<>();
-        relatedFausts.addAll(dto.getRelatedFausts() == null ? new ArrayList<>() : dto.getRelatedFausts());
-
-        // Create tasks if any is given
-        ArrayList<PromatTask> tasks = new ArrayList<>();
-        if( dto.getTasks() != null ) {
-            for(TaskDto task : dto.getTasks()) {
-                if(task.getTaskType() == null || task.getTaskFieldType() == null) {
-                    LOGGER.info("Task dto is missing the taskType and/or taskFieldType field");
-                    return ServiceErrorDto.InvalidRequest("Missing required field(s) in the request data", "Fields 'taskType' and 'taskFieldType' must be supplied when creating a new task");
-                }
-
-                tasks.add(new PromatTask()
-                        .withTaskType(task.getTaskType())
-                        .withTaskFieldType(task.getTaskFieldType())
-                        .withPayCode(getPaycodeForTaskType(task.getTaskType()))
-                        .withCreated(LocalDate.now())
-                        .withTargetFausts(task.getTargetFausts() == null ? null : task.getTargetFausts()));
-
-                if( task.getTargetFausts() != null ) {
-                    for(String faust : task.getTargetFausts() ) {
-                        if(!relatedFausts.contains(faust)) {
-                            relatedFausts.add(faust);
-                        }
-                    }
-                }
             }
         }
 
@@ -538,5 +513,38 @@ public class Cases {
         }
 
         return true;
+    }
+
+    private List<PromatTask> createTasks(List<TaskDto> taskDtos, List<String> relatedFausts) throws ServiceErrorException {
+        ArrayList<PromatTask> tasks = new ArrayList<>();
+
+        if( taskDtos != null && taskDtos.size() > 0) {
+            for(TaskDto task : taskDtos) {
+                if(task.getTaskType() == null || task.getTaskFieldType() == null) {
+                    LOGGER.info("Task dto is missing the taskType and/or taskFieldType field");
+                    throw new ServiceErrorException("Task dto is missing the taskType and/or taskFieldType field")
+                            .withCause("Missing required field(s) in the request data")
+                            .withDetails("Fields 'taskType' and 'taskFieldType' must be supplied when creating a new task")
+                            .withCode(ServiceErrorCode.INVALID_REQUEST);
+                }
+
+                tasks.add(new PromatTask()
+                        .withTaskType(task.getTaskType())
+                        .withTaskFieldType(task.getTaskFieldType())
+                        .withPayCode(getPaycodeForTaskType(task.getTaskType()))
+                        .withCreated(LocalDate.now())
+                        .withTargetFausts(task.getTargetFausts() == null ? null : task.getTargetFausts()));
+
+                if( task.getTargetFausts() != null ) {
+                    for(String faust : task.getTargetFausts() ) {
+                        if(!relatedFausts.contains(faust)) {
+                            relatedFausts.add(faust);
+                        }
+                    }
+                }
+            }
+        }
+
+        return tasks;
     }
 }
