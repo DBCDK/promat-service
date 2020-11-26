@@ -229,6 +229,10 @@ paths:
                 $ref: '#/components/schemas/Case'
         '404':
           description: Case could not be found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
 
     post:
       tags:
@@ -408,11 +412,11 @@ components:
     ServiceErrorCode:
       type: string
       enum:
-        - INVALID_QUERY_PARAM   # One of the query parameters is invalid
         - INVALID_REQUEST       # Request body contains invalid fields or id's
         - CASE_EXISTS           # Active case for this/these faust/fausts exists
         - INVALID_STATE         # Change to a new state was not possible or invalid
         - FAILED                # Some error occurred
+        - NOT_FOUND             # Case, Task or other item was not found
 
     SubjectList:
       type: object

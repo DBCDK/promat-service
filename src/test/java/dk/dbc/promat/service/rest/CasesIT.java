@@ -364,7 +364,7 @@ public class CasesIT extends ContainerTest {
         assertThat("Number of cases with status as blankspaces", fetched.getNumFound(), is(greaterThanOrEqualTo(11)));
 
         response = getResponse("v1/api/cases", Map.of("status", "NO_SUCH_STATUS"));
-        assertThat("status code", response.getStatus(), is(500));
+        assertThat("status code", response.getStatus(), is(400));
     }
 
     @Test

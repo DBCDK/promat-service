@@ -67,27 +67,15 @@ public class Cases {
         // Check for required data when creating a new case
         if( dto.getTitle() == null || dto.getTitle().isEmpty() ) {
             LOGGER.info("Request dto is missing 'title' field");
-            ServiceErrorDto err = new ServiceErrorDto()
-                    .withCode(ServiceErrorCode.INVALID_REQUEST)
-                    .withCause("Missing required field in the request data")
-                    .withDetails("Field 'title' must be supplied when creating a new case");
-            return Response.status(400).entity(err).build();
+            return ServiceErrorDto.InvalidRequest("Missing required field in the request data", "Field 'title' must be supplied when creating a new case");
         }
         if( dto.getPrimaryFaust() == null || dto.getPrimaryFaust().isEmpty() ) {
             LOGGER.info("Request dto is missing 'primaryFaust' field");
-            ServiceErrorDto err = new ServiceErrorDto()
-                    .withCode(ServiceErrorCode.INVALID_REQUEST)
-                    .withCause("Missing required field in the request data")
-                    .withDetails("Field 'primaryFaust' must be supplied when creating a new case");
-            return Response.status(400).entity(err).build();
+            return ServiceErrorDto.InvalidRequest("Missing required field in the request data", "Field 'primaryFaust' must be supplied when creating a new case");
         }
         if( dto.getMaterialType() == null ) {
             LOGGER.info("Request dto is missing 'materialType' field");
-            ServiceErrorDto err = new ServiceErrorDto()
-                    .withCode(ServiceErrorCode.INVALID_REQUEST)
-                    .withCause("Missing required field in the request data")
-                    .withDetails("Field 'materialType' must be supplied when creating a new case");
-            return Response.status(400).entity(err).build();
+            return ServiceErrorDto.InvalidRequest("Missing required field in the request data", "Field 'materialType' must be supplied when creating a new case");
         }
 
         repository.getExclusiveAccessToTable(PromatCase.TABLE_NAME);
@@ -98,11 +86,7 @@ public class Cases {
         q.setParameter(1, dto.getPrimaryFaust());
         if((boolean) q.getSingleResult() == false) {
             LOGGER.info("Case with primary or related Faust {} and state <> CLOSED|DONE exists", dto.getPrimaryFaust());
-            ServiceErrorDto err = new ServiceErrorDto()
-                    .withCode(ServiceErrorCode.CASE_EXISTS)
-                    .withCause("Case exists")
-                    .withDetails(String.format("Case with primary or related faust {} and status not DONE or CLOSED exists", dto.getPrimaryFaust()));
-            return Response.status(409).entity(err).build();
+            return ServiceErrorDto.CaseExists(String.format("Case with primary or related faust {} and status not DONE or CLOSED exists", dto.getPrimaryFaust()));
         }
 
         // Check that no existing case exists with the same primary or related faustnumber
@@ -113,11 +97,7 @@ public class Cases {
                 q.setParameter(1, faust);
                 if((boolean) q.getSingleResult() == false) {
                     LOGGER.info("Case with primary or related {} and state <> CLOSED|DONE exists", faust);
-                    ServiceErrorDto err = new ServiceErrorDto()
-                            .withCode(ServiceErrorCode.CASE_EXISTS)
-                            .withCause("Case exists")
-                            .withDetails(String.format("Case with primary or related faust {} and status not DONE or CLOSED exists", dto.getPrimaryFaust()));
-                    return Response.status(409).entity(err).build();
+                    return ServiceErrorDto.CaseExists(String.format("Case with primary or related faust {} and status not DONE or CLOSED exists", dto.getPrimaryFaust()));
                 }
             }
         }
@@ -129,11 +109,7 @@ public class Cases {
                 case ASSIGNED: // A check is made later to make sure we can mark the case as assigned
                     break;
                 default:
-                    ServiceErrorDto err = new ServiceErrorDto()
-                            .withCode(ServiceErrorCode.INVALID_STATE)
-                            .withCause("Invalid state")
-                            .withDetails(String.format("Case status {} is not allowed when creating a new case", dto.getStatus()));
-                    return Response.status(400).entity(err).build();
+                    return ServiceErrorDto.InvalidState(String.format("Case status {} is not allowed when creating a new case", dto.getStatus()));
             }
         }
 
@@ -161,11 +137,7 @@ public class Cases {
         } else {
             if( status.equals(CaseStatus.ASSIGNED) ) {
                 LOGGER.info("Attempt to set status ASSIGNED with no reviewer", dto.getReviewer());
-                ServiceErrorDto err = new ServiceErrorDto()
-                        .withCode(ServiceErrorCode.INVALID_STATE)
-                        .withCause("Invalid state")
-                        .withDetails("Case status ASSIGNED is not possible without a reviewer");
-                return Response.status(400).entity(err).build();
+                return ServiceErrorDto.InvalidState("Case status ASSIGNED is not possible without a reviewer");
             }
         }
 
@@ -179,11 +151,7 @@ public class Cases {
             for(TaskDto task : dto.getTasks()) {
                 if(task.getTaskType() == null || task.getTaskFieldType() == null) {
                     LOGGER.info("Task dto is missing the taskType and/or taskFieldType field");
-                    ServiceErrorDto err = new ServiceErrorDto()
-                            .withCode(ServiceErrorCode.INVALID_REQUEST)
-                            .withCause("Missing required field(s) in the request data")
-                            .withDetails("Fields 'taskType' and 'taskFieldType' must be supplied when creating a new task");
-                    return Response.status(400).entity(err).build();
+                    return ServiceErrorDto.InvalidRequest("Missing required field(s) in the request data", "Fields 'taskType' and 'taskFieldType' must be supplied when creating a new task");
                 }
 
                 tasks.add(new PromatTask()
@@ -229,18 +197,14 @@ public class Cases {
                     .build();
         } catch(Exception exception) {
             LOGGER.error("Caught unexpected exception: {} of type {}", exception.getMessage(), exception.toString());
-            ServiceErrorDto err = new ServiceErrorDto()
-                    .withCode(ServiceErrorCode.FAILED)
-                    .withCause("Request failed")
-                    .withDetails(exception.getMessage());
-            return Response.serverError().entity(err).build();
+            return ServiceErrorDto.Failed(exception.getMessage());
         }
     }
 
     @GET
     @Path("cases/{id}")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response getCase(@PathParam("id") final Integer id) throws Exception {
+    public Response getCase(@PathParam("id") final Integer id) {
         LOGGER.info("cases/{}", id);
 
         // Find and return the requested case
@@ -249,13 +213,13 @@ public class Cases {
             PromatCase requested = entityManager.find(PromatCase.class, id);
             if( requested == null ) {
                 LOGGER.info("Requested case {} does not exist", id);
-                return Response.status(404).build();
+                return ServiceErrorDto.NotFound("Case not found", String.format("Requested case {} does not exist", id));
             }
 
             return Response.status(200).entity(requested).build();
         } catch(Exception exception) {
             LOGGER.error("Caught exception: {}", exception.getMessage());
-            throw exception;
+            return ServiceErrorDto.Failed(exception.getMessage());
         }
     }
 
@@ -318,11 +282,7 @@ public class Cases {
                         statusPredicates.add(builder.equal(root.get("status"), CaseStatus.valueOf(oneStatus)));
                     } catch (IllegalArgumentException ex) {
                         LOGGER.info("Invalid status code '{}' in request for cases with status", oneStatus);
-                        ServiceErrorDto err = new ServiceErrorDto()
-                                .withCode(ServiceErrorCode.INVALID_REQUEST)
-                                .withCause("Request failed")
-                                .withDetails("Invalid case status code");
-                        return Response.serverError().entity(err).build();
+                        return ServiceErrorDto.InvalidRequest("Invalid case status code", String.format("Unknown case status={}", oneStatus));
                     }
                 }
 
@@ -375,7 +335,7 @@ public class Cases {
 
         } catch(Exception exception) {
             LOGGER.error("Caught exception: {}", exception.getMessage());
-            throw exception;
+            return ServiceErrorDto.Failed(exception.getMessage());
         }
     }
 
@@ -397,30 +357,18 @@ public class Cases {
             // Errorchecking when trying to update fields managed by the backend solely
             if(dto.getAssigned() != null) {
                 LOGGER.info("Attempt to set 'assigned' on case {}", id);
-                ServiceErrorDto err = new ServiceErrorDto()
-                        .withCode(ServiceErrorCode.INVALID_REQUEST)
-                        .withCause("Forbidden field")
-                        .withDetails(String.format("Setting the value of 'assigned' is not allowed"));
-                return Response.status(400).entity(err).build();
+                return ServiceErrorDto.InvalidRequest("Forbidden field", String.format("Setting the value of 'assigned' is not allowed"));
             }
             if(dto.getStatus() != null && dto.getStatus() != CaseStatus.CLOSED && dto.getStatus() != CaseStatus.CREATED) {
                 LOGGER.info("Attempt to set forbidden 'status' on case {}", id);
-                ServiceErrorDto err = new ServiceErrorDto()
-                        .withCode(ServiceErrorCode.INVALID_REQUEST)
-                        .withCause("Forbidden status")
-                        .withDetails(String.format("Setting the value of 'status' to other statuses than CLOSED or CREATED is not allowed"));
-                return Response.status(400).entity(err).build();
+                return ServiceErrorDto.InvalidRequest("Forbidden status", String.format("Setting the value of 'status' to other statuses than CLOSED or CREATED is not allowed"));
             }
 
             // Fetch an existing entity with the given id
             PromatCase existing = entityManager.find(PromatCase.class, id);
             if( existing == null ) {
                 LOGGER.info("No such case {}", id);
-                ServiceErrorDto err = new ServiceErrorDto()
-                        .withCode(ServiceErrorCode.INVALID_REQUEST)
-                        .withCause("No such case")
-                        .withDetails(String.format("Case with id {} does not exist", id));
-                return Response.status(404).entity(err).build();
+                return ServiceErrorDto.NotFound("No such case", String.format("Case with id {} does not exist", id));
             }
 
             // Update fields
@@ -436,11 +384,7 @@ public class Cases {
                 q.setParameter(2, existing.getId());
                 if((boolean) q.getSingleResult() == false) {
                     LOGGER.info("Case with primary or related faust {} and state <> CLOSED|DONE exists", dto.getPrimaryFaust());
-                    ServiceErrorDto err = new ServiceErrorDto()
-                            .withCode(ServiceErrorCode.CASE_EXISTS)
-                            .withCause("Case exists")
-                            .withDetails(String.format("Case with primary or realted faust {} and status not DONE or CLOSED exists", dto.getPrimaryFaust()));
-                    return Response.status(409).entity(err).build();
+                    return ServiceErrorDto.CaseExists(String.format("Case with primary or realted faust {} and status not DONE or CLOSED exists", dto.getPrimaryFaust()));
                 }
 
                 existing.setPrimaryFaust(dto.getPrimaryFaust());
@@ -453,11 +397,7 @@ public class Cases {
                     q.setParameter(2, existing.getId());
                     if((boolean) q.getSingleResult() == false) {
                         LOGGER.info("Case with primary or related faust {} and state <> CLOSED|DONE exists", faust);
-                        ServiceErrorDto err = new ServiceErrorDto()
-                                .withCode(ServiceErrorCode.CASE_EXISTS)
-                                .withCause("Case exists")
-                                .withDetails(String.format("Case with primary or related faust {} and status not DONE or CLOSED exists", faust));
-                        return Response.status(409).entity(err).build();
+                        return ServiceErrorDto.CaseExists(String.format("Case with primary or related faust {} and status not DONE or CLOSED exists", faust));
                     }
 
                 }
@@ -505,7 +445,7 @@ public class Cases {
         }
         catch(Exception exception) {
             LOGGER.error("Caught exception: {}", exception.getMessage());
-            throw exception;
+            return ServiceErrorDto.Failed(exception.getMessage());
         }
     }
 
