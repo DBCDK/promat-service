@@ -355,6 +355,10 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Subject'
+        accepts:
+          type: array
+          items:
+            $ref: '#/components/schemas/ReviewerAccepts'
       required:
         - id
         - firstName
@@ -364,6 +368,7 @@ components:
         - institution
         - paycode
         - subjects
+        - accepts
 
     Editor:
       type: object
@@ -738,3 +743,18 @@ components:
         * METAKOMPAS = Special topics for Metakompasset
         * BUGGI = Special topics for Buggi
         * ABOUT = Short note to be added to records with targeted faustnumbers
+
+    ReviewerAccepts:
+      type: string
+      enum:
+        - 'BKM'
+        - 'BOOK'
+        - 'EBOOK'
+        - 'EXPRESS'
+        - 'MOVIE'
+        - 'MULTIMEDIA'
+        - 'PS4'
+        - 'PS5'
+        - 'XBOX_ONE'
+        - 'XBOX_SERIES_X'
+        - 'NINTENDO_SWITCH'
