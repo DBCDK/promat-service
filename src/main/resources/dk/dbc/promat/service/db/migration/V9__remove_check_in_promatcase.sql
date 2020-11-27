@@ -1,0 +1,1 @@
+ALTER TABLE promatcase DROP CONSTRAINT promatcase_primaryfaust_check;

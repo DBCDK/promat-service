@@ -5,13 +5,14 @@
 
 package dk.dbc.promat.service.persistence;
 
-public enum CaseStatus {
-    CREATED,
-    REJECTED,
-    ASSIGNED,
-    PENDING_APPROVAL,
-    PENDING_ISSUES,
-    APPROVED,
-    DONE,
-    CLOSED
+public enum TaskFieldType {
+    NONE,
+    BRIEF,
+    DESCRIPTION,
+    EVALUATION,
+    COMPARISON,
+    RECOMMENDATION,
+    BIBLIOGRAPHIC,
+    TOPICS,
+    BKM
 }

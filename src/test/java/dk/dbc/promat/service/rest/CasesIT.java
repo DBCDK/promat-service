@@ -1,3 +1,8 @@
+/*
+ * Copyright Dansk Bibliotekscenter a/s. Licensed under GPLv3
+ * See license text in LICENSE.txt or at https://opensource.dbc.dk/licenses/gpl-3.0/
+ */
+
 package dk.dbc.promat.service.rest;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -9,12 +14,12 @@ import dk.dbc.promat.service.dto.TaskDto;
 import dk.dbc.promat.service.persistence.PromatCase;
 import dk.dbc.promat.service.persistence.CaseStatus;
 import dk.dbc.promat.service.persistence.MaterialType;
-import dk.dbc.promat.service.persistence.Paycode;
 import dk.dbc.promat.service.persistence.Subject;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 
+import dk.dbc.promat.service.persistence.TaskFieldType;
 import dk.dbc.promat.service.persistence.TaskType;
 import org.hamcrest.core.IsNull;
 import org.junit.jupiter.api.Test;
@@ -190,12 +195,12 @@ public class CasesIT extends ContainerTest {
                 .withStatus(CaseStatus.ASSIGNED)
                 .withTasks(Arrays.asList(
                         new TaskDto()
-                                .withPaycode(Paycode.NONE)
-                                .withTypeOfTask(TaskType.ABOUT)
-                                .withTargetFausts(Arrays.asList(new String[] {"6002222", "6004444"})),
+                                .withTaskType(TaskType.GROUP_1_LESS_THAN_100_PAGES)
+                                .withTaskFieldType(TaskFieldType.BRIEF),
                         new TaskDto()
-                                .withPaycode(Paycode.NONE)
-                                .withTypeOfTask(TaskType.BKM)
+                                .withTaskType(TaskType.GROUP_1_LESS_THAN_100_PAGES)
+                                .withTaskFieldType(TaskFieldType.BRIEF)
+                                .withTargetFausts(Arrays.asList(new String[] {"6002222", "6004444"}))
                 ));
 
         Response response = postResponse("v1/api/cases", dto);
@@ -207,14 +212,24 @@ public class CasesIT extends ContainerTest {
         assertThat("has 2 tasks", created.getTasks().size(), is(2));
 
         // Check the first created task
-        assertThat("task 1 type", created.getTasks().get(0).getTypeOfTask(), is(TaskType.ABOUT));
-        assertThat("task 1 paycode", created.getTasks().get(0).getPaycode(), is(Paycode.NONE));
+        assertThat("task 1 type", created.getTasks().get(0).getTaskType(), is(TaskType.GROUP_1_LESS_THAN_100_PAGES));
+        assertThat("task 1 field type", created.getTasks().get(1).getTaskFieldType(), is(TaskFieldType.BRIEF));
+        assertThat("task 1 paycode", created.getTasks().get(0).getPaycode(), is("1956"));
         assertThat("task 1 created", created.getTasks().get(0).getCreated(), is(LocalDate.now()));
         assertThat("task 1 approved", created.getTasks().get(0).getApproved(), is(IsNull.nullValue()));
         assertThat("task 1 payed", created.getTasks().get(0).getPayed(), is(IsNull.nullValue()));
-        assertThat("task 1 targetFausts", created.getTasks().get(0).getTargetFausts(), is(IsNull.notNullValue()));
-        assertThat("task 1 targetFausts size", created.getTasks().get(0).getTargetFausts().size(), is(2));
-        assertThat("task 1 targetFausts contains", created.getTasks().get(0).getTargetFausts()
+        assertThat("task 1 targetFausts", created.getTasks().get(0).getTargetFausts(), is(IsNull.nullValue()));
+
+        // Check the second created task
+        assertThat("task 2 type", created.getTasks().get(1).getTaskType(), is(TaskType.GROUP_1_LESS_THAN_100_PAGES));
+        assertThat("task 2 field type", created.getTasks().get(1).getTaskFieldType(), is(TaskFieldType.BRIEF));
+        assertThat("task 2 paycode", created.getTasks().get(1).getPaycode(), is("1956"));
+        assertThat("task 2 created", created.getTasks().get(1).getCreated(), is(LocalDate.now()));
+        assertThat("task 2 approved", created.getTasks().get(1).getApproved(), is(IsNull.nullValue()));
+        assertThat("task 2 payed", created.getTasks().get(1).getPayed(), is(IsNull.nullValue()));
+        assertThat("task 2 targetFausts", created.getTasks().get(1).getTargetFausts(), is(IsNull.notNullValue()));
+        assertThat("task 2 targetFausts size", created.getTasks().get(1).getTargetFausts().size(), is(2));
+        assertThat("task 2 targetFausts contains", created.getTasks().get(1).getTargetFausts()
                         .stream().sorted().collect(Collectors.toList()).toString(),
                 is(Arrays.asList(new String [] {"6002222", "6004444"})
                         .stream().sorted().collect(Collectors.toList()).toString()));
@@ -222,14 +237,6 @@ public class CasesIT extends ContainerTest {
                         .stream().sorted().collect(Collectors.toList()).toString(),
                 is(Arrays.asList(new String [] {"6002222", "6003333", "6004444"})
                         .stream().sorted().collect(Collectors.toList()).toString()));
-
-        // Check the second created task
-        assertThat("task 2 type", created.getTasks().get(1).getTypeOfTask(), is(TaskType.BKM));
-        assertThat("task 2 paycode", created.getTasks().get(1).getPaycode(), is(Paycode.NONE));
-        assertThat("task 2 created", created.getTasks().get(1).getCreated(), is(LocalDate.now()));
-        assertThat("task 2 approved", created.getTasks().get(1).getApproved(), is(IsNull.nullValue()));
-        assertThat("task 2 payed", created.getTasks().get(1).getPayed(), is(IsNull.nullValue()));
-        assertThat("task 2 targetFausts", created.getTasks().get(1).getTargetFausts(), is(IsNull.nullValue()));
 
         // Get the case we created
         response = getResponse("v1/api/cases/" + created.getId().toString());
@@ -362,7 +369,7 @@ public class CasesIT extends ContainerTest {
         assertThat("Number of cases with status as blankspaces", fetched.getNumFound(), is(greaterThanOrEqualTo(11)));
 
         response = getResponse("v1/api/cases", Map.of("status", "NO_SUCH_STATUS"));
-        assertThat("status code", response.getStatus(), is(500));
+        assertThat("status code", response.getStatus(), is(400));
     }
 
     @Test
@@ -426,7 +433,7 @@ public class CasesIT extends ContainerTest {
         assertThat("status code", response.getStatus(), is(200));
         String obj = response.readEntity(String.class);
         CaseSummaryList fetched = mapper.readValue(obj, CaseSummaryList.class);
-        assertThat("Number of cases with editor 10", fetched.getNumFound(), is(1));
+        assertThat("Number of cases with editor 10", fetched.getNumFound(), is(greaterThanOrEqualTo(1)));
 
         // Cases with editor '11' and status 'REJECTED' (no cases with status REJECTED)
         response = getResponse("v1/api/cases", Map.of("editor", 11, "status", "REJECTED"));
@@ -467,6 +474,199 @@ public class CasesIT extends ContainerTest {
         obj = response.readEntity(String.class);
         fetched = mapper.readValue(obj, CaseSummaryList.class);
         assertThat("Number of cases with editor 10", fetched.getNumFound(), is(1));
+    }
+
+    @Test
+    public void testEditCase() throws JsonProcessingException {
+
+        // Update of unknown case - should return 404 NOT FOUND
+        CaseRequestDto dto = new CaseRequestDto();
+        Response response = postResponse("v1/api/cases/9876", dto);
+        assertThat("status code", response.getStatus(), is(404));
+
+        // Attemtp to set field 'assigned' - should return 400 BAD REQUEST
+        dto = new CaseRequestDto().withAssigned("2020-11-18");
+        response = postResponse("v1/api/cases/1", dto);
+        assertThat("status code", response.getStatus(), is(400));
+
+        // Attemtp to set field 'status' - should return 400 BAD REQUEST
+        dto = new CaseRequestDto().withStatus(CaseStatus.ASSIGNED);
+        response = postResponse("v1/api/cases/1", dto);
+        assertThat("status code", response.getStatus(), is(400));
+
+        // Attemtp to set field 'reviewer' with non existing reviewer - should return 400 BAD REQUEST
+        dto = new CaseRequestDto().withReviewer(9999);
+        response = postResponse("v1/api/cases/1", dto);
+        assertThat("status code", response.getStatus(), is(400));
+
+        // Attemtp to set field 'editor' with non existing editor - should return 400 BAD REQUEST
+        dto = new CaseRequestDto().withEditor(9999);
+        response = postResponse("v1/api/cases/1", dto);
+        assertThat("status code", response.getStatus(), is(400));
+
+        // Attemtp to set field 'subject' with non existing subject - should return 400 BAD REQUEST
+        dto = new CaseRequestDto().withSubjects(Arrays.asList(9999));
+        response = postResponse("v1/api/cases/1", dto);
+        assertThat("status code", response.getStatus(), is(400));
+
+        // Create a new case
+        dto = new CaseRequestDto()
+                .withTitle("Title for 8001111")
+                .withDetails("Details for 8001111")
+                .withPrimaryFaust("8001111")
+                .withRelatedFausts(Arrays.asList("8002222", "8003333"))
+                .withEditor(10)
+                .withSubjects(Arrays.asList(3, 4))
+                .withDeadline("2020-12-18")
+                .withMaterialType(MaterialType.BOOK)
+                .withTasks(Arrays.asList(
+                        new TaskDto()
+                                .withTaskType(TaskType.GROUP_1_LESS_THAN_100_PAGES)
+                                .withTaskFieldType(TaskFieldType.BRIEF)
+                                .withTargetFausts(Arrays.asList(new String[] {"8002222", "8004444"})),
+                        new TaskDto()
+                                .withTaskType(TaskType.BKM)
+                                .withTaskFieldType(TaskFieldType.BKM)
+                ));
+        response = postResponse("v1/api/cases", dto);
+        assertThat("status code", response.getStatus(), is(201));
+        PromatCase created = mapper.readValue(response.readEntity(String.class), PromatCase.class);
+
+        // Update case - should return 200 OK
+        dto = new CaseRequestDto()
+                .withTitle("New title for 8001111")
+                .withDetails("New details for 8001111")
+                .withPrimaryFaust("8002222")
+                .withRelatedFausts(Arrays.asList("8001111", "8003333", "8004444"))
+                .withReviewer(1)
+                .withEditor(11)
+                .withSubjects(Arrays.asList(5))
+                .withDeadline("2021-01-18")
+                .withMaterialType(MaterialType.MULTIMEDIA)
+                .withTasks(Arrays.asList(
+                        new TaskDto()
+                                .withTaskType(TaskType.GROUP_1_LESS_THAN_100_PAGES)
+                                .withTaskFieldType(TaskFieldType.BRIEF)
+                                .withTargetFausts(Arrays.asList(new String[] {"8001111", "8004444"})),
+                        new TaskDto()
+                                .withTaskType(TaskType.BKM)
+                                .withTaskFieldType(TaskFieldType.BKM),
+                        new TaskDto()
+                                .withTaskType(TaskType.BUGGI)
+                                .withTaskFieldType(TaskFieldType.NONE)
+                ));
+        response = postResponse("v1/api/cases/" + created.getId(), dto);
+        assertThat("status code", response.getStatus(), is(200));
+        PromatCase updated = mapper.readValue(response.readEntity(String.class), PromatCase.class);
+
+        assertThat("updated case did not change id", updated.getId(), is(created.getId()));
+        assertThat("updated title", updated.getTitle(), is("New title for 8001111"));
+        assertThat("updated details", updated.getDetails(), is("New details for 8001111"));
+        assertThat("updated primary faust", updated.getPrimaryFaust(), is("8002222"));
+        assertThat("updated relatedFausts", updated.getRelatedFausts().
+                stream()
+                .sorted()
+                .collect(Collectors.toList())
+                .equals(Arrays.stream(new String[]{"8001111", "8003333", "8004444"})
+                        .collect(Collectors.toList())), is(true));
+        assertThat("updated reviewer", updated.getReviewer().getId(), is(1));
+        assertThat("status changed", updated.getStatus(), is(CaseStatus.ASSIGNED));
+        assertThat("updated editor", updated.getEditor().getId(), is(11));
+        assertThat("updated subjects size", updated.getSubjects().size(), is(1));
+        List<Integer> actual = updated.getSubjects()
+                .stream()
+                .sorted(Comparator.comparingInt(Subject::getId))
+                .map(s -> s.getId()).collect(Collectors.toList());
+        List<Integer> expected = new ArrayList<Integer>();
+        expected.add(5);
+        assertThat("updated subject ids", actual.equals(expected), is(true) );
+        assertThat("updated deadline", updated.getDeadline(),  is(LocalDate.parse("2021-01-18")));
+        assertThat("updated materialtype", updated.getMaterialType(), is(MaterialType.MULTIMEDIA));
+        assertThat("updated tasks (should remain unchanged)", updated.getTasks().equals(created.getTasks()));
+
+        // Fetch the case, check that it matches the updated case
+        response = getResponse("v1/api/cases/" + created.getId().toString());
+        assertThat("status code", response.getStatus(), is(200));
+        PromatCase fetched = mapper.readValue(response.readEntity(String.class), PromatCase.class);
+        assertThat("fetched case is same as updated", updated.equals(fetched), is(true));
+
+        // Close the case
+        dto.setStatus(CaseStatus.CLOSED);
+        response = postResponse("v1/api/cases/" + created.getId(), dto);
+        assertThat("status code", response.getStatus(), is(200));
+        updated = mapper.readValue(response.readEntity(String.class), PromatCase.class);
+        assertThat("status", updated.getStatus(), is(CaseStatus.CLOSED));
+
+        // Try to reopen the case by changing status to ASSIGNED
+        dto.setStatus(CaseStatus.ASSIGNED);
+        response = postResponse("v1/api/cases/" + created.getId(), dto);
+        assertThat("status code", response.getStatus(), is(400));
+
+        // Reopen the case. The case has been assigned to, so status should move to ASSIGNED
+        dto.setStatus(CaseStatus.CREATED);
+        response = postResponse("v1/api/cases/" + created.getId(), dto);
+        assertThat("status code", response.getStatus(), is(200));
+        updated = mapper.readValue(response.readEntity(String.class), PromatCase.class);
+        assertThat("status", updated.getStatus(), is(CaseStatus.ASSIGNED));
+
+        // Update the case with the dto as-is
+        response = postResponse("v1/api/cases/" + created.getId(), dto);
+        assertThat("status code", response.getStatus(), is(200));
+
+        // Change the primary faustnumber to something completely new
+        dto.setPrimaryFaust("8005555");
+        response = postResponse("v1/api/cases/" + created.getId(), dto);
+        assertThat("status code", response.getStatus(), is(200));
+
+        // Try to change the primary faustnumber to something that exists
+        dto.setPrimaryFaust("001111");
+        response = postResponse("v1/api/cases/" + created.getId(), dto);
+        assertThat("status code", response.getStatus(), is(409));
+
+        // Try to add a faustnumber to related faustnumbers, that exists on an active case
+        dto.setRelatedFausts(Arrays.asList("8001111", "8003333", "8004444", "001111"));
+        response = postResponse("v1/api/cases/" + created.getId(), dto);
+        assertThat("status code", response.getStatus(), is(409));
+    }
+
+    @Test
+    public void testCreateCaseWithTasksWithMissingFields() throws JsonProcessingException {
+
+        // Create case without tasktype and taskfieldtype
+        CaseRequestDto dto = new CaseRequestDto()
+                .withPrimaryFaust("9001111")
+                .withTitle("Title for 9001111")
+                .withDetails("Details for 9001111")
+                .withMaterialType(MaterialType.BOOK)
+                .withTasks(Arrays.asList(
+                        new TaskDto()
+                ));
+        assertThat("status code", postResponse("v1/api/cases", dto).getStatus(), is(400));
+
+        // Create case without taskfieldtype
+        dto = new CaseRequestDto()
+                .withPrimaryFaust("9001111")
+                .withTitle("Title for 9001111")
+                .withDetails("Details for 9001111")
+                .withMaterialType(MaterialType.BOOK)
+                .withTasks(Arrays.asList(
+                        new TaskDto()
+                                .withTaskType(TaskType.GROUP_1_LESS_THAN_100_PAGES)
+                ));
+        assertThat("status code", postResponse("v1/api/cases", dto).getStatus(), is(400));
+
+        // Create case with tasktype and taskfieldtype - should succeed now
+        dto = new CaseRequestDto()
+                .withPrimaryFaust("9001111")
+                .withTitle("Title for 9001111")
+                .withDetails("Details for 9001111")
+                .withMaterialType(MaterialType.BOOK)
+                .withTasks(Arrays.asList(
+                        new TaskDto()
+                                .withTaskType(TaskType.GROUP_1_LESS_THAN_100_PAGES)
+                                .withTaskFieldType(TaskFieldType.BRIEF)
+                ));
+        assertThat("status code", postResponse("v1/api/cases", dto).getStatus(), is(201));
     }
 
 }

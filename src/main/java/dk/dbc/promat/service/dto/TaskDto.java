@@ -1,6 +1,11 @@
+/*
+ * Copyright Dansk Bibliotekscenter a/s. Licensed under GPLv3
+ * See license text in LICENSE.txt or at https://opensource.dbc.dk/licenses/gpl-3.0/
+ */
+
 package dk.dbc.promat.service.dto;
 
-import dk.dbc.promat.service.persistence.Paycode;
+import dk.dbc.promat.service.persistence.TaskFieldType;
 import dk.dbc.promat.service.persistence.TaskType;
 
 import java.util.List;
@@ -8,26 +13,26 @@ import java.util.Objects;
 
 public class TaskDto {
 
-    private TaskType typeOfTask;
+    private TaskType taskType;
 
-    private Paycode paycode;
+    private TaskFieldType taskFieldType;
 
     private List<String> targetFausts;
 
-    public TaskType getTypeOfTask() {
-        return typeOfTask;
+    public TaskType getTaskType() {
+        return taskType;
     }
 
-    public void setTypeOfTask(TaskType typeOfTask) {
-        this.typeOfTask = typeOfTask;
+    public void setTaskType(TaskType taskType) {
+        this.taskType = taskType;
     }
 
-    public Paycode getPaycode() {
-        return paycode;
+    public TaskFieldType getTaskFieldType() {
+        return taskFieldType;
     }
 
-    public void setPaycode(Paycode paycode) {
-        this.paycode = paycode;
+    public void setTaskFieldType(TaskFieldType taskFieldType) {
+        this.taskFieldType = taskFieldType;
     }
 
     public List<String> getTargetFausts() {
@@ -38,13 +43,13 @@ public class TaskDto {
         this.targetFausts = targetFausts;
     }
 
-    public TaskDto withTypeOfTask(TaskType typeOfTask) {
-        this.typeOfTask = typeOfTask;
+    public TaskDto withTaskType(TaskType taskType) {
+        this.taskType = taskType;
         return this;
     }
 
-    public TaskDto withPaycode(Paycode paycode) {
-        this.paycode = paycode;
+    public TaskDto withTaskFieldType(TaskFieldType taskFieldType) {
+        this.taskFieldType = taskFieldType;
         return this;
     }
 
@@ -58,20 +63,20 @@ public class TaskDto {
         if(this == o) return true;
         if(o == null || getClass() != o.getClass()) return false;
         TaskDto taskDto = (TaskDto) o;
-        return typeOfTask == taskDto.typeOfTask &&
-                paycode == taskDto.paycode;
+        return taskType == taskDto.taskType &&
+               taskFieldType == taskDto.taskFieldType;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(typeOfTask, paycode);
+        return Objects.hash(taskType, taskFieldType);
     }
 
     @Override
     public String toString() {
         return "TaskDto{" +
-                "typeOfTask=" + typeOfTask +
-                ", paycode=" + paycode +
+                "taskType=" + taskType +
+                "taskFieldType=" + taskFieldType +
                 '}';
     }
 }

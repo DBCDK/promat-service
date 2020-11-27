@@ -1,3 +1,8 @@
+/*
+ * Copyright Dansk Bibliotekscenter a/s. Licensed under GPLv3
+ * See license text in LICENSE.txt or at https://opensource.dbc.dk/licenses/gpl-3.0/
+ */
+
 package dk.dbc.promat.service.persistence;
 
 import javax.persistence.Column;
@@ -11,17 +16,19 @@ import java.util.List;
 import java.util.Objects;
 
 @Entity
-public class Task {
+public class PromatTask {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
 
-    private TaskType typeOfTask;
+    private TaskType taskType;
+
+    private TaskFieldType taskFieldType;
 
     private LocalDate created;
 
-    private Paycode paycode;
+    private String paycode;
 
     private LocalDate approved;
 
@@ -41,12 +48,20 @@ public class Task {
         this.id = id;
     }
 
-    public TaskType getTypeOfTask() {
-        return typeOfTask;
+    public TaskType getTaskType() {
+        return taskType;
     }
 
-    public void setTypeOfTask(TaskType typeOfTask) {
-        this.typeOfTask = typeOfTask;
+    public void setTaskType(TaskType taskType) {
+        this.taskType = taskType;
+    }
+
+    public TaskFieldType getTaskFieldType() {
+        return taskFieldType;
+    }
+
+    public void setTaskFieldType(TaskFieldType taskFieldType) {
+        this.taskFieldType = taskFieldType;
     }
 
     public LocalDate getCreated() {
@@ -57,11 +72,11 @@ public class Task {
         this.created = created;
     }
 
-    public Paycode getPaycode() {
+    public String getPaycode() {
         return paycode;
     }
 
-    public void setPaycode(Paycode paycode) {
+    public void setPaycode(String paycode) {
         this.paycode = paycode;
     }
 
@@ -97,43 +112,48 @@ public class Task {
         this.targetFausts = targetFausts;
     }
 
-    public Task withId(int id) {
+    public PromatTask withId(int id) {
         this.id = id;
         return this;
     }
 
-    public Task withTypeOfTask(TaskType typeOfTask) {
-        this.typeOfTask = typeOfTask;
+    public PromatTask withTaskType(TaskType taskType) {
+        this.taskType = taskType;
         return this;
     }
 
-    public Task withCreated(LocalDate created) {
+    public PromatTask withTaskFieldType(TaskFieldType taskFieldType) {
+        this.taskFieldType = taskFieldType;
+        return this;
+    }
+
+    public PromatTask withCreated(LocalDate created) {
         this.created = created;
         return this;
     }
 
-    public Task withPaycode(Paycode paycode) {
+    public PromatTask withPayCode(String paycode) {
         this.paycode = paycode;
         return this;
     }
 
-    public Task withApproved(LocalDate approved) {
+    public PromatTask withApproved(LocalDate approved) {
         this.approved = approved;
         return this;
     }
 
-    public Task withPayed(LocalDate payed) {
+    public PromatTask withPayed(LocalDate payed) {
         this.payed = payed;
         return this;
     }
 
 
-    public Task withData(String data) {
+    public PromatTask withData(String data) {
         this.data = data;
         return this;
     }
 
-    public Task withTargetFausts(List<String> targetFausts) {
+    public PromatTask withTargetFausts(List<String> targetFausts) {
         this.targetFausts = targetFausts;
         return this;
     }
@@ -142,11 +162,12 @@ public class Task {
     public boolean equals(Object o) {
         if(this == o) return true;
         if(o == null || getClass() != o.getClass()) return false;
-        Task task = (Task) o;
+        PromatTask task = (PromatTask) o;
         return id == task.id &&
-                typeOfTask == task.typeOfTask &&
+                taskType == task.taskType &&
+                taskFieldType == task.taskFieldType &&
                 created.equals(task.created) &&
-                paycode == task.paycode &&
+                paycode.equals(task.paycode) &&
                 Objects.equals(approved, task.approved) &&
                 Objects.equals(payed, task.payed) &&
                 Objects.equals(data, task.data) &&
@@ -155,6 +176,6 @@ public class Task {
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, typeOfTask, created, paycode, approved, payed, data, targetFausts);
+        return Objects.hash(id, taskType, taskFieldType, created, paycode, approved, payed, data, targetFausts);
     }
 }

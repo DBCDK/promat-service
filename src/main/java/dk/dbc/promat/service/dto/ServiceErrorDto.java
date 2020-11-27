@@ -1,4 +1,11 @@
+/*
+ * Copyright Dansk Bibliotekscenter a/s. Licensed under GPLv3
+ * See license text in LICENSE.txt or at https://opensource.dbc.dk/licenses/gpl-3.0/
+ */
+
 package dk.dbc.promat.service.dto;
+
+import javax.ws.rs.core.Response;
 
 public class ServiceErrorDto implements Dto {
 
@@ -45,5 +52,45 @@ public class ServiceErrorDto implements Dto {
     public ServiceErrorDto withDetails(String details) {
         this.details = details;
         return this;
+    }
+
+    public static Response InvalidRequest(String cause, String details) {
+        ServiceErrorDto err = new ServiceErrorDto()
+                .withCode(ServiceErrorCode.INVALID_REQUEST)
+                .withCause(cause)
+                .withDetails(details);
+        return Response.status(400).entity(err).build();
+    }
+
+    public static Response CaseExists(String details) {
+        ServiceErrorDto err = new ServiceErrorDto()
+                .withCode(ServiceErrorCode.CASE_EXISTS)
+                .withCause("Case exists")
+                .withDetails(details);
+        return Response.status(409).entity(err).build();
+    }
+
+    public static Response InvalidState(String details) {
+        ServiceErrorDto err = new ServiceErrorDto()
+                .withCode(ServiceErrorCode.INVALID_STATE)
+                .withCause("Invalid state")
+                .withDetails(details);
+        return Response.status(400).entity(err).build();
+    }
+
+    public static Response Failed(String details) {
+        ServiceErrorDto err = new ServiceErrorDto()
+                .withCode(ServiceErrorCode.FAILED)
+                .withCause("Request failed")
+                .withDetails(details);
+        return Response.serverError().entity(err).build();
+    }
+
+    public static Response NotFound(String cause, String details) {
+        ServiceErrorDto err = new ServiceErrorDto()
+                .withCode(ServiceErrorCode.NOT_FOUND)
+                .withCause(cause)
+                .withDetails(details);
+        return Response.status(404).entity(err).build();
     }
 }
