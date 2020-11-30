@@ -146,6 +146,12 @@ paths:
             type: integer
           description: Editor that must be assigned to the cases returned
         - in: query
+          name: reviewer
+          required: false
+          schema:
+            type: integer
+          description: Reviewer that must be assigned to the cases returned
+        - in: query
           name: title
           required: false
           schema:
