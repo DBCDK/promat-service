@@ -365,6 +365,10 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Subject'
+        accepts:
+          type: array
+          items:
+            $ref: '#/components/schemas/ReviewerAccepts'
       required:
         - id
         - firstName
@@ -374,6 +378,7 @@ components:
         - institution
         - paycode
         - subjects
+        - accepts
 
     Editor:
       type: object
@@ -798,3 +803,18 @@ components:
         * BIBLIOGRAPHIC = Bibliographic note for the movie/multimedia material
         * TOPICS = Suggested topics (semicolon separated) for the material
         * BKM = BKM assessment
+
+    ReviewerAccepts:
+      type: string
+      enum:
+        - 'BKM'
+        - 'BOOK'
+        - 'EBOOK'
+        - 'EXPRESS'
+        - 'MOVIE'
+        - 'MULTIMEDIA'
+        - 'PS4'
+        - 'PS5'
+        - 'XBOX_ONE'
+        - 'XBOX_SERIES_X'
+        - 'NINTENDO_SWITCH'
