@@ -5,6 +5,8 @@
 
 package dk.dbc.promat.service.persistence;
 
+import dk.dbc.commons.jpa.converter.StringListToJsonArrayConverter;
+
 import javax.persistence.Column;
 import javax.persistence.Convert;
 import javax.persistence.Entity;
@@ -37,7 +39,7 @@ public class PromatTask {
     private String data;
 
     @Column(columnDefinition = "jsonb")
-    @Convert(converter = JsonStringArrayConverter.class)
+    @Convert(converter = StringListToJsonArrayConverter.class)
     private List<String> targetFausts;
 
     public int getId() {
