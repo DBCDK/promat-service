@@ -202,7 +202,7 @@ public class Cases {
     @Produces(MediaType.APPLICATION_JSON)
     public Response listCases(@QueryParam("faust") final String faust,
                               @QueryParam("status") final String status,
-                              @QueryParam("reviewer") final Integer reviwer,
+                              @QueryParam("reviewer") final Integer reviewer,
                               @QueryParam("editor") final Integer editor,
                               @QueryParam("title") final String title,
                               @QueryParam("limit") final Integer limit,
@@ -210,7 +210,7 @@ public class Cases {
         LOGGER.info("cases/?faust={}|status={}|editor={}|title={}|limit={}|from={}",
                 faust == null ? "null" : faust,
                 status == null ? "null" : status,
-                reviwer == null ? "null" : reviwer,
+                reviewer == null ? "null" : reviewer,
                 editor == null ? "null" : editor,
                 title == null ? "null" : title,
                 limit == null ? "null" : limit,
@@ -266,8 +266,8 @@ public class Cases {
             }
 
             // Get cases with given reviewer
-            if(reviwer != null && reviwer > 0) {
-                allPredicates.add(builder.equal(root.get("reviewer").get("id"), reviwer));
+            if(reviewer != null && reviewer > 0) {
+                allPredicates.add(builder.equal(root.get("reviewer").get("id"), reviewer));
             }
 
             // Get cases with given editor
