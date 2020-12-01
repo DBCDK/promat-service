@@ -418,6 +418,37 @@ public class CasesIT extends ContainerTest {
     }
 
     @Test
+    public void testGetCasesWithReviwer() throws JsonProcessingException {
+
+        // Cases with reviewer '9999' (no such user)
+        Response response = getResponse("v1/api/cases", Map.of("reviewer", 9999));
+        assertThat("status code", response.getStatus(), is(404));
+
+        // Cases with reviewer '10' (not an reviewer)
+        response = getResponse("v1/api/cases", Map.of("reviewer", 10));
+        assertThat("status code", response.getStatus(), is(404));
+
+        // Cases with reviewer '1'
+        response = getResponse("v1/api/cases", Map.of("reviewer", 1));
+        assertThat("status code", response.getStatus(), is(200));
+        String obj = response.readEntity(String.class);
+        CaseSummaryList fetched = mapper.readValue(obj, CaseSummaryList.class);
+        assertThat("Number of cases with reviewer 1", fetched.getNumFound(), is(greaterThanOrEqualTo(1)));
+
+        // Cases with reviewer '1' and status 'REJECTED' (no cases with status REJECTED)
+        response = getResponse("v1/api/cases", Map.of("reviewer", 2, "status", "REJECTED"));
+        assertThat("status code", response.getStatus(), is(404));
+
+        // Cases with editor '2' and status 'CREATED'
+        response = getResponse("v1/api/cases", Map.of("reviewer", 2, "status", "CREATED"));
+        assertThat("status code", response.getStatus(), is(200));
+        obj = response.readEntity(String.class);
+        fetched = mapper.readValue(obj, CaseSummaryList.class);
+        assertThat("Number of cases with reviewer 2 and status CREATED", fetched.getNumFound(), is(1));
+        assertThat("case id", fetched.getCases().get(0).getId(), is(11));
+    }
+
+    @Test
     public void testGetCasesWithEditor() throws JsonProcessingException {
 
         // Cases with editor '9999' (no such user)
@@ -444,7 +475,8 @@ public class CasesIT extends ContainerTest {
         assertThat("status code", response.getStatus(), is(200));
         obj = response.readEntity(String.class);
         fetched = mapper.readValue(obj, CaseSummaryList.class);
-        assertThat("Number of cases with editor 10", fetched.getNumFound(), is(1));
+        assertThat("Number of cases with editor 10 and status CREATED", fetched.getNumFound(), is(1));
+        assertThat("case id", fetched.getCases().get(0).getId(), is(10));
     }
 
     @Test
