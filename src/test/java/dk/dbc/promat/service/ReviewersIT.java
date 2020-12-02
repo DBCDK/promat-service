@@ -88,7 +88,6 @@ public class ReviewersIT extends ContainerTest {
                 ReviewerList.class);
 
         assertThat("List of reviewers is just 'Hans Hansen' and 'Ole Olsen'",
-                actual.toString(),
-                is(expected.toString()));
+                actual, is(expected));
     }
 }
