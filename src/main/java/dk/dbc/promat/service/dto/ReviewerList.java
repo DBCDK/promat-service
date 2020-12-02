@@ -8,11 +8,11 @@ package dk.dbc.promat.service.dto;
 import dk.dbc.promat.service.persistence.Reviewer;
 import java.util.List;
 
-public class ReviewerList {
+public class ReviewerList<T extends Reviewer> {
     private int numFound = 0;
-    List<Reviewer> reviewers = null;
+    List<T> reviewers = null;
 
-    public ReviewerList withReviewers(List<Reviewer> reviewers) {
+    public ReviewerList<T> withReviewers(List<T> reviewers) {
         if (reviewers != null) {
             numFound = reviewers.size();
         } else {
@@ -26,7 +26,7 @@ public class ReviewerList {
         return numFound;
     }
 
-    public List<Reviewer> getReviewers() {
+    public List<T> getReviewers() {
         return reviewers;
     }
 

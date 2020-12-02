@@ -5,24 +5,39 @@
 
 package dk.dbc.promat.service.persistence;
 
+import dk.dbc.promat.service.dto.ReviewerWithWorkloads;
+
+import javax.persistence.ColumnResult;
 import javax.persistence.Convert;
 import javax.persistence.DiscriminatorValue;
 import javax.persistence.Embedded;
 import javax.persistence.Entity;
+import javax.persistence.EntityResult;
+import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
-import javax.persistence.NamedQueries;
+import javax.persistence.NamedNativeQuery;
 import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
+import javax.persistence.SqlResultSetMapping;
 import java.time.LocalDate;
 import java.util.Collection;
 import java.util.List;
-@NamedQueries({
-        @NamedQuery(
-                name = Reviewer.GET_ALL_REVIEWERS_NAME,
-                query = Reviewer.GET_ALL_REVIEWERS_QUERY
-        )
-})
+
+@SqlResultSetMapping(
+        name = "ReviewerWithWorkloadMapping",
+        entities = @EntityResult(entityClass = Reviewer.class),
+        columns = {
+                @ColumnResult(name = "weekWorkload", type = Long.class),
+                @ColumnResult(name = "weekBeforeWorkload", type = Long.class),
+                @ColumnResult(name = "weekAfterWorkload", type = Long.class)})
+@NamedQuery(
+        name = Reviewer.GET_ALL_REVIEWERS_NAME,
+        query = Reviewer.GET_ALL_REVIEWERS_QUERY)
+@NamedNativeQuery(
+        name = Reviewer.GET_ALL_REVIEWERS_WITH_WORKLOADS,
+        query = Reviewer.GET_ALL_REVIEWERS_WITH_WORKLOADS_QUERY,
+        resultSetMapping = "ReviewerWithWorkloadMapping")
 @Entity
 @DiscriminatorValue("REVIEWER")
 public class Reviewer extends PromatUser {
@@ -30,6 +45,17 @@ public class Reviewer extends PromatUser {
             "Reviewers.get.all";
     public static final String GET_ALL_REVIEWERS_QUERY =
             "SELECT reviewer FROM Reviewer reviewer ORDER BY reviewer.id ASC";
+
+    public static final String GET_ALL_REVIEWERS_WITH_WORKLOADS =
+            "Reviewers.getAllReviewersWithWorkloads";
+    public static final String GET_ALL_REVIEWERS_WITH_WORKLOADS_QUERY =
+            "SELECT pu.*," +
+            "SUM(CASE WHEN (pc.deadline BETWEEN ?1 AND ?2) THEN 1 ELSE 0 END) AS weekWorkload," +
+            "SUM(CASE WHEN (pc.deadline BETWEEN ?3 AND ?4) THEN 1 ELSE 0 END) AS weekBeforeWorkload," +
+            "SUM(CASE WHEN (pc.deadline BETWEEN ?5 AND ?6) THEN 1 ELSE 0 END) AS weekAfterWorkload " +
+            "FROM promatuser pu LEFT JOIN promatcase pc ON pc.reviewer_id=pu.id AND pc.status = 'ASSIGNED' AND pc.deadline BETWEEN ?7 AND ?8 " +
+            "WHERE pu.role='REVIEWER'" +
+            "GROUP BY pu.id";
 
     public enum Accepts {
         BKM,
@@ -46,23 +72,23 @@ public class Reviewer extends PromatUser {
     }
 
     @Embedded
-    private Address address;
-    private String institution;
-    private Integer paycode;
+    protected Address address;
+    protected String institution;
+    protected Integer paycode;
 
-    private LocalDate hiatus_begin;
-    private LocalDate hiatus_end;
+    protected LocalDate hiatus_begin;
+    protected LocalDate hiatus_end;
 
-    @OneToMany
+    @OneToMany(fetch = FetchType.EAGER)
     @JoinTable (
             name = "ReviewerSubjects",
             joinColumns = @JoinColumn(name = "reviewer_id"),
             inverseJoinColumns = @JoinColumn(name = "subject_id")
     )
-    private Collection<Subject> subjects;
+    protected Collection<Subject> subjects;
 
     @Convert(converter = AcceptsListToJsonArrayConverter.class)
-    private List<Accepts> accepts;
+    protected List<Accepts> accepts;
 
     public Address getAddress() {
         return address;
@@ -265,5 +291,22 @@ public class Reviewer extends PromatUser {
                 ", subjects=" + subjects +
                 ", accepts=" + accepts +
                 '}';
+    }
+
+    public ReviewerWithWorkloads toReviewerWithWorkloads() {
+        final ReviewerWithWorkloads reviewerWithWorkloads = new ReviewerWithWorkloads();
+        reviewerWithWorkloads.setId(id);
+        reviewerWithWorkloads.setActive(active);
+        reviewerWithWorkloads.setFirstName(firstName);
+        reviewerWithWorkloads.setLastName(lastName);
+        reviewerWithWorkloads.setEmail(email);
+        reviewerWithWorkloads.setAddress(address);
+        reviewerWithWorkloads.setInstitution(institution);
+        reviewerWithWorkloads.setPaycode(paycode);
+        reviewerWithWorkloads.setSubjects(subjects);
+        reviewerWithWorkloads.setHiatus_begin(hiatus_begin);
+        reviewerWithWorkloads.setHiatus_end(hiatus_end);
+        reviewerWithWorkloads.setAccepts(accepts);
+        return reviewerWithWorkloads;
     }
 }
