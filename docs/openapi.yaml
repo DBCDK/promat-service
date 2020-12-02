@@ -33,8 +33,10 @@ paths:
         - name: deadline
           in: query
           required: false
-          description: Optional filter on deadline date as defined by RFC3339,
-                       meaning only reviewers available for the deadline will be returned.
+          description: Optional deadline date as defined by RFC3339,
+                       which will return reviewers with their workloads
+                       for the week of the deadline as well as for the
+                       before and after the deadline.
           schema:
             type: string
             format: date
@@ -375,6 +377,16 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/ReviewerAccepts'
+        weekWorkload:
+          type: integer
+          description: workload for the week of a deadline
+        weekBeforeWorkload:
+          type: integer
+          description: workload for the week before a deadline
+        weekAfterWorkload:
+          type: integer
+          description: workload for the week after a deadline
+
       required:
         - id
         - firstName
