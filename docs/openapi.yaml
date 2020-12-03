@@ -13,6 +13,8 @@ tags:
     description: Users approving professional reviews
   - name: reviewers
     description: Users writing professional reviews
+  - name: users
+    description: User authorization
   - name: subjects
     description: Fields of interests
   - name: records
@@ -76,6 +78,33 @@ paths:
                 $ref: '#/components/schemas/Editor'
         '404':
           description: Editor not found
+
+  /users/{culrId}/role:
+    get:
+      tags:
+        - users
+      summary: Returns role for user with a given CULR ID
+      operationId: getUserRole
+      parameters:
+        - in: path
+          name: culrId
+          required: true
+          schema:
+            type: string
+            description: CULR ID
+      responses:
+        '200':
+          description: CULR ID could be resolved to a PROMAT user with a specific role
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserRole'
+        '401':
+          description: Forbidden because CULR ID was not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
 
   /subjects:
     get:
@@ -836,3 +865,22 @@ components:
         - 'XBOX_ONE'
         - 'XBOX_SERIES_X'
         - 'NINTENDO_SWITCH'
+        - 'BIWEEKLY_ONLY'
+
+    UserRole:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: PROMAT internal user ID (to be used in API calls)
+        role:
+          $ref: '#/components/schemas/UserRoleType'
+      required:
+        - id
+        - role
+
+    UserRoleType:
+      type: string
+      enum:
+        - 'EDITOR'
+        - 'REVIEWER'
