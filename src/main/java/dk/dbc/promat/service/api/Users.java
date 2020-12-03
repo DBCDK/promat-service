@@ -9,8 +9,6 @@ import dk.dbc.promat.service.dto.ServiceErrorDto;
 import dk.dbc.promat.service.dto.UserRole;
 import dk.dbc.promat.service.persistence.PromatEntityManager;
 import dk.dbc.promat.service.persistence.PromatUser;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.ejb.Stateless;
 import javax.inject.Inject;
@@ -27,8 +25,6 @@ import java.util.List;
 @Stateless
 @Path("users")
 public class Users {
-    private static final Logger LOGGER = LoggerFactory.getLogger(Users.class);
-
     @Inject
     @PromatEntityManager
     EntityManager entityManager;
@@ -45,8 +41,6 @@ public class Users {
             return ServiceErrorDto.Forbidden("User not authorized",
                     String.format("ID %s was not found in the set of known users", culrId));
         }
-        LOGGER.info("USER_ROLE: {}", userRole.get(0));
-
         return Response.ok(userRole.get(0)).build();
     }
 }
