@@ -54,7 +54,7 @@ public class Reviewer extends PromatUser {
             "SUM(CASE WHEN (pc.deadline BETWEEN ?3 AND ?4) THEN 1 ELSE 0 END) AS weekBeforeWorkload," +
             "SUM(CASE WHEN (pc.deadline BETWEEN ?5 AND ?6) THEN 1 ELSE 0 END) AS weekAfterWorkload " +
             "FROM promatuser pu LEFT JOIN promatcase pc ON pc.reviewer_id=pu.id AND pc.status = 'ASSIGNED' AND pc.deadline BETWEEN ?7 AND ?8 " +
-            "WHERE pu.role='REVIEWER'" +
+            "WHERE pu.role='REVIEWER' " +
             "GROUP BY pu.id";
 
     public enum Accepts {
@@ -68,7 +68,8 @@ public class Reviewer extends PromatUser {
         PS5,
         XBOX_ONE,
         XBOX_SERIES_X,
-        NINTENDO_SWITCH
+        NINTENDO_SWITCH,
+        BIWEEKLY_ONLY
     }
 
     @Embedded
