@@ -5,6 +5,7 @@
 
 package dk.dbc.promat.service.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import dk.dbc.promat.service.persistence.CaseStatus;
 import dk.dbc.promat.service.persistence.MaterialType;
 import dk.dbc.promat.service.persistence.Subject;
