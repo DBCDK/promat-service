@@ -25,6 +25,24 @@ import static org.hamcrest.MatcherAssert.assertThat;
 public class ReviewersIT extends ContainerTest {
 
     @Test
+    void getReviewer() throws JsonProcessingException {
+        final Reviewer expectedReviewer = new Reviewer();
+        loadReviewer1(expectedReviewer);
+
+        final Response response = getResponse("v1/api/reviewers/1");
+        assertThat("response status", response.getStatus(), is(200));
+
+        final Reviewer reviewer = mapper.readValue(response.readEntity(String.class), Reviewer.class);
+        assertThat("reviewer", reviewer, is(expectedReviewer));
+    }
+
+    @Test
+    void reviewerNotFound() {
+        final Response response = getResponse("v1/api/reviewers/4242");
+        assertThat(response.getStatus(), is(404));
+    }
+
+    @Test
     public void listReviewers() throws JsonProcessingException {
         final Reviewer reviewer1 = new Reviewer();
         loadReviewer1(reviewer1);
