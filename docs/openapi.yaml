@@ -36,7 +36,7 @@ paths:
           description: Optional deadline date as defined by RFC3339,
                        which will return reviewers with their workloads
                        for the week of the deadline as well as for the
-                       before and after the deadline.
+                       weeks before and after the deadline.
           schema:
             type: string
             format: date
