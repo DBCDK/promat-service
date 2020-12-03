@@ -74,6 +74,7 @@ public class ReviewersIT extends ContainerTest {
     private void loadReviewer1(Reviewer reviewer) {
         reviewer.setId(1);
         reviewer.setActive(true);
+        reviewer.setCulrId("41");
         reviewer.setFirstName("Hans");
         reviewer.setLastName("Hansen");
         reviewer.setEmail("hans@hansen.dk");
@@ -102,6 +103,7 @@ public class ReviewersIT extends ContainerTest {
     private void loadReviewer2(Reviewer reviewer) {
         reviewer.setId(2);
         reviewer.setActive(true);
+        reviewer.setCulrId("42");
         reviewer.setFirstName("Ole");
         reviewer.setLastName("Olsen");
         reviewer.setEmail("ole@olsen.dk");

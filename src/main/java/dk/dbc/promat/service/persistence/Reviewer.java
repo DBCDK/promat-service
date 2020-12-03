@@ -218,19 +218,22 @@ public class Reviewer extends PromatUser {
 
         Reviewer reviewer = (Reviewer) o;
 
-        if (!id.equals(reviewer.id)) {
-            return false;
-        }
         if (active != reviewer.active) {
             return false;
         }
-        if (!firstName.equals(reviewer.firstName)) {
+        if (id != null ? !id.equals(reviewer.id) : reviewer.id != null) {
             return false;
         }
-        if (!lastName.equals(reviewer.lastName)) {
+        if (culrId != null ? !culrId.equals(reviewer.culrId) : reviewer.culrId != null) {
             return false;
         }
-        if (!email.equals(reviewer.email)) {
+        if (firstName != null ? !firstName.equals(reviewer.firstName) : reviewer.firstName != null) {
+            return false;
+        }
+        if (lastName != null ? !lastName.equals(reviewer.lastName) : reviewer.lastName != null) {
+            return false;
+        }
+        if (email != null ? !email.equals(reviewer.email) : reviewer.email != null) {
             return false;
         }
         if (phone != null ? !phone.equals(reviewer.phone) : reviewer.phone != null) {
@@ -261,9 +264,10 @@ public class Reviewer extends PromatUser {
     public int hashCode() {
         int result = id.hashCode();
         result = 31 * result + (active ? 1 : 0);
-        result = 31 * result + firstName.hashCode();
-        result = 31 * result + lastName.hashCode();
-        result = 31 * result + email.hashCode();
+        result = 31 * result + (culrId != null ? culrId.hashCode() : 0);
+        result = 31 * result + (firstName != null ? firstName.hashCode() : 0);
+        result = 31 * result + (lastName != null ? lastName.hashCode() : 0);
+        result = 31 * result + (email != null ? email.hashCode() : 0);
         result = 31 * result + (phone != null ? phone.hashCode() : 0);
         result = 31 * result + address.hashCode();
         result = 31 * result + institution.hashCode();
@@ -280,6 +284,7 @@ public class Reviewer extends PromatUser {
         return "Reviewer{" +
                 "id=" + id +
                 ", active=" + active +
+                ", culrId'=" + culrId + '\'' +
                 ", firstName='" + firstName + '\'' +
                 ", lastName='" + lastName + '\'' +
                 ", email='" + email + '\'' +
@@ -298,6 +303,7 @@ public class Reviewer extends PromatUser {
         final ReviewerWithWorkloads reviewerWithWorkloads = new ReviewerWithWorkloads();
         reviewerWithWorkloads.setId(id);
         reviewerWithWorkloads.setActive(active);
+        reviewerWithWorkloads.setCulrId(culrId);
         reviewerWithWorkloads.setFirstName(firstName);
         reviewerWithWorkloads.setLastName(lastName);
         reviewerWithWorkloads.setEmail(email);

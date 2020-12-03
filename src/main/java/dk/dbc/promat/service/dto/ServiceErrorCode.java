@@ -10,5 +10,6 @@ public enum ServiceErrorCode {
     CASE_EXISTS,
     INVALID_STATE,
     FAILED,
-    NOT_FOUND
+    NOT_FOUND,
+    FORBIDDEN
 }
