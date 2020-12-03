@@ -5,15 +5,14 @@
 
 package dk.dbc.promat.service.dto;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import dk.dbc.promat.service.persistence.CaseStatus;
 import dk.dbc.promat.service.persistence.MaterialType;
-import dk.dbc.promat.service.persistence.Subject;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class CaseRequestDto implements Dto {
 
     private String title;

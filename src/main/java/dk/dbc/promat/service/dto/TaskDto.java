@@ -11,6 +11,8 @@ import dk.dbc.promat.service.persistence.TaskType;
 import java.util.List;
 import java.util.Objects;
 
+import dk.dbc.promat.service.persistence.Subject;
+
 public class TaskDto {
 
     private TaskType taskType;
