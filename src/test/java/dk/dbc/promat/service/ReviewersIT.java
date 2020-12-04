@@ -6,89 +6,120 @@
 package dk.dbc.promat.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import dk.dbc.promat.service.dto.ReviewerList;
+import dk.dbc.promat.service.dto.ReviewerWithWorkloads;
 import dk.dbc.promat.service.persistence.Address;
 import dk.dbc.promat.service.persistence.Reviewer;
 import dk.dbc.promat.service.persistence.Subject;
 import org.junit.jupiter.api.Test;
 
+import javax.ws.rs.core.Response;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 
+import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.core.Is.is;
 
 public class ReviewersIT extends ContainerTest {
 
     @Test
-    public void crude_test() throws JsonProcessingException {
-        final ReviewerList expected = new ReviewerList().withReviewers(
-                List.of(
-                        new Reviewer()
-                                .withId(1)
-                                .withActive(true)
-                                .withFirstName("Hans")
-                                .withLastName("Hansen")
-                                .withEmail("hans@hansen.dk")
-                                .withAddress(
-                                        new Address()
-                                                .withAddress1("Lillegade 1")
-                                                .withZip("9999")
-                                                .withCity("Lilleved")
+    public void listReviewers() throws JsonProcessingException {
+        final Reviewer reviewer1 = new Reviewer();
+        loadReviewer1(reviewer1);
 
-                                )
-                                .withInstitution("Hans Hansens Bix")
-                                .withPaycode(0)
-                                .withSubjects(
-                                        List.of(
-                                                new Subject()
-                                                        .withId(3)
-                                                        .withName("Eventyr, fantasy")
-                                                        .withParentId(2),
-                                                new Subject()
-                                                        .withId(5)
-                                                        .withName("Multimedie")
-                                        )
-                                )
-                                .withHiatus_begin(LocalDate.parse("2020-10-28"))
-                                .withHiatus_end(LocalDate.parse("2020-11-01"))
-                                .withAccepts(List.of(Reviewer.Accepts.MULTIMEDIA,
-                                        Reviewer.Accepts.PS4, Reviewer.Accepts.PS5)),
-                        new Reviewer()
-                                .withId(2)
-                                .withActive(true)
-                                .withFirstName("Ole")
-                                .withLastName("Olsen")
-                                .withEmail("ole@olsen.dk")
-                                .withAddress(
-                                        new Address()
-                                                .withAddress1("Storegade 99")
-                                                .withZip("1111")
-                                                .withCity("Storeved")
+        final Reviewer reviewer2 = new Reviewer();
+        loadReviewer2(reviewer2);
 
-                                )
-                                .withInstitution("Ole Olsens Goodies")
-                                .withPaycode(0)
-                                .withSubjects(
-                                        List.of(
-                                                new Subject()
-                                                        .withId(5)
-                                                        .withName("Multimedie")
-                                        )
-                                )
-                                .withHiatus_begin(LocalDate.parse("2020-11-28"))
-                                .withHiatus_end(LocalDate.parse("2020-12-01"))
-                                .withAccepts(List.of(Reviewer.Accepts.MULTIMEDIA,
-                                        Reviewer.Accepts.PS4, Reviewer.Accepts.PS5))
-                )
-        );
+        final ReviewerList<Reviewer> expected = new ReviewerList<>()
+                .withReviewers(List.of(reviewer1, reviewer2));
 
-        final ReviewerList actual = mapper.readValue(
-                get(String.format("%s/%s", promatServiceBaseUrl, "v1/api/reviewers")),
-                ReviewerList.class);
+        final Response response = getResponse("v1/api/reviewers");
+
+        final ReviewerList<Reviewer> actual = mapper.readValue(
+                response.readEntity(String.class), new TypeReference<>() {});
 
         assertThat("List of reviewers is just 'Hans Hansen' and 'Ole Olsen'",
-                actual.toString(),
-                is(expected.toString()));
+                actual, is(expected));
+    }
+
+    @Test
+    public void listReviewersWithWorkloads() throws JsonProcessingException {
+        final ReviewerWithWorkloads reviewer1 = new ReviewerWithWorkloads()
+                .withWeekWorkload(0)
+                .withWeekBeforeWorkload(0)
+                .withWeekAfterWorkload(1);
+        loadReviewer1(reviewer1);
+
+        final ReviewerWithWorkloads reviewer2 = new ReviewerWithWorkloads()
+                .withWeekWorkload(0)
+                .withWeekBeforeWorkload(0)
+                .withWeekAfterWorkload(0);
+        loadReviewer2(reviewer2);
+
+        final ReviewerList<ReviewerWithWorkloads> expected = new ReviewerList<ReviewerWithWorkloads>()
+                .withReviewers(List.of(reviewer1, reviewer2));
+
+        final Response response = getResponse("v1/api/reviewers",
+                Map.of("deadline", "2020-12-01"));
+
+        final ReviewerList<ReviewerWithWorkloads> actual = mapper.readValue(
+                response.readEntity(String.class), new TypeReference<>() {});
+
+        assertThat("List of reviewers is just 'Hans Hansen' and 'Ole Olsen'",
+                actual, is(expected));
+    }
+
+    private void loadReviewer1(Reviewer reviewer) {
+        reviewer.setId(1);
+        reviewer.setActive(true);
+        reviewer.setFirstName("Hans");
+        reviewer.setLastName("Hansen");
+        reviewer.setEmail("hans@hansen.dk");
+        reviewer.setAddress(
+                new Address()
+                        .withAddress1("Lillegade 1")
+                        .withZip("9999")
+                        .withCity("Lilleved"));
+        reviewer.setInstitution("Hans Hansens Bix");
+        reviewer.setPaycode(0);
+        reviewer.setSubjects(
+                List.of(
+                        new Subject()
+                                .withId(3)
+                                .withName("Eventyr, fantasy")
+                                .withParentId(2),
+                        new Subject()
+                                .withId(5)
+                                .withName("Multimedie")));
+        reviewer.setHiatus_begin(LocalDate.parse("2020-10-28"));
+        reviewer.setHiatus_end(LocalDate.parse("2020-11-01"));
+        reviewer.setAccepts(List.of(
+                Reviewer.Accepts.MULTIMEDIA, Reviewer.Accepts.PS4, Reviewer.Accepts.PS5));
+    }
+
+    private void loadReviewer2(Reviewer reviewer) {
+        reviewer.setId(2);
+        reviewer.setActive(true);
+        reviewer.setFirstName("Ole");
+        reviewer.setLastName("Olsen");
+        reviewer.setEmail("ole@olsen.dk");
+        reviewer.setAddress(
+                new Address()
+                        .withAddress1("Storegade 99")
+                        .withZip("1111")
+                        .withCity("Storeved"));
+        reviewer.setInstitution("Ole Olsens Goodies");
+        reviewer.setPaycode(0);
+        reviewer.setSubjects(
+                List.of(
+                        new Subject()
+                                .withId(5)
+                                .withName("Multimedie")));
+        reviewer.setHiatus_begin(LocalDate.parse("2020-11-28"));
+        reviewer.setHiatus_end(LocalDate.parse("2020-12-01"));
+        reviewer.setAccepts(List.of(
+                Reviewer.Accepts.MULTIMEDIA, Reviewer.Accepts.PS4, Reviewer.Accepts.PS5));
     }
 }

@@ -20,7 +20,7 @@ import java.util.Set;
 public class PromatApplication extends Application {
     private static final Set<Class<?>> classes = Set.of(
             Cases.class, Editors.class, JacksonFeature.class, Records.class, Reviewers.class, Subjects.class);
-    private static final Set<Object> singletons = Set.of(new JsonMapperProvider());
+    private static final Set<Object> singletons = Set.of(new JsonMapperProvider(), new LocalDateConverterProvider());
 
     @Override
     public Set<Class<?>> getClasses() {
@@ -28,5 +28,7 @@ public class PromatApplication extends Application {
     }
 
     @Override
-    public Set<Object> getSingletons() { return singletons; }
+    public Set<Object> getSingletons() {
+        return singletons;
+    }
 }

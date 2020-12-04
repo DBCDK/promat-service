@@ -29,7 +29,7 @@ public abstract class PromatUser {
     @Convert(converter = RoleConverter.class)
     protected Role role;
 
-    boolean active;
+    protected boolean active;
 
     protected String firstName;
     protected String lastName;
