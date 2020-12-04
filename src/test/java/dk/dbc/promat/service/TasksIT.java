@@ -114,5 +114,23 @@ public class TasksIT extends ContainerTest {
         assertThat("related fausts", updatedCase.getRelatedFausts()
                         .stream().sorted().collect(Collectors.toList()),
                 is(Arrays.asList("11002222", "11003333", "11004444")));
+
+        // Add a new faustnumber to one task, this should succeed
+        dto = new TaskDto().withTargetFausts(updated.getTargetFausts());
+        dto.getTargetFausts().add("11005555");
+        response = postResponse("v1/api/tasks/" + taskNoTargetFaust.getId(), dto);
+        assertThat("status code", response.getStatus(), is(200));
+        updated = mapper.readValue(response.readEntity(String.class), PromatTask.class);
+        assertThat("targetfaust is not null", updated.getTargetFausts(), is(notNullValue()));
+        assertThat("targetfaust contains", updated.getTargetFausts().stream().sorted().collect(Collectors.toList()),
+                is(Arrays.asList("11002222", "11005555")));
+
+        // Related fausts should now also contain 11005555
+        response = getResponse("v1/api/cases/" + createdCase.getId());
+        assertThat("status code", response.getStatus(), is(200));
+        updatedCase = mapper.readValue(response.readEntity(String.class), PromatCase.class);
+        assertThat("related fausts", updatedCase.getRelatedFausts()
+                        .stream().sorted().collect(Collectors.toList()),
+                is(Arrays.asList("11002222", "11003333", "11004444", "11005555")));
     }
 }

@@ -7,6 +7,7 @@ package dk.dbc.promat.service.api;
 
 import dk.dbc.promat.service.dto.ServiceErrorDto;
 import dk.dbc.promat.service.dto.TaskDto;
+import dk.dbc.promat.service.persistence.CaseTasks;
 import dk.dbc.promat.service.persistence.PromatCase;
 import dk.dbc.promat.service.persistence.PromatEntityManager;
 import dk.dbc.promat.service.persistence.Repository;
@@ -18,6 +19,10 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.inject.Inject;
 import javax.persistence.EntityManager;
+import javax.persistence.TypedQuery;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Root;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -69,6 +74,7 @@ public class Tasks {
             }
             if(dto.getTargetFausts() != null) {
                 existing.setTargetFausts(dto.getTargetFausts());
+                updateRelatedFausts(existing);
             }
 
             return Response.ok(existing).build();
@@ -76,6 +82,36 @@ public class Tasks {
         catch(Exception exception) {
             LOGGER.error("Caught exception: {}", exception.getMessage());
             return ServiceErrorDto.Failed(exception.getMessage());
+        }
+    }
+
+    private void updateRelatedFausts(PromatTask task) throws Exception {
+
+        // Find the case to which the task belongs
+        CriteriaBuilder builder = entityManager.getCriteriaBuilder();
+        CriteriaQuery criteriaQuery = builder.createQuery();
+        Root<PromatCase> root = criteriaQuery.from(CaseTasks.class);
+        criteriaQuery.select(root).where(builder.equal(root.get("task_id"), task.getId()));
+
+        TypedQuery<CaseTasks> query = entityManager.createQuery(criteriaQuery);
+        CaseTasks caseTask = query.getSingleResult();
+
+        if(caseTask == null) {
+            throw new Exception(String.format("No case exists for task %d", task.getId()));
+        }
+
+        // Load case
+        PromatCase owner = entityManager.find(PromatCase.class, caseTask.getCase_id());
+        if( owner == null) {
+            throw new Exception(String.format("Unable to load  case %d", caseTask.getCase_id()));
+        }
+        owner = entityManager.merge(owner);
+
+        // Add new faustnumber
+        for(String faust : task.getTargetFausts()) {
+            if(!owner.getRelatedFausts().contains(faust)) {
+                owner.getRelatedFausts().add(faust);
+            }
         }
     }
 }
