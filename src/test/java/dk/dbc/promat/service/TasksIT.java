@@ -132,5 +132,18 @@ public class TasksIT extends ContainerTest {
         assertThat("related fausts", updatedCase.getRelatedFausts()
                         .stream().sorted().collect(Collectors.toList()),
                 is(Arrays.asList("11002222", "11003333", "11004444", "11005555")));
+
+        // We do not prevent adding the same targetfaust to more tasks, even though it may be
+        // a bit useless if it is added to two different tasks with the same TaskFieldType.
+        // Such duality may exist for a short period when the user is moving a targetfaust from one task
+        // to another and they would wonder why the got an error.
+        dto = new TaskDto().withTargetFausts(taskWithTargetFaust.getTargetFausts());
+        dto.getTargetFausts().add("11002222");
+        response = postResponse("v1/api/tasks/" + taskWithTargetFaust.getId(), dto);
+        assertThat("status code", response.getStatus(), is(200));
+        updated = mapper.readValue(response.readEntity(String.class), PromatTask.class);
+        assertThat("targetfaust is not null", updated.getTargetFausts(), is(notNullValue()));
+        assertThat("targetfaust contains", updated.getTargetFausts().stream().sorted().collect(Collectors.toList()),
+                is(Arrays.asList("11002222", "11003333", "11004444")));
     }
 }
