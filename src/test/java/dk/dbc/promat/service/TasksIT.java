@@ -82,6 +82,19 @@ public class TasksIT extends ContainerTest {
         assertThat("status code", response.getStatus(), is(200));
         updated = mapper.readValue(response.readEntity(String.class), PromatTask.class);
         assertThat("data value is correct", updated.getData().equals("Here is data for task with targetFaust"), is(true));
+
+        // Check that we can update the data field with an empty string, but not null - but neither request should fail
+        dto = new TaskDto().withData(null);
+        response = postResponse("v1/api/tasks/" + taskNoTargetFaust.getId(), dto);
+        assertThat("status code", response.getStatus(), is(200));
+        updated = mapper.readValue(response.readEntity(String.class), PromatTask.class);
+        assertThat("data value is correct", updated.getData().equals("Here is data for task without targetFaust"), is(true));
+
+        dto = new TaskDto().withData("");
+        response = postResponse("v1/api/tasks/" + taskNoTargetFaust.getId(), dto);
+        assertThat("status code", response.getStatus(), is(200));
+        updated = mapper.readValue(response.readEntity(String.class), PromatTask.class);
+        assertThat("data value is correct", updated.getData().equals(""), is(true));
     }
 
 }
