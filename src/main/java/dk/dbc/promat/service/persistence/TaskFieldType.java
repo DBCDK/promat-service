@@ -14,5 +14,6 @@ public enum TaskFieldType {
     RECOMMENDATION,
     BIBLIOGRAPHIC,
     TOPICS,
-    BKM
+    BKM,
+    FASTTRACK
 }
