@@ -28,7 +28,7 @@ import javax.ws.rs.core.Response;
 @Stateless
 @Path("")
 public class Tasks {
-    private static final Logger LOGGER = LoggerFactory.getLogger(Cases.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(Tasks.class);
 
     @Inject
     @PromatEntityManager
