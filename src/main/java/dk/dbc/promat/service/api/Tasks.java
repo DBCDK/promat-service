@@ -5,6 +5,7 @@
 
 package dk.dbc.promat.service.api;
 
+import dk.dbc.promat.service.dto.ReviewerWithWorkloads;
 import dk.dbc.promat.service.dto.ServiceErrorDto;
 import dk.dbc.promat.service.dto.TaskDto;
 import dk.dbc.promat.service.persistence.CaseTasks;
@@ -12,6 +13,7 @@ import dk.dbc.promat.service.persistence.PromatCase;
 import dk.dbc.promat.service.persistence.PromatEntityManager;
 import dk.dbc.promat.service.persistence.Repository;
 import dk.dbc.promat.service.persistence.PromatTask;
+import dk.dbc.promat.service.persistence.Reviewer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,6 +32,8 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Stateless
 @Path("")
@@ -51,6 +55,10 @@ public class Tasks {
 
         try {
 
+            // Lock tables so that we can ensure that target faustnumbers only exist on a single case and task
+            repository.getExclusiveAccessToTable(PromatCase.TABLE_NAME);
+            repository.getExclusiveAccessToTable(PromatTask.TABLE_NAME);
+
             // Fetch the existing task with the given id
             PromatTask existing = entityManager.find(PromatTask.class, id);
             if( existing == null ) {
@@ -58,14 +66,14 @@ public class Tasks {
                 return ServiceErrorDto.NotFound("No such task", String.format("Task with id {} does not exist", id));
             }
 
-            // Lock tables so that we can ensure that target faustnumbers only exist on a single case and task
-            repository.getExclusiveAccessToTable(PromatCase.TABLE_NAME);
-            repository.getExclusiveAccessToTable(PromatTask.TABLE_NAME);
+            // Find id of the case to which the stated task belongs
+            int caseId = getCaseOfTask(id);
 
             // Check that target faustnumbers has unique usage across a case
             if(dto.getTargetFausts() != null) {
-                // Todo: check that all targetfausts exists as related fausts on the case
-                // Todo: check that all targetfausts do not exist on other tasks on the case
+                if(!Faustnumbers.checkNoOpenCaseWithFaust(entityManager, caseId, dto.getTargetFausts().toArray(String[]::new))) {
+                    return ServiceErrorDto.InvalidRequest("Target faustnumber is in use", "One or more target faustnumbers is in use on another active case");
+                }
             }
 
             // Update fields
@@ -74,7 +82,7 @@ public class Tasks {
             }
             if(dto.getTargetFausts() != null) {
                 existing.setTargetFausts(dto.getTargetFausts());
-                updateRelatedFausts(existing);
+                updateRelatedFausts(caseId, existing);
             }
 
             return Response.ok(existing).build();
@@ -85,27 +93,21 @@ public class Tasks {
         }
     }
 
-    private void updateRelatedFausts(PromatTask task) throws Exception {
+    private int getCaseOfTask(int taskId) throws Exception {
+        final TypedQuery<Integer> query = entityManager.createNamedQuery(
+                PromatCase.GET_CASE_ID_NAME, Integer.class);
+        query.setParameter(1, taskId);
 
-        // Find the case to which the task belongs
-        CriteriaBuilder builder = entityManager.getCriteriaBuilder();
-        CriteriaQuery criteriaQuery = builder.createQuery();
-        Root<PromatCase> root = criteriaQuery.from(CaseTasks.class);
-        criteriaQuery.select(root).where(builder.equal(root.get("task_id"), task.getId()));
+        return query.getSingleResult();
+    }
 
-        TypedQuery<CaseTasks> query = entityManager.createQuery(criteriaQuery);
-        CaseTasks caseTask = query.getSingleResult();
-
-        if(caseTask == null) {
-            throw new Exception(String.format("No case exists for task %d", task.getId()));
-        }
+    private void updateRelatedFausts(int caseId, PromatTask task) throws Exception {
 
         // Load case
-        PromatCase owner = entityManager.find(PromatCase.class, caseTask.getCase_id());
+        PromatCase owner = entityManager.find(PromatCase.class, caseId);
         if( owner == null) {
-            throw new Exception(String.format("Unable to load  case %d", caseTask.getCase_id()));
+            throw new Exception(String.format("Unable to load  case %d", caseId));
         }
-        owner = entityManager.merge(owner);
 
         // Add new faustnumber
         for(String faust : task.getTargetFausts()) {
