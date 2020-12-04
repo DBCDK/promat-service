@@ -95,6 +95,13 @@ public class TasksIT extends ContainerTest {
         assertThat("status code", response.getStatus(), is(200));
         updated = mapper.readValue(response.readEntity(String.class), PromatTask.class);
         assertThat("data value is correct", updated.getData().equals(""), is(true));
-    }
 
+        // Add an existing targetFaust to one task, this should succeed
+        dto = new TaskDto().withTargetFausts(Arrays.asList("11002222"));
+        response = postResponse("v1/api/tasks/" + taskNoTargetFaust.getId(), dto);
+        assertThat("status code", response.getStatus(), is(200));
+        updated = mapper.readValue(response.readEntity(String.class), PromatTask.class);
+        assertThat("targetfaust is not null", updated.getTargetFausts(), is(notNullValue()));
+        assertThat("targetfaust contains", updated.getTargetFausts().stream().findFirst().get().equals("11002222"), is(true));
+    }
 }
