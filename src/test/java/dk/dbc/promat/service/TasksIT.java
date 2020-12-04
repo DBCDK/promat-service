@@ -57,11 +57,14 @@ public class TasksIT extends ContainerTest {
                         new TaskDto()
                                 .withTaskType(TaskType.GROUP_1_LESS_THAN_100_PAGES)
                                 .withTaskFieldType(TaskFieldType.BRIEF)
-                                .withTargetFausts(Arrays.asList(new String[] {"11002222", "8004444"}))
+                                .withTargetFausts(Arrays.asList(new String[] {"11003333", "11004444"}))
                 ));
         response = postResponse("v1/api/cases", caseDto);
         assertThat("status code", response.getStatus(), is(201));
         PromatCase createdCase = mapper.readValue(response.readEntity(String.class), PromatCase.class);
+        assertThat("related fausts", createdCase.getRelatedFausts()
+                        .stream().sorted().collect(Collectors.toList()),
+                is(Arrays.asList("11002222", "11003333", "11004444")));
 
         // Find task ids
         PromatTask taskNoTargetFaust = createdCase.getTasks().stream().filter(task -> task.getTargetFausts() == null).findFirst().get();
@@ -96,12 +99,20 @@ public class TasksIT extends ContainerTest {
         updated = mapper.readValue(response.readEntity(String.class), PromatTask.class);
         assertThat("data value is correct", updated.getData().equals(""), is(true));
 
-        // Add an existing targetFaust to one task, this should succeed
+        // Add an existing related faustnumber to one task, this should succeed
         dto = new TaskDto().withTargetFausts(Arrays.asList("11002222"));
         response = postResponse("v1/api/tasks/" + taskNoTargetFaust.getId(), dto);
         assertThat("status code", response.getStatus(), is(200));
         updated = mapper.readValue(response.readEntity(String.class), PromatTask.class);
         assertThat("targetfaust is not null", updated.getTargetFausts(), is(notNullValue()));
         assertThat("targetfaust contains", updated.getTargetFausts().stream().findFirst().get().equals("11002222"), is(true));
+
+        // Related fausts should remain unchanged
+        response = getResponse("v1/api/cases/" + createdCase.getId());
+        assertThat("status code", response.getStatus(), is(200));
+        PromatCase updatedCase = mapper.readValue(response.readEntity(String.class), PromatCase.class);
+        assertThat("related fausts", updatedCase.getRelatedFausts()
+                        .stream().sorted().collect(Collectors.toList()),
+                is(Arrays.asList("11002222", "11003333", "11004444")));
     }
 }
