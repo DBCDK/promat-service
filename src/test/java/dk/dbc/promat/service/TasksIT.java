@@ -145,5 +145,16 @@ public class TasksIT extends ContainerTest {
         assertThat("targetfaust is not null", updated.getTargetFausts(), is(notNullValue()));
         assertThat("targetfaust contains", updated.getTargetFausts().stream().sorted().collect(Collectors.toList()),
                 is(Arrays.asList("11002222", "11003333", "11004444")));
+
+        // When adding a targetfaust, the number should either not belong to any active case, or belong (as primary
+        // or related faust) to the case to which the task belongs
+        // - 003333 is related faust on case id 1
+        // - 004444 is primary faust on case id 2
+        dto = new TaskDto().withTargetFausts(Arrays.asList("003333"));
+        response = postResponse("v1/api/tasks/" + taskNoTargetFaust.getId(), dto);
+        assertThat("status code", response.getStatus(), is(400));
+        dto = new TaskDto().withTargetFausts(Arrays.asList("004444"));
+        response = postResponse("v1/api/tasks/" + taskNoTargetFaust.getId(), dto);
+        assertThat("status code", response.getStatus(), is(400));
     }
 }
