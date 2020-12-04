@@ -7,6 +7,7 @@ package dk.dbc.promat.service.api;
 
 import dk.dbc.promat.service.dto.ServiceErrorDto;
 import dk.dbc.promat.service.dto.TaskDto;
+import dk.dbc.promat.service.persistence.PromatCase;
 import dk.dbc.promat.service.persistence.PromatEntityManager;
 import dk.dbc.promat.service.persistence.Repository;
 import dk.dbc.promat.service.persistence.PromatTask;
@@ -52,9 +53,22 @@ public class Tasks {
                 return ServiceErrorDto.NotFound("No such task", String.format("Task with id {} does not exist", id));
             }
 
+            // Lock tables so that we can ensure that target faustnumbers only exist on a single case and task
+            repository.getExclusiveAccessToTable(PromatCase.TABLE_NAME);
+            repository.getExclusiveAccessToTable(PromatTask.TABLE_NAME);
+
+            // Check that target faustnumbers has unique usage across a case
+            if(dto.getTargetFausts() != null) {
+                // Todo: check that all targetfausts exists as related fausts on the case
+                // Todo: check that all targetfausts do not exist on other tasks on the case
+            }
+
             // Update fields
             if(dto.getData() != null) {
                 existing.setData(dto.getData()); // It is allowed to update with an empty value
+            }
+            if(dto.getTargetFausts() != null) {
+                existing.setTargetFausts(dto.getTargetFausts());
             }
 
             return Response.ok(existing).build();
