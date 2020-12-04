@@ -7,7 +7,6 @@ package dk.dbc.promat.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 
-import dk.dbc.promat.service.ContainerTest;
 import dk.dbc.promat.service.dto.CaseRequestDto;
 import dk.dbc.promat.service.dto.CaseSummaryList;
 import dk.dbc.promat.service.dto.TaskDto;
