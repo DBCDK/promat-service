@@ -47,10 +47,6 @@ public class Tasks {
 
         try {
 
-            // Lock tables so that we can ensure that target faustnumbers only exist on a single case and task
-            repository.getExclusiveAccessToTable(PromatCase.TABLE_NAME);
-            repository.getExclusiveAccessToTable(PromatTask.TABLE_NAME);
-
             // Fetch the existing task with the given id
             PromatTask existing = entityManager.find(PromatTask.class, id);
             if( existing == null ) {
@@ -58,12 +54,17 @@ public class Tasks {
                 return ServiceErrorDto.NotFound("No such task", String.format("Task with id {} does not exist", id));
             }
 
-            // Find id of the case to which the stated task belongs
-            int caseId = getCaseOfTask(id);
+            // Find the case to which the stated task belongs
+            PromatCase caseOfTask = getCaseOfTask(id);
+
+            // Lock tables so that we can ensure that target faustnumbers only exist on a single case and task
+            repository.getExclusiveAccessToTable(PromatCase.TABLE_NAME);
+            repository.getExclusiveAccessToTable(PromatTask.TABLE_NAME);
 
             // Check that target faustnumbers has unique usage across a case
             if(dto.getTargetFausts() != null) {
-                if(!Faustnumbers.checkNoOpenCaseWithFaust(entityManager, caseId, dto.getTargetFausts().toArray(String[]::new))) {
+                if(!Faustnumbers.checkNoOpenCaseWithFaust(entityManager, caseOfTask.getId(), dto.getTargetFausts().toArray(String[]::new))) {
+                    LOGGER.info("Attempt to add one or more targetfausts {} which is in use on another active case", dto.getTargetFausts());
                     return ServiceErrorDto.InvalidRequest("Target faustnumber is in use", "One or more target faustnumbers is in use on another active case");
                 }
             }
@@ -74,37 +75,37 @@ public class Tasks {
             }
             if(dto.getTargetFausts() != null) {
                 existing.setTargetFausts(dto.getTargetFausts());
-                updateRelatedFausts(caseId, existing);
+                updateRelatedFausts(caseOfTask, existing);
             }
 
             return Response.ok(existing).build();
-        }
-        catch(Exception exception) {
+        } catch(ServiceErrorException serviceErrorException) {
+            LOGGER.info("Received serviceErrorException while updating task: {}", serviceErrorException.getMessage());
+            return Response.status(400).entity(serviceErrorException.getServiceErrorDto()).build();
+        } catch(Exception exception) {
             LOGGER.error("Caught exception: {}", exception.getMessage());
             return ServiceErrorDto.Failed(exception.getMessage());
         }
     }
 
-    private int getCaseOfTask(int taskId) throws Exception {
-        final TypedQuery<Integer> query = entityManager.createNamedQuery(
-                PromatCase.GET_CASE_ID_NAME, Integer.class);
-        query.setParameter(1, taskId);
+    private PromatCase getCaseOfTask(int taskId) throws ServiceErrorException {
+        final TypedQuery<PromatCase> query = entityManager.createNamedQuery(
+                PromatCase.GET_CASE_NAME, PromatCase.class);
+        query.setParameter("taskid", taskId);
 
-        return query.getSingleResult();
-    }
-
-    private void updateRelatedFausts(int caseId, PromatTask task) throws Exception {
-
-        // Load case
-        PromatCase owner = entityManager.find(PromatCase.class, caseId);
-        if( owner == null) {
-            throw new Exception(String.format("Unable to load  case %d", caseId));
+        PromatCase caseOfTask = query.getSingleResult();
+        if( caseOfTask == null) {
+            LOGGER.info(String.format("Unable to load  case of task with id %d", taskId));
+            throw new ServiceErrorException(String.format("Task with id %d do not belong to any task", taskId));
         }
 
-        // Add new faustnumber
+        return entityManager.merge(caseOfTask);
+    }
+
+    private void updateRelatedFausts(PromatCase caseOfTask, PromatTask task) {
         for(String faust : task.getTargetFausts()) {
-            if(!owner.getRelatedFausts().contains(faust)) {
-                owner.getRelatedFausts().add(faust);
+            if(!caseOfTask.getRelatedFausts().contains(faust)) {
+                caseOfTask.getRelatedFausts().add(faust);
             }
         }
     }

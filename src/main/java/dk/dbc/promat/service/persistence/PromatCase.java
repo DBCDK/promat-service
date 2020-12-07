@@ -27,16 +27,18 @@ import java.util.List;
 import java.util.Objects;
 
 @NamedQuery(
-        name = PromatCase.GET_CASE_ID_NAME,
-        query = PromatCase.GET_CASE_ID_QUERY)
+        name = PromatCase.GET_CASE_NAME,
+        query = PromatCase.GET_CASE_QUERY)
 @Entity
 public class PromatCase {
     public static final String TABLE_NAME = "promatcase";
 
-    public static final String GET_CASE_ID_NAME =
-            "PromatCase.get.case.id";
-    public static final String GET_CASE_ID_QUERY =
-            "SELECT ct.case_id FROM CaseTasks ct where ct.task_id = ?1";
+    public static final String GET_CASE_NAME =
+            "PromatCase.get.case";
+    public static final String GET_CASE_QUERY = "select pc " +
+            "                                      from PromatCase pc " +
+            "                                      join pc.tasks t " +
+            "                                     where t.id=:taskid";
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
