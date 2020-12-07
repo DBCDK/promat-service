@@ -777,7 +777,7 @@ components:
         - 'BKM'
         - 'METAKOMPAS'
         - 'BUGGI'
-        - 'EXPRESS
+        - 'EXPRESS'
       description: |
         Enum describing the type of task
         * NONE = No tasktype set (should not be used)
