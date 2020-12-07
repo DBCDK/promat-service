@@ -16,6 +16,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.TypedQuery;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
@@ -31,6 +32,17 @@ public class Reviewers {
     @Inject
     @PromatEntityManager
     EntityManager entityManager;
+
+    @GET
+    @Path("{id}")
+    @Produces({MediaType.APPLICATION_JSON})
+    public Response getEditor(@PathParam("id") Integer id) {
+        final Reviewer reviewer = entityManager.find(Reviewer.class, id);
+        if (reviewer == null) {
+            return Response.status(404).build();
+        }
+        return Response.ok(reviewer).build();
+    }
 
     @GET
     @Produces({MediaType.APPLICATION_JSON})

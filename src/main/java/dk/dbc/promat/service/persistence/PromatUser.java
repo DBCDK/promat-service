@@ -6,17 +6,38 @@
 package dk.dbc.promat.service.persistence;
 
 import javax.persistence.Column;
+import javax.persistence.ColumnResult;
+import javax.persistence.ConstructorResult;
 import javax.persistence.Convert;
 import javax.persistence.DiscriminatorColumn;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Inheritance;
 import javax.persistence.InheritanceType;
+import javax.persistence.NamedNativeQuery;
+import javax.persistence.SqlResultSetMapping;
 
+@SqlResultSetMapping(
+        name = "PromatUser.UserRoleMapping",
+        classes = {
+                @ConstructorResult(
+                        targetClass = dk.dbc.promat.service.dto.UserRole.class,
+                        columns = {
+                                @ColumnResult(name = "id"),
+                                @ColumnResult(name = "role")})})
+@NamedNativeQuery(
+        name = PromatUser.GET_USER_ROLE,
+        query = PromatUser.GET_USER_ROLE_QUERY,
+        resultSetMapping = "PromatUser.UserRoleMapping")
 @Entity
 @Inheritance(strategy= InheritanceType.SINGLE_TABLE)
 @DiscriminatorColumn(name="role")
 public abstract class PromatUser {
+    public static final String GET_USER_ROLE =
+            "PromatUser.getUserRole";
+    public static final String GET_USER_ROLE_QUERY =
+            "SELECT id,role FROM promatuser reviewer WHERE culrId=?1";
+
     public enum Role {
         EDITOR, REVIEWER
     }
@@ -31,6 +52,7 @@ public abstract class PromatUser {
 
     protected boolean active;
 
+    protected String culrId;
     protected String firstName;
     protected String lastName;
     protected String email;
@@ -50,6 +72,14 @@ public abstract class PromatUser {
 
     public void setActive(boolean active) {
         this.active = active;
+    }
+
+    public String getCulrId() {
+        return culrId;
+    }
+
+    public void setCulrId(String culrId) {
+        this.culrId = culrId;
     }
 
     public String getFirstName() {
