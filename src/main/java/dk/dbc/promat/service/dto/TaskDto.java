@@ -19,6 +19,8 @@ public class TaskDto {
 
     private List<String> targetFausts;
 
+    private String data;
+
     public TaskType getTaskType() {
         return taskType;
     }
@@ -43,6 +45,14 @@ public class TaskDto {
         this.targetFausts = targetFausts;
     }
 
+    public String getData() {
+        return data;
+    }
+
+    public void setData(String data) {
+        this.data = data;
+    }
+
     public TaskDto withTaskType(TaskType taskType) {
         this.taskType = taskType;
         return this;
@@ -58,25 +68,34 @@ public class TaskDto {
         return this;
     }
 
+    public TaskDto withData(String data) {
+        this.data = data;
+        return this;
+    }
+
     @Override
     public boolean equals(Object o) {
         if(this == o) return true;
         if(o == null || getClass() != o.getClass()) return false;
         TaskDto taskDto = (TaskDto) o;
         return taskType == taskDto.taskType &&
-               taskFieldType == taskDto.taskFieldType;
+                taskFieldType == taskDto.taskFieldType &&
+                Objects.equals(targetFausts, taskDto.targetFausts) &&
+                Objects.equals(data, taskDto.data);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(taskType, taskFieldType);
+        return Objects.hash(taskType, taskFieldType, targetFausts, data);
     }
 
     @Override
     public String toString() {
         return "TaskDto{" +
                 "taskType=" + taskType +
-                "taskFieldType=" + taskFieldType +
+                ", taskFieldType=" + taskFieldType +
+                ", targetFausts=" + targetFausts +
+                ", data='" + data + '\'' +
                 '}';
     }
 }

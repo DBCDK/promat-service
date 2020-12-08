@@ -19,6 +19,7 @@ import java.util.Objects;
 
 @Entity
 public class PromatTask {
+    public static final String TABLE_NAME = "promattask";
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

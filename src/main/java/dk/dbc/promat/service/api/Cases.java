@@ -29,7 +29,6 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.inject.Inject;
 import javax.persistence.EntityManager;
-import javax.persistence.Query;
 import javax.persistence.TypedQuery;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
@@ -87,7 +86,7 @@ public class Cases {
 
         // Check that no existing case exists with the same primary or related faustnumber
         // as the given primary faustnumber and a state other than CLOSED or DONE
-        if(!checkNoOpenCaseWithFaust(dto.getPrimaryFaust())) {
+        if(!Faustnumbers.checkNoOpenCaseWithFaust(entityManager, dto.getPrimaryFaust())) {
             LOGGER.info("Case with primary or related Faust {} and state <> CLOSED|DONE exists", dto.getPrimaryFaust());
             return ServiceErrorDto.CaseExists(String.format("Case with primary or related faust {} and status not DONE or CLOSED exists", dto.getPrimaryFaust()));
         }
@@ -95,7 +94,7 @@ public class Cases {
         // Check that no existing case exists with the same primary or related faustnumber
         // as the given relasted fasutnumbers and a state other than CLOSED or DONE
         if(dto.getRelatedFausts() != null && dto.getRelatedFausts().size() > 0) {
-            if(!checkNoOpenCaseWithFaust(dto.getRelatedFausts().toArray(String[]::new))) {
+            if(!Faustnumbers.checkNoOpenCaseWithFaust(entityManager, dto.getRelatedFausts().toArray(String[]::new))) {
                 LOGGER.info("Case with primary or related {} and state <> CLOSED|DONE exists", dto.getRelatedFausts());
                 return ServiceErrorDto.CaseExists(String.format("Case with primary or related faust {} and status not DONE or CLOSED exists", dto.getRelatedFausts()));
             }
@@ -108,6 +107,7 @@ public class Cases {
                 case ASSIGNED: // A check is made later to make sure we can mark the case as assigned
                     break;
                 default:
+                    LOGGER.info("Attempt to create case with invalid state {}", dto.getStatus());
                     return ServiceErrorDto.InvalidState(String.format("Case status {} is not allowed when creating a new case", dto.getStatus()));
             }
         }
@@ -126,6 +126,7 @@ public class Cases {
             editor = resolveEditor(dto.getEditor());
             tasks = createTasks(dto.getTasks(), relatedFausts);
         } catch(ServiceErrorException serviceErrorException) {
+            LOGGER.info("Received serviceErrorException while mapping entities: {}", serviceErrorException.getMessage());
             return Response.status(400).entity(serviceErrorException.getServiceErrorDto()).build();
         }
 
@@ -360,16 +361,16 @@ public class Cases {
                 existing.setDetails(dto.getDetails());
             }
             if(dto.getPrimaryFaust() != null) {
-                if(!checkNoOpenCaseWithFaust(existing.getId(), dto.getPrimaryFaust())) {
+                if(!Faustnumbers.checkNoOpenCaseWithFaust(entityManager, existing.getId(), dto.getPrimaryFaust())) {
                     LOGGER.info("Case with primary or related faust {} and state <> CLOSED|DONE exists", dto.getPrimaryFaust());
-                    return ServiceErrorDto.CaseExists(String.format("Case with primary or realted faust {} and status not DONE or CLOSED exists", dto.getPrimaryFaust()));
+                    return ServiceErrorDto.CaseExists(String.format("Case with primary or related faust {} and status not DONE or CLOSED exists", dto.getPrimaryFaust()));
                 }
                 existing.setPrimaryFaust(dto.getPrimaryFaust());
             }
-            if(dto.getRelatedFausts() != null && dto.getRelatedFausts().size() > 0) {
-                if(!checkNoOpenCaseWithFaust(existing.getId(), dto.getRelatedFausts().toArray(String[]::new))) {
+            if(dto.getRelatedFausts() != null) {
+                if(!Faustnumbers.checkNoOpenCaseWithFaust(entityManager, existing.getId(), dto.getRelatedFausts().toArray(String[]::new))) {
                     LOGGER.info("Case with primary or related faust {} and state <> CLOSED|DONE exists", dto.getPrimaryFaust());
-                    return ServiceErrorDto.CaseExists(String.format("Case with primary or realted faust {} and status not DONE or CLOSED exists", dto.getPrimaryFaust()));
+                    return ServiceErrorDto.CaseExists(String.format("Case with primary or related fausts {} and status not DONE or CLOSED exists", dto.getRelatedFausts()));
                 }
                 existing.setRelatedFausts(dto.getRelatedFausts());
             }
@@ -410,6 +411,7 @@ public class Cases {
 
             return Response.ok(existing).build();
         } catch(ServiceErrorException serviceErrorException) {
+            LOGGER.info("Received serviceErrorException while mapping entities: {}", serviceErrorException.getMessage());
             return Response.status(400).entity(serviceErrorException.getServiceErrorDto()).build();
         }
         catch(Exception exception) {
@@ -504,27 +506,6 @@ public class Cases {
             default:
                 return "";
         }
-    }
-
-    private boolean checkNoOpenCaseWithFaust(String... fausts) {
-        return checkNoOpenCaseWithFaust(null, fausts);
-    }
-
-    private boolean checkNoOpenCaseWithFaust(Integer caseId, String... fausts) {
-        Query q = entityManager.createNativeQuery("SELECT CheckNoOpenCaseWithFaust(?, ?)");
-
-        // Passing a null parameter is not possible, so if caseId is null, then passing
-        // the id of a non-existing case will yield same results (and id zero never exists)
-        q.setParameter(2, caseId != null ? caseId : 0);
-
-        for( String faust : fausts) {
-            q.setParameter(1, faust);
-            if( (boolean) q.getSingleResult() == false ) {
-                return false;
-            }
-        }
-
-        return true;
     }
 
     private List<PromatTask> createTasks(List<TaskDto> taskDtos, List<String> relatedFausts) throws ServiceErrorException {

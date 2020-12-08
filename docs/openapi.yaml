@@ -365,6 +365,45 @@ paths:
               schema:
                 $ref: '#/components/schemas/ServiceError'
 
+  /tasks/{id}:
+    post:
+      tags:
+        - tasks
+      summary: Update existing task
+      operationId: updateTask
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            description: Task id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Task'
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        '404':
+          description: Task could not be found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '409':
+          description: Task could not be updated, check ServiceError in body for specifics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+
 components:
   schemas:
     Address:
@@ -739,8 +778,8 @@ components:
       nullable: true
       enum:
         - 'CREATED'
-        - 'REJECTED'
         - 'ASSIGNED'
+        - 'REJECTED'
         - 'PENDING_APPROVAL'
         - 'PENDING_ISSUES'
         - 'APPROVED'

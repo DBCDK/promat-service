@@ -19,21 +19,26 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
+import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Objects;
 
-/** Entity for table holding cases
- *
- *  Correct table name 'case' is a reserved word and would
- *  properbly cause some problems for jpa if used, thus the
- *  plural form used here.
- */
+@NamedQuery(
+        name = PromatCase.GET_CASE_NAME,
+        query = PromatCase.GET_CASE_QUERY)
 @Entity
 public class PromatCase {
     public static final String TABLE_NAME = "promatcase";
+
+    public static final String GET_CASE_NAME =
+            "PromatCase.get.case";
+    public static final String GET_CASE_QUERY = "select pc " +
+            "                                      from PromatCase pc " +
+            "                                      join pc.tasks t " +
+            "                                     where t.id=:taskid";
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
