@@ -93,4 +93,12 @@ public class ServiceErrorDto implements Dto {
                 .withDetails(details);
         return Response.status(404).entity(err).build();
     }
+
+     public static Response Forbidden(String cause, String details) {
+        ServiceErrorDto err = new ServiceErrorDto()
+                .withCode(ServiceErrorCode.FORBIDDEN)
+                .withCause(cause)
+                .withDetails(details);
+        return Response.status(401).entity(err).build();
+    }
 }
