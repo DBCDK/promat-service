@@ -861,4 +861,40 @@ public class CasesIT extends ContainerTest {
         taskDto.setTaskFieldType(TaskFieldType.BRIEF);
         assertThat("status code", postResponse("v1/api/cases/" + created.getId() + "/tasks", taskDto).getStatus(), is(201));
     }
+
+    @Test
+    public void testCreateCaseWithTaskWithUsedFaust() {
+
+        // Create case 1
+        CaseRequestDto dto = new CaseRequestDto()
+                .withPrimaryFaust("17001111")
+                .withRelatedFausts(Arrays.asList("17002222"))
+                .withTitle("Title for 17001111")
+                .withDetails("Details for 17001111")
+                .withMaterialType(MaterialType.BOOK)
+                .withTasks(Arrays.asList(
+                        new TaskDto()
+                                .withTaskType(TaskType.GROUP_1_LESS_THAN_100_PAGES)
+                                .withTaskFieldType(TaskFieldType.BRIEF)
+                                .withTargetFausts(Arrays.asList("17003333"))
+                ));
+        Response response = postResponse("v1/api/cases", dto);
+        assertThat("status code", response.getStatus(), is(201));
+
+        // Create case 2
+        dto = new CaseRequestDto()
+                .withPrimaryFaust("18001111")
+                .withRelatedFausts(Arrays.asList("18002222"))
+                .withTitle("Title for 18001111")
+                .withDetails("Details for 18001111")
+                .withMaterialType(MaterialType.BOOK)
+                .withTasks(Arrays.asList(
+                        new TaskDto()
+                                .withTaskType(TaskType.GROUP_1_LESS_THAN_100_PAGES)
+                                .withTaskFieldType(TaskFieldType.BRIEF)
+                                .withTargetFausts(Arrays.asList("17003333"))
+                ));
+        response = postResponse("v1/api/cases", dto);
+        assertThat("status code", response.getStatus(), is(409));
+    }
 }
