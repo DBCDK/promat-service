@@ -828,4 +828,31 @@ public class CasesIT extends ContainerTest {
         response = postResponse("v1/api/cases/" + secondTask.getId() + "/tasks", taskDto);
         assertThat("status code", response.getStatus(), is(409));
     }
+
+    @Test
+    public void testAddTaskWithMissingFields() throws JsonProcessingException {
+
+        // Create new case
+        CaseRequestDto dto = new CaseRequestDto()
+                .withPrimaryFaust("16001111")
+                .withTitle("Title for 16001111")
+                .withDetails("Details for 16001111")
+                .withMaterialType(MaterialType.BOOK);
+        Response response = postResponse("v1/api/cases", dto);
+        assertThat("status code", response.getStatus(), is(201));
+        PromatCase created = mapper.readValue(response.readEntity(String.class), PromatCase.class);
+
+        TaskDto taskDto = new TaskDto();
+
+        // Empty dto
+        assertThat("status code", postResponse("v1/api/cases/" + created.getId() + "/tasks", taskDto).getStatus(), is(400));
+
+        // Add TaskType
+        taskDto.setTaskType(TaskType.GROUP_1_LESS_THAN_100_PAGES);
+        assertThat("status code", postResponse("v1/api/cases/" + created.getId() + "/tasks", taskDto).getStatus(), is(400));
+
+        // Add TaskFieldType
+        taskDto.setTaskFieldType(TaskFieldType.BRIEF);
+        assertThat("status code", postResponse("v1/api/cases/" + created.getId() + "/tasks", taskDto).getStatus(), is(201));
+    }
 }

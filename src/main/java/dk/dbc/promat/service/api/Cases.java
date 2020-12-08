@@ -30,6 +30,7 @@ import javax.ejb.Stateless;
 import javax.inject.Inject;
 import javax.persistence.EntityManager;
 import javax.persistence.TypedQuery;
+import javax.persistence.ValidationMode;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Predicate;
@@ -137,7 +138,7 @@ public class Cases {
             tasks = createTasks(dto.getTasks(), relatedFausts);
         } catch(ServiceErrorException serviceErrorException) {
             LOGGER.info("Received serviceErrorException while mapping entities: {}", serviceErrorException.getMessage());
-            return Response.status(400).entity(serviceErrorException.getServiceErrorDto()).build();
+            return Response.status(serviceErrorException.getHttpStatus()).entity(serviceErrorException.getServiceErrorDto()).build();
         }
 
         // Handle possible change of case status due to assigning an editor.
@@ -422,9 +423,8 @@ public class Cases {
             return Response.ok(existing).build();
         } catch(ServiceErrorException serviceErrorException) {
             LOGGER.info("Received serviceErrorException while mapping entities: {}", serviceErrorException.getMessage());
-            return Response.status(400).entity(serviceErrorException.getServiceErrorDto()).build();
-        }
-        catch(Exception exception) {
+            return Response.status(serviceErrorException.getHttpStatus()).entity(serviceErrorException.getServiceErrorDto()).build();
+        } catch(Exception exception) {
             LOGGER.error("Caught exception: {}", exception.getMessage());
             return ServiceErrorDto.Failed(exception.getMessage());
         }
@@ -442,6 +442,9 @@ public class Cases {
         repository.getExclusiveAccessToTable(PromatTask.TABLE_NAME);
 
         try {
+
+            // Make sure we got all required fields
+            validateTaskDto(dto);
 
             // Fetch the case
             PromatCase promatCase = entityManager.find(PromatCase.class, id);
@@ -481,6 +484,9 @@ public class Cases {
             return Response.status(201)
                     .entity(task)
                     .build();
+        } catch(ServiceErrorException serviceErrorException) {
+            LOGGER.info("Received serviceErrorException while mapping entities: {}", serviceErrorException.getMessage());
+            return Response.status(serviceErrorException.getHttpStatus()).entity(serviceErrorException.getServiceErrorDto()).build();
         } catch(Exception exception) {
             LOGGER.error("Caught exception: {}", exception.getMessage());
             return ServiceErrorDto.Failed(exception.getMessage());
@@ -498,7 +504,8 @@ public class Cases {
             throw new ServiceErrorException("Attempt to resolve reviewer failed")
                     .withCode(ServiceErrorCode.INVALID_REQUEST)
                     .withCause("No such reviewer")
-                    .withDetails(String.format("Field 'reviewer' contains user id {} which does not exist", reviewerId));
+                    .withDetails(String.format("Field 'reviewer' contains user id {} which does not exist", reviewerId))
+                    .withHttpStatus(400);
         }
         return reviewer;
     }
@@ -514,7 +521,8 @@ public class Cases {
             throw new ServiceErrorException("Attempt to resolve editor failed")
                     .withCode(ServiceErrorCode.INVALID_REQUEST)
                     .withCause("No such editor")
-                    .withDetails(String.format("Field 'editor' contains user id {} which does not exist", editorId));
+                    .withDetails(String.format("Field 'editor' contains user id {} which does not exist", editorId))
+                    .withHttpStatus(400);
         }
         return editor;
     }
@@ -533,7 +541,8 @@ public class Cases {
                 throw new ServiceErrorException("Attempt to resolve subject failed")
                         .withCode(ServiceErrorCode.INVALID_REQUEST)
                         .withCause("No such subject")
-                        .withDetails(String.format("Field 'subject' contains id {} which does not exist", subjectId));
+                        .withDetails(String.format("Field 'subject' contains id {} which does not exist", subjectId))
+                        .withHttpStatus(400);
             }
             subjects.add(subject);
         }
@@ -580,13 +589,7 @@ public class Cases {
 
         if( taskDtos != null && taskDtos.size() > 0) {
             for(TaskDto task : taskDtos) {
-                if(task.getTaskType() == null || task.getTaskFieldType() == null) {
-                    LOGGER.info("Task dto is missing the taskType and/or taskFieldType field");
-                    throw new ServiceErrorException("Task dto is missing the taskType and/or taskFieldType field")
-                            .withCause("Missing required field(s) in the request data")
-                            .withDetails("Fields 'taskType' and 'taskFieldType' must be supplied when creating a new task")
-                            .withCode(ServiceErrorCode.INVALID_REQUEST);
-                }
+                validateTaskDto(task);
 
                 tasks.add(new PromatTask()
                         .withTaskType(task.getTaskType())
@@ -606,5 +609,16 @@ public class Cases {
         }
 
         return tasks;
+    }
+
+    private void validateTaskDto(TaskDto dto) throws ServiceErrorException {
+        if(dto.getTaskType() == null || dto.getTaskFieldType() == null) {
+            LOGGER.info("Task dto is missing the taskType and/or taskFieldType field");
+            throw new ServiceErrorException("Task dto is missing the taskType and/or taskFieldType field")
+                    .withCause("Missing required field(s) in the request data")
+                    .withDetails("Fields 'taskType' and 'taskFieldType' must be supplied when creating a new task")
+                    .withCode(ServiceErrorCode.INVALID_REQUEST)
+                    .withHttpStatus(400);
+        }
     }
 }
