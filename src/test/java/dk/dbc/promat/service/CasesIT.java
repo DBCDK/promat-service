@@ -718,6 +718,7 @@ public class CasesIT extends ContainerTest {
         TaskDto taskDto = new TaskDto()
                 .withTaskType(TaskType.GROUP_1_LESS_THAN_100_PAGES)
                 .withTaskFieldType(TaskFieldType.BRIEF)
+                .withData("anoroc kcuf")
                 .withTargetFausts(Arrays.asList("12002222", "12003333"));
         response = postResponse("v1/api/cases/" + created.getId() + "/tasks", taskDto);
         assertThat("status code", response.getStatus(), is(201));
@@ -739,6 +740,11 @@ public class CasesIT extends ContainerTest {
         assertThat("case tasks is not null", fetched.getTasks(), is(notNullValue()));
         assertThat("case has 1 task", fetched.getTasks().size(), is(1));
         assertThat("task is the created task", fetched.getTasks().get(0).equals(createdTask));
+
+        // Check that the case now has 1 task with the expected types and data
+        assertThat("task is expected TaskType", fetched.getTasks().get(0).getTaskType(), is(TaskType.GROUP_1_LESS_THAN_100_PAGES));
+        assertThat("task is expected TaskFieldType", fetched.getTasks().get(0).getTaskFieldType(), is(TaskFieldType.BRIEF));
+        assertThat("task has expected data", fetched.getTasks().get(0).getData().equals("anoroc kcuf"));
     }
 
     @Test

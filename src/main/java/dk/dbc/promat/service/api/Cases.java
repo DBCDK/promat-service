@@ -464,6 +464,7 @@ public class Cases {
             PromatTask task = new PromatTask()
                     .withTaskType(dto.getTaskType())
                     .withTaskFieldType(dto.getTaskFieldType())
+                    .withData(dto.getData())  // null is allowed here since it is the default value anyway
                     .withCreated(LocalDate.now())
                     .withPayCode(getPaycodeForTaskType(dto.getTaskType()))
                     .withTargetFausts(dto.getTargetFausts());
