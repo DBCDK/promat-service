@@ -829,6 +829,7 @@ components:
         - 'BKM'
         - 'METAKOMPAS'
         - 'BUGGI'
+        - 'EXPRESS'
       description: |
         Enum describing the type of task
         * NONE = No tasktype set (should not be used)
@@ -849,6 +850,7 @@ components:
         * BKM = Decide if this material is relevant for libraries
         * METAKOMPAS = Special topics for Metakompasset
         * BUGGI = Special topics for Buggi
+        * EXPRESS = This case is urgent
 
     TaskFieldType:
       type: string
