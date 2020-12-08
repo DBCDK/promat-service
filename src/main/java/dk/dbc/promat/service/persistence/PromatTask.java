@@ -10,6 +10,8 @@ import dk.dbc.commons.jpa.converter.StringListToJsonArrayConverter;
 import javax.persistence.Column;
 import javax.persistence.Convert;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -25,8 +27,10 @@ public class PromatTask {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
 
+    @Enumerated(EnumType.STRING)
     private TaskType taskType;
 
+    @Enumerated(EnumType.STRING)
     private TaskFieldType taskFieldType;
 
     private LocalDate created;
