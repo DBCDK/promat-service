@@ -40,7 +40,7 @@ public class TasksIT extends ContainerTest {
 
         // Update of unknown task - should return 404 NOT FOUND
         TaskDto dto = new TaskDto();
-        Response response = postResponse("v1/api/tasks/9876", dto);
+        Response response = putResponse("v1/api/tasks/9876", dto);
         assertThat("status code", response.getStatus(), is(404));
 
         // Create a new case
@@ -74,34 +74,34 @@ public class TasksIT extends ContainerTest {
 
         // Update first task - should return 200 OK
         dto = new TaskDto().withData("Here is data for task without targetFaust");
-        response = postResponse("v1/api/tasks/" + taskNoTargetFaust.getId(), dto);
+        response = putResponse("v1/api/tasks/" + taskNoTargetFaust.getId(), dto);
         assertThat("status code", response.getStatus(), is(200));
         PromatTask updated = mapper.readValue(response.readEntity(String.class), PromatTask.class);
         assertThat("data value is correct", updated.getData().equals("Here is data for task without targetFaust"), is(true));
 
         // Update second task - should return 200 OK
         dto = new TaskDto().withData("Here is data for task with targetFaust");
-        response = postResponse("v1/api/tasks/" + taskWithTargetFaust.getId(), dto);
+        response = putResponse("v1/api/tasks/" + taskWithTargetFaust.getId(), dto);
         assertThat("status code", response.getStatus(), is(200));
         updated = mapper.readValue(response.readEntity(String.class), PromatTask.class);
         assertThat("data value is correct", updated.getData().equals("Here is data for task with targetFaust"), is(true));
 
         // Check that we can update the data field with an empty string, but not null - but neither request should fail
         dto = new TaskDto().withData(null);
-        response = postResponse("v1/api/tasks/" + taskNoTargetFaust.getId(), dto);
+        response = putResponse("v1/api/tasks/" + taskNoTargetFaust.getId(), dto);
         assertThat("status code", response.getStatus(), is(200));
         updated = mapper.readValue(response.readEntity(String.class), PromatTask.class);
         assertThat("data value is correct", updated.getData().equals("Here is data for task without targetFaust"), is(true));
 
         dto = new TaskDto().withData("");
-        response = postResponse("v1/api/tasks/" + taskNoTargetFaust.getId(), dto);
+        response = putResponse("v1/api/tasks/" + taskNoTargetFaust.getId(), dto);
         assertThat("status code", response.getStatus(), is(200));
         updated = mapper.readValue(response.readEntity(String.class), PromatTask.class);
         assertThat("data value is correct", updated.getData().equals(""), is(true));
 
         // Add an existing related faustnumber to one task, this should succeed
         dto = new TaskDto().withTargetFausts(Arrays.asList("11002222"));
-        response = postResponse("v1/api/tasks/" + taskNoTargetFaust.getId(), dto);
+        response = putResponse("v1/api/tasks/" + taskNoTargetFaust.getId(), dto);
         assertThat("status code", response.getStatus(), is(200));
         updated = mapper.readValue(response.readEntity(String.class), PromatTask.class);
         assertThat("targetfaust is not null", updated.getTargetFausts(), is(notNullValue()));
@@ -118,7 +118,7 @@ public class TasksIT extends ContainerTest {
         // Add a new faustnumber to one task, this should succeed
         dto = new TaskDto().withTargetFausts(updated.getTargetFausts());
         dto.getTargetFausts().add("11005555");
-        response = postResponse("v1/api/tasks/" + taskNoTargetFaust.getId(), dto);
+        response = putResponse("v1/api/tasks/" + taskNoTargetFaust.getId(), dto);
         assertThat("status code", response.getStatus(), is(200));
         updated = mapper.readValue(response.readEntity(String.class), PromatTask.class);
         assertThat("targetfaust is not null", updated.getTargetFausts(), is(notNullValue()));
@@ -139,7 +139,7 @@ public class TasksIT extends ContainerTest {
         // to another and they would wonder why the got an error.
         dto = new TaskDto().withTargetFausts(taskWithTargetFaust.getTargetFausts());
         dto.getTargetFausts().add("11002222");
-        response = postResponse("v1/api/tasks/" + taskWithTargetFaust.getId(), dto);
+        response = putResponse("v1/api/tasks/" + taskWithTargetFaust.getId(), dto);
         assertThat("status code", response.getStatus(), is(200));
         updated = mapper.readValue(response.readEntity(String.class), PromatTask.class);
         assertThat("targetfaust is not null", updated.getTargetFausts(), is(notNullValue()));
@@ -151,10 +151,10 @@ public class TasksIT extends ContainerTest {
         // - 003333 is related faust on case id 1
         // - 004444 is primary faust on case id 2
         dto = new TaskDto().withTargetFausts(Arrays.asList("003333"));
-        response = postResponse("v1/api/tasks/" + taskNoTargetFaust.getId(), dto);
+        response = putResponse("v1/api/tasks/" + taskNoTargetFaust.getId(), dto);
         assertThat("status code", response.getStatus(), is(400));
         dto = new TaskDto().withTargetFausts(Arrays.asList("004444"));
-        response = postResponse("v1/api/tasks/" + taskNoTargetFaust.getId(), dto);
+        response = putResponse("v1/api/tasks/" + taskNoTargetFaust.getId(), dto);
         assertThat("status code", response.getStatus(), is(400));
     }
 }
