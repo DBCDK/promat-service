@@ -62,9 +62,9 @@ public class ServiceErrorDto implements Dto {
         return Response.status(400).entity(err).build();
     }
 
-    public static Response CaseExists(String details) {
+    public static Response FaustInUse(String details) {
         ServiceErrorDto err = new ServiceErrorDto()
-                .withCode(ServiceErrorCode.CASE_EXISTS)
+                .withCode(ServiceErrorCode.FAUST_IN_USE)
                 .withCause("Case exists")
                 .withDetails(details);
         return Response.status(409).entity(err).build();

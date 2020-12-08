@@ -88,7 +88,7 @@ public class Cases {
         // as the given primary faustnumber and a state other than CLOSED or DONE
         if(!Faustnumbers.checkNoOpenCaseWithFaust(entityManager, dto.getPrimaryFaust())) {
             LOGGER.info("Case with primary or related Faust {} and state <> CLOSED|DONE exists", dto.getPrimaryFaust());
-            return ServiceErrorDto.CaseExists(String.format("Case with primary or related faust {} and status not DONE or CLOSED exists", dto.getPrimaryFaust()));
+            return ServiceErrorDto.FaustInUse(String.format("Case with primary or related faust {} and status not DONE or CLOSED exists", dto.getPrimaryFaust()));
         }
 
         // Check that no existing case exists with the same primary or related faustnumber
@@ -96,8 +96,18 @@ public class Cases {
         if(dto.getRelatedFausts() != null && dto.getRelatedFausts().size() > 0) {
             if(!Faustnumbers.checkNoOpenCaseWithFaust(entityManager, dto.getRelatedFausts().toArray(String[]::new))) {
                 LOGGER.info("Case with primary or related {} and state <> CLOSED|DONE exists", dto.getRelatedFausts());
-                return ServiceErrorDto.CaseExists(String.format("Case with primary or related faust {} and status not DONE or CLOSED exists", dto.getRelatedFausts()));
+                return ServiceErrorDto.FaustInUse(String.format("Case with primary or related faust {} and status not DONE or CLOSED exists", dto.getRelatedFausts()));
             }
+            /*if(dto.getTasks() != null) {
+                for(TaskDto task : dto.getTasks()) {
+                    if(task.getTargetFausts() != null) {
+                        if(!Faustnumbers.checkNoOpenCaseWithFaust(entityManager, task.getTargetFausts().toArray(String[]::new))) {
+                            LOGGER.info("Case contains a task with one or more targetFaust {} used by other active cases", task.getTargetFausts());
+                            return ServiceErrorDto.CaseExists("Case contains tasks with one or more targetFaust used by other active cases");
+                        }
+                    }
+                }
+            }*/
         }
 
         // Check for acceptable status code
@@ -363,14 +373,14 @@ public class Cases {
             if(dto.getPrimaryFaust() != null) {
                 if(!Faustnumbers.checkNoOpenCaseWithFaust(entityManager, existing.getId(), dto.getPrimaryFaust())) {
                     LOGGER.info("Case with primary or related faust {} and state <> CLOSED|DONE exists", dto.getPrimaryFaust());
-                    return ServiceErrorDto.CaseExists(String.format("Case with primary or related faust {} and status not DONE or CLOSED exists", dto.getPrimaryFaust()));
+                    return ServiceErrorDto.FaustInUse(String.format("Case with primary or related faust {} and status not DONE or CLOSED exists", dto.getPrimaryFaust()));
                 }
                 existing.setPrimaryFaust(dto.getPrimaryFaust());
             }
             if(dto.getRelatedFausts() != null) {
                 if(!Faustnumbers.checkNoOpenCaseWithFaust(entityManager, existing.getId(), dto.getRelatedFausts().toArray(String[]::new))) {
                     LOGGER.info("Case with primary or related faust {} and state <> CLOSED|DONE exists", dto.getPrimaryFaust());
-                    return ServiceErrorDto.CaseExists(String.format("Case with primary or related fausts {} and status not DONE or CLOSED exists", dto.getRelatedFausts()));
+                    return ServiceErrorDto.FaustInUse(String.format("Case with primary or related fausts {} and status not DONE or CLOSED exists", dto.getRelatedFausts()));
                 }
                 existing.setRelatedFausts(dto.getRelatedFausts());
             }
@@ -415,6 +425,63 @@ public class Cases {
             return Response.status(400).entity(serviceErrorException.getServiceErrorDto()).build();
         }
         catch(Exception exception) {
+            LOGGER.error("Caught exception: {}", exception.getMessage());
+            return ServiceErrorDto.Failed(exception.getMessage());
+        }
+    }
+
+    @POST
+    @Path("cases/{id}/tasks")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response addTask(@PathParam("id") final Integer id, TaskDto dto) {
+        LOGGER.info("cases/{}/tasks (POST) body: {}", id, dto);
+
+        // Lock case and task tables
+        repository.getExclusiveAccessToTable(PromatCase.TABLE_NAME);
+        repository.getExclusiveAccessToTable(PromatTask.TABLE_NAME);
+
+        try {
+
+            // Fetch the case
+            PromatCase promatCase = entityManager.find(PromatCase.class, id);
+            if(promatCase == null) {
+                LOGGER.info("No case with id {}", id);
+                return ServiceErrorDto.NotFound("No such case", String.format("No case with id %d exists", id));
+            }
+
+            // Check that we do not add any targetfausts that is in use
+            if(dto.getTargetFausts() != null) {
+                if(!Faustnumbers.checkNoOpenCaseWithFaust(entityManager, promatCase.getId(), dto.getTargetFausts().toArray(String[]::new))) {
+                    LOGGER.info("Case contains a task with one or more targetFaust {} used by other active cases", dto.getTargetFausts());
+                    return ServiceErrorDto.FaustInUse("One or more targetFausts is used by other active cases");
+                }
+            }
+
+            // Create the new task
+            PromatTask task = new PromatTask()
+                    .withTaskType(dto.getTaskType())
+                    .withTaskFieldType(dto.getTaskFieldType())
+                    .withCreated(LocalDate.now())
+                    .withPayCode(getPaycodeForTaskType(dto.getTaskType()))
+                    .withTargetFausts(dto.getTargetFausts());
+
+            // Add the new task
+            promatCase.getTasks().add(task);
+
+            // Add new targetfausts
+            if(dto.getTargetFausts() != null && dto.getTargetFausts().size() > 0) {
+                for(String faust : dto.getTargetFausts()) {
+                    if(!promatCase.getRelatedFausts().contains(faust)) {
+                        promatCase.getRelatedFausts().add(faust);
+                    }
+                }
+            }
+
+            return Response.status(201)
+                    .entity(task)
+                    .build();
+        } catch(Exception exception) {
             LOGGER.error("Caught exception: {}", exception.getMessage());
             return ServiceErrorDto.Failed(exception.getMessage());
         }
