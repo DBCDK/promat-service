@@ -366,7 +366,7 @@ paths:
                 $ref: '#/components/schemas/ServiceError'
 
   /tasks/{id}:
-    post:
+    put:
       tags:
         - tasks
       summary: Update existing task
