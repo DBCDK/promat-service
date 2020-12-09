@@ -5,11 +5,17 @@
 
 package dk.dbc.promat.service.persistence;
 
+import dk.dbc.promat.service.api.ServiceErrorException;
+import dk.dbc.promat.service.dto.ServiceErrorCode;
+
 import javax.ejb.Stateless;
 import javax.inject.Inject;
 import javax.persistence.EntityManager;
 import javax.persistence.LockModeType;
 import javax.persistence.Query;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 @Stateless
 public class Repository {
@@ -39,5 +45,24 @@ public class Repository {
                 String.format("LOCK TABLE %s IN EXCLUSIVE MODE", tableName)
         );
         lockQuery.executeUpdate();
+    }
+
+    public List<Subject> resolveSubjects(List<Integer> subjectIds) throws ServiceErrorException {
+        if (subjectIds == null || subjectIds.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        final List<Subject> subjects = new ArrayList<>();
+        for (int subjectId : subjectIds) {
+            final Subject subject = entityManager.find(Subject.class, subjectId);
+            if (subject == null) {
+                throw new ServiceErrorException("Attempt to resolve subject failed")
+                        .withCode(ServiceErrorCode.INVALID_REQUEST)
+                        .withCause("No such subject")
+                        .withDetails(String.format("Field 'subject' contains id {} which does not exist", subjectId));
+            }
+            subjects.add(subject);
+        }
+        return subjects;
     }
 }

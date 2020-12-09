@@ -8,21 +8,97 @@ package dk.dbc.promat.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import dk.dbc.promat.service.dto.ReviewerList;
+import dk.dbc.promat.service.dto.ReviewerRequest;
 import dk.dbc.promat.service.dto.ReviewerWithWorkloads;
+import dk.dbc.promat.service.dto.ServiceErrorCode;
+import dk.dbc.promat.service.dto.ServiceErrorDto;
 import dk.dbc.promat.service.persistence.Address;
 import dk.dbc.promat.service.persistence.Reviewer;
 import dk.dbc.promat.service.persistence.Subject;
+import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
-
+import org.junit.jupiter.api.TestMethodOrder;
+import org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
 import javax.ws.rs.core.Response;
 import java.time.LocalDate;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
+@TestMethodOrder(OrderAnnotation.class)
 public class ReviewersIT extends ContainerTest {
+
+    @Test
+    void createReviewer() throws JsonProcessingException {
+        final ReviewerRequest reviewerRequest = new ReviewerRequest()
+                .withCprNumber("1234567890")
+                .withPaycode(42)
+                .withFirstName("John")
+                .withLastName("Doe")
+                .withEmail("john@doe.com");
+
+        final Response response = postResponse("v1/api/reviewers", reviewerRequest);
+        assertThat("response status", response.getStatus(), is(201));
+
+        final Reviewer reviewer = mapper.readValue(response.readEntity(String.class), Reviewer.class);
+        assertThat("reviewer entity", reviewer.getFirstName(), is("John"));
+    }
+
+    @Test
+    void createReviewerWithoutCprNumber() throws JsonProcessingException {
+        final ReviewerRequest reviewerRequest = new ReviewerRequest().withPaycode(42);
+
+        final Response response = postResponse("v1/api/reviewers", reviewerRequest);
+        assertThat("response status", response.getStatus(), is(400));
+
+        final ServiceErrorDto serviceError = mapper.readValue(response.readEntity(String.class), ServiceErrorDto.class);
+        assertThat("service error", serviceError.getCode(), is(ServiceErrorCode.INVALID_REQUEST));
+    }
+
+    @Test
+    void createReviewerWithoutPaycode() throws JsonProcessingException {
+        final ReviewerRequest reviewerRequest = new ReviewerRequest().withCprNumber("1234567890");
+
+        final Response response = postResponse("v1/api/reviewers", reviewerRequest);
+        assertThat("response status", response.getStatus(), is(400));
+
+        final ServiceErrorDto serviceError = mapper.readValue(response.readEntity(String.class), ServiceErrorDto.class);
+        assertThat("service error", serviceError.getCode(), is(ServiceErrorCode.INVALID_REQUEST));
+    }
+
+    @Test
+    void createReviewerWithNonExistingSubject() throws JsonProcessingException {
+        final ReviewerRequest reviewerRequest = new ReviewerRequest()
+                .withCprNumber("1234567890")
+                .withPaycode(42)
+                .withSubjects(List.of(4242));
+
+        final Response response = postResponse("v1/api/reviewers", reviewerRequest);
+        assertThat("response status", response.getStatus(), is(400));
+
+        final ServiceErrorDto serviceError = mapper.readValue(response.readEntity(String.class), ServiceErrorDto.class);
+        assertThat("service error", serviceError.getCode(), is(ServiceErrorCode.INVALID_REQUEST));
+    }
+
+    @Test
+    void createReviewerWithoutNonNullField() throws JsonProcessingException {
+        final ReviewerRequest reviewerRequest = new ReviewerRequest()
+                .withCprNumber("1234567890")
+                .withPaycode(42)
+                .withFirstName("John")
+                .withLastName("Doe")
+                .withAccepts(Collections.emptyList());
+                // missing non-null email
+
+        final Response response = postResponse("v1/api/reviewers", reviewerRequest);
+        assertThat("response status", response.getStatus(), is(400));
+
+        final ServiceErrorDto serviceError = mapper.readValue(response.readEntity(String.class), ServiceErrorDto.class);
+        assertThat("service error", serviceError.getCode(), is(ServiceErrorCode.INVALID_REQUEST));
+    }
 
     @Test
     void getReviewer() throws JsonProcessingException {
@@ -43,6 +119,7 @@ public class ReviewersIT extends ContainerTest {
     }
 
     @Test
+    @Order(1)
     public void listReviewers() throws JsonProcessingException {
         final Reviewer reviewer1 = new Reviewer();
         loadReviewer1(reviewer1);
@@ -63,6 +140,7 @@ public class ReviewersIT extends ContainerTest {
     }
 
     @Test
+    @Order(1)
     public void listReviewersWithWorkloads() throws JsonProcessingException {
         final ReviewerWithWorkloads reviewer1 = new ReviewerWithWorkloads()
                 .withWeekWorkload(0)
