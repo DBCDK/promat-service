@@ -7,7 +7,7 @@ package dk.dbc.promat.service.dto;
 
 public enum ServiceErrorCode {
     INVALID_REQUEST,
-    CASE_EXISTS,
+    FAUST_IN_USE,
     INVALID_STATE,
     FAILED,
     NOT_FOUND,

@@ -12,8 +12,15 @@ public class ServiceErrorException extends Exception {
 
     private ServiceErrorDto serviceErrorDto = new ServiceErrorDto();
 
+    private int httpStatus = 500;
+
     public ServiceErrorException(String reason) {
         super(reason);
+    }
+
+    public ServiceErrorException withHttpStatus(int status) {
+        this.httpStatus = status;
+        return this;
     }
 
     public ServiceErrorException withServiceErrorDto(ServiceErrorDto dto) {
@@ -38,5 +45,9 @@ public class ServiceErrorException extends Exception {
 
     public ServiceErrorDto getServiceErrorDto() {
         return this.serviceErrorDto;
+    }
+
+    public int getHttpStatus() {
+        return httpStatus;
     }
 }
