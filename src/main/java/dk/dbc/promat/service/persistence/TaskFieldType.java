@@ -15,5 +15,9 @@ public enum TaskFieldType {
     BIBLIOGRAPHIC,
     TOPICS,
     BKM,
-    EXPRESS
+    EXPRESS,
+    METAKOMPAS,
+    GENRE,
+    AGE,
+    MATLEVEL
 }
