@@ -84,22 +84,6 @@ public class Cases {
 
         repository.getExclusiveAccessToTable(PromatCase.TABLE_NAME);
 
-        // Check that no existing case exists with the same primary or related faustnumber
-        // as the given primary faustnumber and a state other than CLOSED or DONE
-        if(!Faustnumbers.checkNoOpenCaseWithFaust(entityManager, dto.getPrimaryFaust())) {
-            LOGGER.info("Case with primary or related Faust {} and state <> CLOSED|DONE exists", dto.getPrimaryFaust());
-            return ServiceErrorDto.CaseExists(String.format("Case with primary or related faust {} and status not DONE or CLOSED exists", dto.getPrimaryFaust()));
-        }
-
-        // Check that no existing case exists with the same primary or related faustnumber
-        // as the given relasted fasutnumbers and a state other than CLOSED or DONE
-        if(dto.getRelatedFausts() != null && dto.getRelatedFausts().size() > 0) {
-            if(!Faustnumbers.checkNoOpenCaseWithFaust(entityManager, dto.getRelatedFausts().toArray(String[]::new))) {
-                LOGGER.info("Case with primary or related {} and state <> CLOSED|DONE exists", dto.getRelatedFausts());
-                return ServiceErrorDto.CaseExists(String.format("Case with primary or related faust {} and status not DONE or CLOSED exists", dto.getRelatedFausts()));
-            }
-        }
-
         // Check for acceptable status code
         if( dto.getStatus() != null ) {
             switch( dto.getStatus() ) {
@@ -121,13 +105,21 @@ public class Cases {
                 ? new ArrayList<>()
                 : dto.getRelatedFausts());
         try {
+
+            // Check that the new case does not use any faustnumbers used on any other active case
+            checkValidFaustNumbers(dto);
+
+            // Map simple entities
             subjects = resolveSubjects(dto.getSubjects());
             reviewer = resolveReviewer(dto.getReviewer());
             editor = resolveEditor(dto.getEditor());
+
+            // Create tasks (and update related fausts if needed)
             tasks = createTasks(dto.getTasks(), relatedFausts);
+
         } catch(ServiceErrorException serviceErrorException) {
             LOGGER.info("Received serviceErrorException while mapping entities: {}", serviceErrorException.getMessage());
-            return Response.status(400).entity(serviceErrorException.getServiceErrorDto()).build();
+            return Response.status(serviceErrorException.getHttpStatus()).entity(serviceErrorException.getServiceErrorDto()).build();
         }
 
         // Handle possible change of case status due to assigning an editor.
@@ -363,14 +355,14 @@ public class Cases {
             if(dto.getPrimaryFaust() != null) {
                 if(!Faustnumbers.checkNoOpenCaseWithFaust(entityManager, existing.getId(), dto.getPrimaryFaust())) {
                     LOGGER.info("Case with primary or related faust {} and state <> CLOSED|DONE exists", dto.getPrimaryFaust());
-                    return ServiceErrorDto.CaseExists(String.format("Case with primary or related faust {} and status not DONE or CLOSED exists", dto.getPrimaryFaust()));
+                    return ServiceErrorDto.FaustInUse(String.format("Case with primary or related faust {} and status not DONE or CLOSED exists", dto.getPrimaryFaust()));
                 }
                 existing.setPrimaryFaust(dto.getPrimaryFaust());
             }
             if(dto.getRelatedFausts() != null) {
                 if(!Faustnumbers.checkNoOpenCaseWithFaust(entityManager, existing.getId(), dto.getRelatedFausts().toArray(String[]::new))) {
                     LOGGER.info("Case with primary or related faust {} and state <> CLOSED|DONE exists", dto.getPrimaryFaust());
-                    return ServiceErrorDto.CaseExists(String.format("Case with primary or related fausts {} and status not DONE or CLOSED exists", dto.getRelatedFausts()));
+                    return ServiceErrorDto.FaustInUse(String.format("Case with primary or related fausts {} and status not DONE or CLOSED exists", dto.getRelatedFausts()));
                 }
                 existing.setRelatedFausts(dto.getRelatedFausts());
             }
@@ -412,9 +404,72 @@ public class Cases {
             return Response.ok(existing).build();
         } catch(ServiceErrorException serviceErrorException) {
             LOGGER.info("Received serviceErrorException while mapping entities: {}", serviceErrorException.getMessage());
-            return Response.status(400).entity(serviceErrorException.getServiceErrorDto()).build();
+            return Response.status(serviceErrorException.getHttpStatus()).entity(serviceErrorException.getServiceErrorDto()).build();
+        } catch(Exception exception) {
+            LOGGER.error("Caught exception: {}", exception.getMessage());
+            return ServiceErrorDto.Failed(exception.getMessage());
         }
-        catch(Exception exception) {
+    }
+
+    @POST
+    @Path("cases/{id}/tasks")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response addTask(@PathParam("id") final Integer id, TaskDto dto) {
+        LOGGER.info("cases/{}/tasks (POST) body: {}", id, dto);
+
+        // Lock case and task tables
+        repository.getExclusiveAccessToTable(PromatCase.TABLE_NAME);
+        repository.getExclusiveAccessToTable(PromatTask.TABLE_NAME);
+
+        try {
+
+            // Make sure we got all required fields
+            validateTaskDto(dto);
+
+            // Fetch the case
+            PromatCase promatCase = entityManager.find(PromatCase.class, id);
+            if(promatCase == null) {
+                LOGGER.info("No case with id {}", id);
+                return ServiceErrorDto.NotFound("No such case", String.format("No case with id %d exists", id));
+            }
+
+            // Check that we do not add any targetfausts that is in use
+            if(dto.getTargetFausts() != null) {
+                if(!Faustnumbers.checkNoOpenCaseWithFaust(entityManager, promatCase.getId(), dto.getTargetFausts().toArray(String[]::new))) {
+                    LOGGER.info("Case contains a task with one or more targetFaust {} used by other active cases", dto.getTargetFausts());
+                    return ServiceErrorDto.FaustInUse("One or more targetFausts is used by other active cases");
+                }
+            }
+
+            // Create the new task
+            PromatTask task = new PromatTask()
+                    .withTaskType(dto.getTaskType())
+                    .withTaskFieldType(dto.getTaskFieldType())
+                    .withData(dto.getData())  // null is allowed here since it is the default value anyway
+                    .withCreated(LocalDate.now())
+                    .withPayCode(getPaycodeForTaskType(dto.getTaskType()))
+                    .withTargetFausts(dto.getTargetFausts());
+
+            // Add the new task
+            promatCase.getTasks().add(task);
+
+            // Add new targetfausts
+            if(dto.getTargetFausts() != null && dto.getTargetFausts().size() > 0) {
+                for(String faust : dto.getTargetFausts()) {
+                    if(!promatCase.getRelatedFausts().contains(faust)) {
+                        promatCase.getRelatedFausts().add(faust);
+                    }
+                }
+            }
+
+            return Response.status(201)
+                    .entity(task)
+                    .build();
+        } catch(ServiceErrorException serviceErrorException) {
+            LOGGER.info("Received serviceErrorException while mapping entities: {}", serviceErrorException.getMessage());
+            return Response.status(serviceErrorException.getHttpStatus()).entity(serviceErrorException.getServiceErrorDto()).build();
+        } catch(Exception exception) {
             LOGGER.error("Caught exception: {}", exception.getMessage());
             return ServiceErrorDto.Failed(exception.getMessage());
         }
@@ -431,7 +486,8 @@ public class Cases {
             throw new ServiceErrorException("Attempt to resolve reviewer failed")
                     .withCode(ServiceErrorCode.INVALID_REQUEST)
                     .withCause("No such reviewer")
-                    .withDetails(String.format("Field 'reviewer' contains user id {} which does not exist", reviewerId));
+                    .withDetails(String.format("Field 'reviewer' contains user id {} which does not exist", reviewerId))
+                    .withHttpStatus(400);
         }
         return reviewer;
     }
@@ -447,7 +503,8 @@ public class Cases {
             throw new ServiceErrorException("Attempt to resolve editor failed")
                     .withCode(ServiceErrorCode.INVALID_REQUEST)
                     .withCause("No such editor")
-                    .withDetails(String.format("Field 'editor' contains user id {} which does not exist", editorId));
+                    .withDetails(String.format("Field 'editor' contains user id {} which does not exist", editorId))
+                    .withHttpStatus(400);
         }
         return editor;
     }
@@ -466,7 +523,8 @@ public class Cases {
                 throw new ServiceErrorException("Attempt to resolve subject failed")
                         .withCode(ServiceErrorCode.INVALID_REQUEST)
                         .withCause("No such subject")
-                        .withDetails(String.format("Field 'subject' contains id {} which does not exist", subjectId));
+                        .withDetails(String.format("Field 'subject' contains id {} which does not exist", subjectId))
+                        .withHttpStatus(400);
             }
             subjects.add(subject);
         }
@@ -513,13 +571,7 @@ public class Cases {
 
         if( taskDtos != null && taskDtos.size() > 0) {
             for(TaskDto task : taskDtos) {
-                if(task.getTaskType() == null || task.getTaskFieldType() == null) {
-                    LOGGER.info("Task dto is missing the taskType and/or taskFieldType field");
-                    throw new ServiceErrorException("Task dto is missing the taskType and/or taskFieldType field")
-                            .withCause("Missing required field(s) in the request data")
-                            .withDetails("Fields 'taskType' and 'taskFieldType' must be supplied when creating a new task")
-                            .withCode(ServiceErrorCode.INVALID_REQUEST);
-                }
+                validateTaskDto(task);
 
                 tasks.add(new PromatTask()
                         .withTaskType(task.getTaskType())
@@ -539,5 +591,60 @@ public class Cases {
         }
 
         return tasks;
+    }
+
+    private void validateTaskDto(TaskDto dto) throws ServiceErrorException {
+        if(dto.getTaskType() == null || dto.getTaskFieldType() == null) {
+            LOGGER.info("Task dto is missing the taskType and/or taskFieldType field");
+            throw new ServiceErrorException("Task dto is missing the taskType and/or taskFieldType field")
+                    .withCause("Missing required field(s) in the request data")
+                    .withDetails("Fields 'taskType' and 'taskFieldType' must be supplied when creating a new task")
+                    .withCode(ServiceErrorCode.INVALID_REQUEST)
+                    .withHttpStatus(400);
+        }
+    }
+
+    private void checkValidFaustNumbers(CaseRequestDto dto) throws ServiceErrorException {
+
+        // Check that no existing case exists with the same primary or related faustnumber
+        // as the given primary faustnumber and a state other than CLOSED or DONE
+        if(!Faustnumbers.checkNoOpenCaseWithFaust(entityManager, dto.getPrimaryFaust())) {
+            LOGGER.info("Case with primary or related Faust {} and state <> CLOSED|DONE exists", dto.getPrimaryFaust());
+            throw new ServiceErrorException(String.format("Case with primary or related faust {} and status not DONE or CLOSED exists", dto.getPrimaryFaust()))
+                    .withHttpStatus(409)
+                    .withCode(ServiceErrorCode.FAUST_IN_USE)
+                    .withCause("Faustnumber is in use")
+                    .withDetails(String.format("Case with primary or related faust {} and status not DONE or CLOSED exists", dto.getPrimaryFaust()));
+        }
+
+        // Check that no existing case exists with the same primary or related faustnumber
+        // as the given relasted fasutnumbers and a state other than CLOSED or DONE
+        if(dto.getRelatedFausts() != null && dto.getRelatedFausts().size() > 0) {
+            if(!Faustnumbers.checkNoOpenCaseWithFaust(entityManager, dto.getRelatedFausts().toArray(String[]::new))) {
+                LOGGER.info("Case with primary or related {} and state <> CLOSED|DONE exists", dto.getRelatedFausts());
+                throw new ServiceErrorException(String.format("Case with primary or related faust {} and status not DONE or CLOSED exists", dto.getRelatedFausts()))
+                        .withHttpStatus(409)
+                        .withCode(ServiceErrorCode.FAUST_IN_USE)
+                        .withCause("Faustnumber is in use")
+                        .withDetails(String.format("Case with primary or related faust {} and status not DONE or CLOSED exists", dto.getRelatedFausts()));
+            }
+        }
+
+        // Check that no existing case exists with the same primary or related faustnumber
+        // as the given faustnumbers on any task, and a state other than CLOSED or DONE
+        if( dto.getTasks() != null) {
+            for(TaskDto task : dto.getTasks()) {
+                if(task.getTargetFausts() != null) {
+                    if(!Faustnumbers.checkNoOpenCaseWithFaust(entityManager, task.getTargetFausts().toArray(String[]::new))) {
+                        LOGGER.info("Case contains a task with one or more targetFaust {} used by other active cases", task.getTargetFausts());
+                        throw new ServiceErrorException(String.format("Case contains tasks with one or more targetfausts {} used by other active cases", task.getTargetFausts()))
+                                .withHttpStatus(409)
+                                .withCode(ServiceErrorCode.FAUST_IN_USE)
+                                .withCause("Faustnumber is in use")
+                                .withDetails(String.format("Case contains tasks with one or more targetfausts {} used by other active cases", task.getTargetFausts()));
+                    }
+                }
+            }
+        }
     }
 }

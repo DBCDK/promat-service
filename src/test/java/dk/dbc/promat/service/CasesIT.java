@@ -13,8 +13,10 @@ import dk.dbc.promat.service.dto.TaskDto;
 import dk.dbc.promat.service.persistence.PromatCase;
 import dk.dbc.promat.service.persistence.CaseStatus;
 import dk.dbc.promat.service.persistence.MaterialType;
+import dk.dbc.promat.service.persistence.PromatTask;
 import dk.dbc.promat.service.persistence.Subject;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 
@@ -700,4 +702,199 @@ public class CasesIT extends ContainerTest {
         assertThat("status code", postResponse("v1/api/cases", dto).getStatus(), is(201));
     }
 
+    @Test
+    public void testAddFirstTask() throws JsonProcessingException {
+
+        // Create new case
+        CaseRequestDto dto = new CaseRequestDto()
+                .withPrimaryFaust("12001111")
+                .withTitle("Title for 12001111")
+                .withDetails("Details for 12001111")
+                .withMaterialType(MaterialType.BOOK);
+        Response response = postResponse("v1/api/cases", dto);
+        assertThat("status code", response.getStatus(), is(201));
+        PromatCase created = mapper.readValue(response.readEntity(String.class), PromatCase.class);
+
+        TaskDto taskDto = new TaskDto()
+                .withTaskType(TaskType.GROUP_1_LESS_THAN_100_PAGES)
+                .withTaskFieldType(TaskFieldType.BRIEF)
+                .withData("anoroc kcuf")
+                .withTargetFausts(Arrays.asList("12002222", "12003333"));
+        response = postResponse("v1/api/cases/" + created.getId() + "/tasks", taskDto);
+        assertThat("status code", response.getStatus(), is(201));
+        PromatTask createdTask = mapper.readValue(response.readEntity(String.class), PromatTask.class);
+        assertThat("created task targetfausts is not null", createdTask.getTargetFausts(), is(notNullValue()));
+        assertThat("created task has 2 targetfausts", createdTask.getTargetFausts().size(), is(2));
+
+        // Get the case we created
+        response = getResponse("v1/api/cases/" + created.getId().toString());
+        assertThat("status code", response.getStatus(), is(200));
+        PromatCase fetched = mapper.readValue(response.readEntity(String.class), PromatCase.class);
+
+        // Check that the two targetfausts has been added as related fausts
+        assertThat("case has related fausts", fetched.getRelatedFausts(), is(notNullValue()));
+        assertThat("case has 2 related fausts", fetched.getRelatedFausts().size(), is(2));
+        assertThat("case has the expected 2 related fausts", fetched.getRelatedFausts().stream().sorted().collect(Collectors.toList()).equals(Arrays.asList("12002222", "12003333")));
+
+        // Check that the case now has 1 task which matches the created task
+        assertThat("case tasks is not null", fetched.getTasks(), is(notNullValue()));
+        assertThat("case has 1 task", fetched.getTasks().size(), is(1));
+        assertThat("task is the created task", fetched.getTasks().get(0).equals(createdTask));
+
+        // Check that the case now has 1 task with the expected types and data
+        assertThat("task is expected TaskType", fetched.getTasks().get(0).getTaskType(), is(TaskType.GROUP_1_LESS_THAN_100_PAGES));
+        assertThat("task is expected TaskFieldType", fetched.getTasks().get(0).getTaskFieldType(), is(TaskFieldType.BRIEF));
+        assertThat("task has expected data", fetched.getTasks().get(0).getData().equals("anoroc kcuf"));
+    }
+
+    @Test
+    public void testAddNextTask() throws JsonProcessingException {
+
+        // Create new case
+        CaseRequestDto dto = new CaseRequestDto()
+                .withPrimaryFaust("13001111")
+                .withTitle("Title for 13001111")
+                .withDetails("Details for 13001111")
+                .withMaterialType(MaterialType.BOOK)
+                .withTasks(Arrays.asList(
+                        new TaskDto()
+                                .withTaskType(TaskType.GROUP_1_LESS_THAN_100_PAGES)
+                                .withTaskFieldType(TaskFieldType.BRIEF)
+                ));
+        Response response = postResponse("v1/api/cases", dto);
+        assertThat("status code", response.getStatus(), is(201));
+        PromatCase created = mapper.readValue(response.readEntity(String.class), PromatCase.class);
+        assertThat("case has 1 task", created.getTasks().size(), is(1));
+
+        TaskDto taskDto = new TaskDto()
+                .withTaskType(TaskType.GROUP_1_LESS_THAN_100_PAGES)
+                .withTaskFieldType(TaskFieldType.BRIEF);
+        response = postResponse("v1/api/cases/" + created.getId() + "/tasks", taskDto);
+        assertThat("status code", response.getStatus(), is(201));
+
+        // Get the case we created
+        response = getResponse("v1/api/cases/" + created.getId().toString());
+        assertThat("status code", response.getStatus(), is(200));
+        PromatCase fetched = mapper.readValue(response.readEntity(String.class), PromatCase.class);
+        assertThat("case has 2 tasks", fetched.getTasks().size(), is(2));
+    }
+
+    @Test
+    public void testAddTaskWithFaustInUse() throws JsonProcessingException {
+
+        // Create case 1
+        CaseRequestDto dto = new CaseRequestDto()
+                .withPrimaryFaust("14001111")
+                .withRelatedFausts(Arrays.asList("14002222"))
+                .withTitle("Title for 14001111")
+                .withDetails("Details for 14001111")
+                .withMaterialType(MaterialType.BOOK)
+                .withTasks(Arrays.asList(
+                        new TaskDto()
+                                .withTaskType(TaskType.GROUP_1_LESS_THAN_100_PAGES)
+                                .withTaskFieldType(TaskFieldType.BRIEF)
+                                .withTargetFausts(Arrays.asList("14003333"))
+                ));
+        Response response = postResponse("v1/api/cases", dto);
+        assertThat("status code", response.getStatus(), is(201));
+
+        // Create case 2
+        dto = new CaseRequestDto()
+                .withPrimaryFaust("15001111")
+                .withRelatedFausts(Arrays.asList("15002222"))
+                .withTitle("Title for 15001111")
+                .withDetails("Details for 15001111")
+                .withMaterialType(MaterialType.BOOK)
+                .withTasks(Arrays.asList(
+                        new TaskDto()
+                                .withTaskType(TaskType.GROUP_1_LESS_THAN_100_PAGES)
+                                .withTaskFieldType(TaskFieldType.BRIEF)
+                                .withTargetFausts(Arrays.asList("15003333"))
+                ));
+        response = postResponse("v1/api/cases", dto);
+        assertThat("status code", response.getStatus(), is(201));
+        PromatCase secondTask = mapper.readValue(response.readEntity(String.class), PromatCase.class);
+
+        TaskDto taskDto = new TaskDto()
+                .withTaskType(TaskType.GROUP_1_LESS_THAN_100_PAGES)
+                .withTaskFieldType(TaskFieldType.BRIEF)
+                .withTargetFausts(Arrays.asList("15002222"));
+
+        // Adding a task with a targetfaust used by the case is allowed
+        response = postResponse("v1/api/cases/" + secondTask.getId() + "/tasks", taskDto);
+        assertThat("status code", response.getStatus(), is(201));
+
+        // Adding a task with a targetfaust used by another task on the case is allowed
+        taskDto.setTargetFausts(Arrays.asList("15003333"));
+        response = postResponse("v1/api/cases/" + secondTask.getId() + "/tasks", taskDto);
+        assertThat("status code", response.getStatus(), is(201));
+
+        // Adding a task with a targetfaust used by the another case is not allowed
+        taskDto.setTargetFausts(Arrays.asList("14002222"));
+        response = postResponse("v1/api/cases/" + secondTask.getId() + "/tasks", taskDto);
+        assertThat("status code", response.getStatus(), is(409));
+    }
+
+    @Test
+    public void testAddTaskWithMissingFields() throws JsonProcessingException {
+
+        // Create new case
+        CaseRequestDto dto = new CaseRequestDto()
+                .withPrimaryFaust("16001111")
+                .withTitle("Title for 16001111")
+                .withDetails("Details for 16001111")
+                .withMaterialType(MaterialType.BOOK);
+        Response response = postResponse("v1/api/cases", dto);
+        assertThat("status code", response.getStatus(), is(201));
+        PromatCase created = mapper.readValue(response.readEntity(String.class), PromatCase.class);
+
+        TaskDto taskDto = new TaskDto();
+
+        // Empty dto
+        assertThat("status code", postResponse("v1/api/cases/" + created.getId() + "/tasks", taskDto).getStatus(), is(400));
+
+        // Add TaskType
+        taskDto.setTaskType(TaskType.GROUP_1_LESS_THAN_100_PAGES);
+        assertThat("status code", postResponse("v1/api/cases/" + created.getId() + "/tasks", taskDto).getStatus(), is(400));
+
+        // Add TaskFieldType
+        taskDto.setTaskFieldType(TaskFieldType.BRIEF);
+        assertThat("status code", postResponse("v1/api/cases/" + created.getId() + "/tasks", taskDto).getStatus(), is(201));
+    }
+
+    @Test
+    public void testCreateCaseWithTaskWithUsedFaust() {
+
+        // Create case 1
+        CaseRequestDto dto = new CaseRequestDto()
+                .withPrimaryFaust("17001111")
+                .withRelatedFausts(Arrays.asList("17002222"))
+                .withTitle("Title for 17001111")
+                .withDetails("Details for 17001111")
+                .withMaterialType(MaterialType.BOOK)
+                .withTasks(Arrays.asList(
+                        new TaskDto()
+                                .withTaskType(TaskType.GROUP_1_LESS_THAN_100_PAGES)
+                                .withTaskFieldType(TaskFieldType.BRIEF)
+                                .withTargetFausts(Arrays.asList("17003333"))
+                ));
+        Response response = postResponse("v1/api/cases", dto);
+        assertThat("status code", response.getStatus(), is(201));
+
+        // Create case 2
+        dto = new CaseRequestDto()
+                .withPrimaryFaust("18001111")
+                .withRelatedFausts(Arrays.asList("18002222"))
+                .withTitle("Title for 18001111")
+                .withDetails("Details for 18001111")
+                .withMaterialType(MaterialType.BOOK)
+                .withTasks(Arrays.asList(
+                        new TaskDto()
+                                .withTaskType(TaskType.GROUP_1_LESS_THAN_100_PAGES)
+                                .withTaskFieldType(TaskFieldType.BRIEF)
+                                .withTargetFausts(Arrays.asList("17003333"))
+                ));
+        response = postResponse("v1/api/cases", dto);
+        assertThat("status code", response.getStatus(), is(409));
+    }
 }

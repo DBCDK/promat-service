@@ -527,7 +527,7 @@ components:
       type: string
       enum:
         - INVALID_REQUEST       # Request body contains invalid fields or id's
-        - CASE_EXISTS           # Active case for this/these faust/fausts exists
+        - FAUST_IN_USE          # Active case for this/these faust/fausts exists
         - INVALID_STATE         # Change to a new state was not possible or invalid
         - FAILED                # Some error occurred
         - NOT_FOUND             # Case, Task or other item was not found
