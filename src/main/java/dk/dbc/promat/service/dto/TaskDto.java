@@ -5,12 +5,14 @@
 
 package dk.dbc.promat.service.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import dk.dbc.promat.service.persistence.TaskFieldType;
 import dk.dbc.promat.service.persistence.TaskType;
 
 import java.util.List;
 import java.util.Objects;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class TaskDto {
 
     private TaskType taskType;
