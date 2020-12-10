@@ -151,6 +151,9 @@ public class TasksIT extends ContainerTest {
     @Test
     public void testDeleteTask() throws JsonProcessingException {
 
+        // Try to delete task on non-existing case
+        assertThat("status code", deleteResponse("v1/api/tasks/99999").getStatus(), is(404));
+
         // Check that the testcase is as expected
         Response response = getResponse("v1/api/cases/1");
         assertThat("status code", response.getStatus(), is(200));
@@ -158,10 +161,9 @@ public class TasksIT extends ContainerTest {
         assertThat("number of tasks", existing.getTasks().size(), is(5));
 
         // Delete tasks
-        // Todo: Test deletion of tasks that should not be deletable
-        //assertThat("status code", deleteResponse("v1/api/tasks/1").getStatus(), is(409));
-        //assertThat("status code", deleteResponse("v1/api/tasks/2").getStatus(), is(409));
-        //assertThat("status code", deleteResponse("v1/api/tasks/3").getStatus(), is(409));
+        assertThat("status code", deleteResponse("v1/api/tasks/1").getStatus(), is(401));
+        assertThat("status code", deleteResponse("v1/api/tasks/2").getStatus(), is(401));
+        assertThat("status code", deleteResponse("v1/api/tasks/3").getStatus(), is(401));
         assertThat("status code", deleteResponse("v1/api/tasks/4").getStatus(), is(200));
         assertThat("status code", deleteResponse("v1/api/tasks/5").getStatus(), is(200));
 

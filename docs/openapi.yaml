@@ -454,7 +454,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ServiceError'
-        '409':
+        '401':
           description: Task could not be deleted, check ServiceError in body for specifics
           content:
             application/json:
@@ -631,11 +631,12 @@ components:
       type: string
       enum:
         - EXTERNAL_SERVICE_ERROR  # Error when communicating with external service
-        - INVALID_REQUEST         # Request body contains invalid fields or id's
-        - FAUST_IN_USE            # Active case for this/these faust/fausts exists
-        - INVALID_STATE           # Change to a new state was not possible or invalid
-        - FAILED                  # Some error occurred
-        - NOT_FOUND               # Case, Task or other item was not found
+        - INVALID_REQUEST       # Request body contains invalid fields or id's
+        - FAUST_IN_USE          # Active case for this/these faust/fausts exists
+        - INVALID_STATE         # Change to a new state was not possible or invalid
+        - FAILED                # Some error occurred
+        - NOT_FOUND             # Case, Task or other item was not found
+        - FORBIDDEN             # Operation was forbidden or impossible
 
     SubjectList:
       type: object

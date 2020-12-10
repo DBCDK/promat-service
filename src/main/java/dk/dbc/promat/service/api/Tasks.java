@@ -5,6 +5,7 @@
 
 package dk.dbc.promat.service.api;
 
+import dk.dbc.promat.service.dto.ServiceErrorCode;
 import dk.dbc.promat.service.dto.ServiceErrorDto;
 import dk.dbc.promat.service.dto.TaskDto;
 import dk.dbc.promat.service.persistence.PromatCase;
@@ -82,7 +83,7 @@ public class Tasks {
             return Response.ok(existing).build();
         } catch(ServiceErrorException serviceErrorException) {
             LOGGER.info("Received serviceErrorException while updating task: {}", serviceErrorException.getMessage());
-            return Response.status(400).entity(serviceErrorException.getServiceErrorDto()).build();
+            return Response.status(serviceErrorException.getHttpStatus()).entity(serviceErrorException.getServiceErrorDto()).build();
         } catch(Exception exception) {
             LOGGER.error("Caught exception: {}", exception.getMessage());
             return ServiceErrorDto.Failed(exception.getMessage());
@@ -91,6 +92,7 @@ public class Tasks {
 
     @DELETE
     @Path("tasks/{id}")
+    @Produces(MediaType.APPLICATION_JSON)
     public Response deleteTask(@PathParam("id") final Integer id) {
         LOGGER.info("tasks/{} (DELETE)", id);
 
@@ -100,10 +102,6 @@ public class Tasks {
 
             // Find the case to which the stated task belongs
             PromatCase caseOfTask = getCaseOfTask(id);
-            if( caseOfTask == null ) {
-                LOGGER.info("No case exists with a task with id {}", id);
-                return ServiceErrorDto.NotFound("No such case", String.format("No case exists with a task with id {}", id));
-            }
             LOGGER.info("Task with id {} exist on case {}", id, caseOfTask.getId());
 
             // Find the task to be removed
@@ -112,11 +110,16 @@ public class Tasks {
                     .findFirst()
                     .get();
             if( task == null ) {
-                LOGGER.info("No such task {}", id);
-                return ServiceErrorDto.NotFound("No such task on this case", String.format("Task with id {} does not exist on case with id {}", id, caseOfTask.getId()));
+                // This is highly unexpected!. If we got a case, we must be able to find the task in the list of tasks
+                LOGGER.error("No such task {} allthough we did resolve the case of this task", id);
+                return Response.serverError().entity("Task not found on case which did resolve to this task id").build();
             }
 
-            // Todo: Validate that deletion is possible
+            // Make sure the task can be deleted
+            if( task.getApproved() != null || task.getPayed() != null || (task.getData() != null && !task.getData().isEmpty())) {
+                LOGGER.info("Task is approved, payed or has data. Deletion rejected");
+                return ServiceErrorDto.Forbidden("Not possible", "Task is approved, payed or has data. Deletion is not possible");
+            }
 
             // Delete the task
             LOGGER.info("Deleting task with id {} from case with id {}", task.getId(), caseOfTask.getId());
@@ -124,6 +127,9 @@ public class Tasks {
             entityManager.remove(task);
 
             return Response.ok().build();
+        } catch(ServiceErrorException serviceErrorException) {
+            LOGGER.info("Received serviceErrorException while updating task: {}", serviceErrorException.getMessage());
+            return Response.status(serviceErrorException.getHttpStatus()).entity(serviceErrorException.getServiceErrorDto()).build();
         } catch(Exception exception) {
             LOGGER.error("Caught exception: {}", exception.getMessage());
             return ServiceErrorDto.Failed(exception.getMessage());
@@ -135,10 +141,15 @@ public class Tasks {
                 PromatCase.GET_CASE_NAME, PromatCase.class);
         query.setParameter("taskid", taskId);
 
-        PromatCase caseOfTask = query.getSingleResult();
+        PromatCase caseOfTask = query.getResultList().stream().findFirst().orElse(null);
+
         if( caseOfTask == null) {
             LOGGER.info(String.format("Unable to load  case of task with id %d", taskId));
-            throw new ServiceErrorException(String.format("Task with id %d do not belong to any task", taskId));
+            throw new ServiceErrorException("Case not found")
+                    .withCause("Case not found")
+                    .withDetails(String.format("Task with id %d do not belong to any task", taskId))
+                    .withCode(ServiceErrorCode.NOT_FOUND)
+                    .withHttpStatus(404);
         }
 
         return entityManager.merge(caseOfTask);
