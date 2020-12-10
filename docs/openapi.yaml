@@ -207,7 +207,7 @@ paths:
     get:
       tags:
         - cases
-      summary: Returns list of cases for the given faustnumber
+      summary: Returns list of cases
       operationId: getCasesForFaust
       parameters:
         - in: query
@@ -537,7 +537,6 @@ components:
         note:
           type: string
           description: editors notes on the reviewer
-
       required:
         - id
         - firstName
@@ -611,6 +610,20 @@ components:
         - firstName
         - lastName
         - email
+
+    UserSummary:
+      type: object
+      properties:
+        id:
+          type: integer
+        firstName:
+          type: string
+        lastName:
+          type: string
+      required:
+        - id
+        - firstName
+        - lastName
 
     ServiceError:
       type: object
@@ -741,6 +754,14 @@ components:
             type: string
             description: Other faustnumbers that should link to the review produced by this case
           minItems: 0
+        reviewer:
+          $ref: '#/components/schemas/UserSummary'
+          nullable: true
+          description: Summary for the selected reviewer
+        editor:
+            $ref: '#/components/schemas/UserSummary'
+            nullable: true
+            description: Summary for the selected editor
         created:
           type: string
           format: date-time
