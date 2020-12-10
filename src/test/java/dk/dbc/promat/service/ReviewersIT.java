@@ -34,8 +34,8 @@ public class ReviewersIT extends ContainerTest {
     @Test
     void createReviewer() throws JsonProcessingException {
         final ReviewerRequest reviewerRequest = new ReviewerRequest()
-                .withCprNumber("1234567890")
-                .withPaycode(42)
+                .withCprNumber("2407776666")
+                .withPaycode(6666)
                 .withFirstName("John")
                 .withLastName("Doe")
                 .withEmail("john@doe.com");
@@ -44,7 +44,7 @@ public class ReviewersIT extends ContainerTest {
         assertThat("response status", response.getStatus(), is(201));
 
         final Reviewer reviewer = mapper.readValue(response.readEntity(String.class), Reviewer.class);
-        assertThat("reviewer entity", reviewer.getFirstName(), is("John"));
+        assertThat("reviewer entity", reviewer.getCulrId(), is("8ed780d6-46eb-4706-a4dc-a59f412d16c0"));
     }
 
     @Test
@@ -72,8 +72,8 @@ public class ReviewersIT extends ContainerTest {
     @Test
     void createReviewerWithNonExistingSubject() throws JsonProcessingException {
         final ReviewerRequest reviewerRequest = new ReviewerRequest()
-                .withCprNumber("1234567890")
-                .withPaycode(42)
+                .withCprNumber("2407776666")
+                .withPaycode(6666)
                 .withSubjects(List.of(4242));
 
         final Response response = postResponse("v1/api/reviewers", reviewerRequest);
@@ -86,8 +86,8 @@ public class ReviewersIT extends ContainerTest {
     @Test
     void createReviewerWithoutNonNullField() throws JsonProcessingException {
         final ReviewerRequest reviewerRequest = new ReviewerRequest()
-                .withCprNumber("1234567890")
-                .withPaycode(42)
+                .withCprNumber("2407776666")
+                .withPaycode(6666)
                 .withFirstName("John")
                 .withLastName("Doe")
                 .withAccepts(Collections.emptyList());

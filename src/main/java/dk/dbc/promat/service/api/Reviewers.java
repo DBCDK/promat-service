@@ -5,6 +5,7 @@
 
 package dk.dbc.promat.service.api;
 
+import dk.dbc.connector.culr.CulrConnectorException;
 import dk.dbc.promat.service.dto.ReviewerList;
 import dk.dbc.promat.service.dto.ReviewerRequest;
 import dk.dbc.promat.service.dto.ReviewerWithWorkloads;
@@ -44,6 +45,9 @@ public class Reviewers {
 
     @EJB Repository repository;
 
+    @Inject
+    CulrHandler culrHandler;
+
     @GET
     @Path("{id}")
     @Produces({MediaType.APPLICATION_JSON})
@@ -57,7 +61,7 @@ public class Reviewers {
 
     @POST
     @Produces({MediaType.APPLICATION_JSON})
-    public Response createReviewer(ReviewerRequest reviewerRequest) {
+    public Response createReviewer(ReviewerRequest reviewerRequest) throws CulrConnectorException {
         final String cprNumber = reviewerRequest.getCprNumber();
         if (cprNumber == null || cprNumber.isBlank()) {
             return ServiceErrorDto.InvalidRequest("Missing required field in the request data",
@@ -70,7 +74,12 @@ public class Reviewers {
                     "Field 'paycode' must be supplied when creating a new reviewer");
         }
 
-        // TODO: 09/12/2020 CULR service interaction
+        final String culrId;
+        try {
+            culrId = culrHandler.createCulrAccount(cprNumber, String.valueOf(paycode));
+        } catch (ServiceErrorException e) {
+            return Response.status(500).entity(e.getServiceErrorDto()).build();
+        }
 
         try {
             final Reviewer entity = new Reviewer()
@@ -86,6 +95,8 @@ public class Reviewers {
                     .withHiatus_end(reviewerRequest.getHiatusEnd())
                     .withSubjects(repository.resolveSubjects(reviewerRequest.getSubjects()))
                     .withAccepts(reviewerRequest.getAccepts());
+
+            entity.setCulrId(culrId);
 
             entityManager.persist(entity);
             entityManager.flush();
