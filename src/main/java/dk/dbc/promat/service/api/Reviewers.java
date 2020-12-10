@@ -51,7 +51,7 @@ public class Reviewers {
     @GET
     @Path("{id}")
     @Produces({MediaType.APPLICATION_JSON})
-    public Response getEditor(@PathParam("id") Integer id) {
+    public Response getReviewer(@PathParam("id") Integer id) {
         final Reviewer reviewer = entityManager.find(Reviewer.class, id);
         if (reviewer == null) {
             return Response.status(404).build();
