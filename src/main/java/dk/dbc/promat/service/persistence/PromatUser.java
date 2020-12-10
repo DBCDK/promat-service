@@ -5,6 +5,8 @@
 
 package dk.dbc.promat.service.persistence;
 
+import com.fasterxml.jackson.annotation.JsonView;
+
 import javax.persistence.Column;
 import javax.persistence.ColumnResult;
 import javax.persistence.ConstructorResult;
@@ -46,19 +48,31 @@ public abstract class PromatUser {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @JsonView({CaseView.CaseSummary.class})
     protected Integer id;
 
     // update/insert is managed by discriminator mechanics
     @Column(nullable = false, insertable = false, updatable = false)
     @Convert(converter = RoleConverter.class)
+    @JsonView({CaseView.Case.class})
     protected Role role;
 
+    @JsonView({CaseView.Case.class})
     protected boolean active;
 
+    @JsonView({CaseView.Case.class})
     protected String culrId;
+
+    @JsonView({CaseView.CaseSummary.class})
     protected String firstName;
+
+    @JsonView({CaseView.CaseSummary.class})
     protected String lastName;
+
+    @JsonView({CaseView.Case.class})
     protected String email;
+
+    @JsonView({CaseView.Case.class})
     protected String phone;
 
     public Integer getId() {
