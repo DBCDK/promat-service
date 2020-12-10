@@ -7,29 +7,19 @@ package dk.dbc.promat.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import dk.dbc.promat.service.dto.CaseRequestDto;
-import dk.dbc.promat.service.dto.CaseSummaryList;
 import dk.dbc.promat.service.dto.TaskDto;
-import dk.dbc.promat.service.persistence.CaseStatus;
 import dk.dbc.promat.service.persistence.MaterialType;
 import dk.dbc.promat.service.persistence.PromatCase;
 import dk.dbc.promat.service.persistence.PromatTask;
-import dk.dbc.promat.service.persistence.Subject;
 import dk.dbc.promat.service.persistence.TaskFieldType;
 import dk.dbc.promat.service.persistence.TaskType;
-import org.hamcrest.core.IsNull;
 import org.junit.jupiter.api.Test;
 
 import javax.ws.rs.core.Response;
-import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.core.Is.is;
 
@@ -156,5 +146,31 @@ public class TasksIT extends ContainerTest {
         dto = new TaskDto().withTargetFausts(Arrays.asList("004444"));
         response = putResponse("v1/api/tasks/" + taskNoTargetFaust.getId(), dto);
         assertThat("status code", response.getStatus(), is(400));
+    }
+
+    @Test
+    public void testDeleteTask() throws JsonProcessingException {
+
+        // Check that the testcase is as expected
+        Response response = getResponse("v1/api/cases/1");
+        assertThat("status code", response.getStatus(), is(200));
+        PromatCase existing = mapper.readValue(response.readEntity(String.class), PromatCase.class);
+        assertThat("number of tasks", existing.getTasks().size(), is(5));
+
+        // Delete tasks
+        // Todo: Test deletion of tasks that should not be deletable
+        //assertThat("status code", deleteResponse("v1/api/tasks/1").getStatus(), is(409));
+        //assertThat("status code", deleteResponse("v1/api/tasks/2").getStatus(), is(409));
+        //assertThat("status code", deleteResponse("v1/api/tasks/3").getStatus(), is(409));
+        assertThat("status code", deleteResponse("v1/api/tasks/4").getStatus(), is(200));
+        assertThat("status code", deleteResponse("v1/api/tasks/5").getStatus(), is(200));
+
+        // Testcase should now contain only two tasks
+        response = getResponse("v1/api/cases/1");
+        assertThat("status code", response.getStatus(), is(200));
+        existing = mapper.readValue(response.readEntity(String.class), PromatCase.class);
+        assertThat("number of tasks", existing.getTasks().size(), is(3));
+        assertThat("expected tasks", existing.getTasks().stream().map(task -> task.getId()).sorted().collect(Collectors.toList()),
+                is(Arrays.asList(1, 2, 3)));
     }
 }

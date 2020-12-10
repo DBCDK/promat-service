@@ -20,6 +20,7 @@ import javax.inject.Inject;
 import javax.persistence.EntityManager;
 import javax.persistence.TypedQuery;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -82,6 +83,47 @@ public class Tasks {
         } catch(ServiceErrorException serviceErrorException) {
             LOGGER.info("Received serviceErrorException while updating task: {}", serviceErrorException.getMessage());
             return Response.status(400).entity(serviceErrorException.getServiceErrorDto()).build();
+        } catch(Exception exception) {
+            LOGGER.error("Caught exception: {}", exception.getMessage());
+            return ServiceErrorDto.Failed(exception.getMessage());
+        }
+    }
+
+    @DELETE
+    @Path("tasks/{id}")
+    public Response deleteTask(@PathParam("id") final Integer id) {
+        LOGGER.info("tasks/{} (DELETE)", id);
+
+        try {
+
+            /* Locking is not needed since removing a task does not modify the list of related faustnumbers */
+
+            // Find the case to which the stated task belongs
+            PromatCase caseOfTask = getCaseOfTask(id);
+            if( caseOfTask == null ) {
+                LOGGER.info("No case exists with a task with id {}", id);
+                return ServiceErrorDto.NotFound("No such case", String.format("No case exists with a task with id {}", id));
+            }
+            LOGGER.info("Task with id {} exist on case {}", id, caseOfTask.getId());
+
+            // Find the task to be removed
+            PromatTask task = caseOfTask.getTasks().stream()
+                    .filter(t -> t.getId() == id)
+                    .findFirst()
+                    .get();
+            if( task == null ) {
+                LOGGER.info("No such task {}", id);
+                return ServiceErrorDto.NotFound("No such task on this case", String.format("Task with id {} does not exist on case with id {}", id, caseOfTask.getId()));
+            }
+
+            // Todo: Validate that deletion is possible
+
+            // Delete the task
+            LOGGER.info("Deleting task with id {} from case with id {}", task.getId(), caseOfTask.getId());
+            caseOfTask.getTasks().remove(task);
+            entityManager.remove(task);
+
+            return Response.ok().build();
         } catch(Exception exception) {
             LOGGER.error("Caught exception: {}", exception.getMessage());
             return ServiceErrorDto.Failed(exception.getMessage());

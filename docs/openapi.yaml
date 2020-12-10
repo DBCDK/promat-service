@@ -433,6 +433,33 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ServiceError'
+    delete:
+      tags:
+        - tasks
+      summary: Delete existing task
+      operationId: deleteTask
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            description: Task id
+      responses:
+        '200':
+          description: successful operation
+        '404':
+          description: Task not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '409':
+          description: Task could not be deleted, check ServiceError in body for specifics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
 
 components:
   schemas:
