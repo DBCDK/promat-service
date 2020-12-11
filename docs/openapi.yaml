@@ -759,9 +759,9 @@ components:
           nullable: true
           description: Summary for the selected reviewer
         editor:
-            $ref: '#/components/schemas/UserSummary'
-            nullable: true
-            description: Summary for the selected editor
+          $ref: '#/components/schemas/UserSummary'
+          nullable: true
+          description: Summary for the selected editor
         created:
           type: string
           format: date-time
