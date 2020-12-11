@@ -218,30 +218,75 @@ public class Reviewer extends PromatUser {
         return this;
     }
 
+
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof Reviewer)) {
+            return false;
+        }
 
         Reviewer reviewer = (Reviewer) o;
 
-        if (address != null ? !address.equals(reviewer.address) : reviewer.address != null) return false;
-        if (institution != null ? !institution.equals(reviewer.institution) : reviewer.institution != null)
+        if (active != reviewer.active) {
             return false;
-        if (paycode != null ? !paycode.equals(reviewer.paycode) : reviewer.paycode != null) return false;
-        if (hiatus_begin != null ? !hiatus_begin.equals(reviewer.hiatus_begin) : reviewer.hiatus_begin != null)
+        }
+        if (id != null ? !id.equals(reviewer.id) : reviewer.id != null) {
             return false;
-        if (hiatus_end != null ? !hiatus_end.equals(reviewer.hiatus_end) : reviewer.hiatus_end != null) return false;
-        if (note != null ? !note.equals(reviewer.note) : reviewer.note != null) return false;
-        if (subjects != null ? !subjects.equals(reviewer.subjects) : reviewer.subjects != null) return false;
+        }
+        if (culrId != null ? !culrId.equals(reviewer.culrId) : reviewer.culrId != null) {
+            return false;
+        }
+        if (firstName != null ? !firstName.equals(reviewer.firstName) : reviewer.firstName != null) {
+            return false;
+        }
+        if (lastName != null ? !lastName.equals(reviewer.lastName) : reviewer.lastName != null) {
+            return false;
+        }
+        if (email != null ? !email.equals(reviewer.email) : reviewer.email != null) {
+            return false;
+        }
+        if (phone != null ? !phone.equals(reviewer.phone) : reviewer.phone != null) {
+            return false;
+        }
+        if (address != null ? !address.equals(reviewer.address) : reviewer.address != null) {
+            return false;
+        }
+        if (institution != null ? !institution.equals(reviewer.institution) : reviewer.institution != null) {
+            return false;
+        }
+        if (paycode != null ? !paycode.equals(reviewer.paycode) : reviewer.paycode != null) {
+            return false;
+        }
+        if (hiatus_begin != null ? !hiatus_begin.equals(reviewer.hiatus_begin) : reviewer.hiatus_begin != null) {
+            return false;
+        }
+        if (hiatus_end != null ? !hiatus_end.equals(reviewer.hiatus_end) : reviewer.hiatus_end != null) {
+            return false;
+        }
+        if (note != null ? !note.equals(reviewer.note) : reviewer.note != null) {
+            return false;
+        }
+        if (subjects != null ? !subjects.equals(reviewer.subjects) : reviewer.subjects != null) {
+            return false;
+        }
         return accepts != null ? accepts.equals(reviewer.accepts) : reviewer.accepts == null;
     }
 
     @Override
     public int hashCode() {
-        int result = address != null ? address.hashCode() : 0;
-        result = 31 * result + (institution != null ? institution.hashCode() : 0);
-        result = 31 * result + (paycode != null ? paycode.hashCode() : 0);
+        int result = id.hashCode();
+        result = 31 * result + (active ? 1 : 0);
+        result = 31 * result + (culrId != null ? culrId.hashCode() : 0);
+        result = 31 * result + (firstName != null ? firstName.hashCode() : 0);
+        result = 31 * result + (lastName != null ? lastName.hashCode() : 0);
+        result = 31 * result + (email != null ? email.hashCode() : 0);
+        result = 31 * result + (phone != null ? phone.hashCode() : 0);
+        result = 31 * result + address.hashCode();
+        result = 31 * result + institution.hashCode();
+        result = 31 * result + paycode.hashCode();
         result = 31 * result + (hiatus_begin != null ? hiatus_begin.hashCode() : 0);
         result = 31 * result + (hiatus_end != null ? hiatus_end.hashCode() : 0);
         result = 31 * result + (note != null ? note.hashCode() : 0);
