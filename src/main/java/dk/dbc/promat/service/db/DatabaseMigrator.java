@@ -42,6 +42,7 @@ public class DatabaseMigrator {
                 .table("schema_version")
                 .dataSource(dataSource)
                 .locations("classpath:dk/dbc/promat/service/db/migration")
+                .baselineOnMigrate(true)
                 .load();
         for (MigrationInfo info : flyway.info().all()) {
             LOGGER.info("database migration {} : {} from file '{}'",

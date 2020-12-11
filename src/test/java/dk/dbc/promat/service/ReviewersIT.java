@@ -7,6 +7,7 @@ package dk.dbc.promat.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
+import dk.dbc.promat.service.db.DatabaseMigrator;
 import dk.dbc.promat.service.dto.ReviewerList;
 import dk.dbc.promat.service.dto.ReviewerWithWorkloads;
 import dk.dbc.promat.service.persistence.Address;
@@ -18,11 +19,14 @@ import javax.ws.rs.core.Response;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 public class ReviewersIT extends ContainerTest {
+    private static final Logger LOGGER = LoggerFactory.getLogger(ReviewersIT.class);
 
     @Test
     void getReviewer() throws JsonProcessingException {
@@ -33,6 +37,7 @@ public class ReviewersIT extends ContainerTest {
         assertThat("response status", response.getStatus(), is(200));
 
         final Reviewer reviewer = mapper.readValue(response.readEntity(String.class), Reviewer.class);
+
         assertThat("reviewer", reviewer, is(expectedReviewer));
     }
 
@@ -85,6 +90,7 @@ public class ReviewersIT extends ContainerTest {
         final ReviewerList<ReviewerWithWorkloads> actual = mapper.readValue(
                 response.readEntity(String.class), new TypeReference<>() {});
 
+
         assertThat("List of reviewers is just 'Hans Hansen' and 'Ole Olsen'",
                 actual, is(expected));
     }
@@ -116,6 +122,7 @@ public class ReviewersIT extends ContainerTest {
         reviewer.setHiatus_end(LocalDate.parse("2020-11-01"));
         reviewer.setAccepts(List.of(
                 Reviewer.Accepts.MULTIMEDIA, Reviewer.Accepts.PS4, Reviewer.Accepts.PS5));
+        reviewer.setNote("note1");
     }
 
     private void loadReviewer2(Reviewer reviewer) {
@@ -141,5 +148,6 @@ public class ReviewersIT extends ContainerTest {
         reviewer.setHiatus_end(LocalDate.parse("2020-12-01"));
         reviewer.setAccepts(List.of(
                 Reviewer.Accepts.MULTIMEDIA, Reviewer.Accepts.PS4, Reviewer.Accepts.PS5));
+        reviewer.setNote("note2");
     }
 }

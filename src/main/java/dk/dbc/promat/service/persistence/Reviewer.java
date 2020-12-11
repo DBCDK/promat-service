@@ -7,6 +7,7 @@ package dk.dbc.promat.service.persistence;
 
 import dk.dbc.promat.service.dto.ReviewerWithWorkloads;
 
+import java.util.Objects;
 import javax.persistence.ColumnResult;
 import javax.persistence.Convert;
 import javax.persistence.DiscriminatorValue;
@@ -79,6 +80,7 @@ public class Reviewer extends PromatUser {
 
     protected LocalDate hiatus_begin;
     protected LocalDate hiatus_end;
+    protected String note;
 
     @OneToMany(fetch = FetchType.EAGER)
     @JoinTable (
@@ -147,6 +149,10 @@ public class Reviewer extends PromatUser {
         this.accepts = accepts;
     }
 
+    public String getNote() { return note; }
+
+    public void setNote(String note) { this.note = note; }
+
     public Reviewer withId(Integer id) {
         this.id = id;
         return this;
@@ -207,73 +213,38 @@ public class Reviewer extends PromatUser {
         return this;
     }
 
+    public Reviewer withNote(String note) {
+        this.note = note;
+        return this;
+    }
+
     @Override
     public boolean equals(Object o) {
-        if (this == o) {
-            return true;
-        }
-        if (o == null || getClass() != o.getClass()) {
-            return false;
-        }
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
 
         Reviewer reviewer = (Reviewer) o;
 
-        if (active != reviewer.active) {
+        if (address != null ? !address.equals(reviewer.address) : reviewer.address != null) return false;
+        if (institution != null ? !institution.equals(reviewer.institution) : reviewer.institution != null)
             return false;
-        }
-        if (id != null ? !id.equals(reviewer.id) : reviewer.id != null) {
+        if (paycode != null ? !paycode.equals(reviewer.paycode) : reviewer.paycode != null) return false;
+        if (hiatus_begin != null ? !hiatus_begin.equals(reviewer.hiatus_begin) : reviewer.hiatus_begin != null)
             return false;
-        }
-        if (culrId != null ? !culrId.equals(reviewer.culrId) : reviewer.culrId != null) {
-            return false;
-        }
-        if (firstName != null ? !firstName.equals(reviewer.firstName) : reviewer.firstName != null) {
-            return false;
-        }
-        if (lastName != null ? !lastName.equals(reviewer.lastName) : reviewer.lastName != null) {
-            return false;
-        }
-        if (email != null ? !email.equals(reviewer.email) : reviewer.email != null) {
-            return false;
-        }
-        if (phone != null ? !phone.equals(reviewer.phone) : reviewer.phone != null) {
-            return false;
-        }
-        if (address != null ? !address.equals(reviewer.address) : reviewer.address != null) {
-            return false;
-        }
-        if (institution != null ? !institution.equals(reviewer.institution) : reviewer.institution != null) {
-            return false;
-        }
-        if (paycode != null ? !paycode.equals(reviewer.paycode) : reviewer.paycode != null) {
-            return false;
-        }
-        if (hiatus_begin != null ? !hiatus_begin.equals(reviewer.hiatus_begin) : reviewer.hiatus_begin != null) {
-            return false;
-        }
-        if (hiatus_end != null ? !hiatus_end.equals(reviewer.hiatus_end) : reviewer.hiatus_end != null) {
-            return false;
-        }
-        if (subjects != null ? !subjects.equals(reviewer.subjects) : reviewer.subjects != null) {
-            return false;
-        }
+        if (hiatus_end != null ? !hiatus_end.equals(reviewer.hiatus_end) : reviewer.hiatus_end != null) return false;
+        if (note != null ? !note.equals(reviewer.note) : reviewer.note != null) return false;
+        if (subjects != null ? !subjects.equals(reviewer.subjects) : reviewer.subjects != null) return false;
         return accepts != null ? accepts.equals(reviewer.accepts) : reviewer.accepts == null;
     }
 
     @Override
     public int hashCode() {
-        int result = id.hashCode();
-        result = 31 * result + (active ? 1 : 0);
-        result = 31 * result + (culrId != null ? culrId.hashCode() : 0);
-        result = 31 * result + (firstName != null ? firstName.hashCode() : 0);
-        result = 31 * result + (lastName != null ? lastName.hashCode() : 0);
-        result = 31 * result + (email != null ? email.hashCode() : 0);
-        result = 31 * result + (phone != null ? phone.hashCode() : 0);
-        result = 31 * result + address.hashCode();
-        result = 31 * result + institution.hashCode();
-        result = 31 * result + paycode.hashCode();
+        int result = address != null ? address.hashCode() : 0;
+        result = 31 * result + (institution != null ? institution.hashCode() : 0);
+        result = 31 * result + (paycode != null ? paycode.hashCode() : 0);
         result = 31 * result + (hiatus_begin != null ? hiatus_begin.hashCode() : 0);
         result = 31 * result + (hiatus_end != null ? hiatus_end.hashCode() : 0);
+        result = 31 * result + (note != null ? note.hashCode() : 0);
         result = 31 * result + (subjects != null ? subjects.hashCode() : 0);
         result = 31 * result + (accepts != null ? accepts.hashCode() : 0);
         return result;
@@ -296,6 +267,7 @@ public class Reviewer extends PromatUser {
                 ", hiatus_end=" + hiatus_end +
                 ", subjects=" + subjects +
                 ", accepts=" + accepts +
+                ", note='" + note + '\'' +
                 '}';
     }
 
@@ -314,6 +286,7 @@ public class Reviewer extends PromatUser {
         reviewerWithWorkloads.setHiatus_begin(hiatus_begin);
         reviewerWithWorkloads.setHiatus_end(hiatus_end);
         reviewerWithWorkloads.setAccepts(accepts);
+        reviewerWithWorkloads.setNote(note);
         return reviewerWithWorkloads;
     }
 }
