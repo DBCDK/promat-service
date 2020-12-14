@@ -5,16 +5,24 @@
 
 package dk.dbc.promat.service.api;
 
+import dk.dbc.connector.culr.CulrConnectorException;
 import dk.dbc.promat.service.dto.ReviewerList;
+import dk.dbc.promat.service.dto.ReviewerRequest;
 import dk.dbc.promat.service.dto.ReviewerWithWorkloads;
+import dk.dbc.promat.service.dto.ServiceErrorDto;
 import dk.dbc.promat.service.persistence.PromatEntityManager;
+import dk.dbc.promat.service.persistence.Repository;
 import dk.dbc.promat.service.persistence.Reviewer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.inject.Inject;
 import javax.persistence.EntityManager;
 import javax.persistence.TypedQuery;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -29,19 +37,77 @@ import java.util.stream.Collectors;
 @Stateless
 @Path("reviewers")
 public class Reviewers {
+    private static final Logger LOGGER = LoggerFactory.getLogger(Reviewers.class);
+
     @Inject
     @PromatEntityManager
     EntityManager entityManager;
 
+    @EJB Repository repository;
+
+    @Inject
+    CulrHandler culrHandler;
+
     @GET
     @Path("{id}")
     @Produces({MediaType.APPLICATION_JSON})
-    public Response getEditor(@PathParam("id") Integer id) {
+    public Response getReviewer(@PathParam("id") Integer id) {
         final Reviewer reviewer = entityManager.find(Reviewer.class, id);
         if (reviewer == null) {
             return Response.status(404).build();
         }
         return Response.ok(reviewer).build();
+    }
+
+    @POST
+    @Produces({MediaType.APPLICATION_JSON})
+    public Response createReviewer(ReviewerRequest reviewerRequest) throws CulrConnectorException {
+        final String cprNumber = reviewerRequest.getCprNumber();
+        if (cprNumber == null || cprNumber.isBlank()) {
+            return ServiceErrorDto.InvalidRequest("Missing required field in the request data",
+                    "Field 'cprNumber' must be supplied when creating a new reviewer");
+        }
+
+        final Integer paycode = reviewerRequest.getPaycode();
+        if (paycode == null) {
+            return ServiceErrorDto.InvalidRequest("Missing required field in the request data",
+                    "Field 'paycode' must be supplied when creating a new reviewer");
+        }
+
+        final String culrId;
+        try {
+            culrId = culrHandler.createCulrAccount(cprNumber, String.valueOf(paycode));
+        } catch (ServiceErrorException e) {
+            return Response.status(500).entity(e.getServiceErrorDto()).build();
+        }
+
+        try {
+            final Reviewer entity = new Reviewer()
+                    .withActive(reviewerRequest.isActive())
+                    .withFirstName(reviewerRequest.getFirstName())
+                    .withLastName(reviewerRequest.getLastName())
+                    .withEmail(reviewerRequest.getEmail())
+                    .withPhone(reviewerRequest.getPhone())
+                    .withInstitution(reviewerRequest.getInstitution())
+                    .withPaycode(reviewerRequest.getPaycode())
+                    .withAddress(reviewerRequest.getAddress())
+                    .withHiatus_begin(reviewerRequest.getHiatusBegin())
+                    .withHiatus_end(reviewerRequest.getHiatusEnd())
+                    .withSubjects(repository.resolveSubjects(reviewerRequest.getSubjects()))
+                    .withAccepts(reviewerRequest.getAccepts());
+
+            entity.setCulrId(culrId);
+
+            entityManager.persist(entity);
+            entityManager.flush();
+
+            LOGGER.info("Created new reviewer with ID {} for request {}", entity.getId(), reviewerRequest);
+            return Response.status(201)
+                    .entity(entity)
+                    .build();
+        } catch (ServiceErrorException e) {
+            return Response.status(400).entity(e.getServiceErrorDto()).build();
+        }
     }
 
     @GET

@@ -97,7 +97,7 @@ public class Cases {
         }
 
         // Map foreign entities and create tasks
-        ArrayList<Subject> subjects;
+        List<Subject> subjects;
         Reviewer reviewer;
         Editor editor;
         List<PromatTask> tasks;
@@ -105,12 +105,11 @@ public class Cases {
                 ? new ArrayList<>()
                 : dto.getRelatedFausts());
         try {
-
             // Check that the new case does not use any faustnumbers used on any other active case
             checkValidFaustNumbers(dto);
 
             // Map simple entities
-            subjects = resolveSubjects(dto.getSubjects());
+            subjects = repository.resolveSubjects(dto.getSubjects());
             reviewer = resolveReviewer(dto.getReviewer());
             editor = resolveEditor(dto.getEditor());
 
@@ -376,7 +375,7 @@ public class Cases {
                 existing.setEditor(resolveEditor(dto.getEditor()));
             }
             if(dto.getSubjects() != null) {
-                existing.setSubjects(resolveSubjects(dto.getSubjects()));
+                existing.setSubjects(repository.resolveSubjects(dto.getSubjects()));
             }
             if(dto.getDeadline() != null) {
                 existing.setDeadline(LocalDate.parse(dto.getDeadline()));
@@ -507,28 +506,6 @@ public class Cases {
                     .withHttpStatus(400);
         }
         return editor;
-    }
-
-    public ArrayList<Subject> resolveSubjects(List<Integer> subjectIds) throws ServiceErrorException {
-        ArrayList<Subject> subjects = new ArrayList<>();
-
-        if(subjectIds == null || subjectIds.size() == 0) {
-            return subjects;
-        }
-
-        for(int subjectId : subjectIds) {
-            Subject subject = entityManager.find(Subject.class, subjectId);
-            if(subject == null) {
-                LOGGER.info("Attempt to resolve subject {} failed. No such subject", subjectId);
-                throw new ServiceErrorException("Attempt to resolve subject failed")
-                        .withCode(ServiceErrorCode.INVALID_REQUEST)
-                        .withCause("No such subject")
-                        .withDetails(String.format("Field 'subject' contains id {} which does not exist", subjectId))
-                        .withHttpStatus(400);
-            }
-            subjects.add(subject);
-        }
-        return subjects;
     }
 
     private String getPaycodeForTaskType(TaskType taskType) {

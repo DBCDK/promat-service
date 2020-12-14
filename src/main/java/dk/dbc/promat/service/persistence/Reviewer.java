@@ -178,6 +178,11 @@ public class Reviewer extends PromatUser {
         return this;
     }
 
+    public Reviewer withPhone(String phone) {
+        this.phone = phone;
+        return this;
+    }
+
     public Reviewer withAddress(Address address) {
         this.address = address;
         return this;

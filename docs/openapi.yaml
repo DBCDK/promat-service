@@ -55,6 +55,36 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ServiceError'
+    post:
+      tags:
+        - reviewers
+      summary: Create reviewer
+      operationId: createReviewer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReviewerRequest'
+      responses:
+        '201':
+          description: reviewer successfully created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Reviewer'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '500':
+          description: On failure from external CULR service
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
 
   /reviewers/{id}:
     get:
@@ -492,6 +522,50 @@ components:
         - subjects
         - accepts
 
+    ReviewerRequest:
+      type: object
+      properties:
+        cprNumber:
+          type: string
+        firstName:
+          type: string
+        lastName:
+          type: string
+        email:
+          type: string
+        phone:
+          type: string
+        address:
+          $ref: '#/components/schemas/Address'
+        institution:
+          type: string
+        paycode:
+          type: integer
+        hiatus_begin:
+          type: string
+          format: date
+        hiatus_end:
+          type: string
+          format: date
+        subjects:
+          type: array
+          items:
+            type: integer
+          minItems: 0
+          nullable: true
+          description: IDs of subjects covered by this reviewer
+        accepts:
+          type: array
+          items:
+            $ref: '#/components/schemas/ReviewerAccepts'
+
+      required:
+        - cprNumber
+        - firstName
+        - lastName
+        - email
+        - paycode
+
     Editor:
       type: object
       properties:
@@ -529,11 +603,12 @@ components:
     ServiceErrorCode:
       type: string
       enum:
-        - INVALID_REQUEST       # Request body contains invalid fields or id's
-        - FAUST_IN_USE          # Active case for this/these faust/fausts exists
-        - INVALID_STATE         # Change to a new state was not possible or invalid
-        - FAILED                # Some error occurred
-        - NOT_FOUND             # Case, Task or other item was not found
+        - EXTERNAL_SERVICE_ERROR  # Error when communicating with external service
+        - INVALID_REQUEST         # Request body contains invalid fields or id's
+        - FAUST_IN_USE            # Active case for this/these faust/fausts exists
+        - INVALID_STATE           # Change to a new state was not possible or invalid
+        - FAILED                  # Some error occurred
+        - NOT_FOUND               # Case, Task or other item was not found
 
     SubjectList:
       type: object

@@ -6,27 +6,37 @@
 package dk.dbc.promat.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.tomakehurst.wiremock.WireMockServer;
 import dk.dbc.httpclient.HttpGet;
 import dk.dbc.httpclient.HttpPost;
 import dk.dbc.httpclient.HttpPut;
 import dk.dbc.promat.service.rest.JsonMapperProvider;
-import javax.ws.rs.core.Response;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.Testcontainers;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.output.Slf4jLogConsumer;
 import org.testcontainers.containers.wait.strategy.Wait;
+
+import javax.ws.rs.core.Response;
 import java.time.Duration;
-import java.util.List;
 import java.util.Map;
+
+import static com.github.tomakehurst.wiremock.client.WireMock.configureFor;
+import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options;
 
 
 public abstract class ContainerTest extends IntegrationTest {
     private static final Logger LOGGER = LoggerFactory.getLogger(ContainerTest.class);
     protected static final ObjectMapper mapper = new JsonMapperProvider().getObjectMapper();
 
+    private static WireMockServer wireMockServer;
+
     static {
+        wireMockServer = new WireMockServer(options().dynamicPort());
+        wireMockServer.start();
+        configureFor("localhost", wireMockServer.port());
+        Testcontainers.exposeHostPorts(wireMockServer.port());
         Testcontainers.exposeHostPorts(pg.getPort());
     }
 
@@ -40,6 +50,9 @@ public abstract class ContainerTest extends IntegrationTest {
                 .withEnv("LOG_FORMAT", "text")
                 .withEnv("PROMAT_DB_URL", String.format("postgres:@host.testcontainers.internal:%s/postgres",
                         pg.getPort()))
+                .withEnv("CULR_SERVICE_URL", "http://host.testcontainers.internal:" + wireMockServer.port() + "/1.4/CulrWebService")
+                .withEnv("CULR_SERVICE_USER_ID", "connector")
+                .withEnv("CULR_SERVICE_PASSWORD", "connector-pass")
                 .withEnv("OPENSEARCH_SERVICE_URL", "")
                 .withEnv("WORK_PRESENTATION_SERVICE_URL", "")
                 .withEnv("PROMAT_CLUSTER_NAME", "")
