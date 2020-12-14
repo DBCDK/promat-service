@@ -7,6 +7,7 @@ package dk.dbc.promat.service.persistence;
 
 import dk.dbc.promat.service.dto.ReviewerWithWorkloads;
 
+import java.util.Objects;
 import javax.persistence.ColumnResult;
 import javax.persistence.Convert;
 import javax.persistence.DiscriminatorValue;
@@ -79,6 +80,7 @@ public class Reviewer extends PromatUser {
 
     protected LocalDate hiatus_begin;
     protected LocalDate hiatus_end;
+    protected String note;
 
     @OneToMany(fetch = FetchType.EAGER)
     @JoinTable (
@@ -147,6 +149,10 @@ public class Reviewer extends PromatUser {
         this.accepts = accepts;
     }
 
+    public String getNote() { return note; }
+
+    public void setNote(String note) { this.note = note; }
+
     public Reviewer withId(Integer id) {
         this.id = id;
         return this;
@@ -207,12 +213,18 @@ public class Reviewer extends PromatUser {
         return this;
     }
 
+    public Reviewer withNote(String note) {
+        this.note = note;
+        return this;
+    }
+
+
     @Override
     public boolean equals(Object o) {
         if (this == o) {
             return true;
         }
-        if (o == null || getClass() != o.getClass()) {
+        if (!(o instanceof Reviewer)) {
             return false;
         }
 
@@ -254,6 +266,9 @@ public class Reviewer extends PromatUser {
         if (hiatus_end != null ? !hiatus_end.equals(reviewer.hiatus_end) : reviewer.hiatus_end != null) {
             return false;
         }
+        if (note != null ? !note.equals(reviewer.note) : reviewer.note != null) {
+            return false;
+        }
         if (subjects != null ? !subjects.equals(reviewer.subjects) : reviewer.subjects != null) {
             return false;
         }
@@ -274,6 +289,7 @@ public class Reviewer extends PromatUser {
         result = 31 * result + paycode.hashCode();
         result = 31 * result + (hiatus_begin != null ? hiatus_begin.hashCode() : 0);
         result = 31 * result + (hiatus_end != null ? hiatus_end.hashCode() : 0);
+        result = 31 * result + (note != null ? note.hashCode() : 0);
         result = 31 * result + (subjects != null ? subjects.hashCode() : 0);
         result = 31 * result + (accepts != null ? accepts.hashCode() : 0);
         return result;
@@ -296,6 +312,7 @@ public class Reviewer extends PromatUser {
                 ", hiatus_end=" + hiatus_end +
                 ", subjects=" + subjects +
                 ", accepts=" + accepts +
+                ", note='" + note + '\'' +
                 '}';
     }
 
@@ -314,6 +331,7 @@ public class Reviewer extends PromatUser {
         reviewerWithWorkloads.setHiatus_begin(hiatus_begin);
         reviewerWithWorkloads.setHiatus_end(hiatus_end);
         reviewerWithWorkloads.setAccepts(accepts);
+        reviewerWithWorkloads.setNote(note);
         return reviewerWithWorkloads;
     }
 }

@@ -477,6 +477,9 @@ components:
         weekAfterWorkload:
           type: integer
           description: workload for the week after a deadline
+        note:
+          type: string
+          description: editors notes on the reviewer
 
       required:
         - id
