@@ -207,7 +207,7 @@ paths:
     get:
       tags:
         - cases
-      summary: Returns list of cases for the given faustnumber
+      summary: Returns list of cases
       operationId: getCasesForFaust
       parameters:
         - in: query
@@ -433,6 +433,33 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ServiceError'
+    delete:
+      tags:
+        - tasks
+      summary: Delete existing task
+      operationId: deleteTask
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            description: Task id
+      responses:
+        '200':
+          description: successful operation
+        '404':
+          description: Task not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '401':
+          description: Task could not be deleted, check ServiceError in body for specifics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
 
 components:
   schemas:
@@ -510,7 +537,6 @@ components:
         note:
           type: string
           description: editors notes on the reviewer
-
       required:
         - id
         - firstName
@@ -585,6 +611,20 @@ components:
         - lastName
         - email
 
+    UserSummary:
+      type: object
+      properties:
+        id:
+          type: integer
+        firstName:
+          type: string
+        lastName:
+          type: string
+      required:
+        - id
+        - firstName
+        - lastName
+
     ServiceError:
       type: object
       properties:
@@ -604,11 +644,12 @@ components:
       type: string
       enum:
         - EXTERNAL_SERVICE_ERROR  # Error when communicating with external service
-        - INVALID_REQUEST         # Request body contains invalid fields or id's
-        - FAUST_IN_USE            # Active case for this/these faust/fausts exists
-        - INVALID_STATE           # Change to a new state was not possible or invalid
-        - FAILED                  # Some error occurred
-        - NOT_FOUND               # Case, Task or other item was not found
+        - INVALID_REQUEST       # Request body contains invalid fields or id's
+        - FAUST_IN_USE          # Active case for this/these faust/fausts exists
+        - INVALID_STATE         # Change to a new state was not possible or invalid
+        - FAILED                # Some error occurred
+        - NOT_FOUND             # Case, Task or other item was not found
+        - FORBIDDEN             # Operation was forbidden or impossible
 
     SubjectList:
       type: object
@@ -713,6 +754,14 @@ components:
             type: string
             description: Other faustnumbers that should link to the review produced by this case
           minItems: 0
+        reviewer:
+          $ref: '#/components/schemas/UserSummary'
+          nullable: true
+          description: Summary for the selected reviewer
+        editor:
+          $ref: '#/components/schemas/UserSummary'
+          nullable: true
+          description: Summary for the selected editor
         created:
           type: string
           format: date-time

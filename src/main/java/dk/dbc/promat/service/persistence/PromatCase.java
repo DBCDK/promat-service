@@ -60,11 +60,11 @@ public class PromatCase {
     private List<String> relatedFausts;
 
     @OneToOne
-    @JsonView({CaseView.Case.class})
+    @JsonView({CaseView.CaseSummary.class})
     private Reviewer reviewer;
 
     @OneToOne
-    @JsonView({CaseView.Case.class})
+    @JsonView({CaseView.CaseSummary.class})
     private Editor editor;
 
     @OneToMany
