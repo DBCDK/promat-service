@@ -659,8 +659,24 @@ components:
         isPrimary:
           type: boolean
           description: Set to true for the faustnumber that currently is the primary object in the work
+        types:
+          type: array
+          description: A list of the types of this book (most likely 1 item, but multiple may occur)
+          items:
+            $ref: '#/components/schemas/RecordMaterialType'
+            minItems: 0
       required:
         - faust
+
+    RecordMaterialType:
+      type: object
+      properties:
+        materialType:
+          $ref: '#/components/schemas/MaterialType'
+          description: The generic promat material type this faustnumber maps to
+        specificType:
+          type: string
+          description: The specific type as given by the dm2 record
 
     CaseSummaryList:
       type: object
@@ -877,6 +893,7 @@ components:
     MaterialType:
       type: string
       enum:
+        - 'UNKNOWN'
         - 'BOOK'
         - 'MOVIE'
         - 'MULTIMEDIA'
