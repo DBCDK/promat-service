@@ -7,6 +7,7 @@ package dk.dbc.promat.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tomakehurst.wiremock.WireMockServer;
+import dk.dbc.httpclient.HttpDelete;
 import dk.dbc.httpclient.HttpGet;
 import dk.dbc.httpclient.HttpPost;
 import dk.dbc.httpclient.HttpPut;
@@ -106,5 +107,12 @@ public abstract class ContainerTest extends IntegrationTest {
                 .withPathElements(path)
                 .withData(body, "application/json");
         return httpClient.execute(httpPut);
+    }
+
+    public <T> Response deleteResponse(String path) {
+        HttpDelete httpDelete = new HttpDelete(httpClient)
+                .withBaseUrl(promatServiceBaseUrl)
+                .withPathElements(path);
+        return httpClient.execute(httpDelete);
     }
 }
