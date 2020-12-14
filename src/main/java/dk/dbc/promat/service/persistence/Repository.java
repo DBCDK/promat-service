@@ -57,6 +57,7 @@ public class Repository {
             final Subject subject = entityManager.find(Subject.class, subjectId);
             if (subject == null) {
                 throw new ServiceErrorException("Attempt to resolve subject failed")
+                        .withHttpStatus(400)
                         .withCode(ServiceErrorCode.INVALID_REQUEST)
                         .withCause("No such subject")
                         .withDetails(String.format("Field 'subject' contains id {} which does not exist", subjectId));
