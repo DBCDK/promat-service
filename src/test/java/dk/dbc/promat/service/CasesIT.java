@@ -925,7 +925,7 @@ public class CasesIT extends ContainerTest {
         response = getResponse(String.format("v1/api/cases/%s", CASEID_TO_BE_DELETED));
         assertThat("status code", response.getStatus(), is(200));
 
-        // Give me the list of casese where status is deleted
+        // Give me the list of cases where status is deleted
         response = getResponse("v1/api/cases", Map.of("status","DELETED"));
         obj = response.readEntity(String.class);
         fetched = mapper.readValue(obj, CaseSummaryList.class);
