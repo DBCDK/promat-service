@@ -6,6 +6,7 @@
 package dk.dbc.promat.service.persistence;
 
 public enum MaterialType {
+    UNKNOWN,
     BOOK,
     MOVIE,
     MULTIMEDIA,

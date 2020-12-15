@@ -5,12 +5,15 @@
 
 package dk.dbc.promat.service.dto;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 public class RecordDto implements Dto {
 
     private String faust;
     private boolean isPrimary;
+    private List<RecordMaterialTypeDto> types = new ArrayList<>();
 
     public String getFaust() {
         return faust;
@@ -28,6 +31,14 @@ public class RecordDto implements Dto {
         isPrimary = primary;
     }
 
+    public void setTypes(List<RecordMaterialTypeDto> types) {
+        this.types = types;
+    }
+
+    public List<RecordMaterialTypeDto> getTypes() {
+        return types;
+    }
+
     public RecordDto withFaust(String faust) {
         this.faust = faust;
         return this;
@@ -38,17 +49,23 @@ public class RecordDto implements Dto {
         return this;
     }
 
+    public RecordDto withTypes(List<RecordMaterialTypeDto> types) {
+        this.types = types;
+        return this;
+    }
+
     @Override
     public boolean equals(Object o) {
         if(this == o) return true;
         if(o == null || getClass() != o.getClass()) return false;
         RecordDto recordDto = (RecordDto) o;
         return isPrimary == recordDto.isPrimary &&
-                faust.equals(recordDto.faust);
+                faust.equals(recordDto.faust) &&
+                types.equals(recordDto.types);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(faust, isPrimary);
+        return Objects.hash(faust, isPrimary, types);
     }
 }

@@ -5,6 +5,7 @@
 
 package dk.dbc.promat.service.persistence;
 
+import com.fasterxml.jackson.annotation.JsonView;
 import dk.dbc.promat.service.dto.ReviewerWithWorkloads;
 
 import java.util.Objects;
@@ -74,11 +75,19 @@ public class Reviewer extends PromatUser {
     }
 
     @Embedded
+    @JsonView({CaseView.Case.class})
     protected Address address;
+
+    @JsonView({CaseView.Case.class})
     protected String institution;
+
+    @JsonView({CaseView.Case.class})
     protected Integer paycode;
 
+    @JsonView({CaseView.Case.class})
     protected LocalDate hiatus_begin;
+
+    @JsonView({CaseView.Case.class})
     protected LocalDate hiatus_end;
     protected String note;
 
@@ -88,9 +97,11 @@ public class Reviewer extends PromatUser {
             joinColumns = @JoinColumn(name = "reviewer_id"),
             inverseJoinColumns = @JoinColumn(name = "subject_id")
     )
+    @JsonView({CaseView.Case.class})
     protected Collection<Subject> subjects;
 
     @Convert(converter = AcceptsListToJsonArrayConverter.class)
+    @JsonView({CaseView.Case.class})
     protected List<Accepts> accepts;
 
     public Address getAddress() {

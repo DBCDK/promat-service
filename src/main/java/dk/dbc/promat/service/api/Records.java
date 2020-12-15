@@ -20,9 +20,11 @@ import dk.dbc.opensearch.workpresentation.model.WorkPresentationRecord;
 import dk.dbc.opensearch.workpresentation.model.WorkPresentationWork;
 import dk.dbc.promat.service.dto.Dto;
 import dk.dbc.promat.service.dto.RecordDto;
+import dk.dbc.promat.service.dto.RecordMaterialTypeDto;
 import dk.dbc.promat.service.dto.RecordsListDto;
 import dk.dbc.promat.service.dto.ServiceErrorCode;
 import dk.dbc.promat.service.dto.ServiceErrorDto;
+import dk.dbc.promat.service.persistence.MaterialType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -89,7 +91,8 @@ public class Records {
                         for(WorkPresentationRecord record : work.getRecords()) {
                             relatedByWork.add(new RecordDto()
                                     .withFaust(record.getManifestation())
-                                    .withPrimary(record.getManifestation().equals(work.getManifestation())));
+                                    .withPrimary(record.getManifestation().equals(work.getManifestation()))
+                                    .withTypes(mapRrTypes(record.getTypes())));
                         }
                     }
                 }
@@ -125,5 +128,84 @@ public class Records {
             LOGGER.info("Caught exception: {}", exception.getMessage());
             throw exception;
         }
+    }
+
+    private List<RecordMaterialTypeDto> mapRrTypes(String[] rrTypes) {
+
+        // Types are values from the list of danbib materialtype codes.
+        // Usually, only a single materialtype is listed, but the list of types
+        // is declared as a list by the workpresentation service, so it would
+        // be expected that cases exists where a record can be mapped to multiple types
+        //
+        // https://danbib.dk/docs/abm/types.xml
+
+        // Map known types, ignore the rest
+        ArrayList<RecordMaterialTypeDto> types = new ArrayList<>();
+        for(String rrType : rrTypes) {
+            switch(rrType) {
+
+                case "Billedbog":
+                case "Bog":
+                case "Bog stor skrift":
+                case "Ebog":
+                case "Lydbog":
+                case "Lydbog (bånd)":
+                case "Lydbog (cd)":
+                case "Lydbog (net)":
+                case "Lydbog (cd-mp3)":
+                case "Årbog":
+                case "Punktskrift":
+                case "DTBook": types.add(new RecordMaterialTypeDto()
+                        .withMaterialType(MaterialType.BOOK)
+                        .withSpecificType(rrType));
+                break;
+
+                case "Biograffilm":
+                case "DVD (film)":
+                case "Film":
+                case "Film (net)":
+                case "Blu-ray": types.add(new RecordMaterialTypeDto()
+                        .withMaterialType(MaterialType.MOVIE)
+                        .withSpecificType(rrType));
+                break;
+
+                case "CD":
+                case "CD-I":
+                case "CD-rom":
+                case "Cd-rom (mp3)":
+                case "Computerspil":
+                case "Dvd":
+                case "DVD-rom":
+                case "Elektronisk materiale":
+                case "GameBoy":
+                case "GameBoy Advance":
+                case "GameBoy Color":
+                case "Nintendo 3":
+                case "Nintendo 3DS":
+                case "Nintendo DS":
+                case "Nintendo Switch":
+                case "Pc-spil":
+                case "Pc-spil (net)":
+                case "Playstation":
+                case "Playstation 2 [brugt for PS2]":
+                case "Playstation 3 [brugt for PS3]":
+                case "Playstation 4 [brugt for PS4]":
+                case "Playstation Vita":
+                case "Wii":
+                case "Wii U":
+                case "Xbox":
+                case "Xbox 360":
+                case "Xbox One": types.add(new RecordMaterialTypeDto()
+                        .withMaterialType(MaterialType.MULTIMEDIA)
+                        .withSpecificType(rrType))
+                ; break;
+
+                default: types.add(new RecordMaterialTypeDto()
+                        .withMaterialType(MaterialType.UNKNOWN)
+                        .withSpecificType(rrType));
+                break;
+            }
+        }
+        return types;
     }
 }
