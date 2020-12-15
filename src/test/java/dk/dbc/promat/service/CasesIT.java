@@ -7,7 +7,6 @@ package dk.dbc.promat.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 
-import dk.dbc.promat.service.db.DatabaseMigrator;
 import dk.dbc.promat.service.dto.CaseRequestDto;
 import dk.dbc.promat.service.dto.CaseSummaryList;
 import dk.dbc.promat.service.dto.TaskDto;
@@ -33,11 +32,8 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class CasesIT extends ContainerTest {
-    private static final Logger LOGGER = LoggerFactory.getLogger(CasesIT.class);
     @Test
     public void testCreateCase() throws JsonProcessingException {
 
