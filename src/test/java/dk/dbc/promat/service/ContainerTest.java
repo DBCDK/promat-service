@@ -109,11 +109,10 @@ public abstract class ContainerTest extends IntegrationTest {
         return httpClient.execute(httpPut);
     }
 
-    public Response deleteResponse(String path) {
-        return new HttpDelete(httpClient)
+    public <T> Response deleteResponse(String path) {
+        HttpDelete httpDelete = new HttpDelete(httpClient)
                 .withBaseUrl(promatServiceBaseUrl)
-                .withPathElements(path)
-                .execute();
+                .withPathElements(path);
+        return httpClient.execute(httpDelete);
     }
-
 }

@@ -22,6 +22,7 @@ import dk.dbc.promat.service.persistence.Subject;
 import dk.dbc.promat.service.persistence.PromatTask;
 import dk.dbc.promat.service.persistence.TaskType;
 import dk.dbc.promat.service.rest.JsonMapperProvider;
+import javax.ws.rs.DELETE;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -132,7 +133,7 @@ public class Cases {
             status = CaseStatus.ASSIGNED;
         } else {
             if( status.equals(CaseStatus.ASSIGNED) ) {
-                LOGGER.info("Attempt to set status ASSIGNED with no reviewer", dto.getReviewer());
+                LOGGER.info("Attempt to set status ASSIGNED with no reviewer");
                 return ServiceErrorDto.InvalidState("Case status ASSIGNED is not possible without a reviewer");
             }
         }
@@ -231,6 +232,7 @@ public class Cases {
                 CriteriaBuilder.In<CaseStatus> inClause = builder.in(root.get("status"));
                 inClause.value(CaseStatus.CLOSED);
                 inClause.value(CaseStatus.DONE);
+                inClause.value(CaseStatus.DELETED);
                 Predicate statusPredicate = builder.not(inClause);
 
                 allPredicates.add(builder.and(faustPredicate, statusPredicate));
@@ -255,6 +257,9 @@ public class Cases {
                 }
 
                 allPredicates.add(builder.or(statusPredicates.toArray(Predicate[]::new)));
+            } else {
+                // If no status specified: Set a status "not" deleted predicate
+                allPredicates.add(builder.notEqual(root.get("status"), CaseStatus.DELETED));
             }
 
             // Get cases with given reviewer
@@ -472,6 +477,22 @@ public class Cases {
             LOGGER.error("Caught exception: {}", exception.getMessage());
             return ServiceErrorDto.Failed(exception.getMessage());
         }
+    }
+
+    @DELETE
+    @Path("cases/{id}")
+    public Response deleteCase(@PathParam("id") final Integer id) {
+        repository.getExclusiveAccessToTable(PromatCase.TABLE_NAME);
+
+        // Fetch the case
+        PromatCase promatCase = entityManager.find(PromatCase.class, id);
+        if(promatCase == null) {
+            LOGGER.info("No case with id {}", id);
+            return ServiceErrorDto.NotFound("No such case", String.format("No case with id %d exists", id));
+        }
+
+        promatCase.setStatus(CaseStatus.DELETED);
+        return Response.ok().build();
     }
 
     public Reviewer resolveReviewer(Integer reviewerId) throws ServiceErrorException {

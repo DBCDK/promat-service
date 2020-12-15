@@ -34,7 +34,6 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 public class CasesIT extends ContainerTest {
-
     @Test
     public void testCreateCase() throws JsonProcessingException {
 
@@ -476,7 +475,7 @@ public class CasesIT extends ContainerTest {
         assertThat("status code", response.getStatus(), is(200));
         obj = response.readEntity(String.class);
         fetched = mapper.readValue(obj, CaseSummaryList.class);
-        assertThat("Number of cases with editor 10 and status CREATED", fetched.getNumFound(), is(1));
+        assertThat("Number of cases with editor 10 and status CREATED", fetched.getNumFound(), is(2));
         assertThat("case id", fetched.getCases().get(0).getId(), is(10));
     }
 
@@ -896,5 +895,44 @@ public class CasesIT extends ContainerTest {
                 ));
         response = postResponse("v1/api/cases", dto);
         assertThat("status code", response.getStatus(), is(409));
+    }
+
+    @Test
+    public void testDeleteCase() throws JsonProcessingException {
+        int CASEID_TO_BE_DELETED = 12;
+
+        // Check that the case at first IS in the response
+        Response response = getResponse("v1/api/cases");
+        String obj = response.readEntity(String.class);
+        CaseSummaryList fetched = mapper.readValue(obj, CaseSummaryList.class);
+        assertThat("Case with this id exists",
+                fetched.getCases().stream().filter(procase -> procase.getId() == CASEID_TO_BE_DELETED).count(),
+                is(1L));
+
+        // Delete it
+        response = deleteResponse(String.format("v1/api/cases/%s", CASEID_TO_BE_DELETED));
+        assertThat("status code", response.getStatus(), is(200));
+
+        // Check that the case is no longer to be found in the returned cases
+        response = getResponse("v1/api/cases");
+        obj = response.readEntity(String.class);
+        fetched = mapper.readValue(obj, CaseSummaryList.class);
+        assertThat("No case with this id",
+                fetched.getCases().stream().filter(procase -> procase.getId() == CASEID_TO_BE_DELETED).count(),
+                is(0L));
+
+        // Check that the case still can be fetched directly
+        response = getResponse(String.format("v1/api/cases/%s", CASEID_TO_BE_DELETED));
+        assertThat("status code", response.getStatus(), is(200));
+
+        // Give me the list of cases where status is deleted
+        response = getResponse("v1/api/cases", Map.of("status","DELETED"));
+        obj = response.readEntity(String.class);
+        fetched = mapper.readValue(obj, CaseSummaryList.class);
+        assertThat("The deleted case is amongst the cases with flagged 'deleted'",
+                fetched.getCases().stream().filter(procase -> procase.getId() == CASEID_TO_BE_DELETED).count(),
+                is(1L));
+
+
     }
 }

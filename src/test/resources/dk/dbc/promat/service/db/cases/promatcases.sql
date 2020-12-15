@@ -10,8 +10,8 @@ values (1, 'Title for 001111', 'Details for 001111', '001111', '["002222","00333
        (8, 'Title for 016666', 'Details for 016666', '016666', '[]', NULL, NULL, '2020-11-11', '2020-12-11', NULL, 'CREATED', 'BOOK'),
        (9, 'Title for 017777', 'Details for 017777', '017777', '[]', NULL, NULL, '2020-11-11', '2020-12-11', NULL, 'CLOSED', 'BOOK'),
        (10, 'Title for 018888', 'Details for 018888', '018888', '[]', NULL, 11, '2020-11-11', '2020-12-11', NULL, 'CREATED', 'BOOK'),
-       (11, 'Title for 019999', 'Details for 019999', '019999', '[]', 2, NULL, '2020-11-11', '2020-12-11', NULL, 'CREATED', 'BOOK');
-;
+       (11, 'Title for 019999', 'Details for 019999', '019999', '[]', 2, NULL, '2020-11-11', '2020-12-11', NULL, 'CREATED', 'BOOK'),
+       (12, 'Title for 019991', 'Details for 019991', '019991', '[]', NULL, 11, '2020-11-11', '2020-12-14', NULL, 'CREATED', 'BOOK');
 
 insert into promattask(id, tasktype, taskfieldtype, created, paycode, approved, payed, data, targetFausts)
 values  (1, 'GROUP_1_LESS_THAN_100_PAGES', 'NONE', '2020-12-10', '0000', '2020-12-10', NULL,         NULL,                NULL),
@@ -26,5 +26,4 @@ values (1, 1),
        (1, 2),
        (1, 3),
        (1, 4),
-       (1, 5)
-;
+       (1, 5);

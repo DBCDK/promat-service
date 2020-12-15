@@ -13,5 +13,6 @@ public enum CaseStatus {
     PENDING_ISSUES,
     APPROVED,
     DONE,
-    CLOSED
+    CLOSED,
+    DELETED
 }
