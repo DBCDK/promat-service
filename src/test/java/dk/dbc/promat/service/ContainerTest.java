@@ -54,8 +54,8 @@ public abstract class ContainerTest extends IntegrationTest {
                 .withEnv("CULR_SERVICE_URL", "http://host.testcontainers.internal:" + wireMockServer.port() + "/1.4/CulrWebService")
                 .withEnv("CULR_SERVICE_USER_ID", "connector")
                 .withEnv("CULR_SERVICE_PASSWORD", "connector-pass")
-                .withEnv("OPENSEARCH_SERVICE_URL", "http://opensearch-5-2-dbckat-service.cisterne.svc.cloud.dbc.dk/b3.5_5.2/") // Todo: Replace with wiremock endpoint after mapping
-                .withEnv("WORK_PRESENTATION_SERVICE_URL", "http://work-presentation-service.cisterne.svc.cloud.dbc.dk/api/") // Todo: Replace with wiremock endpoint after mapping
+                .withEnv("OPENSEARCH_SERVICE_URL", "http://host.testcontainers.internal:" + wireMockServer.port() + "/b3.5_5.2/")
+                .withEnv("WORK_PRESENTATION_SERVICE_URL", "http://host.testcontainers.internal:" + wireMockServer.port() + "/api/")
                 .withEnv("PROMAT_CLUSTER_NAME", "")
                 .withEnv("MAIL_HOST", "mailhost")
                 .withEnv("MAIL_USER", "mail.user")

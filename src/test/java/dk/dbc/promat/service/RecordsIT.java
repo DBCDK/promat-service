@@ -11,6 +11,8 @@ import org.junit.jupiter.api.Test;
 
 import javax.ws.rs.core.Response;
 
+import java.io.Console;
+
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 
@@ -23,7 +25,7 @@ public class RecordsIT extends ContainerTest {
         assertThat("status code", response.getStatus(), is(200));
         RecordsListDto resolved = mapper.readValue(response.readEntity(String.class), RecordsListDto.class);
 
-        assertThat("results", resolved.getNumFound(), is(1));
+        assertThat("results", resolved.getNumFound(), is(19));
     }
 
     @Test
@@ -33,7 +35,7 @@ public class RecordsIT extends ContainerTest {
         assertThat("status code", response.getStatus(), is(200));
         RecordsListDto resolved = mapper.readValue(response.readEntity(String.class), RecordsListDto.class);
 
-        assertThat("results", resolved.getNumFound(), is(1));
+        assertThat("results", resolved.getNumFound(), is(19));
     }
 
     @Test
@@ -43,6 +45,6 @@ public class RecordsIT extends ContainerTest {
         assertThat("status code", response.getStatus(), is(200));
         RecordsListDto resolved = mapper.readValue(response.readEntity(String.class), RecordsListDto.class);
 
-        assertThat("results", resolved.getNumFound(), is(1));
+        assertThat("results", resolved.getNumFound(), is(0));  // Todo: Add search on barcode
     }
 }
