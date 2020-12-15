@@ -45,6 +45,6 @@ public class RecordsIT extends ContainerTest {
         assertThat("status code", response.getStatus(), is(200));
         RecordsListDto resolved = mapper.readValue(response.readEntity(String.class), RecordsListDto.class);
 
-        assertThat("results", resolved.getNumFound(), is(0));  // Todo: Add search on barcode
+        assertThat("results", resolved.getNumFound(), is(2));
     }
 }

@@ -1,17 +1,17 @@
 {
-  "id" : "2e44a43b-f32f-34dd-b727-3b2db8571aac",
+  "id" : "9cd580b5-567e-3b14-b517-bfbe550a8759",
   "request" : {
     "url" : "/api/work-presentation?profile=test&agencyId=870970&workId=work-of%3A870970-basis%3A24699773",
     "method" : "GET"
   },
   "response" : {
     "status" : 200,
-    "bodyFileName" : "body-api-work-presentation-cyjZx.json",
+    "bodyFileName" : "body-api-work-presentation-TOeQj.json",
     "headers" : {
       "Server" : "Payara Micro #badassfish",
       "Content-Type" : "application/json",
       "X-Frame-Options" : "SAMEORIGIN"
     }
   },
-  "uuid" : "2e44a43b-f32f-34dd-b727-3b2db8571aac"
+  "uuid" : "9cd580b5-567e-3b14-b517-bfbe550a8759"
 }
