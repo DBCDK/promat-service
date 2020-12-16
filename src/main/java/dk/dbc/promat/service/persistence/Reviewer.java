@@ -90,6 +90,7 @@ public class Reviewer extends PromatUser {
     @JsonView({CaseView.Case.class})
     protected LocalDate hiatus_end;
     protected String note;
+    protected Integer capacity;
 
     @OneToMany(fetch = FetchType.EAGER)
     @JoinTable (
@@ -234,6 +235,18 @@ public class Reviewer extends PromatUser {
         return this;
     }
 
+    public Integer getCapacity() {
+        return capacity;
+    }
+
+    public void setCapacity(Integer capacity) {
+        this.capacity = capacity;
+    }
+
+    public Reviewer withCapacity(Integer capacity) {
+        this.capacity = capacity;
+        return this;
+    }
 
     @Override
     public boolean equals(Object o) {
@@ -285,6 +298,9 @@ public class Reviewer extends PromatUser {
         if (note != null ? !note.equals(reviewer.note) : reviewer.note != null) {
             return false;
         }
+        if (capacity != null ? !capacity.equals(reviewer.capacity) : reviewer.capacity != null) {
+            return false;
+        }
         if (subjects != null ? !subjects.equals(reviewer.subjects) : reviewer.subjects != null) {
             return false;
         }
@@ -306,6 +322,7 @@ public class Reviewer extends PromatUser {
         result = 31 * result + (hiatus_begin != null ? hiatus_begin.hashCode() : 0);
         result = 31 * result + (hiatus_end != null ? hiatus_end.hashCode() : 0);
         result = 31 * result + (note != null ? note.hashCode() : 0);
+        result = 31 * result + (capacity != null ? capacity.hashCode() : 0);
         result = 31 * result + (subjects != null ? subjects.hashCode() : 0);
         result = 31 * result + (accepts != null ? accepts.hashCode() : 0);
         return result;
@@ -329,6 +346,7 @@ public class Reviewer extends PromatUser {
                 ", subjects=" + subjects +
                 ", accepts=" + accepts +
                 ", note='" + note + '\'' +
+                ", capacity=" + capacity +
                 '}';
     }
 
@@ -348,6 +366,7 @@ public class Reviewer extends PromatUser {
         reviewerWithWorkloads.setHiatus_end(hiatus_end);
         reviewerWithWorkloads.setAccepts(accepts);
         reviewerWithWorkloads.setNote(note);
+        reviewerWithWorkloads.setCapacity(capacity);
         return reviewerWithWorkloads;
     }
 }

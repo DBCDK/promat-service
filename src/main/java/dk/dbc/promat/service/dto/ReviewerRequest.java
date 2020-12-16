@@ -27,6 +27,7 @@ public class ReviewerRequest implements Dto {
     private LocalDate hiatusEnd;
     private List<Integer> subjects;
     private List<Reviewer.Accepts> accepts;
+    private Integer capacity;
 
     public boolean isActive() {
         return active;
@@ -184,6 +185,14 @@ public class ReviewerRequest implements Dto {
         return this;
     }
 
+    public Integer getCapacity() {
+        return capacity;
+    }
+
+    public void setCapacity(Integer capacity) {
+        this.capacity = capacity;
+    }
+
     public List<Reviewer.Accepts> getAccepts() {
         return accepts;
     }
@@ -194,6 +203,11 @@ public class ReviewerRequest implements Dto {
 
     public ReviewerRequest withAccepts(List<Reviewer.Accepts> accepts) {
         this.accepts = accepts;
+        return this;
+    }
+
+    public ReviewerRequest withCapacity(Integer capacity) {
+        this.capacity = capacity;
         return this;
     }
 
@@ -212,6 +226,7 @@ public class ReviewerRequest implements Dto {
                 ", hiatus_end=" + hiatusEnd +
                 ", subjects=" + subjects +
                 ", accepts=" + accepts +
+                ", capacity=" + capacity +
                 '}';
     }
 
@@ -259,7 +274,10 @@ public class ReviewerRequest implements Dto {
         if (subjects != null ? !subjects.equals(that.subjects) : that.subjects != null) {
             return false;
         }
-        return accepts != null ? accepts.equals(that.accepts) : that.accepts == null;
+        if (accepts != null ? !accepts.equals(that.accepts) : that.accepts != null) {
+            return false;
+        }
+        return capacity != null ? capacity.equals(that.capacity) : that.capacity == null;
     }
 
     @Override
@@ -276,6 +294,7 @@ public class ReviewerRequest implements Dto {
         result = 31 * result + (hiatusEnd != null ? hiatusEnd.hashCode() : 0);
         result = 31 * result + (subjects != null ? subjects.hashCode() : 0);
         result = 31 * result + (accepts != null ? accepts.hashCode() : 0);
+        result = 31 * result + (capacity != null ? capacity.hashCode() : 0);
         return result;
     }
 }
