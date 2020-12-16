@@ -58,7 +58,8 @@ public class Records {
             OpensearchSearchResponse response = opensearchConnector.search(new OpensearchQuery()
                     .withCombiner(OpensearchQueryCombiner.OR)
                     .withId(id)
-                    .withIs(id));
+                    .withIs(id)
+                    .withBc(id));
 
             if(!response.getError().isEmpty()) {
                 LOGGER.info("Opensearch error: {}", response.getError());
