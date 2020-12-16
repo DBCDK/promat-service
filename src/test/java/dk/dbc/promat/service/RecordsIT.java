@@ -11,8 +11,6 @@ import org.junit.jupiter.api.Test;
 
 import javax.ws.rs.core.Response;
 
-import java.io.Console;
-
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 
