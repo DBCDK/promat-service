@@ -12,7 +12,6 @@ import dk.dbc.promat.service.persistence.Reviewer;
 import java.util.List;
 import java.util.Objects;
 
-
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class ReviewerRequest implements Dto {
     private Boolean active;
@@ -199,68 +198,23 @@ public class ReviewerRequest implements Dto {
     }
 
     @Override
-    public String toString() {
-        return "ReviewerRequest{" +
-                "active=" + active +
-                ", firstName='" + firstName + '\'' +
-                ", lastName='" + lastName + '\'' +
-                ", email='" + email + '\'' +
-                ", phone='" + phone + '\'' +
-                ", institution='" + institution + '\'' +
-                ", paycode=" + paycode +
-                ", address=" + address +
-                ", hiatus_begin=" + hiatusBegin +
-                ", hiatus_end=" + hiatusEnd +
-                ", subjects=" + subjects +
-                ", accepts=" + accepts +
-                '}';
-    }
-
-    @Override
     public boolean equals(Object o) {
-        if (this == o) {
-            return true;
-        }
-        if (o == null || getClass() != o.getClass()) {
-            return false;
-        }
-
+        if(this == o) return true;
+        if(o == null || getClass() != o.getClass()) return false;
         ReviewerRequest that = (ReviewerRequest) o;
-
-        if (active != that.active) {
-            return false;
-        }
-        if (firstName != null ? !firstName.equals(that.firstName) : that.firstName != null) {
-            return false;
-        }
-        if (lastName != null ? !lastName.equals(that.lastName) : that.lastName != null) {
-            return false;
-        }
-        if (email != null ? !email.equals(that.email) : that.email != null) {
-            return false;
-        }
-        if (phone != null ? !phone.equals(that.phone) : that.phone != null) {
-            return false;
-        }
-        if (institution != null ? !institution.equals(that.institution) : that.institution != null) {
-            return false;
-        }
-        if (paycode != null ? !paycode.equals(that.paycode) : that.paycode != null) {
-            return false;
-        }
-        if (address != null ? !address.equals(that.address) : that.address != null) {
-            return false;
-        }
-        if (hiatusBegin != null ? !hiatusBegin.equals(that.hiatusBegin) : that.hiatusBegin != null) {
-            return false;
-        }
-        if (hiatusEnd != null ? !hiatusEnd.equals(that.hiatusEnd) : that.hiatusEnd != null) {
-            return false;
-        }
-        if (subjects != null ? !subjects.equals(that.subjects) : that.subjects != null) {
-            return false;
-        }
-        return accepts != null ? accepts.equals(that.accepts) : that.accepts == null;
+        return Objects.equals(active, that.active) &&
+                Objects.equals(cprNumber, that.cprNumber) &&
+                Objects.equals(firstName, that.firstName) &&
+                Objects.equals(lastName, that.lastName) &&
+                Objects.equals(email, that.email) &&
+                Objects.equals(phone, that.phone) &&
+                Objects.equals(institution, that.institution) &&
+                Objects.equals(paycode, that.paycode) &&
+                Objects.equals(address, that.address) &&
+                Objects.equals(hiatusBegin, that.hiatusBegin) &&
+                Objects.equals(hiatusEnd, that.hiatusEnd) &&
+                Objects.equals(subjects, that.subjects) &&
+                Objects.equals(accepts, that.accepts);
     }
 
     @Override
@@ -278,5 +232,24 @@ public class ReviewerRequest implements Dto {
         result = 31 * result + (subjects != null ? subjects.hashCode() : 0);
         result = 31 * result + (accepts != null ? accepts.hashCode() : 0);
         return result;
+    }
+
+    @Override
+    public String toString() {
+        return "ReviewerRequest{" +
+                "active=" + active +
+                ", cprNumber='" + cprNumber + '\'' +
+                ", firstName='" + firstName + '\'' +
+                ", lastName='" + lastName + '\'' +
+                ", email='" + email + '\'' +
+                ", phone='" + phone + '\'' +
+                ", institution='" + institution + '\'' +
+                ", paycode=" + paycode +
+                ", address=" + address +
+                ", hiatusBegin='" + hiatusBegin + '\'' +
+                ", hiatusEnd='" + hiatusEnd + '\'' +
+                ", subjects=" + subjects +
+                ", accepts=" + accepts +
+                '}';
     }
 }
