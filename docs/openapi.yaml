@@ -587,6 +587,10 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/ReviewerAccepts'
+        note:
+          type: string
+        capacity:
+          type: integer
 
       required:
         - cprNumber
