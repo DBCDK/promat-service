@@ -7,7 +7,6 @@ package dk.dbc.promat.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
-import dk.dbc.promat.service.db.DatabaseMigrator;
 import dk.dbc.promat.service.dto.ReviewerList;
 import dk.dbc.promat.service.dto.ReviewerRequest;
 import dk.dbc.promat.service.dto.ReviewerWithWorkloads;
@@ -22,6 +21,7 @@ import org.junit.jupiter.api.TestMethodOrder;
 import org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
 import javax.ws.rs.core.Response;
 import java.time.LocalDate;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -132,15 +132,18 @@ public class ReviewersIT extends ContainerTest {
         final Reviewer reviewer2 = new Reviewer();
         loadReviewer2(reviewer2);
 
+        final Reviewer reviewer3 = new Reviewer();
+        loadReviewer3(reviewer3);
+
         final ReviewerList<Reviewer> expected = new ReviewerList<>()
-                .withReviewers(List.of(reviewer1, reviewer2));
+                .withReviewers(List.of(reviewer1, reviewer2, reviewer3));
 
         final Response response = getResponse("v1/api/reviewers");
 
         final ReviewerList<Reviewer> actual = mapper.readValue(
                 response.readEntity(String.class), new TypeReference<>() {});
 
-        assertThat("List of reviewers is just 'Hans Hansen' and 'Ole Olsen'",
+        assertThat("List of reviewers is just 'Hans Hansen', 'Ole Olsen' and 'Peter Petersen'",
                 actual, is(expected));
     }
 
@@ -159,8 +162,14 @@ public class ReviewersIT extends ContainerTest {
                 .withWeekAfterWorkload(0);
         loadReviewer2(reviewer2);
 
+        final ReviewerWithWorkloads reviewer3 = new ReviewerWithWorkloads()
+                .withWeekWorkload(0)
+                .withWeekBeforeWorkload(0)
+                .withWeekAfterWorkload(0);
+        loadReviewer3(reviewer3);
+
         final ReviewerList<ReviewerWithWorkloads> expected = new ReviewerList<ReviewerWithWorkloads>()
-                .withReviewers(List.of(reviewer1, reviewer2));
+                .withReviewers(List.of(reviewer1, reviewer2, reviewer3));
 
         final Response response = getResponse("v1/api/reviewers",
                 Map.of("deadline", "2020-12-01"));
@@ -168,9 +177,33 @@ public class ReviewersIT extends ContainerTest {
         final ReviewerList<ReviewerWithWorkloads> actual = mapper.readValue(
                 response.readEntity(String.class), new TypeReference<>() {});
 
-
-        assertThat("List of reviewers is just 'Hans Hansen' and 'Ole Olsen'",
+        assertThat("List of reviewers is just 'Hans Hansen', 'Ole Olsen' and 'Peter Petersen'",
                 actual, is(expected));
+    }
+
+    @Test
+    void updateReviewer() throws JsonProcessingException {
+
+        final ReviewerRequest reviewerRequest = new ReviewerRequest()
+                .withActive(false)
+                .withAccepts(Arrays.asList(Reviewer.Accepts.BOOK, Reviewer.Accepts.MULTIMEDIA))
+                .withAddress(new Address().withAddress1("Mellemgade 51").withAddress2("Øvre Mellem").withCity("Mellemtved").withZip("6666"))
+                .withEmail("peder@pedersen.dk")
+                .withFirstName("Peder")
+                .withLastName("Pedersen")
+                .withHiatusBegin("2020-12-22")
+                .withHiatusEnd("2021-01-03")
+                .withInstitution("Peder Petersens pedaler")
+                .withPaycode(7777)
+                .withPhone("87654321")
+                .withSubjects(List.of(3))
+                .withCprNumber("123456-7890");  // Should not be used and not cause any conflict
+
+        final Response response = putResponse("v1/api/reviewers/3", reviewerRequest);
+        assertThat("response status", response.getStatus(), is(200));
+        final Reviewer updated = mapper.readValue(response.readEntity(String.class), Reviewer.class);
+
+        // Todo: Verify that the user got updated
     }
 
     private void loadReviewer1(Reviewer reviewer) {
@@ -227,5 +260,60 @@ public class ReviewersIT extends ContainerTest {
         reviewer.setAccepts(List.of(
                 Reviewer.Accepts.MULTIMEDIA, Reviewer.Accepts.PS4, Reviewer.Accepts.PS5));
         reviewer.setNote("note2");
+    }
+
+    private void loadReviewer3(Reviewer reviewer) {
+        reviewer.setId(3);
+        reviewer.setActive(true);
+        reviewer.setCulrId("43");
+        reviewer.setFirstName("Peter");
+        reviewer.setLastName("Petersen");
+        reviewer.setEmail("peter@petersen.dk");
+        reviewer.setAddress(
+                new Address()
+                        .withAddress1("Mellemgade 50")
+                        .withZip("5555")
+                        .withCity("Mellemved"));
+        reviewer.setInstitution("Peter Petersens pedaler");
+        reviewer.setPaycode(22);
+        reviewer.setSubjects(
+                List.of(
+                        new Subject()
+                                .withId(5)
+                                .withName("Multimedie")));
+        reviewer.setHiatus_begin(null);
+        reviewer.setHiatus_end(null);
+        reviewer.setAccepts(List.of(
+                Reviewer.Accepts.BOOK));
+        reviewer.setNote("note3");
+        reviewer.setPhone("12345678");
+    }
+
+    private void loadUpdatedReviewer3(Reviewer reviewer) {
+        reviewer.setId(3);
+        reviewer.setActive(false);
+        reviewer.setCulrId("43");
+        reviewer.setFirstName("Peder");
+        reviewer.setLastName("Pedersen");
+        reviewer.setEmail("peder@pedersen.dk");
+        reviewer.setAddress(
+                new Address()
+                        .withAddress1("Mellemgade 51")
+                        .withZip("6666")
+                        .withCity("Mellemtved")
+                        .withAddress2("Øvre Mellem"));
+        reviewer.setInstitution("Peder Pedersens pedaler");
+        reviewer.setPaycode(7777);
+        reviewer.setSubjects(
+                List.of(
+                        new Subject()
+                                .withId(3)
+                                .withName("Eventyr, fantasy")));
+        reviewer.setHiatus_begin(LocalDate.parse("2020-22-12"));
+        reviewer.setHiatus_end(LocalDate.parse("2021-01-03"));
+        reviewer.setAccepts(List.of(
+                Reviewer.Accepts.BOOK, Reviewer.Accepts.MULTIMEDIA));
+        reviewer.setNote("note3");
+        reviewer.setPhone("87654321");
     }
 }

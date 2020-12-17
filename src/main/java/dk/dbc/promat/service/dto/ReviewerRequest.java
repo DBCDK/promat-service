@@ -10,11 +10,12 @@ import dk.dbc.promat.service.persistence.Address;
 import dk.dbc.promat.service.persistence.Reviewer;
 
 import java.util.List;
+import java.util.Objects;
 
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class ReviewerRequest implements Dto {
-    private boolean active = true;
+    private Boolean active;
     private String cprNumber;
     private String firstName;
     private String lastName;
@@ -28,11 +29,11 @@ public class ReviewerRequest implements Dto {
     private List<Integer> subjects;
     private List<Reviewer.Accepts> accepts;
 
-    public boolean isActive() {
+    public Boolean isActive() {
         return active;
     }
 
-    public void setActive(boolean active) {
+    public void setActive(Boolean active) {
         this.active = active;
     }
 

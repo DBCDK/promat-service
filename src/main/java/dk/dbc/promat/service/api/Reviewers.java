@@ -23,6 +23,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.TypedQuery;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -88,7 +89,7 @@ public class Reviewers {
 
         try {
             final Reviewer entity = new Reviewer()
-                    .withActive(reviewerRequest.isActive())
+                    .withActive(reviewerRequest.isActive() != null ? reviewerRequest.isActive() : true)  // New users defaults to active
                     .withFirstName(reviewerRequest.getFirstName())
                     .withLastName(reviewerRequest.getLastName())
                     .withEmail(reviewerRequest.getEmail())
@@ -149,6 +150,30 @@ public class Reviewers {
                         .withWeekAfterWorkload((long) objects[3]))
                 .collect(Collectors.toList());
         return Response.ok(new ReviewerList<ReviewerWithWorkloads>().withReviewers(reviewers)).build();
+    }
+
+    @PUT
+    @Path("reviewers/{id}")
+    @Produces({MediaType.APPLICATION_JSON})
+    public Response updateReviewer(@PathParam("id") final Integer id, ReviewerRequest reviewerRequest) {
+        LOGGER.info("reviewers/{} (PUT) body: {}", id, reviewerRequest);
+
+        try {
+
+            final Reviewer reviewer = entityManager.find(Reviewer.class, id);
+            if (reviewer == null) {
+                LOGGER.info("Reviewer with id {} does not exists", id);
+                return Response.status(404).build();
+            }
+
+            // Todo: Update reviewer
+
+            return Response.status(200)
+                    .entity(reviewer)
+                    .build();
+        } catch (Exception e) {
+            return Response.serverError().entity(e.getMessage()).build();
+        }
     }
 
     /**
