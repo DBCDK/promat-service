@@ -35,7 +35,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Stateless
-@Path("reviewers")
+@Path("")
 public class Reviewers {
     private static final Logger LOGGER = LoggerFactory.getLogger(Reviewers.class);
 
@@ -49,9 +49,11 @@ public class Reviewers {
     CulrHandler culrHandler;
 
     @GET
-    @Path("{id}")
+    @Path("reviewers/{id}")
     @Produces({MediaType.APPLICATION_JSON})
     public Response getReviewer(@PathParam("id") Integer id) {
+        LOGGER.info("reviewers/{} (GET)", id);
+
         final Reviewer reviewer = entityManager.find(Reviewer.class, id);
         if (reviewer == null) {
             return Response.status(404).build();
@@ -60,8 +62,11 @@ public class Reviewers {
     }
 
     @POST
+    @Path("reviewers")
     @Produces({MediaType.APPLICATION_JSON})
     public Response createReviewer(ReviewerRequest reviewerRequest) throws CulrConnectorException {
+        LOGGER.info("reviewers (POST)");
+
         final String cprNumber = reviewerRequest.getCprNumber();
         if (cprNumber == null || cprNumber.isBlank()) {
             return ServiceErrorDto.InvalidRequest("Missing required field in the request data",
@@ -91,8 +96,8 @@ public class Reviewers {
                     .withInstitution(reviewerRequest.getInstitution())
                     .withPaycode(reviewerRequest.getPaycode())
                     .withAddress(reviewerRequest.getAddress())
-                    .withHiatus_begin(reviewerRequest.getHiatusBegin())
-                    .withHiatus_end(reviewerRequest.getHiatusEnd())
+                    .withHiatus_begin(reviewerRequest.getHiatusBegin() != null ? LocalDate.parse(reviewerRequest.getHiatusBegin()) : null)
+                    .withHiatus_end(reviewerRequest.getHiatusEnd() != null ? LocalDate.parse(reviewerRequest.getHiatusEnd()) : null)
                     .withSubjects(repository.resolveSubjects(reviewerRequest.getSubjects()))
                     .withAccepts(reviewerRequest.getAccepts());
 
@@ -111,8 +116,10 @@ public class Reviewers {
     }
 
     @GET
+    @Path("reviewers")
     @Produces({MediaType.APPLICATION_JSON})
     public Response getAllReviewers(@QueryParam("deadline") LocalDate deadline) {
+        LOGGER.info("reviewers (GET)");
 
         if (deadline == null) {
             final TypedQuery<Reviewer> query = entityManager.createNamedQuery(

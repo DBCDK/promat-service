@@ -9,8 +9,8 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import dk.dbc.promat.service.persistence.Address;
 import dk.dbc.promat.service.persistence.Reviewer;
 
-import java.time.LocalDate;
 import java.util.List;
+
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class ReviewerRequest implements Dto {
@@ -23,8 +23,8 @@ public class ReviewerRequest implements Dto {
     private String institution;
     private Integer paycode;
     private Address address;
-    private LocalDate hiatusBegin;
-    private LocalDate hiatusEnd;
+    private String hiatusBegin;
+    private String hiatusEnd;
     private List<Integer> subjects;
     private List<Reviewer.Accepts> accepts;
 
@@ -145,28 +145,28 @@ public class ReviewerRequest implements Dto {
         return this;
     }
 
-    public LocalDate getHiatusBegin() {
+    public String getHiatusBegin() {
         return hiatusBegin;
     }
 
-    public void setHiatusBegin(LocalDate hiatusBegin) {
+    public void setHiatusBegin(String hiatusBegin) {
         this.hiatusBegin = hiatusBegin;
     }
 
-    public ReviewerRequest withHiatusBegin(LocalDate hiatus_begin) {
+    public ReviewerRequest withHiatusBegin(String hiatus_begin) {
         this.hiatusBegin = hiatus_begin;
         return this;
     }
 
-    public LocalDate getHiatusEnd() {
+    public String getHiatusEnd() {
         return hiatusEnd;
     }
 
-    public void setHiatusEnd(LocalDate hiatusEnd) {
+    public void setHiatusEnd(String hiatusEnd) {
         this.hiatusEnd = hiatusEnd;
     }
 
-    public ReviewerRequest withHiatusEnd(LocalDate hiatus_end) {
+    public ReviewerRequest withHiatusEnd(String hiatus_end) {
         this.hiatusEnd = hiatus_end;
         return this;
     }
