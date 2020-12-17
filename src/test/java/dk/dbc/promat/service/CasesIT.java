@@ -264,8 +264,8 @@ public class CasesIT extends ContainerTest {
 
         assertThat("status code", postResponse("v1/api/cases", dto).getStatus(), is(400));
 
-        // Change status to DONE (which is even worse)
-        dto.setStatus(CaseStatus.DONE);
+        // Change status to EXPORTED (which is even worse)
+        dto.setStatus(CaseStatus.EXPORTED);
         assertThat("status code", postResponse("v1/api/cases", dto).getStatus(), is(400));
 
         // Get frustrated and remove the status
@@ -321,12 +321,12 @@ public class CasesIT extends ContainerTest {
         fetched = mapper.readValue(obj, CaseSummaryList.class);
         assertThat("Number of cases with status CREATED", fetched.getNumFound(), is(0));
 
-        // Cases with status CLOSED or DONE
-        response = getResponse("v1/api/cases", Map.of("status","CLOSED,DONE"));
+        // Cases with status CLOSED or EXPORTED
+        response = getResponse("v1/api/cases", Map.of("status","CLOSED,EXPORTED"));
         assertThat("status code", response.getStatus(), is(200));
         obj = response.readEntity(String.class);
         fetched = mapper.readValue(obj, CaseSummaryList.class);
-        assertThat("Number of cases with status CLOSED or DONE", fetched.getNumFound(), is(2));
+        assertThat("Number of cases with status CLOSED or EXPORTED", fetched.getNumFound(), is(2));
     }
 
     @Test
