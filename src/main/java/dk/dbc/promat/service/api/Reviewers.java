@@ -156,21 +156,60 @@ public class Reviewers {
     @Path("reviewers/{id}")
     @Produces({MediaType.APPLICATION_JSON})
     public Response updateReviewer(@PathParam("id") final Integer id, ReviewerRequest reviewerRequest) {
-        LOGGER.info("reviewers/{} (PUT) body: {}", id, reviewerRequest);
+        LOGGER.info("reviewers/{} (PUT)", id);
 
         try {
 
+            // Find the existing user
             final Reviewer reviewer = entityManager.find(Reviewer.class, id);
             if (reviewer == null) {
                 LOGGER.info("Reviewer with id {} does not exists", id);
                 return Response.status(404).build();
             }
 
-            // Todo: Update reviewer
+            // Update by patching
+            if(reviewerRequest.isActive() != null) {
+                reviewer.setActive(reviewerRequest.isActive());
+            }
+            if(reviewerRequest.getAccepts() != null) {
+                reviewer.setAccepts(reviewerRequest.getAccepts());
+            }
+            if(reviewerRequest.getAddress() != null) {
+                reviewer.setAddress(reviewerRequest.getAddress());
+            }
+            if(reviewerRequest.getEmail() != null) {
+                reviewer.setEmail(reviewerRequest.getEmail());
+            }
+            if(reviewerRequest.getFirstName() != null) {
+                reviewer.setFirstName(reviewerRequest.getFirstName());
+            }
+            if(reviewerRequest.getLastName() != null) {
+                reviewer.setLastName(reviewerRequest.getLastName());
+            }
+            if(reviewerRequest.getHiatusBegin() != null) {
+                reviewer.setHiatus_begin(reviewerRequest.getHiatusBegin() != null ? LocalDate.parse(reviewerRequest.getHiatusBegin()) : null);
+            }
+            if(reviewerRequest.getHiatusEnd() != null) {
+                reviewer.setHiatus_end(reviewerRequest.getHiatusEnd() != null ? LocalDate.parse(reviewerRequest.getHiatusEnd()) : null);
+            }
+            if(reviewerRequest.getInstitution() != null) {
+                reviewer.setInstitution(reviewerRequest.getInstitution());
+            }
+            if(reviewerRequest.getPaycode() != null) {
+                reviewer.setPaycode(reviewerRequest.getPaycode());
+            }
+            if(reviewerRequest.getPhone() != null) {
+                reviewer.setPhone(reviewerRequest.getPhone());
+            }
+            if(reviewerRequest.getSubjects() != null) {
+                reviewer.setSubjects(repository.resolveSubjects(reviewerRequest.getSubjects()));
+            }
 
             return Response.status(200)
                     .entity(reviewer)
                     .build();
+        } catch (ServiceErrorException e) {
+            return Response.status(e.getHttpStatus()).entity(e.getServiceErrorDto()).build();
         } catch (Exception e) {
             return Response.serverError().entity(e.getMessage()).build();
         }

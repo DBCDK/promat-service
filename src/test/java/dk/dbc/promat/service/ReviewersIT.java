@@ -193,7 +193,7 @@ public class ReviewersIT extends ContainerTest {
                 .withLastName("Pedersen")
                 .withHiatusBegin("2020-12-22")
                 .withHiatusEnd("2021-01-03")
-                .withInstitution("Peder Petersens pedaler")
+                .withInstitution("Peder Pedersens pedaler")
                 .withPaycode(7777)
                 .withPhone("87654321")
                 .withSubjects(List.of(3))
@@ -203,7 +203,10 @@ public class ReviewersIT extends ContainerTest {
         assertThat("response status", response.getStatus(), is(200));
         final Reviewer updated = mapper.readValue(response.readEntity(String.class), Reviewer.class);
 
-        // Todo: Verify that the user got updated
+        final Reviewer expected = new Reviewer();
+        loadUpdatedReviewer3(expected);
+
+        assertThat("Reviewer has been updated", updated.equals(expected));
     }
 
     private void loadReviewer1(Reviewer reviewer) {
@@ -308,8 +311,9 @@ public class ReviewersIT extends ContainerTest {
                 List.of(
                         new Subject()
                                 .withId(3)
-                                .withName("Eventyr, fantasy")));
-        reviewer.setHiatus_begin(LocalDate.parse("2020-22-12"));
+                                .withName("Eventyr, fantasy")
+                                .withParentId(2)));
+        reviewer.setHiatus_begin(LocalDate.parse("2020-12-22"));
         reviewer.setHiatus_end(LocalDate.parse("2021-01-03"));
         reviewer.setAccepts(List.of(
                 Reviewer.Accepts.BOOK, Reviewer.Accepts.MULTIMEDIA));
