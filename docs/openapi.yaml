@@ -537,6 +537,9 @@ components:
         note:
           type: string
           description: editors notes on the reviewer
+        capacity:
+          type: integer
+          description: maximum requested workload per week
       required:
         - id
         - firstName
