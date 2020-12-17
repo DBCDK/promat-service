@@ -1,0 +1,1 @@
+ALTER TABLE promatuser ADD COLUMN capacity INT DEFAULT NULL;
