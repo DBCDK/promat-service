@@ -931,6 +931,7 @@ components:
         - 'DELETED'
         - 'PENDING_MEETING'
         - 'PENDING_REVERT'
+        - 'PENDING_EXPORT'
         - 'REVERTED'
       description: |
         Enum describing the overall state of this case
@@ -946,6 +947,7 @@ components:
         * PENDING_MEETING = case awaits being dealt with at the next editor meeting
         * PENDING_EXTERNAL = case awaits external depencies, such as metakompas
         * PENDING_REVERT = case awaits the deletion of its primary faust
+        * PENDING_EXPORT = case awaits harvesting for future publication
         * REVERTED = primary faust of the case is deleted
 
     MaterialType:

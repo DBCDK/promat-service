@@ -18,5 +18,6 @@ public enum CaseStatus {
     PENDING_MEETING,
     PENDING_EXTERNAL,
     PENDING_REVERT,
+    PENDING_EXPORT,
     REVERTED
 }
