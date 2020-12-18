@@ -38,9 +38,8 @@
     </dependency>
     <dependency>
       <groupId>dk.dbc</groupId>
-      <artifactId>httpclient</artifactId>
-      <version>0.2</version>
-      <scope>test</scope>
+      <artifactId>dbc-commons-httpclient</artifactId>
+      <version>1.1-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>jakarta.platform</groupId>
@@ -169,14 +168,6 @@
           <artifactId>junit</artifactId>
         </exclusion>
       </exclusions>
-    </dependency>
-    <!-- This should have been transitively added by the culr-connector dependency,
-         but it seems to be overruled by the test scoped httpclient dependency.
-    -->
-    <dependency>
-      <groupId>net.jodah</groupId>
-      <artifactId>failsafe</artifactId>
-      <version>2.4.0</version>
     </dependency>
   </dependencies>
 
