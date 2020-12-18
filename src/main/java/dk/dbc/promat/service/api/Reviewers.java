@@ -23,6 +23,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.TypedQuery;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -35,7 +36,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Stateless
-@Path("reviewers")
+@Path("")
 public class Reviewers {
     private static final Logger LOGGER = LoggerFactory.getLogger(Reviewers.class);
 
@@ -49,9 +50,11 @@ public class Reviewers {
     CulrHandler culrHandler;
 
     @GET
-    @Path("{id}")
+    @Path("reviewers/{id}")
     @Produces({MediaType.APPLICATION_JSON})
     public Response getReviewer(@PathParam("id") Integer id) {
+        LOGGER.info("reviewers/{} (GET)", id);
+
         final Reviewer reviewer = entityManager.find(Reviewer.class, id);
         if (reviewer == null) {
             return Response.status(404).build();
@@ -60,8 +63,11 @@ public class Reviewers {
     }
 
     @POST
+    @Path("reviewers")
     @Produces({MediaType.APPLICATION_JSON})
     public Response createReviewer(ReviewerRequest reviewerRequest) throws CulrConnectorException {
+        LOGGER.info("reviewers (POST)");
+
         final String cprNumber = reviewerRequest.getCprNumber();
         if (cprNumber == null || cprNumber.isBlank()) {
             return ServiceErrorDto.InvalidRequest("Missing required field in the request data",
@@ -83,7 +89,7 @@ public class Reviewers {
 
         try {
             final Reviewer entity = new Reviewer()
-                    .withActive(reviewerRequest.isActive())
+                    .withActive(reviewerRequest.isActive() != null ? reviewerRequest.isActive() : true)  // New users defaults to active
                     .withFirstName(reviewerRequest.getFirstName())
                     .withLastName(reviewerRequest.getLastName())
                     .withEmail(reviewerRequest.getEmail())
@@ -111,8 +117,10 @@ public class Reviewers {
     }
 
     @GET
+    @Path("reviewers")
     @Produces({MediaType.APPLICATION_JSON})
     public Response getAllReviewers(@QueryParam("deadline") LocalDate deadline) {
+        LOGGER.info("reviewers (GET)");
 
         if (deadline == null) {
             final TypedQuery<Reviewer> query = entityManager.createNamedQuery(
@@ -142,6 +150,69 @@ public class Reviewers {
                         .withWeekAfterWorkload((long) objects[3]))
                 .collect(Collectors.toList());
         return Response.ok(new ReviewerList<ReviewerWithWorkloads>().withReviewers(reviewers)).build();
+    }
+
+    @PUT
+    @Path("reviewers/{id}")
+    @Produces({MediaType.APPLICATION_JSON})
+    public Response updateReviewer(@PathParam("id") final Integer id, ReviewerRequest reviewerRequest) {
+        LOGGER.info("reviewers/{} (PUT)", id);
+
+        try {
+
+            // Find the existing user
+            final Reviewer reviewer = entityManager.find(Reviewer.class, id);
+            if (reviewer == null) {
+                LOGGER.info("Reviewer with id {} does not exists", id);
+                return Response.status(404).build();
+            }
+
+            // Update by patching
+            if(reviewerRequest.isActive() != null) {
+                reviewer.setActive(reviewerRequest.isActive());
+            }
+            if(reviewerRequest.getAccepts() != null) {
+                reviewer.setAccepts(reviewerRequest.getAccepts());
+            }
+            if(reviewerRequest.getAddress() != null) {
+                reviewer.setAddress(reviewerRequest.getAddress());
+            }
+            if(reviewerRequest.getEmail() != null) {
+                reviewer.setEmail(reviewerRequest.getEmail());
+            }
+            if(reviewerRequest.getFirstName() != null) {
+                reviewer.setFirstName(reviewerRequest.getFirstName());
+            }
+            if(reviewerRequest.getLastName() != null) {
+                reviewer.setLastName(reviewerRequest.getLastName());
+            }
+            if(reviewerRequest.getHiatusBegin() != null) {
+                reviewer.setHiatus_begin(reviewerRequest.getHiatusBegin());
+            }
+            if(reviewerRequest.getHiatusEnd() != null) {
+                reviewer.setHiatus_end(reviewerRequest.getHiatusEnd());
+            }
+            if(reviewerRequest.getInstitution() != null) {
+                reviewer.setInstitution(reviewerRequest.getInstitution());
+            }
+            if(reviewerRequest.getPaycode() != null) {
+                reviewer.setPaycode(reviewerRequest.getPaycode());
+            }
+            if(reviewerRequest.getPhone() != null) {
+                reviewer.setPhone(reviewerRequest.getPhone());
+            }
+            if(reviewerRequest.getSubjects() != null) {
+                reviewer.setSubjects(repository.resolveSubjects(reviewerRequest.getSubjects()));
+            }
+
+            return Response.status(200)
+                    .entity(reviewer)
+                    .build();
+        } catch (ServiceErrorException e) {
+            return Response.status(e.getHttpStatus()).entity(e.getServiceErrorDto()).build();
+        } catch (Exception e) {
+            return Response.serverError().entity(e.getMessage()).build();
+        }
     }
 
     /**

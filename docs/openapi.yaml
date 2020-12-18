@@ -108,6 +108,42 @@ paths:
                 $ref: '#/components/schemas/Reviewer'
         '404':
           description: Reviewer not found
+    put:
+      tags:
+        - reviewers
+      summary: Update reviewer
+      operationId: updateReviewer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReviewerRequest'
+      responses:
+        '200':
+          description: reviewer successfully updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Reviewer'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '404':
+          description: Reviewer not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '500':
+          description: On failure from external CULR service
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
 
   /editors/{id}:
     get:
