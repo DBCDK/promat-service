@@ -6,9 +6,14 @@
 package dk.dbc.promat.service.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateDeserializer;
+import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateSerializer;
 import dk.dbc.promat.service.persistence.Address;
 import dk.dbc.promat.service.persistence.Reviewer;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Objects;
 
@@ -23,10 +28,15 @@ public class ReviewerRequest implements Dto {
     private String institution;
     private Integer paycode;
     private Address address;
-    private String hiatusBegin;
-    private String hiatusEnd;
+
     private List<Integer> subjects;
     private List<Reviewer.Accepts> accepts;
+
+    @JsonSerialize(using = LocalDateSerializer.class)
+    private LocalDate hiatusBegin;
+
+    @JsonSerialize(using = LocalDateSerializer.class)
+    private LocalDate hiatusEnd;
 
     public Boolean isActive() {
         return active;
@@ -145,28 +155,28 @@ public class ReviewerRequest implements Dto {
         return this;
     }
 
-    public String getHiatusBegin() {
+    public LocalDate getHiatusBegin() {
         return hiatusBegin;
     }
 
-    public void setHiatusBegin(String hiatusBegin) {
+    public void setHiatusBegin(LocalDate hiatusBegin) {
         this.hiatusBegin = hiatusBegin;
     }
 
-    public ReviewerRequest withHiatusBegin(String hiatus_begin) {
+    public ReviewerRequest withHiatusBegin(LocalDate hiatus_begin) {
         this.hiatusBegin = hiatus_begin;
         return this;
     }
 
-    public String getHiatusEnd() {
+    public LocalDate getHiatusEnd() {
         return hiatusEnd;
     }
 
-    public void setHiatusEnd(String hiatusEnd) {
+    public void setHiatusEnd(LocalDate hiatusEnd) {
         this.hiatusEnd = hiatusEnd;
     }
 
-    public ReviewerRequest withHiatusEnd(String hiatus_end) {
+    public ReviewerRequest withHiatusEnd(LocalDate hiatus_end) {
         this.hiatusEnd = hiatus_end;
         return this;
     }

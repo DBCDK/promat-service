@@ -97,8 +97,8 @@ public class Reviewers {
                     .withInstitution(reviewerRequest.getInstitution())
                     .withPaycode(reviewerRequest.getPaycode())
                     .withAddress(reviewerRequest.getAddress())
-                    .withHiatus_begin(reviewerRequest.getHiatusBegin() != null ? LocalDate.parse(reviewerRequest.getHiatusBegin()) : null)
-                    .withHiatus_end(reviewerRequest.getHiatusEnd() != null ? LocalDate.parse(reviewerRequest.getHiatusEnd()) : null)
+                    .withHiatus_begin(reviewerRequest.getHiatusBegin())
+                    .withHiatus_end(reviewerRequest.getHiatusEnd())
                     .withSubjects(repository.resolveSubjects(reviewerRequest.getSubjects()))
                     .withAccepts(reviewerRequest.getAccepts());
 
@@ -187,10 +187,10 @@ public class Reviewers {
                 reviewer.setLastName(reviewerRequest.getLastName());
             }
             if(reviewerRequest.getHiatusBegin() != null) {
-                reviewer.setHiatus_begin(reviewerRequest.getHiatusBegin() != null ? LocalDate.parse(reviewerRequest.getHiatusBegin()) : null);
+                reviewer.setHiatus_begin(reviewerRequest.getHiatusBegin());
             }
             if(reviewerRequest.getHiatusEnd() != null) {
-                reviewer.setHiatus_end(reviewerRequest.getHiatusEnd() != null ? LocalDate.parse(reviewerRequest.getHiatusEnd()) : null);
+                reviewer.setHiatus_end(reviewerRequest.getHiatusEnd());
             }
             if(reviewerRequest.getInstitution() != null) {
                 reviewer.setInstitution(reviewerRequest.getInstitution());
