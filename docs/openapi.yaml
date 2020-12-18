@@ -926,8 +926,13 @@ components:
         - 'PENDING_APPROVAL'
         - 'PENDING_ISSUES'
         - 'APPROVED'
-        - 'DONE'
+        - 'EXPORTED'
         - 'CLOSED'
+        - 'DELETED'
+        - 'PENDING_MEETING'
+        - 'PENDING_REVERT'
+        - 'PENDING_EXPORT'
+        - 'REVERTED'
       description: |
         Enum describing the overall state of this case
         * CREATED = Case has been created but still needs refinement
@@ -936,8 +941,14 @@ components:
         * PENDING_APPROVAL = reviewer has completed all tasks, editor needs to approve one or more of them
         * PENDING_ISSUES = review could not be approved, further actions needed by the editor and/or reviewer
         * APPROVED = All tasks has received data is has been approved. Case will be exported on next run
-        * DONE = All tasks is approved and the case has been exported
+        * EXPORTED = All tasks is approved and the case has been exported
         * CLOSED = Case has been closed, individual task states is undefined
+        * DELETED = Case has been abandoned
+        * PENDING_MEETING = case awaits being dealt with at the next editor meeting
+        * PENDING_EXTERNAL = case awaits external depencies, such as metakompas
+        * PENDING_REVERT = case awaits the deletion of its primary faust
+        * PENDING_EXPORT = case awaits harvesting for future publication
+        * REVERTED = primary faust of the case is deleted
 
     MaterialType:
       type: string
