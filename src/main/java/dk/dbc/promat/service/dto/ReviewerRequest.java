@@ -6,15 +6,20 @@
 package dk.dbc.promat.service.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateDeserializer;
+import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateSerializer;
 import dk.dbc.promat.service.persistence.Address;
 import dk.dbc.promat.service.persistence.Reviewer;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Objects;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class ReviewerRequest implements Dto {
-    private boolean active = true;
+    private Boolean active;
     private String cprNumber;
     private String firstName;
     private String lastName;
@@ -23,17 +28,22 @@ public class ReviewerRequest implements Dto {
     private String institution;
     private Integer paycode;
     private Address address;
-    private LocalDate hiatusBegin;
-    private LocalDate hiatusEnd;
+
     private List<Integer> subjects;
     private List<Reviewer.Accepts> accepts;
     private Integer capacity;
 
-    public boolean isActive() {
+    @JsonSerialize(using = LocalDateSerializer.class)
+    private LocalDate hiatusBegin;
+
+    @JsonSerialize(using = LocalDateSerializer.class)
+    private LocalDate hiatusEnd;
+
+    public Boolean isActive() {
         return active;
     }
 
-    public void setActive(boolean active) {
+    public void setActive(Boolean active) {
         this.active = active;
     }
 
@@ -212,72 +222,24 @@ public class ReviewerRequest implements Dto {
     }
 
     @Override
-    public String toString() {
-        return "ReviewerRequest{" +
-                "active=" + active +
-                ", firstName='" + firstName + '\'' +
-                ", lastName='" + lastName + '\'' +
-                ", email='" + email + '\'' +
-                ", phone='" + phone + '\'' +
-                ", institution='" + institution + '\'' +
-                ", paycode=" + paycode +
-                ", address=" + address +
-                ", hiatus_begin=" + hiatusBegin +
-                ", hiatus_end=" + hiatusEnd +
-                ", subjects=" + subjects +
-                ", accepts=" + accepts +
-                ", capacity=" + capacity +
-                '}';
-    }
-
-    @Override
     public boolean equals(Object o) {
-        if (this == o) {
-            return true;
-        }
-        if (o == null || getClass() != o.getClass()) {
-            return false;
-        }
-
+        if(this == o) return true;
+        if(o == null || getClass() != o.getClass()) return false;
         ReviewerRequest that = (ReviewerRequest) o;
-
-        if (active != that.active) {
-            return false;
-        }
-        if (firstName != null ? !firstName.equals(that.firstName) : that.firstName != null) {
-            return false;
-        }
-        if (lastName != null ? !lastName.equals(that.lastName) : that.lastName != null) {
-            return false;
-        }
-        if (email != null ? !email.equals(that.email) : that.email != null) {
-            return false;
-        }
-        if (phone != null ? !phone.equals(that.phone) : that.phone != null) {
-            return false;
-        }
-        if (institution != null ? !institution.equals(that.institution) : that.institution != null) {
-            return false;
-        }
-        if (paycode != null ? !paycode.equals(that.paycode) : that.paycode != null) {
-            return false;
-        }
-        if (address != null ? !address.equals(that.address) : that.address != null) {
-            return false;
-        }
-        if (hiatusBegin != null ? !hiatusBegin.equals(that.hiatusBegin) : that.hiatusBegin != null) {
-            return false;
-        }
-        if (hiatusEnd != null ? !hiatusEnd.equals(that.hiatusEnd) : that.hiatusEnd != null) {
-            return false;
-        }
-        if (subjects != null ? !subjects.equals(that.subjects) : that.subjects != null) {
-            return false;
-        }
-        if (accepts != null ? !accepts.equals(that.accepts) : that.accepts != null) {
-            return false;
-        }
-        return capacity != null ? capacity.equals(that.capacity) : that.capacity == null;
+        return Objects.equals(active, that.active) &&
+                Objects.equals(cprNumber, that.cprNumber) &&
+                Objects.equals(firstName, that.firstName) &&
+                Objects.equals(lastName, that.lastName) &&
+                Objects.equals(email, that.email) &&
+                Objects.equals(phone, that.phone) &&
+                Objects.equals(institution, that.institution) &&
+                Objects.equals(paycode, that.paycode) &&
+                Objects.equals(address, that.address) &&
+                Objects.equals(hiatusBegin, that.hiatusBegin) &&
+                Objects.equals(hiatusEnd, that.hiatusEnd) &&
+                Objects.equals(subjects, that.subjects) &&
+                Objects.equals(accepts, that.accepts) &&
+                Objects.equals(capacity, that.capacity);
     }
 
     @Override
@@ -296,5 +258,25 @@ public class ReviewerRequest implements Dto {
         result = 31 * result + (accepts != null ? accepts.hashCode() : 0);
         result = 31 * result + (capacity != null ? capacity.hashCode() : 0);
         return result;
+    }
+
+    @Override
+    public String toString() {
+        return "ReviewerRequest{" +
+                "active=" + active +
+                ", cprNumber='" + cprNumber + '\'' +
+                ", firstName='" + firstName + '\'' +
+                ", lastName='" + lastName + '\'' +
+                ", email='" + email + '\'' +
+                ", phone='" + phone + '\'' +
+                ", institution='" + institution + '\'' +
+                ", paycode=" + paycode +
+                ", address=" + address +
+                ", hiatusBegin='" + hiatusBegin + '\'' +
+                ", hiatusEnd='" + hiatusEnd + '\'' +
+                ", subjects=" + subjects +
+                ", accepts=" + accepts +
+                ", capacity=" +capacity +
+                '}';
     }
 }

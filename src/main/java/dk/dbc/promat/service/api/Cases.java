@@ -231,7 +231,7 @@ public class Cases {
                 // And status not CLOSED or DONE
                 CriteriaBuilder.In<CaseStatus> inClause = builder.in(root.get("status"));
                 inClause.value(CaseStatus.CLOSED);
-                inClause.value(CaseStatus.DONE);
+                inClause.value(CaseStatus.EXPORTED);
                 inClause.value(CaseStatus.DELETED);
                 Predicate statusPredicate = builder.not(inClause);
 

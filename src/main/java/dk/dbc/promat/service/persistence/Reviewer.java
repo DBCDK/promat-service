@@ -367,6 +367,7 @@ public class Reviewer extends PromatUser {
         reviewerWithWorkloads.setAccepts(accepts);
         reviewerWithWorkloads.setNote(note);
         reviewerWithWorkloads.setCapacity(capacity);
+        reviewerWithWorkloads.setPhone(phone);
         return reviewerWithWorkloads;
     }
 }
