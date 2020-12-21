@@ -237,6 +237,7 @@ public class ReviewersIT extends ContainerTest {
         reviewer.setAccepts(List.of(
                 Reviewer.Accepts.MULTIMEDIA, Reviewer.Accepts.PS4, Reviewer.Accepts.PS5));
         reviewer.setNote("note1");
+        reviewer.setCapacity(1);
     }
 
     private void loadReviewer2(Reviewer reviewer) {
@@ -263,6 +264,7 @@ public class ReviewersIT extends ContainerTest {
         reviewer.setAccepts(List.of(
                 Reviewer.Accepts.MULTIMEDIA, Reviewer.Accepts.PS4, Reviewer.Accepts.PS5));
         reviewer.setNote("note2");
+        reviewer.setCapacity(2);
     }
 
     private void loadReviewer3(Reviewer reviewer) {

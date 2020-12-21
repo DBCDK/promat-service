@@ -31,6 +31,7 @@ public class ReviewerRequest implements Dto {
 
     private List<Integer> subjects;
     private List<Reviewer.Accepts> accepts;
+    private Integer capacity;
 
     @JsonSerialize(using = LocalDateSerializer.class)
     private LocalDate hiatusBegin;
@@ -194,6 +195,14 @@ public class ReviewerRequest implements Dto {
         return this;
     }
 
+    public Integer getCapacity() {
+        return capacity;
+    }
+
+    public void setCapacity(Integer capacity) {
+        this.capacity = capacity;
+    }
+
     public List<Reviewer.Accepts> getAccepts() {
         return accepts;
     }
@@ -204,6 +213,11 @@ public class ReviewerRequest implements Dto {
 
     public ReviewerRequest withAccepts(List<Reviewer.Accepts> accepts) {
         this.accepts = accepts;
+        return this;
+    }
+
+    public ReviewerRequest withCapacity(Integer capacity) {
+        this.capacity = capacity;
         return this;
     }
 
@@ -224,7 +238,8 @@ public class ReviewerRequest implements Dto {
                 Objects.equals(hiatusBegin, that.hiatusBegin) &&
                 Objects.equals(hiatusEnd, that.hiatusEnd) &&
                 Objects.equals(subjects, that.subjects) &&
-                Objects.equals(accepts, that.accepts);
+                Objects.equals(accepts, that.accepts) &&
+                Objects.equals(capacity, that.capacity);
     }
 
     @Override
@@ -241,6 +256,7 @@ public class ReviewerRequest implements Dto {
         result = 31 * result + (hiatusEnd != null ? hiatusEnd.hashCode() : 0);
         result = 31 * result + (subjects != null ? subjects.hashCode() : 0);
         result = 31 * result + (accepts != null ? accepts.hashCode() : 0);
+        result = 31 * result + (capacity != null ? capacity.hashCode() : 0);
         return result;
     }
 
@@ -260,6 +276,7 @@ public class ReviewerRequest implements Dto {
                 ", hiatusEnd='" + hiatusEnd + '\'' +
                 ", subjects=" + subjects +
                 ", accepts=" + accepts +
+                ", capacity=" +capacity +
                 '}';
     }
 }

@@ -573,6 +573,9 @@ components:
         note:
           type: string
           description: editors notes on the reviewer
+        capacity:
+          type: integer
+          description: maximum requested workload per week
       required:
         - id
         - firstName
@@ -620,6 +623,10 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/ReviewerAccepts'
+        note:
+          type: string
+        capacity:
+          type: integer
 
       required:
         - cprNumber

@@ -100,7 +100,8 @@ public class Reviewers {
                     .withHiatus_begin(reviewerRequest.getHiatusBegin())
                     .withHiatus_end(reviewerRequest.getHiatusEnd())
                     .withSubjects(repository.resolveSubjects(reviewerRequest.getSubjects()))
-                    .withAccepts(reviewerRequest.getAccepts());
+                    .withAccepts(reviewerRequest.getAccepts())
+                    .withCapacity(reviewerRequest.getCapacity());
 
             entity.setCulrId(culrId);
 
