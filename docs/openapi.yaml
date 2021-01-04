@@ -113,6 +113,13 @@ paths:
         - reviewers
       summary: Update reviewer
       operationId: updateReviewer
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            description: Reviewer ID
       requestBody:
         required: true
         content:
@@ -167,6 +174,49 @@ paths:
                 $ref: '#/components/schemas/Editor'
         '404':
           description: Editor not found
+    put:
+      tags:
+        - editors
+      summary: Update editor
+      operationId: updateEditor
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            description: Editor ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EditorRequest'
+      responses:
+        '200':
+          description: Editor successfully updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Editor'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '404':
+          description: Editor not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '500':
+          description: On failure from external CULR service
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
 
   /users/{culrId}/role:
     get:
@@ -627,7 +677,8 @@ components:
           type: string
         capacity:
           type: integer
-
+        active:
+          type: boolean
       required:
         - cprNumber
         - firstName
@@ -653,6 +704,32 @@ components:
         - firstName
         - lastName
         - email
+
+    EditorRequest:
+      type: object
+      description: Used for creating new editors and modifying existing.
+      properties:
+        cprNumber:
+          type: string
+          nullable: true
+        active:
+          type: boolean
+          nullable: true
+        firstName:
+          type: string
+          nullable: true
+        lastName:
+          type: string
+          nullable: true
+        email:
+          type: string
+          nullable: true
+      required:
+        - cprnumber
+        - firstName
+        - lastName
+        - email
+        - paycode
 
     UserSummary:
       type: object
