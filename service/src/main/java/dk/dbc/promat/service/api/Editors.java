@@ -6,6 +6,7 @@
 package dk.dbc.promat.service.api;
 
 import dk.dbc.promat.service.dto.EditorRequest;
+import dk.dbc.promat.service.dto.ServiceErrorDto;
 import dk.dbc.promat.service.persistence.Editor;
 import dk.dbc.promat.service.persistence.PromatEntityManager;
 import org.slf4j.Logger;
@@ -15,6 +16,7 @@ import javax.ejb.Stateless;
 import javax.inject.Inject;
 import javax.persistence.EntityManager;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -30,6 +32,49 @@ public class Editors {
     @Inject
     @PromatEntityManager
     EntityManager entityManager;
+
+    @POST
+    @Path("editors")
+    @Produces({MediaType.APPLICATION_JSON})
+    public Response createEditor(EditorRequest editorRequest) {
+        LOGGER.info("editors (POST)");
+
+        if (editorRequest.getFirstName() == null || editorRequest.getFirstName().isBlank()) {
+            return ServiceErrorDto.InvalidRequest("Missing required field in the request data",
+                    "Field 'firstName' must be supplied and not be blank when creating a new reviewer");
+        }
+        if (editorRequest.getLastName() == null || editorRequest.getLastName().isBlank()) {
+            return ServiceErrorDto.InvalidRequest("Missing required field in the request data",
+                    "Field 'lastName' must be supplied and not be blank when creating a new reviewer");
+        }
+        if (editorRequest.getEmail() == null || editorRequest.getEmail().isBlank()) {
+            return ServiceErrorDto.InvalidRequest("Missing required field in the request data",
+                    "Field 'email' must be supplied and not be blank when creating a new reviewer");
+        }
+
+        // Todo: Determine how to obtain a culr-id
+        final String culrId = "";
+
+        try {
+            final Editor entity = new Editor()
+                    .withActive(editorRequest.isActive() != null ? editorRequest.isActive() : true)  // New users defaults to active
+                    .withFirstName(editorRequest.getFirstName())
+                    .withLastName(editorRequest.getLastName())
+                    .withEmail(editorRequest.getEmail());
+
+            entity.setCulrId(culrId);
+
+            entityManager.persist(entity);
+            entityManager.flush();
+
+            LOGGER.info("Created new editor with ID {} for request {}", entity.getId(), editorRequest);
+            return Response.status(201)
+                    .entity(entity)
+                    .build();
+        } catch (Exception e) {
+            return Response.serverError().entity(e.getMessage()).build();
+        }
+    }
 
     @GET
     @Path("editors/{id}")
