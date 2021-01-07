@@ -12,19 +12,20 @@ import javax.mail.Message;
 import javax.mail.MessagingException;
 import javax.mail.Session;
 import javax.persistence.TypedQuery;
+import org.eclipse.microprofile.metrics.ConcurrentGauge;
 import org.eclipse.microprofile.metrics.Counter;
 import org.eclipse.microprofile.metrics.Metadata;
 import org.eclipse.microprofile.metrics.MetricRegistry;
-import org.eclipse.microprofile.metrics.SimpleTimer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.jvnet.mock_javamail.Mailbox;
-
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.any;
 
@@ -39,13 +40,13 @@ public class ScheduledNotificationSenderIT extends IntegrationTest {
     }
     TransactionScopedPersistenceContext persistenceContext;
     private final MetricRegistry metricRegistry = mock(MetricRegistry.class);
-    private final SimpleTimer mailSendingTimer = mock(SimpleTimer.class);
     private final Counter mailCounter = mock(Counter.class);
+    private final ConcurrentGauge mailFailureGauge = mock(ConcurrentGauge.class);
 
     @BeforeEach
     public void setupMailStuff() {
-        when(metricRegistry.simpleTimer(any(Metadata.class))).thenReturn(mailSendingTimer);
         when(metricRegistry.counter(any(Metadata.class))).thenReturn(mailCounter);
+        when(metricRegistry.concurrentGauge(any(Metadata.class))).thenReturn(mailFailureGauge);
         persistenceContext = new TransactionScopedPersistenceContext(entityManager);
         Mailbox.clearAll();
     }
@@ -72,6 +73,8 @@ public class ScheduledNotificationSenderIT extends IntegrationTest {
         TypedQuery<Notification> query = entityManager.createQuery(Notification.SELECT_FROM_NOTIFCATION_QUEUE_QUERY, Notification.class);
         query.setParameter("status", NotificationStatus.DONE);
         assertThat("All notifications in db are now DONE", query.getResultList().size(), is(3));
+        verify(mailCounter, times(2)).inc();
+        verify(mailFailureGauge, times(0)).inc();
     }
 
 }

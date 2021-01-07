@@ -65,5 +65,6 @@ public class ScheduledNotificationSender {
         for (Notification notification : query.getResultList()) {
             notification.setStatus(NotificationStatus.PENDING);
         }
+        notificationSender.resetMailFailuresGauge();
     }
 }

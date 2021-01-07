@@ -10,17 +10,16 @@ import dk.dbc.mail.MailManager;
 import dk.dbc.promat.service.persistence.Notification;
 import dk.dbc.promat.service.persistence.NotificationStatus;
 import dk.dbc.promat.service.persistence.PromatEntityManager;
-import java.time.Duration;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.inject.Inject;
 import javax.mail.MessagingException;
 import javax.persistence.EntityManager;
+import org.eclipse.microprofile.metrics.ConcurrentGauge;
 import org.eclipse.microprofile.metrics.Metadata;
 import org.eclipse.microprofile.metrics.MetricRegistry;
 import org.eclipse.microprofile.metrics.MetricType;
-import org.eclipse.microprofile.metrics.MetricUnits;
 import org.eclipse.microprofile.metrics.annotation.RegistryType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,24 +33,18 @@ public class NotificationSender {
     private static final Logger LOGGER = LoggerFactory.getLogger(NotificationSender.class);
 
     static final Metadata mailCounterMetadata = Metadata.builder()
-            .withName("promat_service_mails_sent")
+            .withName("promat_service_mailsender_counter")
             .withDescription("Number of mails sent.")
             .withType(MetricType.COUNTER)
             .withUnit("mails")
             .build();
 
-    static final Metadata mailFailureCounterMetadata = Metadata.builder()
+    static final Metadata mailFailureGaugeMetadata = Metadata.builder()
             .withName("promat_service_mailsender_failures")
             .withDescription("Number of mails that promat backend service is currently unable to send.")
-            .withType(MetricType.COUNTER)
+            .withType(MetricType.CONCURRENT_GAUGE)
             .withUnit("failures")
             .build();
-
-    static final Metadata mailsendingDurationMetadata = Metadata.builder()
-            .withName("promat_service_mail_sending_duration_timer")
-            .withDescription("Time used sending mail")
-            .withType(MetricType.SIMPLE_TIMER)
-            .withUnit(MetricUnits.MILLISECONDS).build();
 
     @Inject
     MailManager mailManager;
@@ -65,7 +58,6 @@ public class NotificationSender {
     @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
     public void notifyMailRecipient(Notification notification) {
         try {
-            long notifyMailStarttime = System.currentTimeMillis();
             mailManager.newMail()
                     .withRecipients(notification.getToAddress())
                     .withSubject(notification.getSubject())
@@ -78,12 +70,18 @@ public class NotificationSender {
             notification.setStatus(NotificationStatus.DONE);
             entityManager.merge(notification);
             metricRegistry.counter(mailCounterMetadata).inc();
-            metricRegistry.simpleTimer(mailsendingDurationMetadata).update(Duration.ofMillis(System.currentTimeMillis() - notifyMailStarttime));
         } catch (MessagingException e) {
             LOGGER.error("Unable to send mail. Notification:{}",notification.toString());
             notification.setStatus(NotificationStatus.ERROR);
             entityManager.merge(notification);
-            metricRegistry.counter(mailFailureCounterMetadata).inc();
+            metricRegistry.concurrentGauge(mailFailureGaugeMetadata).inc();
+        }
+    }
+
+    public void resetMailFailuresGauge() {
+        ConcurrentGauge gauge = metricRegistry.concurrentGauge(mailFailureGaugeMetadata);
+        while (gauge.getCount() > 0) {
+            gauge.dec();
         }
     }
 }
