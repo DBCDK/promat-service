@@ -25,6 +25,8 @@ tags:
     description: Case tasks
   - name: messages
     description: Text dialogue reviewer/editor on cases
+  - name: payroll
+    description: Payroll preview, execute and lock, history
 
 paths:
   /reviewers:
@@ -703,6 +705,24 @@ paths:
                 $ref: '#/components/schemas/ServiceError'
         '401':
           description: Task could not be deleted, check ServiceError in body for specifics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+
+  /payroll/preview:
+    get:
+      tags:
+        - payroll
+      summary: Return the current payroll, as it will look when executed right now
+      operationId: preview
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/csv: {} # todo: Perhaps preview should return something more approachable for the ui, but while testing this is handy
+        '500':
+          description: Error while building the payroll preview
           content:
             application/json:
               schema:
