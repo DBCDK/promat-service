@@ -67,7 +67,6 @@ public class EditorsIT extends ContainerTest {
         assertThat("Editor has been updated", updated.equals(expected));
     }
 
-    @Order(1)
     @Test
     void addEditor() throws JsonProcessingException {
 
@@ -82,11 +81,12 @@ public class EditorsIT extends ContainerTest {
         final Editor created = mapper.readValue(response.readEntity(String.class), Editor.class);
 
         final Editor expected = new Editor();
+        expected.setId(created.getId());
         loadCreatedEditor(expected);
 
         assertThat("Editor has been created", created.equals(expected));
 
-        response = getResponse("v1/api/editors/5000");
+        response = getResponse("v1/api/editors/" + created.getId());
         assertThat("response status", response.getStatus(), is(200));
         final Editor existing = mapper.readValue(response.readEntity(String.class), Editor.class);
 
@@ -103,7 +103,6 @@ public class EditorsIT extends ContainerTest {
     }
 
     private void loadCreatedEditor(Editor editor) {
-        editor.setId(5000);
         editor.setActive(true);
         editor.setCulrId("");
         editor.setFirstName("Edi");
