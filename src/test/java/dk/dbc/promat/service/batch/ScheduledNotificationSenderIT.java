@@ -12,6 +12,10 @@ import javax.mail.Message;
 import javax.mail.MessagingException;
 import javax.mail.Session;
 import javax.persistence.TypedQuery;
+import org.eclipse.microprofile.metrics.ConcurrentGauge;
+import org.eclipse.microprofile.metrics.Counter;
+import org.eclipse.microprofile.metrics.Metadata;
+import org.eclipse.microprofile.metrics.MetricRegistry;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.jvnet.mock_javamail.Mailbox;
@@ -19,6 +23,11 @@ import org.jvnet.mock_javamail.Mailbox;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.any;
 
 public class ScheduledNotificationSenderIT extends IntegrationTest {
     static MailManager mailManager;
@@ -30,16 +39,20 @@ public class ScheduledNotificationSenderIT extends IntegrationTest {
         mailManager = new MailManager(session);
     }
     TransactionScopedPersistenceContext persistenceContext;
+    private final MetricRegistry metricRegistry = mock(MetricRegistry.class);
+    private final Counter mailCounter = mock(Counter.class);
+    private final ConcurrentGauge mailFailureGauge = mock(ConcurrentGauge.class);
 
     @BeforeEach
     public void setupMailStuff() {
-         persistenceContext = new TransactionScopedPersistenceContext(entityManager);
+        when(metricRegistry.counter(any(Metadata.class))).thenReturn(mailCounter);
+        when(metricRegistry.concurrentGauge(any(Metadata.class))).thenReturn(mailFailureGauge);
+        persistenceContext = new TransactionScopedPersistenceContext(entityManager);
         Mailbox.clearAll();
     }
 
     @Test
     public void test_that_notifications_are_popped_and_sent() throws MessagingException {
-
         ScheduledNotificationSender scheduledNotificationSender = new ScheduledNotificationSender();
         scheduledNotificationSender.entityManager = entityManager;
         scheduledNotificationSender.serverRole = ServerRole.PRIMARY;
@@ -47,6 +60,7 @@ public class ScheduledNotificationSenderIT extends IntegrationTest {
         scheduledNotificationSender.notificationSender = notificationSender;
         scheduledNotificationSender.notificationSender.mailManager = mailManager;
         scheduledNotificationSender.notificationSender.entityManager = entityManager;
+        scheduledNotificationSender.notificationSender.metricRegistry = metricRegistry;
         persistenceContext.run(()->scheduledNotificationSender.processNotifications());
 
         List<Message> inbox1 = Mailbox.get("test1@test.dk");
@@ -59,6 +73,8 @@ public class ScheduledNotificationSenderIT extends IntegrationTest {
         TypedQuery<Notification> query = entityManager.createQuery(Notification.SELECT_FROM_NOTIFCATION_QUEUE_QUERY, Notification.class);
         query.setParameter("status", NotificationStatus.DONE);
         assertThat("All notifications in db are now DONE", query.getResultList().size(), is(3));
+        verify(mailCounter, times(2)).inc();
+        verify(mailFailureGauge, times(0)).inc();
     }
 
 }
