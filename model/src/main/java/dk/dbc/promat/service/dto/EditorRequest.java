@@ -6,13 +6,6 @@
 package dk.dbc.promat.service.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateSerializer;
-import dk.dbc.promat.service.persistence.Address;
-import dk.dbc.promat.service.persistence.Reviewer;
-
-import java.time.LocalDate;
-import java.util.List;
 import java.util.Objects;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -36,6 +29,8 @@ public class EditorRequest implements Dto {
         this.active = active;
         return this;
     }
+
+    // Todo: We do not know, yet, if the cpr number is needed when creating editors
 
     public String getCprNumber() {
         return cprNumber;
@@ -103,11 +98,7 @@ public class EditorRequest implements Dto {
 
     @Override
     public int hashCode() {
-        int result = (active ? 1 : 0);
-        result = 31 * result + (firstName != null ? firstName.hashCode() : 0);
-        result = 31 * result + (lastName != null ? lastName.hashCode() : 0);
-        result = 31 * result + (email != null ? email.hashCode() : 0);
-        return result;
+        return Objects.hash(active, cprNumber, firstName, lastName, email);
     }
 
     @Override
