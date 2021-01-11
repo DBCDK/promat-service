@@ -11,6 +11,27 @@ import javax.persistence.Entity;
 @Entity
 @DiscriminatorValue("EDITOR")
 public class Editor extends PromatUser {
+
+    public Editor withActive(boolean active) {
+        this.active = active;
+        return this;
+    }
+
+    public Editor withFirstName(String firstName) {
+        this.firstName = firstName;
+        return this;
+    }
+
+    public Editor withLastName(String lastName) {
+        this.lastName = lastName;
+        return this;
+    }
+
+    public Editor withEmail(String email) {
+        this.email = email;
+        return this;
+    }
+
     @Override
     public int hashCode() {
         int result = id.hashCode();

@@ -152,6 +152,38 @@ paths:
               schema:
                 $ref: '#/components/schemas/ServiceError'
 
+  /editors:
+    post:
+      tags:
+        - editors
+      summary: Create editor
+      operationId: createEditor
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EditorRequest'
+      responses:
+        '201':
+          description: editor successfully created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Editor'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '500':
+          description: On failure from external CULR service
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+
   /editors/{id}:
     get:
       tags:
