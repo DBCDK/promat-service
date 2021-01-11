@@ -25,8 +25,8 @@ tags:
     description: Case tasks
   - name: messages
     description: Text dialogue reviewer/editor on cases
-  - name: payroll
-    description: Payroll preview, execute and lock, history
+  - name: payments
+    description: Payments preview, execute and lock, history
 
 paths:
   /reviewers:
@@ -710,11 +710,11 @@ paths:
               schema:
                 $ref: '#/components/schemas/ServiceError'
 
-  /payroll/preview:
+  /payments/preview:
     get:
       tags:
-        - payroll
-      summary: Return the current payroll, as it will look when executed right now
+        - payments
+      summary: Return the current payments, as it will look when executed right now
       operationId: preview
       responses:
         '200':
@@ -722,7 +722,7 @@ paths:
           content:
             application/csv: {} # todo: Perhaps preview should return something more approachable for the ui, but while testing this is handy
         '500':
-          description: Error while building the payroll preview
+          description: Error while building the payments preview
           content:
             application/json:
               schema:
@@ -1471,7 +1471,7 @@ components:
           type: string
           format: date
           nullable: true
-          description: Date when first added to a periods payroll. This value must not change hereafter
+          description: Date when first added to a periods payments. This value must not change hereafter
         targetFausts:
           type: array
           items:

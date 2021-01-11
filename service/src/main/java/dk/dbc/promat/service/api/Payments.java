@@ -22,9 +22,9 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.Response;
 
 @Stateless
-@Path("payroll")
-public class Payroll {
-    private static final Logger LOGGER = LoggerFactory.getLogger(Payroll.class);
+@Path("payments")
+public class Payments {
+    private static final Logger LOGGER = LoggerFactory.getLogger(Payments.class);
 
     @Inject
     @PromatEntityManager
@@ -37,20 +37,20 @@ public class Payroll {
     @Path("preview")
     @Produces("application/csv") // Todo: Do we need a more gui-friendly format here ?
     public Response preview() {
-        LOGGER.info("payroll/preview (GET)");
+        LOGGER.info("payments/preview (GET)");
 
         // Lock all relevant tables
         repository.getExclusiveAccessToTable(PromatCase.TABLE_NAME);
         repository.getExclusiveAccessToTable(PromatTask.TABLE_NAME);
 
-        // Todo: Most likely, we'll end up with a more advanced object to hold payroll data, but this works for now
+        // Todo: Most likely, we'll end up with a more advanced object to hold payments data, but this works for now
         String csv = "Lønnr;Lønart;Antal;;;Tekst\n";
 
         // Fetch all non-payed tasks with status 'EXPORTED'
         // Todo: Perhaps more status should be exported ?
         return Response.status(200)
                 .header("Content-Type", "application/csv")
-                .header("Content-Disposition", "attachment; filename=payroll_preview.csv")  // Todo: Append calendar period
+                .header("Content-Disposition", "attachment; filename=payments_preview.csv")  // Todo: Append calendar period
                 .header("Pragma", "no-cache")
                 .entity(csv)
                 .build();
