@@ -77,5 +77,15 @@ pipeline {
 				}
 			}
 		}
-	}
+        stage("deploy to maven repository") {
+            when {
+                 branch "master"
+            }
+            steps {
+                sh """
+                    mvn deploy -Dmaven.test.skip=true -am -pl model
+                """
+            }
+        }
+    }
 }
