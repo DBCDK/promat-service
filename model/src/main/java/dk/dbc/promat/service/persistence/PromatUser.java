@@ -63,10 +63,10 @@ public abstract class PromatUser {
     @JsonView({CaseView.Case.class})
     protected String culrId;
 
-    @JsonView({CaseView.CaseSummary.class})
+    @JsonView({CaseView.Export.class, CaseView.CaseSummary.class})
     protected String firstName;
 
-    @JsonView({CaseView.CaseSummary.class})
+    @JsonView({CaseView.Export.class, CaseView.CaseSummary.class})
     protected String lastName;
 
     @JsonView({CaseView.Case.class})
