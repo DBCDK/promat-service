@@ -716,11 +716,21 @@ paths:
         - payments
       summary: Return the current payments, as it will look when executed right now
       operationId: preview
+      parameters:
+        - in: query
+          name: format
+          required: false
+          schema:
+            $ref: '#/components/schemas/PaymentsFormat'
+          description: Format of payments preview, default is JSON
       responses:
         '200':
           description: successful operation
           content:
-            application/csv: {} # todo: Perhaps preview should return something more approachable for the ui, but while testing this is handy
+            application/csv: {}
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentList'
         '500':
           description: Error while building the payments preview
           content:
@@ -1598,3 +1608,45 @@ components:
         - 'LESS_THAN'
         - 'LESS_THAN_OR_EQUAL_TO'
         - 'NOT_EQUAL'
+
+    PaymentsFormat:
+      type: string
+      enum:
+        - 'CSV'
+        - 'JSON'
+
+    Payment:
+      type: object
+      properties:
+        payCode:
+          type: string
+          description: Paycode of the user who must receive this payment
+        payType:
+          type: string
+          description: Payment type based on the type of task
+        count:
+          type: integer
+          description: Number of payments of this type to this person
+        text:
+          type: string
+          description: Literal description of the task delivered
+      required:
+        - payCode
+        - payType
+        - count
+        - text
+
+    PaymentList:
+      type: object
+      properties:
+        numFound:
+          type: integer
+          description: Number of payments in the list (do note that a single payment may contain more than 1 count of the specific payment to the given person)
+        payments:
+          type: array
+          items:
+            $ref: '#/components/schemas/Payment'
+            description: Individual payments (again, do note that a single payment may contain more than 1 count of the specific payment to the given person)
+      required:
+        - numFound
+        - payments
