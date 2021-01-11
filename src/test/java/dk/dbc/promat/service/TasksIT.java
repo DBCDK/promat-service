@@ -48,7 +48,8 @@ public class TasksIT extends ContainerTest {
                                 .withTaskType(TaskType.GROUP_1_LESS_THAN_100_PAGES)
                                 .withTaskFieldType(TaskFieldType.BRIEF)
                                 .withTargetFausts(Arrays.asList(new String[] {"11003333", "11004444"}))
-                ));
+                ))
+                .withCreator(13);
         response = postResponse("v1/api/cases", caseDto);
         assertThat("status code", response.getStatus(), is(201));
         PromatCase createdCase = mapper.readValue(response.readEntity(String.class), PromatCase.class);

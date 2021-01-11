@@ -101,6 +101,7 @@ public class Cases {
         List<Subject> subjects;
         Reviewer reviewer;
         Editor editor;
+        Editor creator;
         List<PromatTask> tasks;
         ArrayList<String> relatedFausts = new ArrayList<>(dto.getRelatedFausts() == null
                 ? new ArrayList<>()
@@ -113,6 +114,10 @@ public class Cases {
             subjects = repository.resolveSubjects(dto.getSubjects());
             reviewer = resolveReviewer(dto.getReviewer());
             editor = resolveEditor(dto.getEditor());
+            creator = resolveEditor(dto.getCreator());
+            if (creator == null) {
+                throw new ServiceErrorException("Creator cannot be null");
+            }
 
             // Create tasks (and update related fausts if needed)
             tasks = createTasks(dto.getTasks(), relatedFausts);
@@ -153,7 +158,11 @@ public class Cases {
             .withAssigned(assigned)
             .withStatus(status)
             .withMaterialType(dto.getMaterialType())
-            .withTasks(tasks);
+            .withTasks(tasks)
+            .withAuthor(dto.getAuthor())
+            .withCreator(creator)
+            .withPublisher(dto.getPublisher())
+            .withWeekcode(dto.getWeekCode());
 
             entityManager.persist(entity);
 
@@ -350,6 +359,10 @@ public class Cases {
             }
 
             // Update fields
+            if (dto.getCreator() != null && !dto.getCreator().equals(existing.getCreator().getId())) {
+                LOGGER.info("Attempt to set forbidden 'creator' on case {}", id);
+                return ServiceErrorDto.InvalidRequest("Forbidden creator", "Changing 'creator' is not allowed.");
+            }
             if(dto.getTitle() != null) {
                 existing.setTitle(dto.getTitle());
             }
@@ -403,6 +416,18 @@ public class Cases {
                     }
                     // Todo: We may neeed more status handling here when the lifecycle of a task is better defined
                 }
+            }
+            if(dto.getWeekCode() != null) {
+                existing.setWeekCode(dto.getWeekCode());
+            }
+            if(dto.getAuthor() != null) {
+                existing.setAuthor(dto.getAuthor());
+            }
+            if(dto.getCreator() != null) {
+                existing.setCreator(resolveEditor(dto.getEditor()));
+            }
+            if(dto.getPublisher() != null) {
+                existing.setPublisher(dto.getPublisher());
             }
 
             return Response.ok(existing).build();
