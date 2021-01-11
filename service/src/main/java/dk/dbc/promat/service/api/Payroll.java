@@ -5,10 +5,10 @@
 
 package dk.dbc.promat.service.api;
 
+import dk.dbc.promat.service.Repository;
 import dk.dbc.promat.service.persistence.PromatCase;
 import dk.dbc.promat.service.persistence.PromatEntityManager;
 import dk.dbc.promat.service.persistence.PromatTask;
-import dk.dbc.promat.service.persistence.Repository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
