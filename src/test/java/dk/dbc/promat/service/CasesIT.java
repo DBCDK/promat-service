@@ -676,27 +676,31 @@ public class CasesIT extends ContainerTest {
                 .withPublisher("Publisher for 9001211")
                 .withAuthor("Author for 9001211")
                 .withWeekCode("Weekcode for 9001211")
-                .withMaterialType(MaterialType.BOOK)
-                .withCreator(13);
+                .withMaterialType(MaterialType.BOOK);
 
         // Case 1: Create case with creator.
         Response response = postResponse("v1/api/cases", dto);
         assertThat("status code", response.getStatus(), is(201));
         PromatCase created = mapper.readValue(response.readEntity(String.class), PromatCase.class);
 
-        // Case 2:Check that creator can be changed.
+        // Case 2:Check that creator can be set.
         dto.setCreator(11);
         response = postResponse(String.format("v1/api/cases/%s", created.getId()), dto);
         assertThat("status code", response.getStatus(), is(200));
 
-        // Case 2: Check that what we created, is also what is returned.
+        // Case 3: Check that the creator no longer can be changed.
+        dto.setCreator(13);
+        response = postResponse(String.format("v1/api/cases/%s", created.getId()), dto);
+        assertThat("status code", response.getStatus(), is(401));
+
+        // Case 4: Check that what we created, is also what is returned.
         response = getResponse(String.format("v1/api/cases/%s", created.getId()));
         assertThat("status code", response.getStatus(), is(200));
         PromatCase fetched = mapper.readValue(response.readEntity(String.class), PromatCase.class);
         assertThat("publisher", fetched.getPublisher(), is(dto.getPublisher()));
         assertThat("author", fetched.getAuthor(), is(dto.getAuthor()));
         assertThat("weekcode", fetched.getWeekCode(), is(dto.getWeekCode()));
-        assertThat("creator", fetched.getCreator().getId(), is(dto.getCreator()));
+        assertThat("creator", fetched.getCreator().getId(), is(11));
     }
 
     @Test

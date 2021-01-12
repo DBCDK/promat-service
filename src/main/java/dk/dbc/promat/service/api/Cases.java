@@ -411,7 +411,11 @@ public class Cases {
                 }
             }
             if(dto.getCreator() != null) {
-                existing.setCreator(resolveEditor(dto.getCreator()));
+                if (existing.getCreator() != null && !existing.getCreator().getId().equals(dto.getCreator())) {
+                    return ServiceErrorDto.Forbidden("Change in 'creator'","'Creator' cannot be changed, once set.");
+                } else {
+                    existing.setCreator(resolveEditor(dto.getCreator()));
+                }
             }
             if(dto.getWeekCode() != null) {
                 existing.setWeekCode(dto.getWeekCode());
