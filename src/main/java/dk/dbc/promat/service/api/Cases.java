@@ -423,9 +423,6 @@ public class Cases {
             if(dto.getAuthor() != null) {
                 existing.setAuthor(dto.getAuthor());
             }
-            if(dto.getCreator() != null) {
-                existing.setCreator(resolveEditor(dto.getEditor()));
-            }
             if(dto.getPublisher() != null) {
                 existing.setPublisher(dto.getPublisher());
             }
