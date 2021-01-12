@@ -299,6 +299,7 @@ public class Cases {
             query.setMaxResults(limit == null ? DEFAULT_CASES_LIMIT : limit);
 
             // Execute the query
+            // TODO: 12/01/2021 Rename CaseSummaryList to CaseList
             CaseSummaryList cases = new CaseSummaryList();
             cases.getCases().addAll(query.getResultList());
             cases.setNumFound(cases.getCases().size());
