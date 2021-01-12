@@ -115,9 +115,6 @@ public class Cases {
             reviewer = resolveReviewer(dto.getReviewer());
             editor = resolveEditor(dto.getEditor());
             creator = resolveEditor(dto.getCreator());
-            if (creator == null) {
-                throw new ServiceErrorException("Creator cannot be null");
-            }
 
             // Create tasks (and update related fausts if needed)
             tasks = createTasks(dto.getTasks(), relatedFausts);
@@ -359,10 +356,6 @@ public class Cases {
             }
 
             // Update fields
-            if (dto.getCreator() != null && !dto.getCreator().equals(existing.getCreator().getId())) {
-                LOGGER.info("Attempt to set forbidden 'creator' on case {}", id);
-                return ServiceErrorDto.InvalidRequest("Forbidden creator", "Changing 'creator' is not allowed.");
-            }
             if(dto.getTitle() != null) {
                 existing.setTitle(dto.getTitle());
             }
@@ -416,6 +409,9 @@ public class Cases {
                     }
                     // Todo: We may neeed more status handling here when the lifecycle of a task is better defined
                 }
+            }
+            if(dto.getCreator() != null) {
+                existing.setCreator(resolveEditor(dto.getCreator()));
             }
             if(dto.getWeekCode() != null) {
                 existing.setWeekCode(dto.getWeekCode());

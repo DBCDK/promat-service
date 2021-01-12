@@ -973,7 +973,7 @@ components:
           description: Name of author
         creator:
           $ref: '#/components/schemas/Editor'
-          nullable: false
+          nullable: true
           description: The editor that created the case
         publisher:
           type: string
@@ -991,7 +991,6 @@ components:
         - status
         - materialType
         - tasks
-        - creator
 
     CaseRequest:
       type: object
