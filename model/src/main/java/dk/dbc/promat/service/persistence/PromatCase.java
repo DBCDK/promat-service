@@ -102,17 +102,17 @@ public class PromatCase {
     @JsonView({CaseView.Export.class, CaseView.Case.class})
     private List<PromatTask> tasks;
 
-    @JsonView({CaseView.CaseSummary.class, CaseView.Case.class})
+    @JsonView({CaseView.Summary.class, CaseView.Case.class})
     private String weekCode;
 
-    @JsonView({CaseView.CaseSummary.class, CaseView.Case.class})
+    @JsonView({CaseView.Summary.class, CaseView.Case.class})
     private String author;
 
     @OneToOne
-    @JsonView({CaseView.CaseSummary.class, CaseView.Case.class})
+    @JsonView({CaseView.Summary.class, CaseView.Case.class})
     private Editor creator;
 
-    @JsonView({CaseView.CaseSummary.class, CaseView.Case.class})
+    @JsonView({CaseView.Summary.class, CaseView.Case.class})
     private String publisher;
 
     public Integer getId() {
