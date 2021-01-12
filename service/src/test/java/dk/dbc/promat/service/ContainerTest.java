@@ -11,6 +11,8 @@ import dk.dbc.httpclient.HttpDelete;
 import dk.dbc.httpclient.HttpGet;
 import dk.dbc.httpclient.HttpPost;
 import dk.dbc.httpclient.HttpPut;
+import dk.dbc.promat.service.connector.PromatServiceConnector;
+import dk.dbc.promat.service.connector.PromatServiceConnectorFactory;
 import dk.dbc.promat.service.rest.JsonMapperProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,6 +45,7 @@ public abstract class ContainerTest extends IntegrationTest {
 
     protected static final GenericContainer promatServiceContainer;
     protected static final String promatServiceBaseUrl;
+    protected static final PromatServiceConnector promatServiceConnector;
 
     static {
         promatServiceContainer = new GenericContainer("docker-io.dbc.dk/promat-service:devel")
@@ -66,6 +69,7 @@ public abstract class ContainerTest extends IntegrationTest {
         promatServiceContainer.start();
         promatServiceBaseUrl = "http://" + promatServiceContainer.getContainerIpAddress() +
                 ":" + promatServiceContainer.getMappedPort(8080);
+        promatServiceConnector = PromatServiceConnectorFactory.create(promatServiceBaseUrl + "/v1/api");
     }
 
     public <T> T get(String path, Class<T> tClass) {
