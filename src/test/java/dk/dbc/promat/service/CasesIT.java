@@ -697,6 +697,7 @@ public class CasesIT extends ContainerTest {
         assertThat("publisher", fetched.getPublisher(), is(dto.getPublisher()));
         assertThat("author", fetched.getAuthor(), is(dto.getAuthor()));
         assertThat("weekcode", fetched.getWeekCode(), is(dto.getWeekCode()));
+        assertThat("creator", fetched.getCreator().getId(), is(dto.getCreator()));
 
         // Case 3:Check that creator cannot be changed.
         dto.setCreator(11);
