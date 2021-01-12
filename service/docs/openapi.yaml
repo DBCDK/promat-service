@@ -722,7 +722,7 @@ paths:
           required: false
           schema:
             $ref: '#/components/schemas/PaymentsFormat'
-          description: Format of payments preview, default is JSON
+          description: Format of payments preview, default is PAYMENT_LIST
       responses:
         '200':
           description: successful operation
@@ -730,7 +730,9 @@ paths:
             application/csv: {}
             application/json:
               schema:
-                $ref: '#/components/schemas/PaymentList'
+                oneOf:
+                  - $ref: '#/components/schemas/PaymentList'
+                  - $ref: '#/components/schemas/GroupedPaymentList'
         '500':
           description: Error while building the payments preview
           content:
@@ -1613,7 +1615,9 @@ components:
       type: string
       enum:
         - 'CSV'
-        - 'JSON'
+        - 'PAYMENT_LIST'
+        - 'PAYMENT_LIST_BY_USER'
+        - 'PAYMENT_LIST_BY_FAUST'
 
     Payment:
       type: object
@@ -1650,3 +1654,18 @@ components:
       required:
         - numFound
         - payments
+
+    GroupedPaymentList:
+      type: object
+      properties:
+        numFound:
+          type: integer
+          description: Number of groups
+        groups:
+          type: array
+          items:
+            $ref: '#/components/schemas/PaymentList'
+            description: Lists of payments sorted by the requested property. Group metadata can be extracted from first item in each group
+      required:
+        - numFound
+        - groups
