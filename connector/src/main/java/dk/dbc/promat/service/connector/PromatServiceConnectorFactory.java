@@ -50,6 +50,7 @@ public class PromatServiceConnectorFactory {
 
     public static PromatServiceConnector create(String promatServiceBaseUrl) {
         final Client client = HttpClient.newClient(new ClientConfig()
+                .register(new JacksonConfig())
                 .register(new JacksonFeature()));
         LOGGER.info("Creating PromatServiceConnector for: {}", promatServiceBaseUrl);
         return new PromatServiceConnector(client, promatServiceBaseUrl);
