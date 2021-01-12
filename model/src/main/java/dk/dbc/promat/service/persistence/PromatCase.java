@@ -42,29 +42,29 @@ public class PromatCase {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @JsonView({CaseView.CaseSummary.class, CaseView.Case.class})
+    @JsonView({CaseView.Export.class, CaseView.Summary.class, CaseView.Case.class})
     private Integer id;
 
-    @JsonView({CaseView.CaseSummary.class, CaseView.Case.class})
+    @JsonView({CaseView.Export.class, CaseView.Summary.class, CaseView.Case.class})
     private String title;
 
-    @JsonView({CaseView.CaseSummary.class, CaseView.Case.class})
+    @JsonView({CaseView.Export.class, CaseView.Summary.class, CaseView.Case.class})
     private String details;
 
-    @JsonView({CaseView.CaseSummary.class, CaseView.Case.class})
+    @JsonView({CaseView.Export.class, CaseView.Summary.class, CaseView.Case.class})
     private String primaryFaust;
 
     @Column(columnDefinition = "jsonb")
     @Convert(converter = StringListToJsonArrayConverter.class)
-    @JsonView({CaseView.CaseSummary.class, CaseView.Case.class})
+    @JsonView({CaseView.Export.class, CaseView.Summary.class, CaseView.Case.class})
     private List<String> relatedFausts;
 
     @OneToOne
-    @JsonView({CaseView.CaseSummary.class})
+    @JsonView({CaseView.Export.class, CaseView.Summary.class})
     private Reviewer reviewer;
 
     @OneToOne
-    @JsonView({CaseView.CaseSummary.class})
+    @JsonView({CaseView.Summary.class})
     private Editor editor;
 
     @OneToMany
@@ -76,21 +76,21 @@ public class PromatCase {
     @JsonView({CaseView.Case.class})
     private List<Subject> subjects;
 
-    @JsonView({CaseView.CaseSummary.class, CaseView.Case.class})
+    @JsonView({CaseView.Export.class, CaseView.Summary.class, CaseView.Case.class})
     private LocalDate created;
 
-    @JsonView({CaseView.CaseSummary.class, CaseView.Case.class})
+    @JsonView({CaseView.Export.class, CaseView.Summary.class, CaseView.Case.class})
     private LocalDate deadline;
 
-    @JsonView({CaseView.CaseSummary.class, CaseView.Case.class})
+    @JsonView({CaseView.Summary.class, CaseView.Case.class})
     private LocalDate assigned;
 
     @Enumerated(EnumType.STRING)
-    @JsonView({CaseView.CaseSummary.class, CaseView.Case.class})
+    @JsonView({CaseView.Summary.class, CaseView.Case.class})
     private CaseStatus status;
 
     @Enumerated(EnumType.STRING)
-    @JsonView({CaseView.CaseSummary.class, CaseView.Case.class})
+    @JsonView({CaseView.Export.class, CaseView.Summary.class, CaseView.Case.class})
     private MaterialType materialType;
 
     @OneToMany(cascade = CascadeType.ALL)
@@ -99,7 +99,7 @@ public class PromatCase {
             joinColumns = @JoinColumn(name = "case_id"),
             inverseJoinColumns = @JoinColumn(name = "task_id")
     )
-    @JsonView({CaseView.Case.class})
+    @JsonView({CaseView.Export.class, CaseView.Case.class})
     private List<PromatTask> tasks;
 
     public Integer getId() {

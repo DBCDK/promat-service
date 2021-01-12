@@ -371,6 +371,16 @@ paths:
           schema:
             type: integer
           description: Return cases with an id greater than this number
+        - in: query
+          name: format
+          required: false
+          schema:
+            type: string
+            enum:
+              - export
+              - summary
+            default: summary
+          description: View format for returned cases
       responses:
         '200':
           description: successful operation

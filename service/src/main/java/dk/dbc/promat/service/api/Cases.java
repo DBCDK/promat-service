@@ -13,16 +13,14 @@ import dk.dbc.promat.service.dto.ServiceErrorCode;
 import dk.dbc.promat.service.dto.ServiceErrorDto;
 import dk.dbc.promat.service.dto.TaskDto;
 import dk.dbc.promat.service.persistence.CaseStatus;
-import dk.dbc.promat.service.persistence.CaseView;
 import dk.dbc.promat.service.persistence.Editor;
 import dk.dbc.promat.service.persistence.PromatCase;
 import dk.dbc.promat.service.persistence.PromatEntityManager;
+import dk.dbc.promat.service.persistence.PromatTask;
 import dk.dbc.promat.service.persistence.Reviewer;
 import dk.dbc.promat.service.persistence.Subject;
-import dk.dbc.promat.service.persistence.PromatTask;
 import dk.dbc.promat.service.persistence.TaskType;
 import dk.dbc.promat.service.rest.JsonMapperProvider;
-import javax.ws.rs.DELETE;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,6 +34,8 @@ import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -194,7 +194,8 @@ public class Cases {
     @GET
     @Path("cases")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response listCases(@QueryParam("faust") final String faust,
+    public Response listCases(@QueryParam("format") @DefaultValue("SUMMARY") final CaseFormat format,
+                              @QueryParam("faust") final String faust,
                               @QueryParam("status") final String status,
                               @QueryParam("reviewer") final Integer reviewer,
                               @QueryParam("editor") final Integer editor,
@@ -302,14 +303,13 @@ public class Cases {
             cases.getCases().addAll(query.getResultList());
             cases.setNumFound(cases.getCases().size());
 
-            // Return the found cases as a list of CaseSummary entities
-            //
+            // Return the found cases
             // Note that the http status is set to 404 (NOT FOUND) if no case matched the query
             // this is to allow a quick(er) check for existing cases by using HEAD and checking
             // the statuscode instead of deserializing the response body and looking at numFound
-            ObjectMapper mapper = new JsonMapperProvider().getObjectMapper();
+            final ObjectMapper objectMapper = new JsonMapperProvider().getObjectMapper();
             return Response.status(cases.getNumFound() > 0 ? 200 : 404)
-                    .entity(mapper.writerWithView(CaseView.CaseSummary.class)
+                    .entity(objectMapper.writerWithView(format.getViewClass())
                             .writeValueAsString(cases)).build();
 
         } catch(Exception exception) {
