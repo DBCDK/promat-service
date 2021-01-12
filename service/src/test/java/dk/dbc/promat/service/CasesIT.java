@@ -464,7 +464,7 @@ public class CasesIT extends ContainerTest {
     }
 
     @Test
-    public void testGetCasesWithTitle() throws JsonProcessingException, PromatServiceConnectorException {
+    public void testGetCasesWithTitle() throws PromatServiceConnectorException {
 
         // Cases with part of title 'no_such_title'
         Response response = getResponse("v1/api/cases", Map.of("title", "no_such_title"));
@@ -487,7 +487,7 @@ public class CasesIT extends ContainerTest {
     }
 
     @Test
-    public void testEditCase() throws JsonProcessingException {
+    public void testEditCase() throws JsonProcessingException, PromatServiceConnectorException {
 
         // Update of unknown case - should return 404 NOT FOUND
         CaseRequestDto dto = new CaseRequestDto();
@@ -565,9 +565,7 @@ public class CasesIT extends ContainerTest {
                                 .withTaskType(TaskType.BUGGI)
                                 .withTaskFieldType(TaskFieldType.NONE)
                 ));
-        response = postResponse("v1/api/cases/" + created.getId(), dto);
-        assertThat("status code", response.getStatus(), is(200));
-        PromatCase updated = mapper.readValue(response.readEntity(String.class), PromatCase.class);
+        PromatCase updated = promatServiceConnector.updateCase(created.getId(), dto);
 
         assertThat("updated case did not change id", updated.getId(), is(created.getId()));
         assertThat("updated title", updated.getTitle(), is("New title for 8001111"));
