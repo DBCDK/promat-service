@@ -7,10 +7,13 @@ package dk.dbc.promat.service.connector;
 
 import dk.dbc.httpclient.FailSafeHttpClient;
 import dk.dbc.httpclient.HttpGet;
+import dk.dbc.httpclient.HttpPost;
 import dk.dbc.invariant.InvariantUtil;
+import dk.dbc.promat.service.dto.CaseRequestDto;
 import dk.dbc.promat.service.dto.CaseSummaryList;
 import dk.dbc.promat.service.dto.ServiceErrorDto;
 import dk.dbc.promat.service.persistence.CaseStatus;
+import dk.dbc.promat.service.persistence.PromatCase;
 import net.jodah.failsafe.RetryPolicy;
 
 import javax.ws.rs.ProcessingException;
@@ -55,7 +58,7 @@ public class PromatServiceConnector {
     }
 
     /**
-     * list cases
+     * lists cases
      * @param params list operation paramters
      * @return CaseSummaryList
      * @throws PromatServiceConnectorException on unexpected failure for list operation
@@ -72,6 +75,22 @@ public class PromatServiceConnector {
         final Response response = httpGet.execute();
         assertResponseStatus(response, Response.Status.OK, Response.Status.NOT_FOUND);
         return readResponseEntity(response, CaseSummaryList.class);
+    }
+
+    /**
+     * Updates an existing case
+     * @param caseRequest case update request
+     * @return updated case
+     * @throws PromatServiceConnectorException on unexpected failure for update operation
+     */
+    public PromatCase updateCase(int caseID, CaseRequestDto caseRequest) throws PromatServiceConnectorException {
+        final HttpPost httpPost = new HttpPost(failSafeHttpClient)
+                .withBaseUrl(baseUrl)
+                .withPathElements("cases", String.valueOf(caseID))
+                .withJsonData(caseRequest);
+        final Response response = httpPost.execute();
+        assertResponseStatus(response, Response.Status.OK);
+        return readResponseEntity(response, PromatCase.class);
     }
 
     private void assertResponseStatus(Response response, Response.Status... expectedStatus)
