@@ -22,6 +22,7 @@ import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 
 import dk.dbc.promat.service.persistence.TaskFieldType;
 import dk.dbc.promat.service.persistence.TaskType;
+import java.util.Collections;
 import org.hamcrest.core.IsNull;
 import org.junit.jupiter.api.Test;
 import javax.ws.rs.core.Response;
@@ -48,6 +49,10 @@ public class CasesIT extends ContainerTest {
 
         // primaryFaust set
         dto.setPrimaryFaust("1001111");
+        assertThat("status code", postResponse("v1/api/cases", dto).getStatus(), is(400));
+
+        // creator set
+        dto.setCreator(13);
         assertThat("status code", postResponse("v1/api/cases", dto).getStatus(), is(400));
 
         // materialType set
@@ -475,7 +480,7 @@ public class CasesIT extends ContainerTest {
         assertThat("status code", response.getStatus(), is(200));
         obj = response.readEntity(String.class);
         fetched = mapper.readValue(obj, CaseSummaryList.class);
-        assertThat("Number of cases with editor 10 and status CREATED", fetched.getNumFound(), is(2));
+        assertThat("Number of cases with editor 10 and status CREATED", fetched.getNumFound(), is(3));
         assertThat("case id", fetched.getCases().get(0).getId(), is(10));
     }
 
@@ -662,6 +667,43 @@ public class CasesIT extends ContainerTest {
     }
 
     @Test
+    public void testCreateWithFieldsCreatorAuthorPublisherAndWeekcode() throws JsonProcessingException {
+        CaseRequestDto dto = new CaseRequestDto()
+                .withPrimaryFaust("9001211")
+                .withTitle("Title for 9001211")
+                .withDetails("Details for 9001211")
+                .withTasks(Collections.singletonList(new TaskDto().withTaskType(TaskType.BKM).withTaskFieldType(TaskFieldType.BKM)))
+                .withPublisher("Publisher for 9001211")
+                .withAuthor("Author for 9001211")
+                .withWeekCode("Weekcode for 9001211")
+                .withMaterialType(MaterialType.BOOK);
+
+        // Case 1: Create case with creator.
+        Response response = postResponse("v1/api/cases", dto);
+        assertThat("status code", response.getStatus(), is(201));
+        PromatCase created = mapper.readValue(response.readEntity(String.class), PromatCase.class);
+
+        // Case 2:Check that creator can be set.
+        dto.setCreator(11);
+        response = postResponse(String.format("v1/api/cases/%s", created.getId()), dto);
+        assertThat("status code", response.getStatus(), is(200));
+
+        // Case 3: Check that the creator no longer can be changed.
+        dto.setCreator(13);
+        response = postResponse(String.format("v1/api/cases/%s", created.getId()), dto);
+        assertThat("status code", response.getStatus(), is(401));
+
+        // Case 4: Check that what we created, is also what is returned.
+        response = getResponse(String.format("v1/api/cases/%s", created.getId()));
+        assertThat("status code", response.getStatus(), is(200));
+        PromatCase fetched = mapper.readValue(response.readEntity(String.class), PromatCase.class);
+        assertThat("publisher", fetched.getPublisher(), is(dto.getPublisher()));
+        assertThat("author", fetched.getAuthor(), is(dto.getAuthor()));
+        assertThat("weekcode", fetched.getWeekCode(), is(dto.getWeekCode()));
+        assertThat("creator", fetched.getCreator().getId(), is(11));
+    }
+
+    @Test
     public void testCreateCaseWithTasksWithMissingFields() throws JsonProcessingException {
 
         // Create case without tasktype and taskfieldtype
@@ -673,6 +715,7 @@ public class CasesIT extends ContainerTest {
                 .withTasks(Arrays.asList(
                         new TaskDto()
                 ));
+
         assertThat("status code", postResponse("v1/api/cases", dto).getStatus(), is(400));
 
         // Create case without taskfieldtype
@@ -685,6 +728,7 @@ public class CasesIT extends ContainerTest {
                         new TaskDto()
                                 .withTaskType(TaskType.GROUP_1_LESS_THAN_100_PAGES)
                 ));
+
         assertThat("status code", postResponse("v1/api/cases", dto).getStatus(), is(400));
 
         // Create case with tasktype and taskfieldtype - should succeed now
@@ -698,6 +742,7 @@ public class CasesIT extends ContainerTest {
                                 .withTaskType(TaskType.GROUP_1_LESS_THAN_100_PAGES)
                                 .withTaskFieldType(TaskFieldType.BRIEF)
                 ));
+
         assertThat("status code", postResponse("v1/api/cases", dto).getStatus(), is(201));
     }
 
@@ -710,6 +755,7 @@ public class CasesIT extends ContainerTest {
                 .withTitle("Title for 12001111")
                 .withDetails("Details for 12001111")
                 .withMaterialType(MaterialType.BOOK);
+
         Response response = postResponse("v1/api/cases", dto);
         assertThat("status code", response.getStatus(), is(201));
         PromatCase created = mapper.readValue(response.readEntity(String.class), PromatCase.class);
@@ -842,7 +888,8 @@ public class CasesIT extends ContainerTest {
                 .withPrimaryFaust("16001111")
                 .withTitle("Title for 16001111")
                 .withDetails("Details for 16001111")
-                .withMaterialType(MaterialType.BOOK);
+                .withMaterialType(MaterialType.BOOK)
+                .withCreator(13);
         Response response = postResponse("v1/api/cases", dto);
         assertThat("status code", response.getStatus(), is(201));
         PromatCase created = mapper.readValue(response.readEntity(String.class), PromatCase.class);
@@ -877,6 +924,7 @@ public class CasesIT extends ContainerTest {
                                 .withTaskFieldType(TaskFieldType.BRIEF)
                                 .withTargetFausts(Arrays.asList("17003333"))
                 ));
+
         Response response = postResponse("v1/api/cases", dto);
         assertThat("status code", response.getStatus(), is(201));
 

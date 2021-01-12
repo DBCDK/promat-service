@@ -102,6 +102,7 @@ public class Cases {
         List<Subject> subjects;
         Reviewer reviewer;
         Editor editor;
+        Editor creator;
         List<PromatTask> tasks;
         ArrayList<String> relatedFausts = new ArrayList<>(dto.getRelatedFausts() == null
                 ? new ArrayList<>()
@@ -114,6 +115,7 @@ public class Cases {
             subjects = repository.resolveSubjects(dto.getSubjects());
             reviewer = resolveReviewer(dto.getReviewer());
             editor = resolveEditor(dto.getEditor());
+            creator = resolveEditor(dto.getCreator());
 
             // Create tasks (and update related fausts if needed)
             tasks = createTasks(dto.getTasks(), relatedFausts);
@@ -154,7 +156,11 @@ public class Cases {
             .withAssigned(assigned)
             .withStatus(status)
             .withMaterialType(dto.getMaterialType())
-            .withTasks(tasks);
+            .withTasks(tasks)
+            .withAuthor(dto.getAuthor())
+            .withCreator(creator)
+            .withPublisher(dto.getPublisher())
+            .withWeekcode(dto.getWeekCode());
 
             entityManager.persist(entity);
 
@@ -404,6 +410,22 @@ public class Cases {
                     }
                     // Todo: We may neeed more status handling here when the lifecycle of a task is better defined
                 }
+            }
+            if(dto.getCreator() != null) {
+                if (existing.getCreator() != null && !existing.getCreator().getId().equals(dto.getCreator())) {
+                    return ServiceErrorDto.Forbidden("Change in 'creator'","'Creator' cannot be changed, once set.");
+                } else {
+                    existing.setCreator(resolveEditor(dto.getCreator()));
+                }
+            }
+            if(dto.getWeekCode() != null) {
+                existing.setWeekCode(dto.getWeekCode());
+            }
+            if(dto.getAuthor() != null) {
+                existing.setAuthor(dto.getAuthor());
+            }
+            if(dto.getPublisher() != null) {
+                existing.setPublisher(dto.getPublisher());
             }
 
             return Response.ok(existing).build();

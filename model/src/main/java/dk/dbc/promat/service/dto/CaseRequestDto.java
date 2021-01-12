@@ -7,6 +7,7 @@ package dk.dbc.promat.service.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import dk.dbc.promat.service.persistence.CaseStatus;
+import dk.dbc.promat.service.persistence.Editor;
 import dk.dbc.promat.service.persistence.MaterialType;
 
 import java.util.List;
@@ -38,6 +39,14 @@ public class CaseRequestDto implements Dto {
     private MaterialType materialType;
 
     private List<TaskDto> tasks;
+
+    private String weekCode;
+
+    private String author;
+
+    private Integer creator;
+
+    private String publisher;
 
     public String getTitle() {
         return title;
@@ -135,6 +144,38 @@ public class CaseRequestDto implements Dto {
         this.tasks = tasks;
     }
 
+    public String getWeekCode() {
+        return weekCode;
+    }
+
+    public void setWeekCode(String weekCode) {
+        this.weekCode = weekCode;
+    }
+
+    public String getAuthor() {
+        return author;
+    }
+
+    public void setAuthor(String author) {
+        this.author = author;
+    }
+
+    public Integer getCreator() {
+        return creator;
+    }
+
+    public void setCreator(Integer creator) {
+        this.creator = creator;
+    }
+
+    public String getPublisher() {
+        return publisher;
+    }
+
+    public void setPublisher(String publisher) {
+        this.publisher = publisher;
+    }
+
     public CaseRequestDto withTitle(String title) {
         this.title = title;
         return this;
@@ -196,6 +237,27 @@ public class CaseRequestDto implements Dto {
         return this;
     }
 
+    public CaseRequestDto withWeekCode(String weekCode) {
+        this.weekCode = weekCode;
+        return this;
+    }
+
+    public CaseRequestDto withAuthor(String author) {
+        this.author = author;
+        return this;
+    }
+
+    public CaseRequestDto withCreator(Integer creator) {
+        this.creator = creator;
+        return this;
+    }
+
+    public CaseRequestDto withPublisher(String publisher) {
+        this.publisher = publisher;
+        return this;
+    }
+
+
     @Override
     public String toString() {
         return "CaseRequestDto{" +
@@ -211,6 +273,10 @@ public class CaseRequestDto implements Dto {
                 ", status=" + status +
                 ", materialType=" + materialType +
                 ", tasks=" + tasks +
+                ", weekCode='" + weekCode + '\'' +
+                ", author='" + author + '\'' +
+                ", creator=" + creator +
+                ", publisher='" + publisher + '\'' +
                 '}';
     }
 
@@ -230,12 +296,16 @@ public class CaseRequestDto implements Dto {
                 Objects.equals(assigned, that.assigned) &&
                 status == that.status &&
                 materialType == that.materialType &&
-                Objects.equals(tasks, that.tasks);
+                Objects.equals(tasks, that.tasks) &&
+                Objects.equals(weekCode, that.weekCode) &&
+                Objects.equals(author, that.author) &&
+                Objects.equals(creator, that.creator) &&
+                Objects.equals(publisher, that.publisher);
     }
 
     @Override
     public int hashCode() {
-        int result = Objects.hash(title, details, primaryFaust, relatedFausts, reviewer, editor, subjects, deadline, assigned, status, materialType, tasks);
+        int result = Objects.hash(title, details, primaryFaust, relatedFausts, reviewer, editor, subjects, deadline, assigned, status, materialType, tasks, weekCode, author, creator, publisher);
         return result;
     }
 }

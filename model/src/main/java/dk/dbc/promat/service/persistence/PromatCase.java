@@ -102,6 +102,19 @@ public class PromatCase {
     @JsonView({CaseView.Export.class, CaseView.Case.class})
     private List<PromatTask> tasks;
 
+    @JsonView({CaseView.Summary.class, CaseView.Case.class})
+    private String weekCode;
+
+    @JsonView({CaseView.Summary.class, CaseView.Case.class})
+    private String author;
+
+    @OneToOne
+    @JsonView({CaseView.Summary.class, CaseView.Case.class})
+    private Editor creator;
+
+    @JsonView({CaseView.Summary.class, CaseView.Case.class})
+    private String publisher;
+
     public Integer getId() {
         return id;
     }
@@ -214,6 +227,38 @@ public class PromatCase {
         this.tasks = tasks;
     }
 
+    public String getWeekCode() {
+        return weekCode;
+    }
+
+    public void setWeekCode(String weekCode) {
+        this.weekCode = weekCode;
+    }
+
+    public String getAuthor() {
+        return author;
+    }
+
+    public void setAuthor(String author) {
+        this.author = author;
+    }
+
+    public Editor getCreator() {
+        return creator;
+    }
+
+    public void setCreator(Editor creator) {
+        this.creator = creator;
+    }
+
+    public String getPublisher() {
+        return publisher;
+    }
+
+    public void setPublisher(String publisher) {
+        this.publisher = publisher;
+    }
+
     public PromatCase withId(Integer id) {
         this.id = id;
         return this;
@@ -284,6 +329,26 @@ public class PromatCase {
         return this;
     }
 
+    public PromatCase withWeekcode(String weekCode) {
+        this.weekCode = weekCode;
+        return this;
+    }
+
+    public PromatCase withAuthor(String author) {
+        this.author = author;
+        return this;
+    }
+
+    public PromatCase withCreator(Editor creator) {
+        this.creator = creator;
+        return this;
+    }
+
+    public PromatCase withPublisher(String publisher) {
+        this.publisher = publisher;
+        return this;
+    }
+
     @Override
     public boolean equals(Object o) {
         if(this == o) return true;
@@ -302,12 +367,16 @@ public class PromatCase {
                 Objects.equals(assigned, aCase.assigned) &&
                 status == aCase.status &&
                 materialType == aCase.materialType &&
-                Objects.equals(tasks, aCase.tasks);
+                Objects.equals(tasks, aCase.tasks) &&
+                Objects.equals(weekCode, aCase.weekCode) &&
+                Objects.equals(author, aCase.author) &&
+                Objects.equals(creator, aCase.creator) &&
+                Objects.equals(publisher, aCase.publisher);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, title, details, primaryFaust, relatedFausts, reviewer, editor, subjects, created, deadline, assigned, status, materialType, tasks);
+        return Objects.hash(id, title, details, primaryFaust, relatedFausts, reviewer, editor, subjects, created, deadline, assigned, status, materialType, tasks, weekCode, author, creator, publisher);
     }
 
     @Override
@@ -327,6 +396,10 @@ public class PromatCase {
                 ", status=" + status +
                 ", materialType=" + materialType +
                 ", tasks=" + tasks +
+                ", weekCode='" + weekCode + '\'' +
+                ", author='" + author + '\'' +
+                ", creator=" + creator +
+                ", publisher='" + publisher + '\'' +
                 '}';
     }
 }

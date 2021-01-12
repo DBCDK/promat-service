@@ -1005,6 +1005,22 @@ components:
           items:
             $ref: '#/components/schemas/Task'
           minItems: 0
+        weekCode:
+          type: string
+          nullable: true
+          description: Weekcode assigned to this case
+        author:
+          type: string
+          nullable: true
+          description: Name of author
+        creator:
+          $ref: '#/components/schemas/Editor'
+          nullable: true
+          description: The editor that created the case
+        publisher:
+          type: string
+          nullable: true
+          description: Name of the publisher
       required:
         - id
         - title
@@ -1073,6 +1089,22 @@ components:
             $ref: '#/components/schemas/Task'
           minItems: 0
           nullable: true
+        weekCode:
+          type: string
+          nullable: true
+          description: Weekcode assigned to this case
+        author:
+          type: string
+          nullable: true
+          description: Name of author
+        creator:
+          type: integer
+          nullable: true
+          description: ID of the editor that created the case
+        publisher:
+          type: string
+          nullable: true
+          description: Name of the publisher
       required:
         - title
         - primaryFaust
