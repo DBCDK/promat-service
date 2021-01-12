@@ -1,0 +1,1299 @@
+openapi: 3.0.1
+info:
+  title: Promat service
+  description: >-
+    Provides backend services for the Promat system.
+  license:
+    name: GPL-3.0
+    url: 'https://github.com/DBCDK/promat-service/blob/master/LICENCE.txt'
+  version: 1.0-SNAPSHOT
+
+tags:
+  - name: editors
+    description: Users approving professional reviews
+  - name: reviewers
+    description: Users writing professional reviews
+  - name: users
+    description: User authorization
+  - name: subjects
+    description: Fields of interests
+  - name: records
+    description: List of faustnumbers matching a given id
+  - name: cases
+    description: Cases
+  - name: tasks
+    description: Case tasks
+
+paths:
+  /reviewers:
+    get:
+      tags:
+        - reviewers
+      summary: Returns list of reviewers
+      operationId: getReviewers
+      parameters:
+        - name: deadline
+          in: query
+          required: false
+          description: Optional deadline date as defined by RFC3339,
+                       which will return reviewers with their workloads
+                       for the week of the deadline as well as for the
+                       weeks before and after the deadline.
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReviewerList'
+        '400':
+          description: bad request, invalid deadline date
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+    post:
+      tags:
+        - reviewers
+      summary: Create reviewer
+      operationId: createReviewer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReviewerRequest'
+      responses:
+        '201':
+          description: reviewer successfully created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Reviewer'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '500':
+          description: On failure from external CULR service
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+
+  /reviewers/{id}:
+    get:
+      tags:
+        - reviewers
+      summary: Returns a reviewer with a given ID
+      operationId: getReviewer
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            description: Reviewer ID
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Reviewer'
+        '404':
+          description: Reviewer not found
+    put:
+      tags:
+        - reviewers
+      summary: Update reviewer
+      operationId: updateReviewer
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            description: Reviewer ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReviewerRequest'
+      responses:
+        '200':
+          description: reviewer successfully updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Reviewer'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '404':
+          description: Reviewer not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '500':
+          description: On failure from external CULR service
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+
+  /editors:
+    post:
+      tags:
+        - editors
+      summary: Create editor
+      operationId: createEditor
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EditorRequest'
+      responses:
+        '201':
+          description: editor successfully created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Editor'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '500':
+          description: On failure from external CULR service
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+
+  /editors/{id}:
+    get:
+      tags:
+        - editors
+      summary: Returns an editor with a given ID
+      operationId: getEditor
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            description: Editor ID
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Editor'
+        '404':
+          description: Editor not found
+    put:
+      tags:
+        - editors
+      summary: Update editor
+      operationId: updateEditor
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            description: Editor ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EditorRequest'
+      responses:
+        '200':
+          description: Editor successfully updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Editor'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '404':
+          description: Editor not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '500':
+          description: On failure from external CULR service
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+
+  /users/{culrId}/role:
+    get:
+      tags:
+        - users
+      summary: Returns role for user with a given CULR ID
+      operationId: getUserRole
+      parameters:
+        - in: path
+          name: culrId
+          required: true
+          schema:
+            type: string
+            description: CULR ID
+      responses:
+        '200':
+          description: CULR ID could be resolved to a PROMAT user with a specific role
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserRole'
+        '401':
+          description: Forbidden because CULR ID was not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+
+  /subjects:
+    get:
+      tags:
+        - subjects
+      summary: Returns list of all known subjects
+      operationId: getSubjects
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubjectList'
+
+  /records/{id}:
+    get:
+      tags:
+        - records
+      summary: Return zero or more faust numbers that match the given id.
+               The id can be a faust number or an isbn-10 or isbn-13 number.
+      operationId: getRecords
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            minimum: 1
+            maximum: 1
+            description: Identifier to lookup. Can be faust, isbn-10 or isbn-13
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecordsList'
+        '400':
+          description: Error while resolving the id
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+
+  /cases:
+    get:
+      tags:
+        - cases
+      summary: Returns list of cases
+      operationId: getCasesForFaust
+      parameters:
+        - in: query
+          name: faust
+          required: false
+          schema:
+            type: string
+          description: Faustnumber that must be covered by the cases returned
+        - in: query
+          name: status
+          required: false
+          schema:
+            type: string
+            $ref: '#/components/schemas/CaseStatus'
+          description: One or more statuses of the cases returned. The list is commaseparated
+        - in: query
+          name: editor
+          required: false
+          schema:
+            type: integer
+          description: Editor that must be assigned to the cases returned
+        - in: query
+          name: reviewer
+          required: false
+          schema:
+            type: integer
+          description: Reviewer that must be assigned to the cases returned
+        - in: query
+          name: title
+          required: false
+          schema:
+            type: string
+          description: Entire or part of title of the cases returned
+        - in: query
+          name: limit
+          required: false
+          schema:
+            type: integer
+          description: Maximum number of cases returned
+        - in: query
+          name: from
+          required: false
+          schema:
+            type: integer
+          description: Return cases with an id greater than this number
+        - in: query
+          name: format
+          required: false
+          schema:
+            type: string
+            enum:
+              - export
+              - summary
+            default: summary
+          description: View format for returned cases
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CaseSummaryList'
+        '404':
+          description: No cases matched the given search parameter.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CaseSummaryList'
+    post:
+      tags:
+        - cases
+      summary: Create new case. (status field will be ignored if it exists.)
+      operationId: createCase
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CaseRequest'
+      responses:
+        '201':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Case'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '409':
+          description: Conflict. A case with a status other than DONE or CLOSED already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+
+  /cases/{id}:
+    get:
+      tags:
+        - cases
+      summary: Returns a case with the given id
+      operationId: getCase
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            description: Case id
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Case'
+        '404':
+          description: Case could not be found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+
+    post:
+      tags:
+        - cases
+      summary: Update an existing case
+      operationId: updateCase
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            description: Case id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CaseRequest'
+      responses:
+        '201':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Case'
+        '404':
+          description: No case with the given id exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '409':
+          description: Case could not be updated, check ServiceError in body for specifics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+
+  /cases/{id}/tasks:
+    post:
+      tags:
+        - tasks
+      summary: Add task to case
+      operationId: addTask
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            description: Case id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Task'
+      responses:
+        '201':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        '409':
+          description: Task could not be added, check ServiceError in body for specifics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+
+  /tasks/{id}:
+    put:
+      tags:
+        - tasks
+      summary: Update existing task
+      operationId: updateTask
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            description: Task id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Task'
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        '404':
+          description: Task could not be found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '409':
+          description: Task could not be updated, check ServiceError in body for specifics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+    delete:
+      tags:
+        - tasks
+      summary: Delete existing task
+      operationId: deleteTask
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            description: Task id
+      responses:
+        '200':
+          description: successful operation
+        '404':
+          description: Task not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '401':
+          description: Task could not be deleted, check ServiceError in body for specifics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+
+components:
+  schemas:
+    Address:
+      type: object
+      properties:
+        address1:
+          type: string
+        address2:
+          type: string
+        zip:
+          type: string
+        city:
+          type: string
+      required:
+        - address1
+        - zip
+        - city
+
+    ReviewerList:
+      type: object
+      properties:
+        numFound:
+          type: integer
+        reviewers:
+          type: array
+          items:
+            $ref: '#/components/schemas/Reviewer'
+      required:
+        - numFound
+        - reviewers
+
+    Reviewer:
+      type: object
+      properties:
+        id:
+          type: integer
+        firstName:
+          type: string
+        lastName:
+          type: string
+        email:
+          type: string
+        phone:
+          type: string
+        address:
+          $ref: '#/components/schemas/Address'
+        institution:
+          type: string
+        paycode:
+          type: integer
+        hiatus_begin:
+          type: string
+          format: date
+        hiatus_end:
+          type: string
+          format: date
+        subjects:
+          type: array
+          items:
+            $ref: '#/components/schemas/Subject'
+        accepts:
+          type: array
+          items:
+            $ref: '#/components/schemas/ReviewerAccepts'
+        weekWorkload:
+          type: integer
+          description: workload for the week of a deadline
+        weekBeforeWorkload:
+          type: integer
+          description: workload for the week before a deadline
+        weekAfterWorkload:
+          type: integer
+          description: workload for the week after a deadline
+        note:
+          type: string
+          description: editors notes on the reviewer
+        capacity:
+          type: integer
+          description: maximum requested workload per week
+      required:
+        - id
+        - firstName
+        - lastName
+        - email
+        - address
+        - institution
+        - paycode
+        - subjects
+        - accepts
+
+    ReviewerRequest:
+      type: object
+      properties:
+        cprNumber:
+          type: string
+        firstName:
+          type: string
+        lastName:
+          type: string
+        email:
+          type: string
+        phone:
+          type: string
+        address:
+          $ref: '#/components/schemas/Address'
+        institution:
+          type: string
+        paycode:
+          type: integer
+        hiatus_begin:
+          type: string
+          format: date
+        hiatus_end:
+          type: string
+          format: date
+        subjects:
+          type: array
+          items:
+            type: integer
+          minItems: 0
+          nullable: true
+          description: IDs of subjects covered by this reviewer
+        accepts:
+          type: array
+          items:
+            $ref: '#/components/schemas/ReviewerAccepts'
+        note:
+          type: string
+        capacity:
+          type: integer
+        active:
+          type: boolean
+      required:
+        - cprNumber
+        - firstName
+        - lastName
+        - email
+        - paycode
+
+    Editor:
+      type: object
+      properties:
+        id:
+          type: integer
+        firstName:
+          type: string
+        lastName:
+          type: string
+        email:
+          type: string
+        phone:
+          type: string
+      required:
+        - id
+        - firstName
+        - lastName
+        - email
+
+    EditorRequest:
+      type: object
+      description: Used for creating new editors and modifying existing.
+      properties:
+        cprNumber:
+          type: string
+          nullable: true
+        active:
+          type: boolean
+          nullable: true
+        firstName:
+          type: string
+          nullable: true
+        lastName:
+          type: string
+          nullable: true
+        email:
+          type: string
+          nullable: true
+      required:
+        - cprnumber
+        - firstName
+        - lastName
+        - email
+        - paycode
+
+    UserSummary:
+      type: object
+      properties:
+        id:
+          type: integer
+        firstName:
+          type: string
+        lastName:
+          type: string
+      required:
+        - id
+        - firstName
+        - lastName
+
+    ServiceError:
+      type: object
+      properties:
+        code:
+          $ref: '#/components/schemas/ServiceErrorCode'
+        cause:
+          type: string
+          description: Specific cause of the error,
+                       for example the name of an invalid query parameter.
+        details:
+          type: string
+      required:
+        - code
+        - cause
+
+    ServiceErrorCode:
+      type: string
+      enum:
+        - EXTERNAL_SERVICE_ERROR  # Error when communicating with external service
+        - INVALID_REQUEST       # Request body contains invalid fields or id's
+        - FAUST_IN_USE          # Active case for this/these faust/fausts exists
+        - INVALID_STATE         # Change to a new state was not possible or invalid
+        - FAILED                # Some error occurred
+        - NOT_FOUND             # Case, Task or other item was not found
+        - FORBIDDEN             # Operation was forbidden or impossible
+
+    SubjectList:
+      type: object
+      properties:
+        numFound:
+          type: integer
+        subjects:
+          type: array
+          items:
+            $ref: '#/components/schemas/Subject'
+      required:
+        - numFound
+        - subjects
+
+    Subject:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        parentId:
+          type: integer
+      required:
+        - id
+        - name
+
+    RecordsList:
+      type: object
+      properties:
+        numFound:
+          type: integer
+        records:
+          type: array
+          description: A list of faustnumbers matching the given id
+          items:
+            $ref: '#/components/schemas/Record'
+      required:
+        - numFound
+        - records
+
+    Record:
+      type: object
+      properties:
+        faust:
+          type: string
+          description: Faustnumber
+        isPrimary:
+          type: boolean
+          description: Set to true for the faustnumber that currently is the primary object in the work
+        types:
+          type: array
+          description: A list of the types of this book (most likely 1 item, but multiple may occur)
+          items:
+            $ref: '#/components/schemas/RecordMaterialType'
+            minItems: 0
+      required:
+        - faust
+
+    RecordMaterialType:
+      type: object
+      properties:
+        materialType:
+          $ref: '#/components/schemas/MaterialType'
+          description: The generic promat material type this faustnumber maps to
+        specificType:
+          type: string
+          description: The specific type as given by the dm2 record
+
+    CaseSummaryList:
+      type: object
+      properties:
+        numFound:
+          type: integer
+        cases:
+          type: array
+          items:
+            $ref: '#/components/schemas/CaseSummary'
+      required:
+        - numFound
+        - cases
+
+    CaseSummary:
+      type: object
+      nullable: true
+      properties:
+        id:
+          type: integer
+          description: Case id
+        title:
+          type: string
+          description: Case title (free form, not tied to the bibliographic title of any of the faustnumbers)
+        details:
+          type: string
+          description: Case details (free form)
+        primaryFaust:
+          type: string
+          description: Faustnumber for the primary manifestations, typically one of the paperbooks
+        relatedFausts:
+          type: array
+          items:
+            type: string
+            description: Other faustnumbers that should link to the review produced by this case
+          minItems: 0
+        reviewer:
+          $ref: '#/components/schemas/UserSummary'
+          nullable: true
+          description: Summary for the selected reviewer
+        editor:
+          $ref: '#/components/schemas/UserSummary'
+          nullable: true
+          description: Summary for the selected editor
+        created:
+          type: string
+          format: date-time
+          description: Time of creation
+        deadline:
+          type: string
+          format: date
+          nullable: true
+          description: Date of delivery
+        assigned:
+          type: string
+          format: date
+          nullable: true
+          description: Assigned to reviewer on this date
+        status:
+          $ref: '#/components/schemas/CaseStatus'
+        materialType:
+          $ref: '#/components/schemas/MaterialType'
+      required:
+        - id
+        - title
+        - primaryFaust
+        - relatedFausts
+        - created
+        - status
+        - materialType
+
+    Case:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Case id
+        title:
+          type: string
+          description: Case title (free form, not tied to the bibliographic title of any of the faustnumbers)
+        details:
+          type: string
+          description: Case details (free form)
+        primaryFaust:
+          type: string
+          description: Faustnumber for the primary manifestations, typically one of the paperbooks
+        relatedFausts:
+          type: array
+          items:
+            type: string
+          description: Other faustnumbers that should link to the review produced by this case
+          minItems: 0
+        reviewer:
+          $ref: '#/components/schemas/Reviewer'
+          nullable: true
+          description: The selected reviewer, if any otherwise null
+        subjects:
+          type: array
+          items:
+            $ref: '#/components/schemas/Subject'
+          minItems: 0
+          description: One or more subjects covered by the work to review
+        created:
+          type: string
+          format: date-time
+          description: Time of creation
+        deadline:
+          type: string
+          format: date
+          nullable: true
+          description: Date of delivery
+        assigned:
+          type: string
+          format: date
+          nullable: true
+          description: Assigned to reviewer on this date
+        status:
+          $ref: '#/components/schemas/CaseStatus'
+        materialType:
+          $ref: '#/components/schemas/MaterialType'
+        tasks:
+          type: array
+          items:
+            $ref: '#/components/schemas/Task'
+          minItems: 0
+        weekCode:
+          type: string
+          nullable: true
+          description: Weekcode assigned to this case
+        author:
+          type: string
+          nullable: true
+          description: Name of author
+        creator:
+          $ref: '#/components/schemas/Editor'
+          nullable: true
+          description: The editor that created the case
+        publisher:
+          type: string
+          nullable: true
+          description: Name of the publisher
+      required:
+        - id
+        - title
+        - primaryFaust
+        - relatedFausts
+        - reviewer
+        - subjects
+        - created
+        - deadline
+        - status
+        - materialType
+        - tasks
+
+    CaseRequest:
+      type: object
+      properties:
+        title:
+          type: string
+          description: Case title (free form, not tied to the bibliographic title of any of the faustnumbers)
+        details:
+          type: string
+          description: Case details (free form)
+          nullable: true
+        primaryFaust:
+          type: string
+          description: Faustnumber for the primary manifestations, typically one of the paperbooks
+        relatedFausts:
+          type: array
+          items:
+            type: string
+          minItems: 0
+          nullable: true
+          description: Other faustnumbers that should link to the review produced by this case
+        reviewer:
+          type: integer
+          nullable: true
+          description: ID of assigned reviewer
+        editor:
+          type: integer
+          nullable: true
+          description: ID of assigned editor
+        subjects:
+          type: array
+          items:
+            type: integer
+          minItems: 0
+          nullable: true
+          description: IDs of subjects covered by the work to review
+        assigned:
+          type: string
+          format: date
+          nullable: true
+          description: Assigned to reviewer on this date
+        deadline:
+          type: string
+          format: date
+          nullable: true
+          description: Date of delivery
+        status:
+          $ref: '#/components/schemas/CaseStatus'
+        materialType:
+          $ref: '#/components/schemas/MaterialType'
+        tasks:
+          type: array
+          items:
+            $ref: '#/components/schemas/Task'
+          minItems: 0
+          nullable: true
+        weekCode:
+          type: string
+          nullable: true
+          description: Weekcode assigned to this case
+        author:
+          type: string
+          nullable: true
+          description: Name of author
+        creator:
+          type: integer
+          nullable: true
+          description: ID of the editor that created the case
+        publisher:
+          type: string
+          nullable: true
+          description: Name of the publisher
+      required:
+        - title
+        - primaryFaust
+        - materialType
+
+    CaseStatus:
+      type: string
+      nullable: true
+      enum:
+        - 'CREATED'
+        - 'ASSIGNED'
+        - 'REJECTED'
+        - 'PENDING_APPROVAL'
+        - 'PENDING_ISSUES'
+        - 'APPROVED'
+        - 'EXPORTED'
+        - 'CLOSED'
+        - 'DELETED'
+        - 'PENDING_MEETING'
+        - 'PENDING_REVERT'
+        - 'PENDING_EXPORT'
+        - 'REVERTED'
+      description: |
+        Enum describing the overall state of this case
+        * CREATED = Case has been created but still needs refinement
+        * ASSIGNED = Case has been assigned and is in progress
+        * REJECTED = Case has been assigned and rejected by the reviewer
+        * PENDING_APPROVAL = reviewer has completed all tasks, editor needs to approve one or more of them
+        * PENDING_ISSUES = review could not be approved, further actions needed by the editor and/or reviewer
+        * APPROVED = All tasks has received data is has been approved. Case will be exported on next run
+        * EXPORTED = All tasks is approved and the case has been exported
+        * CLOSED = Case has been closed, individual task states is undefined
+        * DELETED = Case has been abandoned
+        * PENDING_MEETING = case awaits being dealt with at the next editor meeting
+        * PENDING_EXTERNAL = case awaits external depencies, such as metakompas
+        * PENDING_REVERT = case awaits the deletion of its primary faust
+        * PENDING_EXPORT = case awaits harvesting for future publication
+        * REVERTED = primary faust of the case is deleted
+
+    MaterialType:
+      type: string
+      enum:
+        - 'UNKNOWN'
+        - 'BOOK'
+        - 'MOVIE'
+        - 'MULTIMEDIA'
+
+    Task:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Task id
+        taskType:
+          $ref: '#/components/schemas/TaskType'
+        taskFieldType:
+          $ref: '#/components/schemas/TaskFieldType'
+        created:
+          type: string
+          format: date
+          description: Date of creation
+        paycode:
+          type: string
+          enum:
+            - 'NONE'  # Todo: define paycodes
+          description: Payment code
+        approved:
+          type: string
+          format: date
+          nullable: true
+          description: Date of approvement
+        payed:
+          type: string
+          format: date
+          nullable: true
+          description: Date when first added to a periods payroll. This value must not change hereafter
+        targetFausts:
+          type: array
+          items:
+            type: string
+          nullable: true
+          minItems: 0
+          description: If data produced by this task only relates to some of the cases related faustnumbers. These numbers must be listed here
+        data:
+          type: string
+          description: The task data
+          nullable: true
+      required:
+        - typeOfTask
+        - paycode
+
+    TaskType:
+      type: string
+      enum:
+        - 'NONE'
+        - 'GROUP_1_LESS_THAN_100_PAGES'
+        - 'GROUP_2_100_UPTO_199_PAGES'
+        - 'GROUP_3_200_UPTO_499_PAGES'
+        - 'GROUP_4_500_OR_MORE_PAGES'
+        - 'MOVIES_GR_1'
+        - 'MOVIES_GR_2'
+        - 'MOVIES_GR_3'
+        - 'MULTIMEDIA_FEE'
+        - 'MULTIMEDIA_FEE_GR2'
+        - 'MOVIE_NON_FICTION_GR1'
+        - 'MOVIE_NON_FICTION_GR2'
+        - 'MOVIE_NON_FICTION_GR3'
+        - 'NO_REVIEW'
+        - 'MUSIC_FEE'
+        - 'BKM'
+        - 'METAKOMPAS'
+        - 'BUGGI'
+        - 'EXPRESS'
+      description: |
+        Enum describing the type of task
+        * NONE = No tasktype set (should not be used)
+        * GROUP_1_LESS_THAN_100_PAGES = Books with less than 100 pages
+        * GROUP_2_100_UPTO_199_PAGES = Books with 100 to 199 pages
+        * GROUP_3_200_UPTO_499_PAGES = Books with 200 to 499 pages
+        * GROUP_4_500_OR_MORE_PAGES = Books with 500 or more pages
+        * MOVIES_GR_1 = Fiction movies, group 1
+        * MOVIES_GR_2 = Fiction movies, group 2
+        * MOVIES_GR_3 = Fiction movies, group 3
+        * MULTIMEDIA_FEE = Multimedia
+        * MULTIMEDIA_FEE_GR2 = Multimedia fee, group 2
+        * MOVIE_NON_FICTION_GR1 = Non-fiction movie, group 1
+        * MOVIE_NON_FICTION_GR2 = Non-fiction movie, group 2
+        * MOVIE_NON_FICTION_GR3 = Non-fiction movie, group 3
+        * NO_REVIEW = Note but no review
+        * MUSIC_FEE = Music (assumed obsolete)
+        * BKM = Decide if this material is relevant for libraries
+        * METAKOMPAS = Special topics for Metakompasset
+        * BUGGI = Special topics for Buggi
+        * EXPRESS = This case is urgent
+
+    TaskFieldType:
+      type: string
+      enum:
+        - 'NONE'
+        - 'BRIEF'
+        - 'DESCRIPTION'
+        - 'EVALUATION'
+        - 'COMPARISON'
+        - 'RECOMMENDATION'
+        - 'BIBLIOGRAPHIC'
+        - 'TOPICS'
+        - 'BKM'
+      description: |
+        Enum describing the type of task field
+        * NONE = No task field type (For fields without data: METAKOMPAS, BUGGI)
+        * BRIEF = Brief note to be inserted into targeted records
+        * DESCRIPTION = Description of the material
+        * EVALUATION = Evaluation of the material
+        * COMPARISON = Other works that is comparable to the material
+        * RECOMMENDATION = The reviewers conclusion on the material
+        * BIBLIOGRAPHIC = Bibliographic note for the movie/multimedia material
+        * TOPICS = Suggested topics (semicolon separated) for the material
+        * BKM = BKM assessment
+
+    ReviewerAccepts:
+      type: string
+      enum:
+        - 'BKM'
+        - 'BOOK'
+        - 'EBOOK'
+        - 'EXPRESS'
+        - 'MOVIE'
+        - 'MULTIMEDIA'
+        - 'PS4'
+        - 'PS5'
+        - 'XBOX_ONE'
+        - 'XBOX_SERIES_X'
+        - 'NINTENDO_SWITCH'
+        - 'BIWEEKLY_ONLY'
+
+    UserRole:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: PROMAT internal user ID (to be used in API calls)
+        role:
+          $ref: '#/components/schemas/UserRoleType'
+      required:
+        - id
+        - role
+
+    UserRoleType:
+      type: string
+      enum:
+        - 'EDITOR'
+        - 'REVIEWER'
