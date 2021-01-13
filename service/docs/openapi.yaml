@@ -380,20 +380,24 @@ paths:
               - export
               - summary
             default: summary
-          description: View format for returned cases
+          description: View format for returned cases, ie. CaseExportList or CaseSummaryList
       responses:
         '200':
           description: successful operation
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CaseSummaryList'
+                oneOf:
+                  - $ref: '#/components/schemas/CaseExportList'
+                  - $ref: '#/components/schemas/CaseSummaryList'
         '404':
           description: No cases matched the given search parameter.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CaseSummaryList'
+                oneOf:
+                  - $ref: '#/components/schemas/CaseExportList'
+                  - $ref: '#/components/schemas/CaseSummaryList'
     post:
       tags:
         - cases
@@ -880,6 +884,70 @@ components:
         specificType:
           type: string
           description: The specific type as given by the dm2 record
+
+    CaseExportList:
+      type: object
+      properties:
+        numFound:
+          type: integer
+        cases:
+          type: array
+          items:
+            $ref: '#/components/schemas/CaseExport'
+      required:
+        - numFound
+        - cases
+
+    CaseExport:
+      type: object
+      nullable: true
+      properties:
+        id:
+          type: integer
+          description: Case id
+        title:
+          type: string
+          description: Case title (free form, not tied to the bibliographic title of any of the faustnumbers)
+        details:
+          type: string
+          description: Case details (free form)
+        primaryFaust:
+          type: string
+          description: Faustnumber for the primary manifestations, typically one of the paperbooks
+        relatedFausts:
+          type: array
+          items:
+            type: string
+            description: Other faustnumbers that should link to the review produced by this case
+          minItems: 0
+        reviewer:
+          $ref: '#/components/schemas/UserSummary'
+          nullable: true
+          description: Summary for the selected reviewer
+        created:
+          type: string
+          format: date-time
+          description: Time of creation
+        deadline:
+          type: string
+          format: date
+          nullable: true
+        materialType:
+          $ref: '#/components/schemas/MaterialType'
+        tasks:
+          type: array
+          items:
+            $ref: '#/components/schemas/Task'
+          minItems: 0
+      required:
+        - id
+        - title
+        - primaryFaust
+        - relatedFausts
+        - created
+        - status
+        - materialType
+        - tasks
 
     CaseSummaryList:
       type: object
