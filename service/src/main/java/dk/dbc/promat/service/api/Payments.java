@@ -262,7 +262,7 @@ public class Payments {
     @GET
     @Path("payments/preview")
     public Response preview(@QueryParam("format") final PaymentsFormat selectedformat) {
-        LOGGER.info("ENTRY");
+
         PaymentsFormat format = selectedformat != null ? selectedformat : PaymentsFormat.PAYMENT_LIST;
         LOGGER.info("payments/preview/?format={} (GET)", selectedformat);
 
