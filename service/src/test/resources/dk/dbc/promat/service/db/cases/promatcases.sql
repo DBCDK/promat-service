@@ -15,7 +15,7 @@ values (1, 'Title for 001111', 'Details for 001111', '001111', '["002222","00333
        (13, 'Title for 019992', 'Details for 019992', '019992', '[]', NULL, 11, '2021-01-11', '2021-01-11', NULL, 'CREATED', 'BOOK', null, null, 13),
        (14, 'Title for 019993', 'Details for 019993', '019993', '[]', 1, 10, '2021-01-13', '2021-01-13', NULL, 'CREATED', 'BOOK', null, null, 13);
 
-insert into promattask(id, tasktype, taskfieldtype, created, paycode, approved, payed, data, targetFausts)
+insert into promattask(id, tasktype, taskfieldtype, created, paycategory, approved, payed, data, targetFausts)
 values  (1, 'GROUP_1_LESS_THAN_100_PAGES', 'NONE', '2020-12-10', '0000', '2020-12-10', NULL,         NULL,                NULL),
         (2, 'GROUP_2_100_UPTO_199_PAGES',  'NONE', '2020-12-10', '0000', NULL,         '2020-12-10', NULL,                NULL),
         (3, 'GROUP_3_200_UPTO_499_PAGES',  'NONE', '2020-12-10', '0000', NULL,         NULL,         'here is some data', NULL),

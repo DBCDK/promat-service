@@ -35,7 +35,7 @@ public class PromatTask {
 
     private LocalDate created;
 
-    private String paycode;
+    private String payCategory;
 
     private LocalDate approved;
 
@@ -79,12 +79,12 @@ public class PromatTask {
         this.created = created;
     }
 
-    public String getPaycode() {
-        return paycode;
+    public String getPayCategory() {
+        return payCategory;
     }
 
-    public void setPaycode(String paycode) {
-        this.paycode = paycode;
+    public void setPayCategory(String payCategory) {
+        this.payCategory = payCategory;
     }
 
     public LocalDate getApproved() {
@@ -139,8 +139,8 @@ public class PromatTask {
         return this;
     }
 
-    public PromatTask withPayCode(String paycode) {
-        this.paycode = paycode;
+    public PromatTask withPayCategory(String payCategory) {
+        this.payCategory = payCategory;
         return this;
     }
 
@@ -174,7 +174,7 @@ public class PromatTask {
                 taskType == task.taskType &&
                 taskFieldType == task.taskFieldType &&
                 created.equals(task.created) &&
-                paycode.equals(task.paycode) &&
+                payCategory.equals(task.payCategory) &&
                 Objects.equals(approved, task.approved) &&
                 Objects.equals(payed, task.payed) &&
                 Objects.equals(data, task.data) &&
@@ -183,6 +183,6 @@ public class PromatTask {
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, taskType, taskFieldType, created, paycode, approved, payed, data, targetFausts);
+        return Objects.hash(id, taskType, taskFieldType, created, payCategory, approved, payed, data, targetFausts);
     }
 }

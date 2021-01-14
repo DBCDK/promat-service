@@ -508,7 +508,7 @@ public class Cases {
                     .withTaskFieldType(dto.getTaskFieldType())
                     .withData(dto.getData())  // null is allowed here since it is the default value anyway
                     .withCreated(LocalDate.now())
-                    .withPayCode(getPaycodeForTaskType(dto.getTaskType()))
+                    .withPayCategory(getPayCategoryForTaskType(dto.getTaskType()))
                     .withTargetFausts(dto.getTargetFausts());
 
             // Add the new task
@@ -585,7 +585,7 @@ public class Cases {
         return editor;
     }
 
-    private String getPaycodeForTaskType(TaskType taskType) {
+    private String getPayCategoryForTaskType(TaskType taskType) {
         switch(taskType) {
 
             case GROUP_1_LESS_THAN_100_PAGES: return "1956";
@@ -612,7 +612,7 @@ public class Cases {
 
             case METAKOMPAS: return "1987";
 
-            case BUGGI: return "0000";  // Todo: Update return value when the paycode is known
+            case BUGGI: return "0000";  // Todo: Update return value when the paycategory is known
 
             case NONE:
             default:
@@ -630,7 +630,7 @@ public class Cases {
                 tasks.add(new PromatTask()
                         .withTaskType(task.getTaskType())
                         .withTaskFieldType(task.getTaskFieldType())
-                        .withPayCode(getPaycodeForTaskType(task.getTaskType()))
+                        .withPayCategory(getPayCategoryForTaskType(task.getTaskType()))
                         .withCreated(LocalDate.now())
                         .withTargetFausts(task.getTargetFausts() == null ? null : task.getTargetFausts()));
 
