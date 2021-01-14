@@ -225,7 +225,7 @@ public class CasesIT extends ContainerTest {
         // Check the first created task
         assertThat("task 1 type", created.getTasks().get(0).getTaskType(), is(TaskType.GROUP_1_LESS_THAN_100_PAGES));
         assertThat("task 1 field type", created.getTasks().get(1).getTaskFieldType(), is(TaskFieldType.BRIEF));
-        assertThat("task 1 paycategory", created.getTasks().get(0).getPayCategory(), is("1956"));
+        assertThat("task 1 paycategory", created.getTasks().get(0).getPayCategory(), is("1960"));
         assertThat("task 1 created", created.getTasks().get(0).getCreated(), is(LocalDate.now()));
         assertThat("task 1 approved", created.getTasks().get(0).getApproved(), is(IsNull.nullValue()));
         assertThat("task 1 payed", created.getTasks().get(0).getPayed(), is(IsNull.nullValue()));
@@ -234,7 +234,7 @@ public class CasesIT extends ContainerTest {
         // Check the second created task
         assertThat("task 2 type", created.getTasks().get(1).getTaskType(), is(TaskType.GROUP_1_LESS_THAN_100_PAGES));
         assertThat("task 2 field type", created.getTasks().get(1).getTaskFieldType(), is(TaskFieldType.BRIEF));
-        assertThat("task 2 paycategory", created.getTasks().get(1).getPayCategory(), is("1956"));
+        assertThat("task 2 paycategory", created.getTasks().get(1).getPayCategory(), is("1960"));
         assertThat("task 2 created", created.getTasks().get(1).getCreated(), is(LocalDate.now()));
         assertThat("task 2 approved", created.getTasks().get(1).getApproved(), is(IsNull.nullValue()));
         assertThat("task 2 payed", created.getTasks().get(1).getPayed(), is(IsNull.nullValue()));
@@ -573,7 +573,7 @@ public class CasesIT extends ContainerTest {
                                 .withTaskFieldType(TaskFieldType.BRIEF)
                                 .withTargetFausts(Arrays.asList(new String[] {"8002222", "8004444"})),
                         new TaskDto()
-                                .withTaskType(TaskType.BKM)
+                                .withTaskType(TaskType.GROUP_1_LESS_THAN_100_PAGES)
                                 .withTaskFieldType(TaskFieldType.BKM)
                 ));
         response = postResponse("v1/api/cases", dto);
@@ -597,10 +597,10 @@ public class CasesIT extends ContainerTest {
                                 .withTaskFieldType(TaskFieldType.BRIEF)
                                 .withTargetFausts(Arrays.asList(new String[] {"8001111", "8004444"})),
                         new TaskDto()
-                                .withTaskType(TaskType.BKM)
+                                .withTaskType(TaskType.GROUP_1_LESS_THAN_100_PAGES)
                                 .withTaskFieldType(TaskFieldType.BKM),
                         new TaskDto()
-                                .withTaskType(TaskType.BUGGI)
+                                .withTaskType(TaskType.GROUP_1_LESS_THAN_100_PAGES)
                                 .withTaskFieldType(TaskFieldType.NONE)
                 ));
         PromatCase updated = promatServiceConnector.updateCase(created.getId(), dto);

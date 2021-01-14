@@ -23,14 +23,4 @@ public enum TaskType {
     MOVIE_NON_FICTION_GR1,
     MOVIE_NON_FICTION_GR2,
     MOVIE_NON_FICTION_GR3,
-
-    NO_REVIEW,
-
-    MUSIC_FEE,  // Todo: Do we need this one ?
-
-    BKM,
-
-    METAKOMPAS,
-
-    BUGGI
 }

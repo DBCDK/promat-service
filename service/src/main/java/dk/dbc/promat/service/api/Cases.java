@@ -23,6 +23,7 @@ import dk.dbc.promat.service.persistence.PromatMessage;
 import dk.dbc.promat.service.persistence.PromatTask;
 import dk.dbc.promat.service.persistence.Reviewer;
 import dk.dbc.promat.service.persistence.Subject;
+import dk.dbc.promat.service.persistence.TaskFieldType;
 import dk.dbc.promat.service.persistence.TaskType;
 import dk.dbc.promat.service.rest.JsonMapperProvider;
 import dk.dbc.promat.service.templating.NotificationFactory;
@@ -508,7 +509,7 @@ public class Cases {
                     .withTaskFieldType(dto.getTaskFieldType())
                     .withData(dto.getData())  // null is allowed here since it is the default value anyway
                     .withCreated(LocalDate.now())
-                    .withPayCategory(getPayCategoryForTaskType(dto.getTaskType()))
+                    .withPayCategory(getPayCategoryForTaskType(dto.getTaskType(), dto.getTaskFieldType()))
                     .withTargetFausts(dto.getTargetFausts());
 
             // Add the new task
@@ -585,39 +586,52 @@ public class Cases {
         return editor;
     }
 
-    private String getPayCategoryForTaskType(TaskType taskType) {
-        switch(taskType) {
+    private String getPayCategoryForTaskType(TaskType taskType, TaskFieldType taskFieldType) throws ServiceErrorException {
+        switch(taskFieldType) {
+            case BRIEF:
+                return "1960";
+            case METAKOMPAS:
+                return "1987";
+            case BKM:
+                return "1962";
+            default: {
+                switch(taskType) {
 
-            case GROUP_1_LESS_THAN_100_PAGES: return "1956";
-            case GROUP_2_100_UPTO_199_PAGES: return "1957";
-            case GROUP_3_200_UPTO_499_PAGES: return "1958";
-            case GROUP_4_500_OR_MORE_PAGES: return "1959";
+                    case GROUP_1_LESS_THAN_100_PAGES:
+                        return "1956";
+                    case GROUP_2_100_UPTO_199_PAGES:
+                        return "1957";
+                    case GROUP_3_200_UPTO_499_PAGES:
+                        return "1958";
+                    case GROUP_4_500_OR_MORE_PAGES:
+                        return "1959";
 
-            case MOVIES_GR_1: return "1980";
-            case MOVIES_GR_2: return "1981";
-            case MOVIES_GR_3: return "1982";
+                    case MOVIES_GR_1:
+                        return "1980";
+                    case MOVIES_GR_2:
+                        return "1981";
+                    case MOVIES_GR_3:
+                        return "1982";
 
-            case MULTIMEDIA_FEE: return "1954";
-            case MULTIMEDIA_FEE_GR2: return "1985";
+                    case MULTIMEDIA_FEE:
+                        return "1954";
+                    case MULTIMEDIA_FEE_GR2:
+                        return "1985";
 
-            case MOVIE_NON_FICTION_GR1: return "1979";
-            case MOVIE_NON_FICTION_GR2: return "1983";
-            case MOVIE_NON_FICTION_GR3: return "1984";
-
-            case NO_REVIEW: return "1961";
-
-            case MUSIC_FEE: return "1234";
-
-            case BKM: return "1962";
-
-            case METAKOMPAS: return "1987";
-
-            case BUGGI: return "0000";  // Todo: Update return value when the paycategory is known
-
-            case NONE:
-            default:
-                return "";
+                    case MOVIE_NON_FICTION_GR1:
+                        return "1979";
+                    case MOVIE_NON_FICTION_GR2:
+                        return "1983";
+                    case MOVIE_NON_FICTION_GR3:
+                        return "1984";
+                }
+            }
         }
+
+        throw new ServiceErrorException("Bad PayCategory")
+                .withDetails(String.format("Invalid combination of TaskType {} and TaskFieldType {} when determining paycategory", taskType, taskFieldType))
+                .withCode(ServiceErrorCode.INVALID_REQUEST)
+                .withHttpStatus(400);
     }
 
     private List<PromatTask> createTasks(List<TaskDto> taskDtos, List<String> relatedFausts) throws ServiceErrorException {
@@ -630,7 +644,7 @@ public class Cases {
                 tasks.add(new PromatTask()
                         .withTaskType(task.getTaskType())
                         .withTaskFieldType(task.getTaskFieldType())
-                        .withPayCategory(getPayCategoryForTaskType(task.getTaskType()))
+                        .withPayCategory(getPayCategoryForTaskType(task.getTaskType(), task.getTaskFieldType()))
                         .withCreated(LocalDate.now())
                         .withTargetFausts(task.getTargetFausts() == null ? null : task.getTargetFausts()));
 
