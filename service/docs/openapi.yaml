@@ -915,6 +915,22 @@ components:
           type: string
           format: date
           nullable: true
+        weekCode:
+          type: string
+          nullable: true
+          description: Weekcode assigned to this case
+        author:
+          type: string
+          nullable: true
+          description: Name of author
+        publisher:
+          type: string
+          nullable: true
+          description: Name of the publisher
+        recordId:
+          type: string
+          nullable: true
+          description: FAUST number assigned to the MARC record generated for the case during export
         materialType:
           $ref: '#/components/schemas/MaterialType'
         tasks:
@@ -1072,6 +1088,10 @@ components:
           type: string
           nullable: true
           description: Name of the publisher
+        recordId:
+          type: string
+          nullable: true
+          description: FAUST number assigned to the MARC record generated for the case during export
       required:
         - id
         - title
