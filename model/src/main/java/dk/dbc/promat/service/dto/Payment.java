@@ -7,14 +7,18 @@ package dk.dbc.promat.service.dto;
 
 import com.fasterxml.jackson.annotation.JsonView;
 import dk.dbc.promat.service.persistence.CaseView;
+import dk.dbc.promat.service.persistence.MaterialType;
 import dk.dbc.promat.service.persistence.Reviewer;
 import dk.dbc.promat.service.persistence.TaskFieldType;
+import dk.dbc.promat.service.persistence.TaskType;
+
+import java.time.LocalDate;
 
 public class Payment {
 
     String payCode;
 
-    String payType;
+    String payCategory;
 
     int count;
 
@@ -25,11 +29,19 @@ public class Payment {
 
     String primaryFaust;
 
+    String relatedFausts;
+
     String title;
 
     String weekCode;
 
+    TaskType taskType;
+
     TaskFieldType taskFieldType;
+
+    MaterialType materialType;
+
+    LocalDate deadline;
 
     public String getPayCode() {
         return payCode;
@@ -39,12 +51,12 @@ public class Payment {
         this.payCode = payCode;
     }
 
-    public String getPayType() {
-        return payType;
+    public String getPayCategory() {
+        return payCategory;
     }
 
-    public void setPayType(String payType) {
-        this.payType = payType;
+    public void setPayCategory(String payCategory) {
+        this.payCategory = payCategory;
     }
 
     public int getCount() {
@@ -103,13 +115,45 @@ public class Payment {
         this.taskFieldType = taskFieldType;
     }
 
+    public String getRelatedFausts() {
+        return relatedFausts;
+    }
+
+    public void setRelatedFausts(String relatedFausts) {
+        this.relatedFausts = relatedFausts;
+    }
+
+    public TaskType getTaskType() {
+        return taskType;
+    }
+
+    public void setTaskType(TaskType taskType) {
+        this.taskType = taskType;
+    }
+
+    public MaterialType getMaterialType() {
+        return materialType;
+    }
+
+    public void setMaterialType(MaterialType materialType) {
+        this.materialType = materialType;
+    }
+
+    public LocalDate getDeadline() {
+        return deadline;
+    }
+
+    public void setDeadline(LocalDate deadline) {
+        this.deadline = deadline;
+    }
+
     public Payment withPayCode(String payCode) {
         this.payCode = payCode;
         return this;
     }
 
-    public Payment withPayType(String payType) {
-        this.payType = payType;
+    public Payment withPayCategory(String payCategory) {
+        this.payCategory = payCategory;
         return this;
     }
 
@@ -145,6 +189,26 @@ public class Payment {
 
     public Payment withTaskFieldType(TaskFieldType taskFieldType) {
         this.taskFieldType = taskFieldType;
+        return this;
+    }
+
+    public Payment withRelatedFausts(String relatedFausts) {
+        this.relatedFausts = relatedFausts;
+        return this;
+    }
+
+    public Payment withTaskType(TaskType taskType) {
+        this.taskType = taskType;
+        return this;
+    }
+
+    public Payment withMaterialType(MaterialType materialType) {
+        this.materialType = materialType;
+        return this;
+    }
+
+    public Payment withDeadline(LocalDate deadline) {
+        this.deadline = deadline;
         return this;
     }
 }

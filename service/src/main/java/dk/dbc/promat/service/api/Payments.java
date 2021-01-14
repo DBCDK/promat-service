@@ -12,11 +12,13 @@ import dk.dbc.promat.service.dto.Payment;
 import dk.dbc.promat.service.dto.PaymentList;
 import dk.dbc.promat.service.dto.ServiceErrorDto;
 import dk.dbc.promat.service.persistence.CaseView;
+import dk.dbc.promat.service.persistence.MaterialType;
 import dk.dbc.promat.service.persistence.PromatCase;
 import dk.dbc.promat.service.persistence.PromatEntityManager;
 import dk.dbc.promat.service.persistence.PromatTask;
 import dk.dbc.promat.service.persistence.Reviewer;
 import dk.dbc.promat.service.persistence.TaskFieldType;
+import dk.dbc.promat.service.persistence.TaskType;
 import dk.dbc.promat.service.rest.JsonMapperProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,6 +31,7 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
@@ -191,9 +194,13 @@ public class Payments {
                         .withText("example payment")
                         .withReviewer(entityManager.find(Reviewer.class, 1))
                         .withPrimaryFaust("123")
+                        .withRelatedFausts("456, 789")
                         .withTitle("title")
                         .withWeekCode("BKM202101")
-                        .withTaskFieldType(TaskFieldType.BRIEF)));
+                        .withTaskType(TaskType.GROUP_1_LESS_THAN_100_PAGES)
+                        .withTaskFieldType(TaskFieldType.BRIEF)
+                        .withMaterialType(MaterialType.BOOK)
+                        .withDeadline(LocalDate.now())));
 
         return paymentList;
     }
