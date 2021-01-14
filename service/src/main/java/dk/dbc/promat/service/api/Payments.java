@@ -363,8 +363,6 @@ public class Payments {
     }
 
     private String convertPaymentListToCsv(PaymentList paymentList) {
-
-
         return "Dato;Lønnr.;Lønart;Antal;Tekst;Anmelder\n" +
                 paymentList.getPayments()
                         .stream()
