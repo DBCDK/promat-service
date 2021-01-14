@@ -363,14 +363,18 @@ public class Payments {
     }
 
     private String convertPaymentListToCsv(PaymentList paymentList) {
-        return "Lønnr;Lønart;Antal;;;Tekst\n" +
+
+
+        return "Dato;Lønnr.;Lønart;Antal;Tekst;Anmelder\n" +
                 paymentList.getPayments()
                         .stream()
-                        .map(payment -> String.format("%s;%s;%d;%s\n",
+                        .map(payment -> String.format("%s;%s;%s;%d;%s;%s\n",
+                                LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd-MM-yyyy")),
                                 payment.getPayCode(),
                                 payment.getPayType(),
                                 payment.getCount(),
-                                payment.getText()))
+                                payment.getText(),
+                                payment.getReviewer().getFirstName() + " " + payment.getReviewer().getLastName()))
                         .collect(Collectors.joining());
     }
 
