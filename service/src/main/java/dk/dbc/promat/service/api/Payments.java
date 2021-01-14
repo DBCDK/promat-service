@@ -51,8 +51,8 @@ public class Payments {
     public enum PaymentsFormat {
         CSV,
         PAYMENT_LIST,
-        PAYMENT_LIST_BY_USER,
-        PAYMENT_LIST_BY_FAUST
+        PAYMENT_LIST_BY_USER, //Todo: May be superfluous, waiting on ux/frontend
+        PAYMENT_LIST_BY_FAUST //Todo: ...^^
     }
 
     @GET
@@ -165,7 +165,7 @@ public class Payments {
                         .map(payment -> String.format("%s;%s;%s;%d;%s;%s\n",
                                 LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd-MM-yyyy")),
                                 payment.getPayCode(),
-                                payment.getPayType(),
+                                payment.getPayCategory(),
                                 payment.getCount(),
                                 payment.getText(),
                                 payment.getReviewer().getFirstName() + " " + payment.getReviewer().getLastName()))
@@ -186,7 +186,7 @@ public class Payments {
                 .withNumFound(1)
                 .withPayments(Arrays.asList(new Payment()
                         .withPayCode("1234")
-                        .withPayType("5678")
+                        .withPayCategory("5678")
                         .withCount(3)
                         .withText("example payment")
                         .withReviewer(entityManager.find(Reviewer.class, 1))
