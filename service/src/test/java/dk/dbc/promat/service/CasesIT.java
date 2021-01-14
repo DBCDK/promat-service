@@ -18,7 +18,6 @@ import dk.dbc.promat.service.persistence.PromatTask;
 import dk.dbc.promat.service.persistence.Subject;
 import dk.dbc.promat.service.persistence.TaskFieldType;
 import dk.dbc.promat.service.persistence.TaskType;
-import java.util.Collections;
 import org.hamcrest.core.IsNull;
 import org.junit.jupiter.api.Test;
 
@@ -26,6 +25,7 @@ import javax.ws.rs.core.Response;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -464,7 +464,7 @@ public class CasesIT extends ContainerTest {
         fetched = promatServiceConnector.listCases(new PromatServiceConnector.ListCasesParams()
                 .withEditor(11)
                 .withStatus(CaseStatus.CREATED));
-        assertThat("Number of cases with editor 11 and status CREATED", fetched.getNumFound(), is(2));
+        assertThat("Number of cases with editor 11 and status CREATED", fetched.getNumFound(), is(3));
         assertThat("case id", fetched.getCases().get(0).getId(), is(10));
     }
 
