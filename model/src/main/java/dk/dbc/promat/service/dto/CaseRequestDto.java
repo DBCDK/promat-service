@@ -7,7 +7,6 @@ package dk.dbc.promat.service.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import dk.dbc.promat.service.persistence.CaseStatus;
-import dk.dbc.promat.service.persistence.Editor;
 import dk.dbc.promat.service.persistence.MaterialType;
 
 import java.util.List;
@@ -47,6 +46,8 @@ public class CaseRequestDto implements Dto {
     private Integer creator;
 
     private String publisher;
+
+    private String recordId;
 
     public String getTitle() {
         return title;
@@ -257,6 +258,18 @@ public class CaseRequestDto implements Dto {
         return this;
     }
 
+    public String getRecordId() {
+        return recordId;
+    }
+
+    public void setRecordId(String recordId) {
+        this.recordId = recordId;
+    }
+
+    public CaseRequestDto withRecordId(String recordId) {
+        setRecordId(recordId);
+        return this;
+    }
 
     @Override
     public String toString() {
@@ -277,6 +290,7 @@ public class CaseRequestDto implements Dto {
                 ", author='" + author + '\'' +
                 ", creator=" + creator +
                 ", publisher='" + publisher + '\'' +
+                ", recordId='" + recordId + '\'' +
                 '}';
     }
 
@@ -300,12 +314,13 @@ public class CaseRequestDto implements Dto {
                 Objects.equals(weekCode, that.weekCode) &&
                 Objects.equals(author, that.author) &&
                 Objects.equals(creator, that.creator) &&
-                Objects.equals(publisher, that.publisher);
+                Objects.equals(publisher, that.publisher) &&
+                Objects.equals(recordId, that.recordId);
     }
 
     @Override
     public int hashCode() {
-        int result = Objects.hash(title, details, primaryFaust, relatedFausts, reviewer, editor, subjects, deadline, assigned, status, materialType, tasks, weekCode, author, creator, publisher);
-        return result;
+        return Objects.hash(title, details, primaryFaust, relatedFausts, reviewer, editor, subjects, deadline, assigned,
+                status, materialType, tasks, weekCode, author, creator, publisher, recordId);
     }
 }

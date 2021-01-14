@@ -428,6 +428,9 @@ public class Cases {
             if(dto.getPublisher() != null) {
                 existing.setPublisher(dto.getPublisher());
             }
+            if (dto.getRecordId() != null) {
+                existing.setRecordId(dto.getRecordId());
+            }
 
             return Response.ok(existing).build();
         } catch(ServiceErrorException serviceErrorException) {
