@@ -83,7 +83,7 @@ pipeline {
             }
             steps {
                 sh """
-                    mvn deploy -Dmaven.test.skip=true -am -pl model
+                    mvn deploy -Dmaven.test.skip=true -am -pl model -pl connector
                 """
             }
         }
