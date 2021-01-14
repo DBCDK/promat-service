@@ -164,7 +164,7 @@ public enum CaseStatus {
 
         Transition from:    (any)
         Transition to:      CREATED
-        Payable:            Yes
+        Payable:            No
         Visible in DBCKat   No
 
         REVIEWS WILL STAY IN THIS STATE UNLESS LATER CHANGED TO CREATED. AN ASSIGNED REVIEWER MUST BE REMOVED
