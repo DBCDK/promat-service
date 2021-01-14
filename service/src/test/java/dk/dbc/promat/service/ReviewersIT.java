@@ -232,7 +232,7 @@ public class ReviewersIT extends ContainerTest {
                         .withZip("9999")
                         .withCity("Lilleved"));
         reviewer.setInstitution("Hans Hansens Bix");
-        reviewer.setPaycode(0);
+        reviewer.setPaycode(123);
         reviewer.setSubjects(
                 List.of(
                         new Subject()
@@ -263,7 +263,7 @@ public class ReviewersIT extends ContainerTest {
                         .withZip("1111")
                         .withCity("Storeved"));
         reviewer.setInstitution("Ole Olsens Goodies");
-        reviewer.setPaycode(0);
+        reviewer.setPaycode(456);
         reviewer.setSubjects(
                 List.of(
                         new Subject()
