@@ -5,9 +5,11 @@
 
 package dk.dbc.promat.service.api;
 
-import com.fasterxml.jackson.annotation.JsonView;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dk.dbc.promat.service.Repository;
+import dk.dbc.promat.service.dto.GroupedPaymentList;
+import dk.dbc.promat.service.dto.Payment;
+import dk.dbc.promat.service.dto.PaymentList;
 import dk.dbc.promat.service.dto.ServiceErrorDto;
 import dk.dbc.promat.service.persistence.CaseView;
 import dk.dbc.promat.service.persistence.PromatCase;
@@ -29,7 +31,6 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -52,211 +53,6 @@ public class Payments {
         PAYMENT_LIST,
         PAYMENT_LIST_BY_USER,
         PAYMENT_LIST_BY_FAUST
-    }
-
-    private class Payment {
-
-        String payCode;
-
-        String payType;
-
-        int count;
-
-        String text;
-
-        @JsonView({CaseView.CaseSummary.class})
-        Reviewer reviewer;
-
-        String primaryFaust;
-
-        String title;
-
-        String weekCode;
-
-        TaskFieldType taskFieldType;
-
-        public String getPayCode() {
-            return payCode;
-        }
-
-        public void setPayCode(String payCode) {
-            this.payCode = payCode;
-        }
-
-        public String getPayType() {
-            return payType;
-        }
-
-        public void setPayType(String payType) {
-            this.payType = payType;
-        }
-
-        public int getCount() {
-            return count;
-        }
-
-        public void setCount(int count) {
-            this.count = count;
-        }
-
-        public String getText() {
-            return text;
-        }
-
-        public void setText(String text) {
-            this.text = text;
-        }
-
-        public Reviewer getReviewer() {
-            return reviewer;
-        }
-
-        public void setReviewer(Reviewer reviewer) {
-            this.reviewer = reviewer;
-        }
-
-        public String getPrimaryFaust() {
-            return primaryFaust;
-        }
-
-        public void setPrimaryFaust(String primaryFaust) {
-            this.primaryFaust = primaryFaust;
-        }
-
-        public String getTitle() {
-            return title;
-        }
-
-        public void setTitle(String title) {
-            this.title = title;
-        }
-
-        public String getWeekCode() {
-            return weekCode;
-        }
-
-        public void setWeekCode(String weekCode) {
-            this.weekCode = weekCode;
-        }
-
-        public TaskFieldType getTaskFieldType() {
-            return taskFieldType;
-        }
-
-        public void setTaskFieldType(TaskFieldType taskFieldType) {
-            this.taskFieldType = taskFieldType;
-        }
-
-        public Payment withPayCode(String payCode) {
-            this.payCode = payCode;
-            return this;
-        }
-
-        public Payment withPayType(String payType) {
-            this.payType = payType;
-            return this;
-        }
-
-        public Payment withCount(int count) {
-            this.count = count;
-            return this;
-        }
-
-        public Payment withText(String text) {
-            this.text = text;
-            return this;
-        }
-
-        public Payment withReviewer(Reviewer reviewer) {
-            this.reviewer = reviewer;
-            return this;
-        }
-
-        public Payment withPrimaryFaust(String primaryFaust) {
-            this.primaryFaust = primaryFaust;
-            return this;
-        }
-
-        public Payment withTitle(String title) {
-            this.title = title;
-            return this;
-        }
-
-        public Payment withWeekCode(String weekCode) {
-            this.weekCode = weekCode;
-            return this;
-        }
-
-        public Payment withTaskFieldType(TaskFieldType taskFieldType) {
-            this.taskFieldType = taskFieldType;
-            return this;
-        }
-    }
-
-    private class PaymentList {
-
-        private int numFound;
-
-        private List<Payment> payments = new ArrayList<>();
-
-        public int getNumFound() {
-            return numFound;
-        }
-
-        public void setNumFound(int numFound) {
-            this.numFound = numFound;
-        }
-
-        public List<Payment> getPayments() {
-            return payments;
-        }
-
-        public void setPayments(List<Payment> payments) {
-            this.payments = payments;
-        }
-
-        public PaymentList withNumFound(int numFound) {
-            this.numFound = numFound;
-            return this;
-        }
-
-        public PaymentList withPayments(List<Payment> payments) {
-            this.payments = payments;
-            return this;
-        }
-    }
-
-    private class GroupedPaymentList {
-
-        private int numFound;
-
-        private List<PaymentList> groups = new ArrayList<>();
-
-        public int getNumFound() {
-            return numFound;
-        }
-
-        public void setNumFound(int numFound) {
-            this.numFound = numFound;
-        }
-
-        public List<PaymentList> getGroups() {
-            return groups;
-        }
-
-        public void setGroups(List<PaymentList> groups) {
-            this.groups = groups;
-        }
-
-        public GroupedPaymentList withNumFound(int numFound) {
-            this.numFound = numFound;
-            return this;
-        }
-
-        public GroupedPaymentList withGroups(List<PaymentList> groups) {
-            this.groups = groups;
-            return this;
-        }
     }
 
     @GET
