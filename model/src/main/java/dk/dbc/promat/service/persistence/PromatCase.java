@@ -115,6 +115,9 @@ public class PromatCase {
     @JsonView({CaseView.Export.class, CaseView.Summary.class, CaseView.Case.class})
     private String publisher;
 
+    @JsonView({CaseView.Export.class, CaseView.Case.class})
+    private String recordId;
+
     public Integer getId() {
         return id;
     }
@@ -349,6 +352,19 @@ public class PromatCase {
         return this;
     }
 
+    public String getRecordId() {
+        return recordId;
+    }
+
+    public void setRecordId(String recordId) {
+        this.recordId = recordId;
+    }
+
+    public PromatCase withRecordId(String recordId) {
+        setRecordId(recordId);
+        return this;
+    }
+
     @Override
     public boolean equals(Object o) {
         if(this == o) return true;
@@ -371,12 +387,14 @@ public class PromatCase {
                 Objects.equals(weekCode, aCase.weekCode) &&
                 Objects.equals(author, aCase.author) &&
                 Objects.equals(creator, aCase.creator) &&
-                Objects.equals(publisher, aCase.publisher);
+                Objects.equals(publisher, aCase.publisher) &&
+                Objects.equals(recordId, aCase.recordId);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, title, details, primaryFaust, relatedFausts, reviewer, editor, subjects, created, deadline, assigned, status, materialType, tasks, weekCode, author, creator, publisher);
+        return Objects.hash(id, title, details, primaryFaust, relatedFausts, reviewer, editor, subjects, created,
+                deadline, assigned, status, materialType, tasks, weekCode, author, creator, publisher, recordId);
     }
 
     @Override
@@ -400,6 +418,7 @@ public class PromatCase {
                 ", author='" + author + '\'' +
                 ", creator=" + creator +
                 ", publisher='" + publisher + '\'' +
+                ", recordId='" + recordId + '\'' +
                 '}';
     }
 }
