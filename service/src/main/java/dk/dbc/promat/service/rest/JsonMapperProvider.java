@@ -7,7 +7,10 @@ package dk.dbc.promat.service.rest;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.ser.impl.SimpleBeanPropertyFilter;
+import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import java.util.Set;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.ext.ContextResolver;
@@ -27,6 +30,14 @@ public class JsonMapperProvider implements ContextResolver<ObjectMapper> {
 
         // Ask Jackson to serialize dates as String (ISO-8601 by default)
         objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+
+        // Register simple filters (to allow exclude annotations)
+        objectMapper.setFilterProvider(new SimpleFilterProvider()
+                .addFilter("idAndName", SimpleBeanPropertyFilter
+                        .filterOutAllExcept(Set.of("id", "firstName", "lastName")))
+                .addFilter("idAndTitle", SimpleBeanPropertyFilter
+                        .filterOutAllExcept(Set.of("id", "title")))
+        );
     }
 
     @Override
