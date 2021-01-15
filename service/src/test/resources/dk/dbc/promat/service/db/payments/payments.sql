@@ -35,7 +35,7 @@ insert into promatcase(id, title, details, primaryFaust, relatedFausts, reviewer
 values (1000, 'Case 1', 'Details', '1001000', '[]', 1, 10, '2021-01-13', '2021-02-13', '2021-01-13', 'APPROVED', 'BOOK');
 
 insert into promattask(id, tasktype, taskfieldtype, created, paycategory, approved, payed, data, targetFausts)
-values  (1001, 'GROUP_1_LESS_THAN_100_PAGES', 'BRIEF', '2021-01-13', '1960', NULL, NULL, 'data', NULL);
+values  (1001, 'GROUP_1_LESS_THAN_100_PAGES', 'BRIEF', '2021-01-13','BRIEF', NULL, NULL, 'data', NULL);
 
 insert into casetasks(case_id, task_id)
 values (1000, 1001);
@@ -47,7 +47,7 @@ insert into promatcase(id, title, details, primaryFaust, relatedFausts, reviewer
 values (1010, 'Case 2', 'Details', '1001010', '[]', 1, 10, '2021-01-13', '2021-02-13', '2021-01-13', 'PENDING_MEETING', 'BOOK');
 
 insert into promattask(id, tasktype, taskfieldtype, created, paycategory, approved, payed, data, targetFausts)
-values  (1011, 'GROUP_1_LESS_THAN_100_PAGES', 'BRIEF', '2021-01-13', '1960', NULL, NULL, 'data', NULL);
+values  (1011, 'GROUP_1_LESS_THAN_100_PAGES', 'BRIEF', '2021-01-13','BRIEF', NULL, NULL, 'data', NULL);
 
 insert into casetasks(case_id, task_id)
 values (1010, 1011);
@@ -59,7 +59,7 @@ insert into promatcase(id, title, details, primaryFaust, relatedFausts, reviewer
 values (1020, 'Case 3', 'Details', '1001020', '[]', 1, 10, '2021-01-13', '2021-02-13', '2021-01-13', 'PENDING_EXPORT', 'BOOK');
 
 insert into promattask(id, tasktype, taskfieldtype, created, paycategory, approved, payed, data, targetFausts)
-values  (1021, 'GROUP_1_LESS_THAN_100_PAGES', 'BRIEF', '2021-01-13', '1960', NULL, NULL, 'data', NULL);
+values  (1021, 'GROUP_1_LESS_THAN_100_PAGES', 'BRIEF', '2021-01-13','BRIEF', NULL, NULL, 'data', NULL);
 
 insert into casetasks(case_id, task_id)
 values (1020, 1021);
@@ -71,7 +71,7 @@ insert into promatcase(id, title, details, primaryFaust, relatedFausts, reviewer
 values (1030, 'Case 4', 'Details', '1001030', '[]', 1, 10, '2021-01-13', '2021-02-13', '2021-01-13', 'EXPORTED', 'BOOK');
 
 insert into promattask(id, tasktype, taskfieldtype, created, paycategory, approved, payed, data, targetFausts)
-values  (1031, 'GROUP_1_LESS_THAN_100_PAGES', 'BRIEF', '2021-01-13', '1960', NULL, NULL, 'data', NULL);
+values  (1031, 'GROUP_1_LESS_THAN_100_PAGES', 'BRIEF', '2021-01-13','BRIEF', NULL, NULL, 'data', NULL);
 
 insert into casetasks(case_id, task_id)
 values (1030, 1031);
@@ -83,7 +83,7 @@ insert into promatcase(id, title, details, primaryFaust, relatedFausts, reviewer
 values (1040, 'Case 5', 'Details', '1001040', '[]', 1, 10, '2021-01-13', '2021-02-13', '2021-01-13', 'PENDING_REVERT', 'BOOK');
 
 insert into promattask(id, tasktype, taskfieldtype, created, paycategory, approved, payed, data, targetFausts)
-values  (1041, 'GROUP_1_LESS_THAN_100_PAGES', 'BRIEF', '2021-01-13', '1960', NULL, NULL, 'data', NULL);
+values  (1041, 'GROUP_1_LESS_THAN_100_PAGES', 'BRIEF', '2021-01-13','BRIEF', NULL, NULL, 'data', NULL);
 
 insert into casetasks(case_id, task_id)
 values (1040, 1041);
@@ -95,7 +95,7 @@ insert into promatcase(id, title, details, primaryFaust, relatedFausts, reviewer
 values (1050, 'Case 6', 'Details', '1001050', '[]', 1, 10, '2021-01-13', '2021-02-13', '2021-01-13', 'REVERTED', 'BOOK');
 
 insert into promattask(id, tasktype, taskfieldtype, created, paycategory, approved, payed, data, targetFausts)
-values  (1051, 'GROUP_1_LESS_THAN_100_PAGES', 'BRIEF', '2021-01-13', '1960', NULL, NULL, 'data', NULL);
+values  (1051, 'GROUP_1_LESS_THAN_100_PAGES', 'BRIEF', '2021-01-13','BRIEF', NULL, NULL, 'data', NULL);
 
 insert into casetasks(case_id, task_id)
 values (1050, 1051);
@@ -107,8 +107,8 @@ insert into promatcase(id, title, details, primaryFaust, relatedFausts, reviewer
 values (1060, 'Case 7', 'Details', '1001060', '[]', 1, 10, '2021-01-13', '2021-02-13', '2021-01-13', 'PENDING_CLOSE', 'BOOK');
 
 insert into promattask(id, tasktype, taskfieldtype, created, paycategory, approved, payed, data, targetFausts)
-values  (1061, 'GROUP_1_LESS_THAN_100_PAGES', 'BRIEF', '2021-01-13', '1960', NULL,         NULL, 'data', NULL),
-        (1062, 'BKM',                         'BKM',   '2021-01-13', '1962', '2021-01-13', NULL, 'data', NULL);
+values  (1061, 'GROUP_1_LESS_THAN_100_PAGES', 'BRIEF', '2021-01-13','BRIEF', NULL,         NULL, 'data', NULL),
+        (1062, 'GROUP_1_LESS_THAN_100_PAGES', 'BKM',   '2021-01-13', 'BKM', '2021-01-13', NULL, 'data', NULL);
 
 insert into casetasks(case_id, task_id)
 values (1060, 1061),
@@ -122,8 +122,8 @@ insert into promatcase(id, title, details, primaryFaust, relatedFausts, reviewer
 values (1070, 'Case 8', 'Details', '1001070', '[]', 1, 10, '2021-01-13', '2021-02-13', '2021-01-13', 'APPROVED', 'BOOK');
 
 insert into promattask(id, tasktype, taskfieldtype, created, paycategory, approved, payed, data, targetFausts)
-values  (1071, 'GROUP_1_LESS_THAN_100_PAGES', 'BRIEF', '2021-01-13', '1960', '2021-01-13', NULL, 'data', NULL),
-        (1072, 'BKM',                         'BKM',   '2021-01-13', '1962', '2021-01-13', NULL, 'data', NULL);
+values  (1071, 'GROUP_1_LESS_THAN_100_PAGES', 'BRIEF', '2021-01-13','BRIEF', '2021-01-13', NULL, 'data', NULL),
+        (1072, 'GROUP_1_LESS_THAN_100_PAGES', 'BKM',   '2021-01-13', 'BKM', '2021-01-13', NULL, 'data', NULL);
 
 insert into casetasks(case_id, task_id)
 values (1070, 1071),
@@ -141,9 +141,9 @@ insert into promatcase(id, title, details, primaryFaust, relatedFausts, reviewer
 values (1080, 'Case 9', 'Details', '1001080', '[1001081, 1001082, 1001083]', 1, 10, '2021-01-13', '2021-02-13', '2021-01-13', 'APPROVED', 'BOOK');
 
 insert into promattask(id, tasktype, taskfieldtype, created, paycategory, approved, payed, data, targetFausts)
-values  (1081, 'GROUP_1_LESS_THAN_100_PAGES', 'BRIEF', '2021-01-13', '1960', '2021-01-13', NULL, 'data', null),
-        (1082, 'GROUP_1_LESS_THAN_100_PAGES', 'BRIEF', '2021-01-13', '1960', '2021-01-13', NULL, 'data', '[1001081]'),
-        (1083, 'GROUP_1_LESS_THAN_100_PAGES', 'BRIEF', '2021-01-13', '1960', '2021-01-13', NULL, 'data', '[1001082]');
+values  (1081, 'GROUP_1_LESS_THAN_100_PAGES', 'BRIEF', '2021-01-13','BRIEF', '2021-01-13', NULL, 'data', null),
+        (1082, 'GROUP_1_LESS_THAN_100_PAGES', 'BRIEF', '2021-01-13','BRIEF', '2021-01-13', NULL, 'data', '[1001081]'),
+        (1083, 'GROUP_1_LESS_THAN_100_PAGES', 'BRIEF', '2021-01-13','BRIEF', '2021-01-13', NULL, 'data', '[1001082]');
 
 insert into casetasks(case_id, task_id)
 values (1080, 1081),
@@ -158,9 +158,9 @@ insert into promatcase(id, title, details, primaryFaust, relatedFausts, reviewer
 values (1090, 'Case 10', 'Details', '1001090', '[1001091, 1001092, 1001093, 1001094]', 1, 10, '2021-01-13', '2021-02-13', '2021-01-13', 'APPROVED', 'BOOK');
 
 insert into promattask(id, tasktype, taskfieldtype, created, paycategory, approved, payed, data, targetFausts)
-values  (1091, 'GROUP_1_LESS_THAN_100_PAGES', 'BRIEF', '2021-01-13', '1960', '2021-01-13', NULL, 'data', null),
-        (1092, 'GROUP_1_LESS_THAN_100_PAGES', 'BRIEF', '2021-01-13', '1960', '2021-01-13', NULL, 'data', '[1001091]'),
-        (1093, 'GROUP_1_LESS_THAN_100_PAGES', 'BRIEF', '2021-01-13', '1960', '2021-01-13', NULL, 'data', '[1001092, 1001093]');
+values  (1091, 'GROUP_1_LESS_THAN_100_PAGES', 'BRIEF', '2021-01-13','BRIEF', '2021-01-13', NULL, 'data', null),
+        (1092, 'GROUP_1_LESS_THAN_100_PAGES', 'BRIEF', '2021-01-13','BRIEF', '2021-01-13', NULL, 'data', '[1001091]'),
+        (1093, 'GROUP_1_LESS_THAN_100_PAGES', 'BRIEF', '2021-01-13','BRIEF', '2021-01-13', NULL, 'data', '[1001092, 1001093]');
 
 insert into casetasks(case_id, task_id)
 values (1090, 1091),
@@ -177,10 +177,10 @@ insert into promatcase(id, title, details, primaryFaust, relatedFausts, reviewer
 values (1100, 'Case 11', 'Details', '1001100', '[1001101, 1001102, 1001103, 1001104]', 1, 10, '2021-01-13', '2021-02-13', '2021-01-13', 'APPROVED', 'BOOK');
 
 insert into promattask(id, tasktype, taskfieldtype, created, paycategory, approved, payed, data, targetFausts)
-values  (1101, 'GROUP_1_LESS_THAN_100_PAGES', 'BRIEF', '2021-01-13', '1960', '2021-01-13', NULL, 'data', null),
-        (1102, 'GROUP_1_LESS_THAN_100_PAGES', 'BRIEF', '2021-01-13', '1960', '2021-01-13', NULL, 'data', null),
-        (1103, 'GROUP_1_LESS_THAN_100_PAGES', 'BRIEF', '2021-01-13', '1960', '2021-01-13', NULL, 'data', '[1001101]'),
-        (1104, 'GROUP_1_LESS_THAN_100_PAGES', 'BRIEF', '2021-01-13', '1960', '2021-01-13', NULL, 'data', '[1001102, 1001103]');
+values  (1101, 'GROUP_1_LESS_THAN_100_PAGES', 'BRIEF', '2021-01-13','BRIEF', '2021-01-13', NULL, 'data', null),
+        (1102, 'GROUP_1_LESS_THAN_100_PAGES', 'BRIEF', '2021-01-13','BRIEF', '2021-01-13', NULL, 'data', null),
+        (1103, 'GROUP_1_LESS_THAN_100_PAGES', 'BRIEF', '2021-01-13','BRIEF', '2021-01-13', NULL, 'data', '[1001101]'),
+        (1104, 'GROUP_1_LESS_THAN_100_PAGES', 'BRIEF', '2021-01-13','BRIEF', '2021-01-13', NULL, 'data', '[1001102, 1001103]');
 
 insert into casetasks(case_id, task_id)
 values (1100, 1101),
@@ -201,14 +201,14 @@ insert into promatcase(id, title, details, primaryFaust, relatedFausts, reviewer
 values (1110, 'Case 12', 'Details', '1001110', '[1001111]', 1, 10, '2021-01-13', '2021-02-13', '2021-01-13', 'APPROVED', 'BOOK');
 
 insert into promattask(id, tasktype, taskfieldtype, created, paycategory, approved, payed, data, targetFausts)
-values  (1111, 'GROUP_1_LESS_THAN_100_PAGES', 'BRIEF',          '2021-01-13', '1960', '2021-01-13', NULL, 'data', NULL),
-        (1112, 'GROUP_1_LESS_THAN_100_PAGES', 'BRIEF',          '2021-01-13', '1960', '2021-01-13', NULL, 'data', '[1001111]'),
-        (1113, 'GROUP_1_LESS_THAN_100_PAGES', 'DESCRIPTION',    '2021-01-13', '1956', '2021-01-13', NULL, 'data', NULL),
-        (1114, 'GROUP_1_LESS_THAN_100_PAGES', 'EVALUATION',     '2021-01-13', '1956', '2021-01-13', NULL, 'data', NULL),
-        (1115, 'GROUP_1_LESS_THAN_100_PAGES', 'COMPARISON',     '2021-01-13', '1956', '2021-01-13', NULL, 'data', NULL),
-        (1116, 'GROUP_1_LESS_THAN_100_PAGES', 'RECOMMENDATION', '2021-01-13', '1956', '2021-01-13', NULL, 'data', NULL),
-        (1117, 'GROUP_1_LESS_THAN_100_PAGES', 'BIBLIOGRAPHIC',  '2021-01-13', '1956', '2021-01-13', NULL, 'data', NULL),
-        (1118, 'GROUP_1_LESS_THAN_100_PAGES', 'METAKOMPAS',     '2021-01-13', '1987', '2021-01-13', NULL, 'data', NULL);
+values  (1111, 'GROUP_1_LESS_THAN_100_PAGES', 'BRIEF',          '2021-01-13', 'BRIEF',                       '2021-01-13', NULL, 'data', NULL),
+        (1112, 'GROUP_1_LESS_THAN_100_PAGES', 'BRIEF',          '2021-01-13', 'BRIEF',                       '2021-01-13', NULL, 'data', '[1001111]'),
+        (1113, 'GROUP_1_LESS_THAN_100_PAGES', 'DESCRIPTION',    '2021-01-13', 'GROUP_1_LESS_THAN_100_PAGES', '2021-01-13', NULL, 'data', NULL),
+        (1114, 'GROUP_1_LESS_THAN_100_PAGES', 'EVALUATION',     '2021-01-13', 'GROUP_1_LESS_THAN_100_PAGES', '2021-01-13', NULL, 'data', NULL),
+        (1115, 'GROUP_1_LESS_THAN_100_PAGES', 'COMPARISON',     '2021-01-13', 'GROUP_1_LESS_THAN_100_PAGES', '2021-01-13', NULL, 'data', NULL),
+        (1116, 'GROUP_1_LESS_THAN_100_PAGES', 'RECOMMENDATION', '2021-01-13', 'GROUP_1_LESS_THAN_100_PAGES', '2021-01-13', NULL, 'data', NULL),
+        (1117, 'GROUP_1_LESS_THAN_100_PAGES', 'BIBLIOGRAPHIC',  '2021-01-13', 'GROUP_1_LESS_THAN_100_PAGES', '2021-01-13', NULL, 'data', NULL),
+        (1118, 'GROUP_1_LESS_THAN_100_PAGES', 'METAKOMPAS',     '2021-01-13', 'GROUP_1_LESS_THAN_100_PAGES', '2021-01-13', NULL, 'data', NULL);
 
 insert into casetasks(case_id, task_id)
 values (1110, 1111),
@@ -227,14 +227,14 @@ insert into promatcase(id, title, details, primaryFaust, relatedFausts, reviewer
 values (1120, 'Case 13', 'Details', '1001120', '[1001121]', 1, 10, '2021-01-13', '2021-02-13', '2021-01-13', 'PENDING_APPROVAL', 'BOOK');
 
 insert into promattask(id, tasktype, taskfieldtype, created, paycategory, approved, payed, data, targetFausts)
-values  (1121, 'GROUP_1_LESS_THAN_100_PAGES', 'BRIEF',          '2021-01-13', '1960', '2021-01-13', NULL, 'data', NULL),
-        (1122, 'GROUP_1_LESS_THAN_100_PAGES', 'BRIEF',          '2021-01-13', '1960', '2021-01-13', NULL, 'data', '[1001111]'),
-        (1123, 'GROUP_1_LESS_THAN_100_PAGES', 'DESCRIPTION',    '2021-01-13', '1956', '2021-01-13', NULL, 'data', NULL),
-        (1124, 'GROUP_1_LESS_THAN_100_PAGES', 'EVALUATION',     '2021-01-13', '1956', '2021-01-13', NULL, 'data', NULL),
-        (1125, 'GROUP_1_LESS_THAN_100_PAGES', 'COMPARISON',     '2021-01-13', '1956', NULL,         NULL, 'data', NULL), -- Here be dragons!
-        (1126, 'GROUP_1_LESS_THAN_100_PAGES', 'RECOMMENDATION', '2021-01-13', '1956', '2021-01-13', NULL, 'data', NULL),
-        (1127, 'GROUP_1_LESS_THAN_100_PAGES', 'BIBLIOGRAPHIC',  '2021-01-13', '1956', '2021-01-13', NULL, 'data', NULL),
-        (1128, 'GROUP_1_LESS_THAN_100_PAGES', 'METAKOMPAS',     '2021-01-13', '1987', '2021-01-13', NULL, 'data', NULL);
+values  (1121, 'GROUP_1_LESS_THAN_100_PAGES', 'BRIEF',          '2021-01-13','BRIEF',                        '2021-01-13', NULL, 'data', NULL),
+        (1122, 'GROUP_1_LESS_THAN_100_PAGES', 'BRIEF',          '2021-01-13','BRIEF',                        '2021-01-13', NULL, 'data', '[1001111]'),
+        (1123, 'GROUP_1_LESS_THAN_100_PAGES', 'DESCRIPTION',    '2021-01-13', 'GROUP_1_LESS_THAN_100_PAGES', '2021-01-13', NULL, 'data', NULL),
+        (1124, 'GROUP_1_LESS_THAN_100_PAGES', 'EVALUATION',     '2021-01-13', 'GROUP_1_LESS_THAN_100_PAGES', '2021-01-13', NULL, 'data', NULL),
+        (1125, 'GROUP_1_LESS_THAN_100_PAGES', 'COMPARISON',     '2021-01-13', 'GROUP_1_LESS_THAN_100_PAGES', NULL,         NULL, 'data', NULL), -- Here be dragons!
+        (1126, 'GROUP_1_LESS_THAN_100_PAGES', 'RECOMMENDATION', '2021-01-13', 'GROUP_1_LESS_THAN_100_PAGES', '2021-01-13', NULL, 'data', NULL),
+        (1127, 'GROUP_1_LESS_THAN_100_PAGES', 'BIBLIOGRAPHIC',  '2021-01-13', 'GROUP_1_LESS_THAN_100_PAGES', '2021-01-13', NULL, 'data', NULL),
+        (1128, 'GROUP_1_LESS_THAN_100_PAGES', 'METAKOMPAS',     '2021-01-13', 'METAKOMPAS',                  '2021-01-13', NULL, 'data', NULL);
 
 insert into casetasks(case_id, task_id)
 values (1120, 1121),
@@ -254,12 +254,12 @@ insert into promatcase(id, title, details, primaryFaust, relatedFausts, reviewer
 values (1130, 'Case 14', 'Details', '1001130', '[1001131]', 2, 10, '2021-01-13', '2021-02-13', '2021-01-13', 'PENDING_EXPORT', 'MOVIE');
 
 insert into promattask(id, tasktype, taskfieldtype, created, paycategory, approved, payed, data, targetFausts)
-values  (1131, 'MOVIES_GR_2', 'BRIEF',          '2021-01-13', '1960', '2021-01-13', NULL, 'data', NULL),
-        (1132, 'MOVIES_GR_2', 'DESCRIPTION',    '2021-01-13', '1981', '2021-01-13', NULL, 'data', NULL),
-        (1133, 'MOVIES_GR_2', 'EVALUATION',     '2021-01-13', '1981', '2021-01-13', NULL, 'data', NULL),
-        (1134, 'MOVIES_GR_2', 'COMPARISON',     '2021-01-13', '1981', '2021-01-13', NULL, 'data', NULL),
-        (1135, 'MOVIES_GR_2', 'RECOMMENDATION', '2021-01-13', '1981', '2021-01-13', NULL, 'data', NULL),
-        (1136, 'MOVIES_GR_2', 'BIBLIOGRAPHIC',  '2021-01-13', '1981', '2021-01-13', NULL, 'data', NULL);
+values  (1131, 'MOVIES_GR_2', 'BRIEF',          '2021-01-13','BRIEF',        '2021-01-13', NULL, 'data', NULL),
+        (1132, 'MOVIES_GR_2', 'DESCRIPTION',    '2021-01-13', 'MOVIES_GR_2', '2021-01-13', NULL, 'data', NULL),
+        (1133, 'MOVIES_GR_2', 'EVALUATION',     '2021-01-13', 'MOVIES_GR_2', '2021-01-13', NULL, 'data', NULL),
+        (1134, 'MOVIES_GR_2', 'COMPARISON',     '2021-01-13', 'MOVIES_GR_2', '2021-01-13', NULL, 'data', NULL),
+        (1135, 'MOVIES_GR_2', 'RECOMMENDATION', '2021-01-13', 'MOVIES_GR_2', '2021-01-13', NULL, 'data', NULL),
+        (1136, 'MOVIES_GR_2', 'BIBLIOGRAPHIC',  '2021-01-13', 'MOVIES_GR_2', '2021-01-13', NULL, 'data', NULL);
 
 insert into casetasks(case_id, task_id)
 values (1130, 1131),
@@ -277,13 +277,13 @@ insert into promatcase(id, title, details, primaryFaust, relatedFausts, reviewer
 values (1140, 'Case 15', 'Details', '1001140', '[1001141,1001142]', 2, 10, '2021-01-13', '2021-02-13', '2021-01-13', 'EXPORTED', 'MOVIE');
 
 insert into promattask(id, tasktype, taskfieldtype, created, paycategory, approved, payed, data, targetFausts)
-values  (1141, 'MOVIES_GR_2', 'BRIEF',          '2021-01-13', '1960', '2020-12-13', '2020-12-21', 'data', NULL),
-        (1142, 'MOVIES_GR_2', 'DESCRIPTION',    '2021-01-13', '1981', '2020-12-13', '2020-12-21', 'data', NULL),
-        (1143, 'MOVIES_GR_2', 'EVALUATION',     '2021-01-13', '1981', '2020-12-13', '2020-12-21', 'data', NULL),
-        (1144, 'MOVIES_GR_2', 'COMPARISON',     '2021-01-13', '1981', '2020-12-13', '2020-12-21', 'data', NULL),
-        (1145, 'MOVIES_GR_2', 'RECOMMENDATION', '2021-01-13', '1981', '2020-12-13', '2020-12-21', 'data', NULL),
-        (1146, 'MOVIES_GR_2', 'BIBLIOGRAPHIC',  '2021-01-13', '1981', '2020-12-13', '2020-12-21', 'data', NULL),
-        (1147, 'MOVIES_GR_2', 'BRIEF',          '2021-01-13', '1960', '2021-01-13', NULL, 'data', '[1001142]');
+values  (1141, 'MOVIES_GR_2', 'BRIEF',          '2021-01-13', 'BRIEF',       '2020-12-13', '2020-12-21', 'data', NULL),
+        (1142, 'MOVIES_GR_2', 'DESCRIPTION',    '2021-01-13', 'MOVIES_GR_2', '2020-12-13', '2020-12-21', 'data', NULL),
+        (1143, 'MOVIES_GR_2', 'EVALUATION',     '2021-01-13', 'MOVIES_GR_2', '2020-12-13', '2020-12-21', 'data', NULL),
+        (1144, 'MOVIES_GR_2', 'COMPARISON',     '2021-01-13', 'MOVIES_GR_2', '2020-12-13', '2020-12-21', 'data', NULL),
+        (1145, 'MOVIES_GR_2', 'RECOMMENDATION', '2021-01-13', 'MOVIES_GR_2', '2020-12-13', '2020-12-21', 'data', NULL),
+        (1146, 'MOVIES_GR_2', 'BIBLIOGRAPHIC',  '2021-01-13', 'MOVIES_GR_2', '2020-12-13', '2020-12-21', 'data', NULL),
+        (1147, 'MOVIES_GR_2', 'BRIEF',          '2021-01-13',                'BRIEF', '2021-01-13', NULL, 'data', '[1001142]');
 
 insert into casetasks(case_id, task_id)
 values (1140, 1141),
@@ -293,18 +293,3 @@ values (1140, 1141),
        (1140, 1145),
        (1140, 1146),
        (1140, 1147);
-
--- ********************************************************************************************************************
--- BKM assessment with no review, but with note and metakompas
--- ********************************************************************************************************************
-
--- Case 16: PAYMENTS EXPECTED
---
--- mm-dd-åååå;123;1962;1;1001140,1001141 Case 15;Hans Hansen
--- mm-dd-åååå;123;1960;2;1001140,1001141 Note Case 15;Hans Hansen
--- mm-dd-åååå;123;1987;2;1001140,1001141 Metadata Case 15;Hans Hansen
-
--- TODO: This type of payment is seen in the example file, but does not match our
---       current understanding of the case flow and status lifecycle.
---       *Currently being investigated*
-

@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.Objects;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class TaskDto {
+public class  TaskDto {
 
     private TaskType taskType;
 

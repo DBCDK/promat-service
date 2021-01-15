@@ -17,6 +17,7 @@ import dk.dbc.promat.service.persistence.CaseStatus;
 import dk.dbc.promat.service.persistence.Editor;
 import dk.dbc.promat.service.persistence.Notification;
 import dk.dbc.promat.service.persistence.NotificationType;
+import dk.dbc.promat.service.persistence.PayCategory;
 import dk.dbc.promat.service.persistence.PromatCase;
 import dk.dbc.promat.service.persistence.PromatEntityManager;
 import dk.dbc.promat.service.persistence.PromatMessage;
@@ -586,44 +587,44 @@ public class Cases {
         return editor;
     }
 
-    private String getPayCategoryForTaskType(TaskType taskType, TaskFieldType taskFieldType) throws ServiceErrorException {
+    private PayCategory getPayCategoryForTaskType(TaskType taskType, TaskFieldType taskFieldType) throws ServiceErrorException {
         switch(taskFieldType) {
             case BRIEF:
-                return "1960";
+                return PayCategory.BRIEF;
             case METAKOMPAS:
-                return "1987";
+                return PayCategory.METAKOMPAS;
             case BKM:
-                return "1962";
+                return PayCategory.BKM;
             default: {
                 switch(taskType) {
 
                     case GROUP_1_LESS_THAN_100_PAGES:
-                        return "1956";
+                        return PayCategory.GROUP_1_LESS_THAN_100_PAGES;
                     case GROUP_2_100_UPTO_199_PAGES:
-                        return "1957";
+                        return PayCategory.GROUP_2_100_UPTO_199_PAGES;
                     case GROUP_3_200_UPTO_499_PAGES:
-                        return "1958";
+                        return PayCategory.GROUP_3_200_UPTO_499_PAGES;
                     case GROUP_4_500_OR_MORE_PAGES:
-                        return "1959";
+                        return PayCategory.GROUP_4_500_OR_MORE_PAGES;
 
                     case MOVIES_GR_1:
-                        return "1980";
+                        return PayCategory.MOVIES_GR_1;
                     case MOVIES_GR_2:
-                        return "1981";
+                        return PayCategory.MOVIES_GR_2;
                     case MOVIES_GR_3:
-                        return "1982";
+                        return PayCategory.MOVIES_GR_3;
 
                     case MULTIMEDIA_FEE:
-                        return "1954";
+                        return PayCategory.MULTIMEDIA_FEE;
                     case MULTIMEDIA_FEE_GR2:
-                        return "1985";
+                        return PayCategory.MULTIMEDIA_FEE_GR2;
 
                     case MOVIE_NON_FICTION_GR1:
-                        return "1979";
+                        return PayCategory.MOVIE_NON_FICTION_GR1;
                     case MOVIE_NON_FICTION_GR2:
-                        return "1983";
+                        return PayCategory.MOVIE_NON_FICTION_GR2;
                     case MOVIE_NON_FICTION_GR3:
-                        return "1984";
+                        return PayCategory.MOVIE_NON_FICTION_GR3;
                 }
             }
         }

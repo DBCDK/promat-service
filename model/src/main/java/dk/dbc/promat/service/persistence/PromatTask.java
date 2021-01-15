@@ -35,7 +35,8 @@ public class PromatTask {
 
     private LocalDate created;
 
-    private String payCategory;
+    @Enumerated(EnumType.STRING)
+    private PayCategory payCategory;
 
     private LocalDate approved;
 
@@ -79,11 +80,11 @@ public class PromatTask {
         this.created = created;
     }
 
-    public String getPayCategory() {
+    public PayCategory getPayCategory() {
         return payCategory;
     }
 
-    public void setPayCategory(String payCategory) {
+    public void setPayCategory(PayCategory payCategory) {
         this.payCategory = payCategory;
     }
 
@@ -139,7 +140,7 @@ public class PromatTask {
         return this;
     }
 
-    public PromatTask withPayCategory(String payCategory) {
+    public PromatTask withPayCategory(PayCategory payCategory) {
         this.payCategory = payCategory;
         return this;
     }
@@ -174,7 +175,7 @@ public class PromatTask {
                 taskType == task.taskType &&
                 taskFieldType == task.taskFieldType &&
                 created.equals(task.created) &&
-                payCategory.equals(task.payCategory) &&
+                payCategory == task.payCategory &&
                 Objects.equals(approved, task.approved) &&
                 Objects.equals(payed, task.payed) &&
                 Objects.equals(data, task.data) &&

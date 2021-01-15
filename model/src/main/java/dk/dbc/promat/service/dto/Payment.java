@@ -8,6 +8,7 @@ package dk.dbc.promat.service.dto;
 import com.fasterxml.jackson.annotation.JsonView;
 import dk.dbc.promat.service.persistence.CaseView;
 import dk.dbc.promat.service.persistence.MaterialType;
+import dk.dbc.promat.service.persistence.PayCategory;
 import dk.dbc.promat.service.persistence.Reviewer;
 import dk.dbc.promat.service.persistence.TaskFieldType;
 import dk.dbc.promat.service.persistence.TaskType;
@@ -18,7 +19,7 @@ public class Payment {
 
     String payCode;
 
-    String payCategory;
+    PayCategory payCategory;
 
     int count;
 
@@ -51,11 +52,11 @@ public class Payment {
         this.payCode = payCode;
     }
 
-    public String getPayCategory() {
+    public PayCategory getPayCategory() {
         return payCategory;
     }
 
-    public void setPayCategory(String payCategory) {
+    public void setPayCategory(PayCategory payCategory) {
         this.payCategory = payCategory;
     }
 
@@ -152,7 +153,7 @@ public class Payment {
         return this;
     }
 
-    public Payment withPayCategory(String payCategory) {
+    public Payment withPayCategory(PayCategory payCategory) {
         this.payCategory = payCategory;
         return this;
     }

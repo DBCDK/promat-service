@@ -13,6 +13,7 @@ import dk.dbc.promat.service.dto.PaymentList;
 import dk.dbc.promat.service.dto.ServiceErrorDto;
 import dk.dbc.promat.service.persistence.CaseView;
 import dk.dbc.promat.service.persistence.MaterialType;
+import dk.dbc.promat.service.persistence.PayCategory;
 import dk.dbc.promat.service.persistence.PromatCase;
 import dk.dbc.promat.service.persistence.PromatEntityManager;
 import dk.dbc.promat.service.persistence.PromatTask;
@@ -162,6 +163,11 @@ public class Payments {
     }
 
     private String convertPaymentListToCsv(PaymentList paymentList) {
+        LOGGER.info("paycategory 1: {}", PayCategory.BKM);
+        LOGGER.info("paycategory 2: {}", PayCategory.BKM.value());
+        LOGGER.info("paycategory 3: {}", paymentList.getPayments().stream().findFirst().get().getPayCategory());
+        LOGGER.info("paycategory 4: {}", paymentList.getPayments().stream().findFirst().get().getPayCategory().value());
+
         return "Dato;Lønnr.;Lønart;Antal;Tekst;Anmelder\n" +
                 paymentList.getPayments()
                         .stream()
@@ -190,7 +196,7 @@ public class Payments {
                 .withNumFound(1)
                 .withPayments(Arrays.asList(new Payment()
                         .withPayCode("1234")
-                        .withPayCategory("5678")
+                        .withPayCategory(PayCategory.BKM)
                         .withCount(3)
                         .withText("example payment")
                         .withReviewer(entityManager.find(Reviewer.class, 1))

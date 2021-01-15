@@ -6,7 +6,6 @@
 package dk.dbc.promat.service.persistence;
 
 public enum TaskType {
-    NONE,
 
     GROUP_1_LESS_THAN_100_PAGES,
     GROUP_2_100_UPTO_199_PAGES,

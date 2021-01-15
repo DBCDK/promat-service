@@ -16,11 +16,11 @@ values (1, 'Title for 001111', 'Details for 001111', '001111', '["002222","00333
        (14, 'Title for 019993', 'Details for 019993', '019993', '[]', 1, 10, '2021-01-13', '2021-01-13', NULL, 'CREATED', 'BOOK', null, null, 13);
 
 insert into promattask(id, tasktype, taskfieldtype, created, paycategory, approved, payed, data, targetFausts)
-values  (1, 'GROUP_1_LESS_THAN_100_PAGES', 'NONE', '2020-12-10', '0000', '2020-12-10', NULL,         NULL,                NULL),
-        (2, 'GROUP_2_100_UPTO_199_PAGES',  'NONE', '2020-12-10', '0000', NULL,         '2020-12-10', NULL,                NULL),
-        (3, 'GROUP_3_200_UPTO_499_PAGES',  'NONE', '2020-12-10', '0000', NULL,         NULL,         'here is some data', NULL),
-        (4, 'GROUP_4_500_OR_MORE_PAGES',   'NONE', '2020-12-10', '0000', NULL,         NULL,         '',                  NULL),
-        (5, 'MOVIES_GR_1',                 'NONE', '2020-12-10', '0000', NULL,         NULL,         NULL,                NULL)
+values  (1, 'GROUP_1_LESS_THAN_100_PAGES', 'DESCRIPTION', '2020-12-10', 'GROUP_1_LESS_THAN_100_PAGES', '2020-12-10', NULL,         NULL,                NULL),
+        (2, 'GROUP_2_100_UPTO_199_PAGES',  'DESCRIPTION', '2020-12-10', 'GROUP_2_100_UPTO_199_PAGES',  NULL,         '2020-12-10', NULL,                NULL),
+        (3, 'GROUP_3_200_UPTO_499_PAGES',  'DESCRIPTION', '2020-12-10', 'GROUP_3_200_UPTO_499_PAGES',  NULL,         NULL,         'here is some data', NULL),
+        (4, 'GROUP_4_500_OR_MORE_PAGES',   'DESCRIPTION', '2020-12-10', 'GROUP_4_500_OR_MORE_PAGES',   NULL,         NULL,         '',                  NULL),
+        (5, 'MOVIES_GR_1',                 'DESCRIPTION', '2020-12-10', 'MOVIES_GR_1',                 NULL,         NULL,         NULL,                NULL)
 ;
 
 insert into casetasks(case_id, task_id)
