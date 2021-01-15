@@ -42,10 +42,10 @@ public class PromatCase {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @JsonView({CaseView.Export.class, CaseView.Summary.class, CaseView.Case.class})
+    @JsonView({CaseView.Identity.class, CaseView.Export.class, CaseView.Summary.class, CaseView.Case.class})
     private Integer id;
 
-    @JsonView({CaseView.Export.class, CaseView.Summary.class, CaseView.Case.class})
+    @JsonView({CaseView.Identity.class, CaseView.Export.class, CaseView.Summary.class, CaseView.Case.class})
     private String title;
 
     @JsonView({CaseView.Export.class, CaseView.Summary.class, CaseView.Case.class})
