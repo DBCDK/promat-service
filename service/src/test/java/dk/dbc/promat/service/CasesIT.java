@@ -108,6 +108,7 @@ public class CasesIT extends ContainerTest {
                 .withMaterialType(MaterialType.BOOK)
                 .withReviewer(1)
                 .withEditor(10)
+                .withDeadline("2021-01-15")
                 .withSubjects(Arrays.asList(3, 4));
 
         Response response = postResponse("v1/api/cases", dto);
@@ -134,6 +135,7 @@ public class CasesIT extends ContainerTest {
         expected.add(3);
         expected.add(4);
         assertThat("subject ids", actual.equals(expected), is(true) );
+
     }
 
     @Test
@@ -193,6 +195,7 @@ public class CasesIT extends ContainerTest {
                 .withDetails("Details for 6001111")
                 .withMaterialType(MaterialType.BOOK)
                 .withReviewer(1)
+                .withEditor(11)
                 .withSubjects(Arrays.asList(3, 4))
                 .withAssigned("2020-04-11")
                 .withDeadline("2020-04-12")

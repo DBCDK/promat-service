@@ -14,13 +14,17 @@ import dk.dbc.promat.service.dto.ServiceErrorDto;
 import dk.dbc.promat.service.dto.TaskDto;
 import dk.dbc.promat.service.persistence.CaseStatus;
 import dk.dbc.promat.service.persistence.Editor;
+import dk.dbc.promat.service.persistence.Notification;
+import dk.dbc.promat.service.persistence.NotificationType;
 import dk.dbc.promat.service.persistence.PromatCase;
 import dk.dbc.promat.service.persistence.PromatEntityManager;
+import dk.dbc.promat.service.persistence.PromatMessage;
 import dk.dbc.promat.service.persistence.PromatTask;
 import dk.dbc.promat.service.persistence.Reviewer;
 import dk.dbc.promat.service.persistence.Subject;
 import dk.dbc.promat.service.persistence.TaskType;
 import dk.dbc.promat.service.rest.JsonMapperProvider;
+import dk.dbc.promat.service.templating.NotificationFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -163,7 +167,9 @@ public class Cases {
             .withWeekcode(dto.getWeekCode());
 
             entityManager.persist(entity);
-
+            if (entity.getStatus() == CaseStatus.ASSIGNED) {
+                notifyOnCaseStatusChange(NotificationType.CASE_ASSIGNED, entity);
+            }
             // 201 CREATED
             LOGGER.info("Created new case for primaryFaust {}", entity.getPrimaryFaust());
             return Response.status(201)
@@ -378,7 +384,10 @@ public class Cases {
                 existing.setRelatedFausts(dto.getRelatedFausts());
             }
             if(dto.getReviewer() != null) {
-                existing.setReviewer(resolveReviewer(dto.getReviewer()));
+                if (!dto.getReviewer().equals(existing.getReviewer())) {
+                    existing.setReviewer(resolveReviewer(dto.getReviewer()));
+                    notifyOnCaseStatusChange(NotificationType.CASE_ASSIGNED, existing);
+                }
                 if(existing.getStatus() == CaseStatus.CREATED) {
                     existing.setStatus(CaseStatus.ASSIGNED);
                 }
@@ -667,5 +676,22 @@ public class Cases {
                 }
             }
         }
+    }
+
+    private void notifyOnCaseStatusChange(NotificationType notificationType, PromatCase promatCase)
+            throws NotificationFactory.ValidateException {
+        if (promatCase.getId() != null) {
+            entityManager.flush();
+        }
+        Notification notification = NotificationFactory.getInstance().of(notificationType, promatCase);
+        PromatMessage message = new PromatMessage()
+                .withPromatCase(promatCase)
+                .withMessageText(notification.getBodyText())
+                .withDirection(PromatMessage.Direction.EDITOR_TO_REVIEWER)
+                .withReviewer(promatCase.getReviewer())
+                .withEditor(promatCase.getEditor())
+                .withIsRead(Boolean.FALSE);
+        entityManager.persist(notification);
+        entityManager.persist(message);
     }
 }
