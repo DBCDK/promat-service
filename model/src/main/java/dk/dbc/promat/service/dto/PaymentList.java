@@ -5,6 +5,7 @@
 
 package dk.dbc.promat.service.dto;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -13,6 +14,8 @@ public class PaymentList {
     private int numFound;
 
     private List<Payment> payments = new ArrayList<>();
+
+    private LocalDate stamp;
 
     public int getNumFound() {
         return numFound;
@@ -30,6 +33,14 @@ public class PaymentList {
         this.payments = payments;
     }
 
+    public LocalDate getStamp() {
+        return stamp;
+    }
+
+    public void setStamp(LocalDate stamp) {
+        this.stamp = stamp;
+    }
+
     public PaymentList withNumFound(int numFound) {
         this.numFound = numFound;
         return this;
@@ -37,6 +48,11 @@ public class PaymentList {
 
     public PaymentList withPayments(List<Payment> payments) {
         this.payments = payments;
+        return this;
+    }
+
+    public PaymentList withStamp(LocalDate stamp) {
+        this.stamp = stamp;
         return this;
     }
 }

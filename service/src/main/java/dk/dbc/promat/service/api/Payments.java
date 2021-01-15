@@ -186,6 +186,7 @@ public class Payments {
 
         // Todo: Example data, will be dynamiccaly built
         final PaymentList paymentList = new PaymentList()
+                .withStamp(LocalDate.now())
                 .withNumFound(1)
                 .withPayments(Arrays.asList(new Payment()
                         .withPayCode("1234")
