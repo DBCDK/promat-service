@@ -5,6 +5,7 @@
 
 package dk.dbc.promat.service.templating;
 
+import dk.dbc.promat.service.persistence.Editor;
 import dk.dbc.promat.service.persistence.Notification;
 import dk.dbc.promat.service.persistence.NotificationType;
 import dk.dbc.promat.service.persistence.PromatCase;
@@ -20,7 +21,7 @@ import static org.hamcrest.core.Is.is;
 public class RendererTest {
 
     @Test
-    public void simpleTest() {
+    public void simpleTest() throws NotificationFactory.ValidateException {
         PromatCase aCase = new PromatCase()
                 .withDeadline(LocalDate.of(2021, 1, 16))
                 .withTitle("En ny spændende bog der skal anmeldes")
@@ -28,7 +29,12 @@ public class RendererTest {
                         new Reviewer()
                                 .withFirstName("Hans")
                                 .withLastName("Hansen")
-                                .withEmail("hans@hansen.dk")
+                                .withEmail("hans@hansen.dk"))
+                .withEditor(
+                        new Editor()
+                        .withFirstName("Kresten")
+                        .withLastName("Krestensen")
+                        .withEmail("kreste@krestense.dk")
                 );
 
         Notification notification = NotificationFactory.getInstance().of(NotificationType.CASE_ASSIGNED, aCase);
