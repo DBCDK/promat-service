@@ -1,6 +1,5 @@
--- These cases checks that only a few selected case status' will trigger a payment
+-- expected CSV output when calling /payments/preview/?format=CSV:
 --
--- expected:
 -- --------------------------------------------------------------------------------------------------------------------
 -- Dato;Lønnr.;Lønart;Antal;Tekst;Anmelder
 -- mm-dd-åååå;123;1960;1;1001000 Note Case 1;Hans Hansen
