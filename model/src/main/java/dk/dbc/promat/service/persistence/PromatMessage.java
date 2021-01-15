@@ -30,15 +30,12 @@ public class PromatMessage {
     private Integer id;
 
     @OneToOne
-    @JsonFilter("idAndName")
     private Reviewer reviewer;
 
     @OneToOne
-    @JsonFilter("idAndName")
     private Editor editor;
 
     @OneToOne
-    @JsonFilter("idAndTitle")
     private PromatCase promatCase;
 
     private String messageText;

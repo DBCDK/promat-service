@@ -1,18 +1,22 @@
 package dk.dbc.promat.service.api;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import dk.dbc.promat.service.Repository;
 import dk.dbc.promat.service.dto.PromatMessageDto;
 import dk.dbc.promat.service.dto.ServiceErrorDto;
 import dk.dbc.promat.service.persistence.PromatCase;
 import dk.dbc.promat.service.persistence.PromatEntityManager;
 import dk.dbc.promat.service.persistence.PromatMessage;
+import dk.dbc.promat.service.rest.JsonMapperProvider;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.inject.Inject;
 import javax.persistence.EntityManager;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -23,10 +27,14 @@ import org.slf4j.LoggerFactory;
 @Path("")
 public class Messages {
     private static final Logger LOGGER = LoggerFactory.getLogger(Messages.class);
+    final ObjectMapper objectMapper = new JsonMapperProvider().getObjectMapper();
 
     @Inject
     @PromatEntityManager
     EntityManager entityManager;
+
+    @EJB
+    Repository repository;
 
     @POST
     @Path("messages")
@@ -34,34 +42,53 @@ public class Messages {
     @Produces(MediaType.APPLICATION_JSON)
     public Response postMessage(PromatMessageDto promatMessageDto) {
         LOGGER.info("messages/ (POST) body:{}", promatMessageDto);
+        try {
+            // Fetch the case that this message concerns
+            PromatCase promatCase = entityManager.find(PromatCase.class, promatMessageDto.getCaseId());
+            if (promatCase == null) {
+                LOGGER.info("No such case {}", promatMessageDto.getCaseId());
+                return ServiceErrorDto.NotFound("No such case",
+                        String.format("Case with id {} does not exist", promatMessageDto.getCaseId()));
+            }
 
-        // Fetch the case that this message concerns
-        PromatCase promatCase = entityManager.find(PromatCase.class, promatMessageDto.getCaseId());
-        if (promatCase == null) {
-            LOGGER.info("No such case {}", promatMessageDto.getCaseId());
-            return ServiceErrorDto.NotFound("No such case",
-                    String.format("Case with id {} does not exist", promatMessageDto.getCaseId()));
+            repository.getExclusiveAccessToTable(PromatMessage.TABLE_NAME);
+            PromatMessage promatMessage = new PromatMessage()
+                    .withMessageText(promatMessageDto.getMessageText())
+                    .withPromatCase(promatCase)
+                    .withEditor(promatCase.getEditor())
+                    .withReviewer(promatCase.getReviewer())
+                    .withDirection(promatMessageDto.getDirection())
+                    .withIsRead(Boolean.FALSE);
+
+            entityManager.persist(promatMessage);
+            entityManager.flush();
+
+            // 201 CREATED
+            return Response.status(201)
+                    .entity(objectMapper
+                            .writerWithView(CaseFormat.IDENTITY.getViewClass())
+                            .writeValueAsString(promatMessage))
+                    .build();
+        } catch (Exception e) {
+            LOGGER.error("Caught exception: {}", e.getMessage());
+            return ServiceErrorDto.Failed(e.getMessage());
         }
+    }
 
-        PromatMessage promatMessage = new PromatMessage()
-                .withMessageText(promatMessageDto.getMessageText())
-                .withPromatCase(promatCase)
-                .withEditor(promatCase.getEditor())
-                .withReviewer(promatCase.getReviewer())
-                .withDirection(promatMessageDto.getDirection())
-                .withIsRead(Boolean.FALSE);
-
-        entityManager.persist(promatMessage);
-        // 201 CREATED
-        LOGGER.info("Created new messsage (id: {}) for case: {}", promatMessage.getId(), promatCase.getId());
-        return Response.status(201)
-                .entity(promatMessage)
-                .build();
+    @GET
+    @Path("messages/{id}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response getMessage(@PathParam("id") final Integer id) {
+        try {
+            PromatMessage message = entityManager.find(PromatMessage.class, id);
+            return Response.ok().entity(message).build();
+        } catch (Exception e) {
+            LOGGER.error("Caught exception: {}", e.getMessage());
+            return ServiceErrorDto.Failed(e.getMessage());
+        }
     }
 
     // ToDo:
-    //  * Fetch enpoint from messageid.
-    //  * Post endpoint with template handling.
     //  * Get endpoint: Fetch a list of messages associated with caseid.
     //  * Post endpont: Set all messages with caseid and direction to "read".
 }

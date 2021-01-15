@@ -11,5 +11,7 @@ public class CaseView {
 
     public static class Export {}
 
+    public static class Identity {}
+
     public static class Case extends Summary {}
 }
