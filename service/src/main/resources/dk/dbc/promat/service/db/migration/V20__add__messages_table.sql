@@ -5,7 +5,7 @@ CREATE TABLE promatmessage
     editor_id INTEGER NOT NULL ,
     promatcase_id INTEGER NOT NULL,
     messageText text,
-    created date,
+    created date DEFAULT NOW(),
     isread BOOLEAN DEFAULT FALSE,
     direction TEXT NOT NULL
 );
