@@ -915,6 +915,22 @@ components:
           type: string
           format: date
           nullable: true
+        weekCode:
+          type: string
+          nullable: true
+          description: Weekcode assigned to this case
+        author:
+          type: string
+          nullable: true
+          description: Name of author
+        publisher:
+          type: string
+          nullable: true
+          description: Name of the publisher
+        recordId:
+          type: string
+          nullable: true
+          description: FAUST number assigned to the MARC record generated for the case during export
         materialType:
           $ref: '#/components/schemas/MaterialType'
         tasks:
@@ -1072,6 +1088,10 @@ components:
           type: string
           nullable: true
           description: Name of the publisher
+        recordId:
+          type: string
+          nullable: true
+          description: FAUST number assigned to the MARC record generated for the case during export
       required:
         - id
         - title
@@ -1090,13 +1110,15 @@ components:
       properties:
         title:
           type: string
+          nullable: true
           description: Case title (free form, not tied to the bibliographic title of any of the faustnumbers)
         details:
           type: string
-          description: Case details (free form)
           nullable: true
+          description: Case details (free form)
         primaryFaust:
           type: string
+          nullable: true
           description: Faustnumber for the primary manifestations, typically one of the paperbooks
         relatedFausts:
           type: array
@@ -1156,10 +1178,10 @@ components:
           type: string
           nullable: true
           description: Name of the publisher
-      required:
-        - title
-        - primaryFaust
-        - materialType
+        recordId:
+          type: string
+          nullable: true
+          description: FAUST number assigned to the MARC record generated for the case during export
 
     CaseStatus:
       type: string
