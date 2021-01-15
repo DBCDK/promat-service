@@ -31,6 +31,10 @@
     <module>service</module>
   </modules>
 
+  <properties>
+          <jte.version>1.4.0</jte.version>
+  </properties>
+
   <dependencies>
     <dependency>
       <groupId>org.hamcrest</groupId>
