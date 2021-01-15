@@ -2,7 +2,7 @@ package dk.dbc.promat.service.api;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dk.dbc.promat.service.Repository;
-import dk.dbc.promat.service.dto.PromatMessageDto;
+import dk.dbc.promat.service.dto.MessageRequest;
 import dk.dbc.promat.service.dto.ServiceErrorDto;
 import dk.dbc.promat.service.persistence.PromatCase;
 import dk.dbc.promat.service.persistence.PromatEntityManager;
@@ -37,27 +37,27 @@ public class Messages {
     Repository repository;
 
     @POST
-    @Path("messages")
+    @Path("cases/{id}/messages")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public Response postMessage(PromatMessageDto promatMessageDto) {
-        LOGGER.info("messages/ (POST) body:{}", promatMessageDto);
+    public Response postMessage(@PathParam("id") Integer caseId, MessageRequest messageRequest) {
+        LOGGER.info("messages/ (POST) body:{}", messageRequest);
         try {
             // Fetch the case that this message concerns
-            PromatCase promatCase = entityManager.find(PromatCase.class, promatMessageDto.getCaseId());
+            PromatCase promatCase = entityManager.find(PromatCase.class, caseId);
             if (promatCase == null) {
-                LOGGER.info("No such case {}", promatMessageDto.getCaseId());
+                LOGGER.info("No such case {}", caseId);
                 return ServiceErrorDto.NotFound("No such case",
-                        String.format("Case with id {} does not exist", promatMessageDto.getCaseId()));
+                        String.format("Case with id {} does not exist", caseId));
             }
 
             repository.getExclusiveAccessToTable(PromatMessage.TABLE_NAME);
             PromatMessage promatMessage = new PromatMessage()
-                    .withMessageText(promatMessageDto.getMessageText())
+                    .withMessageText(messageRequest.getMessageText())
                     .withPromatCase(promatCase)
                     .withEditor(promatCase.getEditor())
                     .withReviewer(promatCase.getReviewer())
-                    .withDirection(promatMessageDto.getDirection())
+                    .withDirection(messageRequest.getDirection())
                     .withIsRead(Boolean.FALSE);
 
             entityManager.persist(promatMessage);
@@ -76,7 +76,7 @@ public class Messages {
     }
 
     @GET
-    @Path("messages/{id}")
+    @Path("cases/messages/{id}")
     @Produces(MediaType.APPLICATION_JSON)
     public Response getMessage(@PathParam("id") final Integer id) {
         try {
