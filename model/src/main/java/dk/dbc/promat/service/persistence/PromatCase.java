@@ -105,6 +105,12 @@ public class PromatCase {
     @JsonView({CaseView.Export.class, CaseView.Summary.class, CaseView.Case.class})
     private String weekCode;
 
+    /*
+     * weekcode without the catalog prefix, ie. yyyyww
+     * Needed for 'less than' queries during export.
+     */
+    private String trimmedWeekCode;
+
     @JsonView({CaseView.Export.class, CaseView.Summary.class, CaseView.Case.class})
     private String author;
 
@@ -365,6 +371,19 @@ public class PromatCase {
         return this;
     }
 
+    public String getTrimmedWeekCode() {
+        return trimmedWeekCode;
+    }
+
+    public void setTrimmedWeekCode(String trimmedWeekCode) {
+        this.trimmedWeekCode = trimmedWeekCode;
+    }
+
+    public PromatCase withTrimmedWeekCode(String trimmedWeekCode) {
+        setTrimmedWeekCode(trimmedWeekCode);
+        return this;
+    }
+
     @Override
     public boolean equals(Object o) {
         if(this == o) return true;
@@ -385,6 +404,7 @@ public class PromatCase {
                 materialType == aCase.materialType &&
                 Objects.equals(tasks, aCase.tasks) &&
                 Objects.equals(weekCode, aCase.weekCode) &&
+                Objects.equals(trimmedWeekCode, aCase.trimmedWeekCode) &&
                 Objects.equals(author, aCase.author) &&
                 Objects.equals(creator, aCase.creator) &&
                 Objects.equals(publisher, aCase.publisher) &&
@@ -394,7 +414,8 @@ public class PromatCase {
     @Override
     public int hashCode() {
         return Objects.hash(id, title, details, primaryFaust, relatedFausts, reviewer, editor, subjects, created,
-                deadline, assigned, status, materialType, tasks, weekCode, author, creator, publisher, recordId);
+                deadline, assigned, status, materialType, tasks, weekCode, trimmedWeekCode, author, creator, publisher,
+                recordId);
     }
 
     @Override
@@ -415,6 +436,7 @@ public class PromatCase {
                 ", materialType=" + materialType +
                 ", tasks=" + tasks +
                 ", weekCode='" + weekCode + '\'' +
+                ", trimmedWeekCode='" + trimmedWeekCode + '\'' +
                 ", author='" + author + '\'' +
                 ", creator=" + creator +
                 ", publisher='" + publisher + '\'' +
