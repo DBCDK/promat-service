@@ -25,7 +25,7 @@ public class Payment {
 
     String text;
 
-    @JsonView({CaseView.CaseSummary.class})
+    @JsonView({CaseView.Summary.class})
     Reviewer reviewer;
 
     String primaryFaust;
@@ -35,10 +35,6 @@ public class Payment {
     String title;
 
     String weekCode;
-
-    TaskType taskType;
-
-    TaskFieldType taskFieldType;
 
     MaterialType materialType;
 
@@ -108,28 +104,12 @@ public class Payment {
         this.weekCode = weekCode;
     }
 
-    public TaskFieldType getTaskFieldType() {
-        return taskFieldType;
-    }
-
-    public void setTaskFieldType(TaskFieldType taskFieldType) {
-        this.taskFieldType = taskFieldType;
-    }
-
     public String getRelatedFausts() {
         return relatedFausts;
     }
 
     public void setRelatedFausts(String relatedFausts) {
         this.relatedFausts = relatedFausts;
-    }
-
-    public TaskType getTaskType() {
-        return taskType;
-    }
-
-    public void setTaskType(TaskType taskType) {
-        this.taskType = taskType;
     }
 
     public MaterialType getMaterialType() {
@@ -188,18 +168,8 @@ public class Payment {
         return this;
     }
 
-    public Payment withTaskFieldType(TaskFieldType taskFieldType) {
-        this.taskFieldType = taskFieldType;
-        return this;
-    }
-
     public Payment withRelatedFausts(String relatedFausts) {
         this.relatedFausts = relatedFausts;
-        return this;
-    }
-
-    public Payment withTaskType(TaskType taskType) {
-        this.taskType = taskType;
         return this;
     }
 

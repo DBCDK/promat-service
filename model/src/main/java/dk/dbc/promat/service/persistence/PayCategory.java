@@ -1,6 +1,7 @@
 package dk.dbc.promat.service.persistence;
 
 public enum PayCategory {
+    NONE("0000"),
 
     BRIEF("1960"),
 
