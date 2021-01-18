@@ -11,6 +11,7 @@ import dk.dbc.httpclient.HttpPost;
 import dk.dbc.invariant.InvariantUtil;
 import dk.dbc.promat.service.dto.CaseRequestDto;
 import dk.dbc.promat.service.dto.CaseSummaryList;
+import dk.dbc.promat.service.dto.CriteriaOperator;
 import dk.dbc.promat.service.dto.ServiceErrorDto;
 import dk.dbc.promat.service.persistence.CaseStatus;
 import dk.dbc.promat.service.persistence.PromatCase;
@@ -151,7 +152,15 @@ public class PromatServiceConnector {
             /**
              * Title (or part of) for cases
              */
-            TITLE("title");
+            TITLE("title"),
+            /**
+             * Trimmed weekcode for cases
+             */
+            TRIMMED_WEEKCODE("trimmedWeekcode"),
+            /**
+             * Trimmed weekcode comparison operator
+             */
+            TRIMMED_WEEKCODE_OPERATOR("trimmedWeekcodeOperator");
 
             private final String keyName;
 
@@ -243,6 +252,27 @@ public class PromatServiceConnector {
 
         public String getTitle() {
             return getString(Key.TITLE);
+        }
+
+        public ListCasesParams withTrimmedWeekcode(String trimmedWeekcode) {
+            return withString(Key.TRIMMED_WEEKCODE, trimmedWeekcode);
+        }
+
+        public String getTrimmedWeekcode() {
+            return getString(Key.TRIMMED_WEEKCODE);
+        }
+
+        public ListCasesParams withTrimmedWekcodeOperator(CriteriaOperator trimmedWeekcodeOperator) {
+            putOrRemoveOnNull(Key.TRIMMED_WEEKCODE_OPERATOR, trimmedWeekcodeOperator);
+            return this;
+        }
+
+        public CriteriaOperator getTrimmedWeekcodeOperator() {
+            final Object value = this.get(Key.TRIMMED_WEEKCODE_OPERATOR);
+            if (value != null) {
+                return (CriteriaOperator) value;
+            }
+            return null;
         }
 
         private void putOrRemoveOnNull(Key param, Object value) {
