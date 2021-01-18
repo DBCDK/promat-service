@@ -262,7 +262,7 @@ public class PromatServiceConnector {
             return getString(Key.TRIMMED_WEEKCODE);
         }
 
-        public ListCasesParams withTrimmedWekcodeOperator(CriteriaOperator trimmedWeekcodeOperator) {
+        public ListCasesParams withTrimmedWeekcodeOperator(CriteriaOperator trimmedWeekcodeOperator) {
             putOrRemoveOnNull(Key.TRIMMED_WEEKCODE_OPERATOR, trimmedWeekcodeOperator);
             return this;
         }
