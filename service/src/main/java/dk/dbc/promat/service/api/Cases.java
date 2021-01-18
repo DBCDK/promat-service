@@ -9,6 +9,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import dk.dbc.promat.service.Repository;
 import dk.dbc.promat.service.dto.CaseRequestDto;
 import dk.dbc.promat.service.dto.CaseSummaryList;
+import dk.dbc.promat.service.dto.CriteriaOperator;
 import dk.dbc.promat.service.dto.ServiceErrorCode;
 import dk.dbc.promat.service.dto.ServiceErrorDto;
 import dk.dbc.promat.service.dto.TaskDto;
@@ -206,14 +207,19 @@ public class Cases {
                               @QueryParam("reviewer") final Integer reviewer,
                               @QueryParam("editor") final Integer editor,
                               @QueryParam("title") final String title,
+                              @QueryParam("trimmedWeekcode") final String trimmedWeekcode,
+                              @QueryParam("trimmedWeekcodeOperator") @DefaultValue("EQUAL")
+                                  final CriteriaOperator trimmedWeekcodeOperator,
                               @QueryParam("limit") final Integer limit,
                               @QueryParam("from") final Integer from) {
-        LOGGER.info("cases/?faust={}|status={}|editor={}|title={}|limit={}|from={}",
+        LOGGER.info("cases/?faust={}|status={}|reviewer={}|editor={}|title={}|trimmedWeekcode={}|trimmedWeekcodeOperator={}|limit={}|from={}",
                 faust == null ? "null" : faust,
                 status == null ? "null" : status,
                 reviewer == null ? "null" : reviewer,
                 editor == null ? "null" : editor,
                 title == null ? "null" : title,
+                trimmedWeekcode == null ? "null" : trimmedWeekcode,
+                trimmedWeekcodeOperator == null ? "null" : trimmedWeekcodeOperator,
                 limit == null ? "null" : limit,
                 from == null ? "null" : from);
 
@@ -286,6 +292,11 @@ public class Cases {
                         .like(builder
                                 .lower(root
                                         .get("title")), builder.literal("%" + title.toLowerCase() + "%")));
+            }
+
+            if (trimmedWeekcode != null && !trimmedWeekcode.isBlank()) {
+                allPredicates.add(PredicateFactory.fromBinaryOperator(trimmedWeekcodeOperator,
+                        root.get("trimmedWeekCode"), trimmedWeekcode, builder));
             }
 
             // If a starting id has been given, add this
