@@ -10,6 +10,7 @@ import dk.dbc.promat.service.connector.PromatServiceConnector;
 import dk.dbc.promat.service.connector.PromatServiceConnectorException;
 import dk.dbc.promat.service.dto.CaseRequestDto;
 import dk.dbc.promat.service.dto.CaseSummaryList;
+import dk.dbc.promat.service.dto.CriteriaOperator;
 import dk.dbc.promat.service.dto.TaskDto;
 import dk.dbc.promat.service.persistence.CaseStatus;
 import dk.dbc.promat.service.persistence.MaterialType;
@@ -489,6 +490,25 @@ public class CasesIT extends ContainerTest {
         fetched = promatServiceConnector.listCases(new PromatServiceConnector.ListCasesParams()
                 .withTitle("Title for 001111"));
         assertThat("Number of cases with title 'Title for 001111'", fetched.getNumFound(), is(1));
+    }
+
+    @Test
+    public void getCasesWithTrimmedWeekcode() throws PromatServiceConnectorException {
+        CaseSummaryList fetched = promatServiceConnector.listCases(new PromatServiceConnector.ListCasesParams()
+                .withTrimmedWeekcode("202102"));
+        assertThat("Number of cases with trimmed weekcode '202102'", fetched.getNumFound(), is(0));
+
+        fetched = promatServiceConnector.listCases(new PromatServiceConnector.ListCasesParams()
+                .withTrimmedWeekcode("202101"));
+        assertThat("Number of cases with trimmed weekcode '202101'", fetched.getNumFound(), is(1));
+        assertThat("Case with trimmed weekcode '202101'", fetched.getCases().get(0).getId(), is(1));
+
+        fetched = promatServiceConnector.listCases(new PromatServiceConnector.ListCasesParams()
+                .withTrimmedWekcodeOperator(CriteriaOperator.LESS_THAN_OR_EQUAL_TO)
+                .withTrimmedWeekcode("202101"));
+        assertThat("Number of cases with weekcode less than '202101'", fetched.getNumFound(), is(2));
+        assertThat("1st case with weekcode less than '202101'", fetched.getCases().get(0).getId(), is(1));
+        assertThat("2nd case with weekcode less than '202101'", fetched.getCases().get(1).getId(), is(2));
     }
 
     @Test
