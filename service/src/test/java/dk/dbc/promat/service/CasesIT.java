@@ -309,7 +309,7 @@ public class CasesIT extends ContainerTest {
     }
 
     @Test
-    public void testGetCasesWithStatus() throws PromatServiceConnectorException {
+    public void testGetCasesWithStatus() throws PromatServiceConnectorException, JsonProcessingException {
 
         // There are 8 cases preloaded into the database, others may have been created
         // by previously run tests
@@ -319,24 +319,19 @@ public class CasesIT extends ContainerTest {
         assertThat("Number of cases with status CLOSED", fetched.getNumFound(), is(1));
 
         // Cases with status CREATED
-        response = getResponse("v1/api/cases", Map.of("status","CLOSED"));
-        assertThat("status code", response.getStatus(), is(200));
-        obj = response.readEntity(String.class);
-        fetched = mapper.readValue(obj, CaseSummaryList.class);
+        fetched = promatServiceConnector.listCases(new PromatServiceConnector.ListCasesParams()
+                .withStatus(CaseStatus.CREATED));
         assertThat("Number of cases with status CREATED", fetched.getNumFound(), is(greaterThanOrEqualTo(1)));
 
         // Cases with status REJECTED
-        response = getResponse("v1/api/cases", Map.of("status","REJECTED"));
-        assertThat("status code", response.getStatus(), is(404));
-        obj = response.readEntity(String.class);
-        fetched = mapper.readValue(obj, CaseSummaryList.class);
+        fetched = promatServiceConnector.listCases(new PromatServiceConnector.ListCasesParams()
+                .withStatus(CaseStatus.REJECTED));
         assertThat("Number of cases with status CREATED", fetched.getNumFound(), is(0));
 
         // Cases with status CLOSED or EXPORTED
-        response = getResponse("v1/api/cases", Map.of("status","CLOSED,EXPORTED"));
-        assertThat("status code", response.getStatus(), is(200));
-        obj = response.readEntity(String.class);
-        fetched = mapper.readValue(obj, CaseSummaryList.class);
+        fetched = promatServiceConnector.listCases(new PromatServiceConnector.ListCasesParams()
+                .withStatus(CaseStatus.CLOSED)
+                .withStatus(CaseStatus.EXPORTED));
         assertThat("Number of cases with status CLOSED or EXPORTED", fetched.getNumFound(), is(greaterThanOrEqualTo(2)));
     }
 
@@ -683,7 +678,7 @@ public class CasesIT extends ContainerTest {
                 .withPrimaryFaust("9001211")
                 .withTitle("Title for 9001211")
                 .withDetails("Details for 9001211")
-                .withTasks(Collections.singletonList(new TaskDto().withTaskType(TaskType.BKM).withTaskFieldType(TaskFieldType.BKM)))
+                .withTasks(Collections.singletonList(new TaskDto().withTaskType(TaskType.GROUP_1_LESS_THAN_100_PAGES).withTaskFieldType(TaskFieldType.BKM)))
                 .withPublisher("Publisher for 9001211")
                 .withAuthor("Author for 9001211")
                 .withWeekCode("Weekcode for 9001211")
