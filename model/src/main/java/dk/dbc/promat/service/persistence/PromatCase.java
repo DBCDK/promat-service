@@ -22,6 +22,8 @@ import javax.persistence.JoinTable;
 import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
+import javax.persistence.PrePersist;
+import javax.persistence.PreUpdate;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Objects;
@@ -382,6 +384,16 @@ public class PromatCase {
     public PromatCase withTrimmedWeekCode(String trimmedWeekCode) {
         setTrimmedWeekCode(trimmedWeekCode);
         return this;
+    }
+
+    @PrePersist
+    @PreUpdate
+    private void beforeUpdate() {
+        if (weekCode != null) {
+            trimmedWeekCode = weekCode.replaceAll("^\\D+", "");
+        } else {
+            trimmedWeekCode = null;
+        }
     }
 
     @Override
