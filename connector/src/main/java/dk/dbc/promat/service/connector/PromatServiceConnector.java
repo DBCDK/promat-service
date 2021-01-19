@@ -17,10 +17,8 @@ import dk.dbc.promat.service.persistence.CaseStatus;
 import dk.dbc.promat.service.persistence.PromatCase;
 import net.jodah.failsafe.RetryPolicy;
 
-import javax.ws.rs.ProcessingException;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.core.Response;
-import java.time.Duration;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -36,11 +34,17 @@ import java.util.Map;
  * </p>
  */
 public class PromatServiceConnector {
+    // TODO: 19/01/2021 re-enable retry policy
+    /* Currently retry handling is disabled to retain backwards compatibility
+     * with older versions of the FailSafeHttpClient in use in systems using
+     * this connector.
+     */
     private static final RetryPolicy<Response> RETRY_POLICY = new RetryPolicy<Response>()
-            .handle(ProcessingException.class)
-            .handleResultIf(response -> response.getStatus() == 500)
-            .withDelay(Duration.ofSeconds(5))
-            .withMaxRetries(3);
+            .withMaxRetries(0);
+            //.handle(ProcessingException.class)
+            //.handleResultIf(response -> response.getStatus() == 500)
+            //.withDelay(Duration.ofSeconds(5))
+            //.withMaxRetries(3);
 
     private final FailSafeHttpClient failSafeHttpClient;
     private final String baseUrl;
