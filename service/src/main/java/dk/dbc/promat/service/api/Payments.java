@@ -35,6 +35,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -202,12 +203,7 @@ public class Payments {
             // Add case payments
             if (promatCase.getTasks() != null) {
 
-                int standardFields = 0;
-                PayCategory standardFieldsPayCategory = PayCategory.NONE;
-
-                int briefs = 0;
-                int metadatas = 0;
-                int bkms = 0;
+                List<PayCategory> casePayCategories = new ArrayList<>();
 
                 // Count payable fields
                 for (PromatTask task : promatCase.getTasks()) {
@@ -220,78 +216,42 @@ public class Payments {
                         continue;
                     }
 
-                    switch(task.getTaskFieldType()) {
+                    switch (task.getPayCategory()) {
                         case BRIEF:
-                            briefs++;
-                            break;
                         case METAKOMPAS:
-                            metadatas++;
-                            break;
                         case BKM:
-                            bkms++;
+                            // These fields is payed by quantity
+                            casePayCategories.add(task.getPayCategory());
                             break;
                         default:
-                            standardFields = 1;
-                            standardFieldsPayCategory = task.getPayCategory();  // Same for all standard tasks
+                            // These fields is payed once, disregarding the number of fields
+                            if (!casePayCategories.contains(task.getPayCategory())) {
+                                casePayCategories.add(task.getPayCategory());
+                            }
                             break;
                     }
                 }
 
-                // Insert 1 payment that covers all standard fields (description, evaluation, etc.)
-                if (standardFields > 0) {
-                    payments.add(new Payment()
-                            .withPayCode(promatCase.getReviewer().getPaycode().toString())
-                            .withPayCategory(standardFieldsPayCategory)
-                            .withCount(1)
-                            .withText(String.format("%s %s", getFaustList(promatCase), promatCase.getTitle()))
-                            .withReviewer(promatCase.getReviewer())
-                            .withPrimaryFaust(promatCase.getPrimaryFaust())
-                            .withRelatedFausts(promatCase.getRelatedFausts().stream().collect(Collectors.joining(",")))
-                            .withTitle(promatCase.getTitle())
-                            .withWeekCode(promatCase.getWeekCode())
-                            .withMaterialType(promatCase.getMaterialType())
-                            .withDeadline(promatCase.getDeadline()));
-                }
+                // Group the categories since we need to add lines with a count of items.
+                // Also sort the categories so that they are added in ascending numerical order
+                // in the list - this is not an outside requirement, but just to ensure that
+                //   a) the payments within a case is placed in the logical order
+                //   b) we can construct a integration test to check payment output
+                Map<PayCategory, List<PayCategory>> groupedPayCategories = casePayCategories.stream()
+                        .collect(Collectors.groupingBy(category -> category));
+                List<PayCategory> sortedPayCategories = groupedPayCategories
+                        .keySet()
+                        .stream()
+                        .sorted(Comparator.comparingInt(a -> Integer.parseInt(a.value())))
+                        .collect(Collectors.toList());
 
-                // Insert a number of payments for briefs, one for each set of target faustnumber/faustnumbers
-                if (briefs > 0) {
+                // Insert payment lines
+                for (PayCategory payCategory : sortedPayCategories) {
                     payments.add(new Payment()
                             .withPayCode(promatCase.getReviewer().getPaycode().toString())
-                            .withPayCategory(PayCategory.BRIEF)
-                            .withCount(briefs)
-                            .withText(String.format("%s Note %s", getFaustList(promatCase), promatCase.getTitle()))
-                            .withReviewer(promatCase.getReviewer())
-                            .withPrimaryFaust(promatCase.getPrimaryFaust())
-                            .withRelatedFausts(promatCase.getRelatedFausts().stream().collect(Collectors.joining(",")))
-                            .withTitle(promatCase.getTitle())
-                            .withWeekCode(promatCase.getWeekCode())
-                            .withMaterialType(promatCase.getMaterialType())
-                            .withDeadline(promatCase.getDeadline()));
-                }
-
-                // Insert a number of payments for metakompas terms created. Usually only one such task will exist
-                if (metadatas > 0) {
-                    payments.add(new Payment()
-                            .withPayCode(promatCase.getReviewer().getPaycode().toString())
-                            .withPayCategory(PayCategory.METAKOMPAS)
-                            .withCount(metadatas)
-                            .withText(String.format("%s Metadata %s", getFaustList(promatCase), promatCase.getTitle()))
-                            .withReviewer(promatCase.getReviewer())
-                            .withPrimaryFaust(promatCase.getPrimaryFaust())
-                            .withRelatedFausts(promatCase.getRelatedFausts().stream().collect(Collectors.joining(",")))
-                            .withTitle(promatCase.getTitle())
-                            .withWeekCode(promatCase.getWeekCode())
-                            .withMaterialType(promatCase.getMaterialType())
-                            .withDeadline(promatCase.getDeadline()));
-                }
-
-                // Insert a number of payments for BKM assessments. Usually only one such task will exist
-                if (bkms > 0) {
-                    payments.add(new Payment()
-                            .withPayCode(promatCase.getReviewer().getPaycode().toString())
-                            .withPayCategory(PayCategory.BKM)
-                            .withCount(bkms)
-                            .withText(String.format("%s Bkm %s", getFaustList(promatCase), promatCase.getTitle()))
+                            .withPayCategory(payCategory)
+                            .withCount(groupedPayCategories.get(payCategory).size())
+                            .withText(String.format("%s%s %s", getFaustList(promatCase), getTextCategory(payCategory), promatCase.getTitle()))
                             .withReviewer(promatCase.getReviewer())
                             .withPrimaryFaust(promatCase.getPrimaryFaust())
                             .withRelatedFausts(promatCase.getRelatedFausts().stream().collect(Collectors.joining(",")))
@@ -319,6 +279,18 @@ public class Payments {
                 .withPayments(payments);
     }
 
+    private String getTextCategory(PayCategory category) {
+        switch (category) {
+            case BRIEF:
+                return " Note";
+            case METAKOMPAS:
+                return " Metadata";
+            case BKM:
+                return " Bkm";
+        }
+        return "";
+    }
+
     private String getFaustList(PromatCase promatCase) {
         List<String> fausts = new ArrayList<>();
         fausts.add(promatCase.getPrimaryFaust());
@@ -327,15 +299,5 @@ public class Payments {
         }
 
         return fausts.stream().collect(Collectors.joining(","));
-    }
-
-    private String getTypeDescription(PromatTask task) {
-        switch(task.getTaskFieldType()) {
-            case BRIEF:
-                return " Note";
-            case METAKOMPAS:
-                return " Metadata";
-        }
-        return "";
     }
 }

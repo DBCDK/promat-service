@@ -1,4 +1,4 @@
-/*
+ /*
  * Copyright Dansk Bibliotekscenter a/s. Licensed under GPLv3
  * See license text in LICENSE.txt or at https://opensource.dbc.dk/licenses/gpl-3.0/
  */
@@ -47,6 +47,7 @@ public class PaymentsIT  extends ContainerTest {
     public void TestPaymentFile() {
         Response response = getResponse("v1/api/payments/preview", Map.of("format","CSV"));
         assertThat("status code", response.getStatus(), is(200));
+
         String csv = response.readEntity(String.class);
         assertThat("number of line", csv.lines().count(), is(20L));  // 1 header + 19 paymentlines
 
@@ -56,6 +57,8 @@ public class PaymentsIT  extends ContainerTest {
     private void verifyPaymentCsv(String csv) {
         LOGGER.info("Received CSV output is:\n{}", csv);
 
+        // Make sure that the expected lines is sorted by the pay category (number)
+        // ascending - this is how lines is output
         String expected = ("Dato;Lønnr.;Lønart;Antal;Tekst;Anmelder\n" +
                 "mm-dd-åååå;123;1960;1;1001000 Note Case 1;Hans Hansen\n" +
                 "mm-dd-åååå;123;1960;1;1001010 Note Case 2;Hans Hansen\n" +
@@ -72,8 +75,8 @@ public class PaymentsIT  extends ContainerTest {
                 "mm-dd-åååå;123;1956;1;1001110,1001111 Case 12;Hans Hansen\n" +
                 "mm-dd-åååå;123;1960;2;1001110,1001111 Note Case 12;Hans Hansen\n" +
                 "mm-dd-åååå;123;1987;1;1001110,1001111 Metadata Case 12;Hans Hansen\n" +
-                "mm-dd-åååå;456;1981;1;1001130,1001131 Case 14;Ole Olsen\n" +
                 "mm-dd-åååå;456;1960;1;1001130,1001131 Note Case 14;Ole Olsen\n" +
+                "mm-dd-åååå;456;1981;1;1001130,1001131 Case 14;Ole Olsen\n" +
                 "mm-dd-åååå;456;1960;1;1001140,1001141,1001142 Note Case 15;Ole Olsen\n" +
                 "mm-dd-åååå;456;1960;1;1001150,1001151,1001152 Note Case 16;Ole Olsen")
                         .replace("mm-dd-åååå", LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd-MM-yyyy")));
