@@ -46,7 +46,7 @@ public class MessagesIT extends ContainerTest {
 
         assertThat("message", message.getMessageText(), is(dto.getMessageText()));
         assertThat("direction", message.getDirection(), is(PromatMessage.Direction.EDITOR_TO_REVIEWER));
-        assertThat("author", message.getAuthor().getAuthorId(), is(EDITOR_ID));
+        assertThat("author", message.getAuthor().getId(), is(EDITOR_ID));
         assertThat("createDate", message.getCreated(), notNullValue());
         assertThat("not read", message.getRead(), is(Boolean.FALSE));
     }

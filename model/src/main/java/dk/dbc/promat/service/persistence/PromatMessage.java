@@ -2,6 +2,7 @@ package dk.dbc.promat.service.persistence;
 
 import java.time.LocalDate;
 import java.util.Objects;
+import javax.persistence.Column;
 import javax.persistence.Embeddable;
 import javax.persistence.Embedded;
 import javax.persistence.Entity;
@@ -31,46 +32,51 @@ public class PromatMessage {
 
     @Embeddable
     public static class Author {
-        Integer authorId;
-        String authorFirstname;
-        String authorLastname;
+        @Column(name = "authorid")
+        Integer id;
 
-        public Integer getAuthorId() {
-            return authorId;
+        @Column(name = "authorfirstname")
+        String firstname;
+
+        @Column(name = "authorlastname")
+        String lastname;
+
+        public Integer getId() {
+            return id;
         }
 
-        public void setAuthorId(Integer authorId) {
-            this.authorId = authorId;
+        public void setId(Integer authorId) {
+            this.id = authorId;
         }
 
-        public String getAuthorFirstname() {
-            return authorFirstname;
+        public String getFirstname() {
+            return firstname;
         }
 
-        public void setAuthorFirstname(String authorFirstname) {
-            this.authorFirstname = authorFirstname;
+        public void setFirstname(String authorFirstname) {
+            this.firstname = authorFirstname;
         }
 
-        public String getAuthorLastname() {
-            return authorLastname;
+        public String getLastname() {
+            return lastname;
         }
 
-        public void setAuthorLastname(String authorLastname) {
-            this.authorLastname = authorLastname;
+        public void setLastname(String authorLastname) {
+            this.lastname = authorLastname;
         }
 
         public Author withAuthorId(Integer authorId) {
-            this.authorId = authorId;
+            this.id = authorId;
             return this;
         }
 
         public Author withAuthorFirstname(String authorFirstname) {
-            this.authorFirstname = authorFirstname;
+            this.firstname = authorFirstname;
             return this;
         }
 
         public Author withAuthorLastname(String authorLastname) {
-            this.authorLastname = authorLastname;
+            this.lastname = authorLastname;
             return this;
         }
 
@@ -93,22 +99,22 @@ public class PromatMessage {
                 return false;
             }
             Author author = (Author) o;
-            return Objects.equals(authorId, author.authorId) &&
-                    Objects.equals(authorFirstname, author.authorFirstname) &&
-                    Objects.equals(authorLastname, author.authorLastname);
+            return Objects.equals(id, author.id) &&
+                    Objects.equals(firstname, author.firstname) &&
+                    Objects.equals(lastname, author.lastname);
         }
 
         @Override
         public int hashCode() {
-            return Objects.hash(authorId, authorFirstname, authorLastname);
+            return Objects.hash(id, firstname, lastname);
         }
 
         @Override
         public String toString() {
             return "Author{" +
-                    "authorId=" + authorId +
-                    ", authorFirstname='" + authorFirstname + '\'' +
-                    ", authorLastname='" + authorLastname + '\'' +
+                    "id=" + id +
+                    ", firstname='" + firstname + '\'' +
+                    ", lastname='" + lastname + '\'' +
                     '}';
         }
     }
