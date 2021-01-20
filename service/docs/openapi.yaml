@@ -523,6 +523,122 @@ paths:
               schema:
                 $ref: '#/components/schemas/ServiceError'
 
+  /cases/{id}/messages:
+    get:
+      tags:
+        - messages
+      summary: Get a list of all messages associated with a case.
+      operationId: getMessagesForCase
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            description: Case id
+      responses:
+        '200':
+          description: succesful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessagesList'
+        '404':
+          description: Case could not be found. Check id.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+
+  /cases/messages/{id}:
+    get:
+      tags:
+        - messages
+      summary: Get message with this id.
+      operationId: getMessage
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            description: Message Id
+      responses:
+        '200':
+          description: succesful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+
+
+  /cases/{caseId}/messages/{userId}:
+    post:
+      tags:
+        - messages
+      summary: Post a message associated with caseid as user userId.
+      operationId: postMessage
+      parameters:
+        - in: path
+          name: caseId
+          required: true
+          schema:
+            type: integer
+            description: Case id
+        - in: path
+          name: userId
+          required: true
+          schema:
+            type: integer
+            description: Promat user id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MessageRequest'
+      responses:
+        '201':
+          description: succesful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+        '500':
+          description: Post of message failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+
+  /cases/{id}/messages/markasread/{direction}:
+    get:
+      tags:
+        - messages
+      summary: Mark all messages for case (id) with direction either REVIEWER_TO_EDITOR or EDITOR_TO_REVIEWER as 'read'
+      operationId: markAsRead
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            description: Case id
+        - in: path
+          name: direction
+          required: true
+          schema:
+            $ref: '#/components/schemas/Direction'
+      responses:
+        '200':
+          description: succesful operation
+        '500':
+          description: Mark as 'read' failed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+
   /tasks/{id}:
     put:
       tags:
@@ -678,6 +794,61 @@ components:
         - paycode
         - subjects
         - accepts
+
+    MessageRequest:
+      type: object
+      properties:
+        direction:
+          $ref: '#/components/schemas/Direction'
+        messageText:
+          type: string
+      required:
+        - direction
+        - messageText
+
+    MessagesList:
+      type: object
+      properties:
+        numFound:
+          type: integer
+        messages:
+          type: array
+          items:
+            $ref: '#/components/schemas/Message'
+
+    Message:
+      type: object
+      properties:
+        author:
+          $ref: '#/components/schemas/Author'
+        messageText:
+          type: string
+        created:
+          type: string
+          format: date
+        direction:
+          $ref: '#/components/schemas/Direction'
+        read:
+          type: boolean
+
+    Direction:
+      type: string
+      enum:
+        - REVIEWER_TO_EDITOR
+        - EDITOR_TO_REVIEWER
+
+    Author:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Id of the promatuser sending the message
+        firstName:
+          type: string
+          description: Firstname of the promatuser sending the message
+        lastname:
+          type: string
+          description: Lastname of the promatuser sending the message
 
     ReviewerRequest:
       type: object
