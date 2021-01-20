@@ -135,8 +135,12 @@ public class ReviewersIT extends ContainerTest {
         final Reviewer reviewer3 = new Reviewer();
         loadReviewer3(reviewer3);
 
+        final Reviewer reviewer4 = new Reviewer();
+        loadReviewer4(reviewer4);
+
+
         final ReviewerList<Reviewer> expected = new ReviewerList<>()
-                .withReviewers(List.of(reviewer1, reviewer2, reviewer3));
+                .withReviewers(List.of(reviewer1, reviewer2, reviewer3, reviewer4));
 
         final Response response = getResponse("v1/api/reviewers");
 
@@ -168,8 +172,14 @@ public class ReviewersIT extends ContainerTest {
                 .withWeekAfterWorkload(0);
         loadReviewer3(reviewer3);
 
+        final ReviewerWithWorkloads reviewer4 = new ReviewerWithWorkloads()
+                .withWeekWorkload(0)
+                .withWeekBeforeWorkload(0)
+                .withWeekAfterWorkload(0);
+        loadReviewer4(reviewer4);
+
         final ReviewerList<ReviewerWithWorkloads> expected = new ReviewerList<ReviewerWithWorkloads>()
-                .withReviewers(List.of(reviewer1, reviewer2, reviewer3));
+                .withReviewers(List.of(reviewer1, reviewer2, reviewer3, reviewer4));
 
         final Response response = getResponse("v1/api/reviewers",
                 Map.of("deadline", "2020-12-01"));
@@ -177,7 +187,7 @@ public class ReviewersIT extends ContainerTest {
         final ReviewerList<ReviewerWithWorkloads> actual = mapper.readValue(
                 response.readEntity(String.class), new TypeReference<>() {});
 
-        assertThat("List of reviewers is just 'Hans Hansen', 'Ole Olsen' and 'Peter Petersen'",
+        assertThat("List of reviewers is just 'Hans Hansen', 'Ole Olsen' and 'Peter Petersen' and 'kirsten kirstensen'",
                 actual, is(expected));
     }
 
@@ -292,6 +302,32 @@ public class ReviewersIT extends ContainerTest {
                 Reviewer.Accepts.BOOK));
         reviewer.setNote("note3");
         reviewer.setPhone("12345678");
+    }
+
+    private void loadReviewer4(Reviewer reviewer) {
+        reviewer.setId(4);
+        reviewer.setActive(true);
+        reviewer.setCulrId("55");
+        reviewer.setFirstName("Kirsten");
+        reviewer.setLastName("Kirstensen");
+        reviewer.setEmail("kirsten@kirstensen.dk");
+        reviewer.setAddress(
+                new Address()
+                        .withAddress1("Overgade 50")
+                        .withZip("5432")
+                        .withCity("Overlev"));
+        reviewer.setInstitution("Kirstens Bix");
+        reviewer.setPaycode(0);
+        reviewer.setHiatus_begin(LocalDate.parse("2021-01-11"));
+        reviewer.setHiatus_end(LocalDate.parse("2021-01-12"));
+        reviewer.setAccepts(List.of(
+                Reviewer.Accepts.BOOK));
+        reviewer.setSubjects(List.of(
+                new Subject()
+                        .withId(5)
+                        .withName("Multimedie")));
+        reviewer.setNote("note5");
+        reviewer.setPhone("123456789010");
     }
 
     private void loadUpdatedReviewer3(Reviewer reviewer) {

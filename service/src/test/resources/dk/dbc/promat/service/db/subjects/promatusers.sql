@@ -5,12 +5,14 @@ values (1, 'REVIEWER', true, '41', 'Hans', 'Hansen', 'hans@hansen.dk', 'Lillegad
 
 -- This reviewer is used for update tests. Please do not rely on the value of this reviewer in other tests
 insert into promatuser(id, role, active, culrid, firstname, lastname, email, address1, zip, city, institution, paycode, hiatus_begin, hiatus_end, accepts, note, phone)
-values (3, 'REVIEWER', true, '43', 'Peter', 'Petersen', 'peter@petersen.dk', 'Mellemgade 50', '5555', 'Mellemved', 'Peter Petersens pedaler', 22, null, null, '["BOOK"]', 'note3', '12345678');
-
+values (3, 'REVIEWER', true, '43', 'Peter', 'Petersen', 'peter@petersen.dk', 'Mellemgade 50', '5555', 'Mellemved', 'Peter Petersens pedaler', 22, null, null, '["BOOK"]', 'note3', '12345678'),
+-- This reviewer is used for message testing. Hands off.
+       (4, 'REVIEWER', true, '55', 'Kirsten', 'Kirstensen', 'kirsten@kirstensen.dk', 'Overgade 50', '5432', 'Overlev', 'Kirstens Bix', 0, '2021-01-11', '2021-01-12', '["BOOK"]', 'note5', '123456789010');
 insert into reviewersubjects(subject_id, reviewer_id) values(5,1);
 insert into reviewersubjects(subject_id, reviewer_id) values(3,1);
 insert into reviewersubjects(subject_id, reviewer_id) values(5,2);
 insert into reviewersubjects(subject_id, reviewer_id) values(5,3);
+insert into reviewersubjects(subject_id, reviewer_id) values(5,4);
 
 -- editors (IDs 10-19)
 insert into promatuser(id, role, active, culrid, firstname, lastname, email) values(10, 'EDITOR', true, '51', 'Ed', 'Itor', 'ed.itor@dbc.dk');
@@ -19,3 +21,5 @@ insert into promatuser(id, role, active, culrid, firstname, lastname, email) val
 
 -- This editor is used for update tests. Please do not rely on the value of this editor in other tests
 insert into promatuser(id, role, active, culrid, firstname, lastname, email) values(12, 'EDITOR', true, '53', 'Edi', 'tor', 'edi.tor@dbc.dk');
+-- This editor is used for message testing. Hands off.
+insert into promatuser(id, role, active, culrid, firstname, lastname, email) values(14, 'EDITOR', true, '56', 'E', 'ditor', 'e.ditor@dbc.dk');

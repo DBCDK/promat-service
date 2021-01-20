@@ -2,16 +2,23 @@ package dk.dbc.promat.service.api;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dk.dbc.promat.service.Repository;
-import dk.dbc.promat.service.dto.MessageRequest;
+import dk.dbc.promat.service.dto.MessageRequestDto;
+import dk.dbc.promat.service.dto.PromatMessagesList;
 import dk.dbc.promat.service.dto.ServiceErrorDto;
+import dk.dbc.promat.service.persistence.Editor;
 import dk.dbc.promat.service.persistence.PromatCase;
 import dk.dbc.promat.service.persistence.PromatEntityManager;
 import dk.dbc.promat.service.persistence.PromatMessage;
+import dk.dbc.promat.service.persistence.PromatUser;
+import dk.dbc.promat.service.persistence.Reviewer;
 import dk.dbc.promat.service.rest.JsonMapperProvider;
+import java.time.LocalDate;
+import java.util.List;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.inject.Inject;
 import javax.persistence.EntityManager;
+import javax.persistence.TypedQuery;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -37,11 +44,12 @@ public class Messages {
     Repository repository;
 
     @POST
-    @Path("cases/{id}/messages")
+    @Path("cases/{caseId}/messages/{userId}")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public Response postMessage(@PathParam("id") Integer caseId, MessageRequest messageRequest) {
-        LOGGER.info("messages/ (POST) body:{}", messageRequest);
+    public Response postMessage(@PathParam("caseId") Integer caseId, @PathParam("userId") Integer userId,
+                                MessageRequestDto messageRequestDto) {
+        LOGGER.info("messages/ (POST) body:{}", messageRequestDto);
         try {
             // Fetch the case that this message concerns
             PromatCase promatCase = entityManager.find(PromatCase.class, caseId);
@@ -51,23 +59,31 @@ public class Messages {
                         String.format("Case with id {} does not exist", caseId));
             }
 
+            // Fetch the user that wants to send this
+            PromatUser promatUser = null;
+            if (messageRequestDto.getDirection() == PromatMessage.Direction.EDITOR_TO_REVIEWER) {
+                promatUser = entityManager.find(Editor.class, userId);
+            } else {
+                promatUser = entityManager.find(Reviewer.class, userId);
+            }
+
             repository.getExclusiveAccessToTable(PromatMessage.TABLE_NAME);
             PromatMessage promatMessage = new PromatMessage()
-                    .withMessageText(messageRequest.getMessageText())
-                    .withPromatCase(promatCase)
-                    .withEditor(promatCase.getEditor())
-                    .withReviewer(promatCase.getReviewer())
-                    .withDirection(messageRequest.getDirection())
+                    .withMessageText(messageRequestDto.getMessageText())
+                    .withCaseId(caseId)
+                    .withAuthor(PromatMessage.Author.fromPromatUser(promatUser))
+                    .withDirection(messageRequestDto.getDirection())
+                    .withCreated(LocalDate.now())
                     .withIsRead(Boolean.FALSE);
+
+            // Todo: Should we also send a mail when EDITOR_TO_REVIEWER?
 
             entityManager.persist(promatMessage);
             entityManager.flush();
 
             // 201 CREATED
             return Response.status(201)
-                    .entity(objectMapper
-                            .writerWithView(CaseFormat.IDENTITY.getViewClass())
-                            .writeValueAsString(promatMessage))
+                    .entity(promatMessage)
                     .build();
         } catch (Exception e) {
             LOGGER.error("Caught exception: {}", e.getMessage());
@@ -88,7 +104,40 @@ public class Messages {
         }
     }
 
-    // ToDo:
-    //  * Get endpoint: Fetch a list of messages associated with caseid.
-    //  * Post endpont: Set all messages with caseid and direction to "read".
+    @GET
+    @Path("cases/{id}/messages")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response getMessagesForCase(@PathParam("id") Integer id) {
+        try {
+            TypedQuery<PromatMessage> query = entityManager
+                    .createNamedQuery(PromatMessage.GET_MESSAGES_FOR_CASE, PromatMessage.class);
+            query.setParameter("caseId", id);
+            final List<PromatMessage> messages = query.getResultList();
+
+            return Response.ok().entity(new PromatMessagesList().withPromatMessages(messages)).build();
+
+        } catch (Exception e) {
+            LOGGER.error("Caught exception: {}", e.getMessage());
+            return ServiceErrorDto.Failed(e.getMessage());
+        }
+    }
+
+    @GET
+    @Path("cases/{id}/messages/markasread/{direction}")
+    public Response markAsRead(@PathParam("id") Integer id,
+                               @PathParam("direction") PromatMessage.Direction direction) {
+        try {
+            TypedQuery<PromatMessage> query =
+                    entityManager.createNamedQuery(PromatMessage.UPDATE_READ_STATE, PromatMessage.class);
+            query.setParameter("caseId", id);
+            query.setParameter("direction", direction);
+            query.setParameter("isRead", Boolean.TRUE);
+            query.executeUpdate();
+            entityManager.flush();
+            return Response.status(201).build();
+        } catch (Exception e) {
+            LOGGER.error("Caught exception {}", e.getMessage());
+            return ServiceErrorDto.Failed(e.getMessage());
+        }
+    }
 }

@@ -168,7 +168,7 @@ public class Cases {
 
             entityManager.persist(entity);
             if (entity.getStatus() == CaseStatus.ASSIGNED) {
-                notifyOnCaseStatusChange(NotificationType.CASE_ASSIGNED, entity);
+                notifyOnReviewerChanged(NotificationType.CASE_ASSIGNED, entity);
             }
             // 201 CREATED
             LOGGER.info("Created new case for primaryFaust {}", entity.getPrimaryFaust());
@@ -386,7 +386,7 @@ public class Cases {
             if(dto.getReviewer() != null) {
                 if (!dto.getReviewer().equals(existing.getReviewer())) {
                     existing.setReviewer(resolveReviewer(dto.getReviewer()));
-                    notifyOnCaseStatusChange(NotificationType.CASE_ASSIGNED, existing);
+                    notifyOnReviewerChanged(NotificationType.CASE_ASSIGNED, existing);
                 }
                 if(existing.getStatus() == CaseStatus.CREATED) {
                     existing.setStatus(CaseStatus.ASSIGNED);
@@ -678,18 +678,20 @@ public class Cases {
         }
     }
 
-    private void notifyOnCaseStatusChange(NotificationType notificationType, PromatCase promatCase)
+    private void notifyOnReviewerChanged(NotificationType notificationType, PromatCase promatCase)
             throws NotificationFactory.ValidateException {
-        if (promatCase.getId() != null) {
+        if (promatCase.getId() == null) {
             entityManager.flush();
         }
         Notification notification = NotificationFactory.getInstance().of(notificationType, promatCase);
         PromatMessage message = new PromatMessage()
-                .withPromatCase(promatCase)
+                .withCaseId(promatCase.getId())
                 .withMessageText(notification.getBodyText())
                 .withDirection(PromatMessage.Direction.EDITOR_TO_REVIEWER)
-                .withReviewer(promatCase.getReviewer())
-                .withEditor(promatCase.getEditor())
+                .withAuthor(
+                        PromatMessage.Author.fromPromatUser(promatCase.getEditor())
+                )
+                .withCreated(LocalDate.now())
                 .withIsRead(Boolean.FALSE);
         entityManager.persist(notification);
         entityManager.persist(message);

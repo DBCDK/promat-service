@@ -3,7 +3,7 @@ package dk.dbc.promat.service.dto;
 import dk.dbc.promat.service.persistence.PromatMessage;
 import java.util.Objects;
 
-public class MessageRequest implements Dto {
+public class MessageRequestDto implements Dto {
 
     private PromatMessage.Direction direction;
     private String messageText;
@@ -26,12 +26,12 @@ public class MessageRequest implements Dto {
         this.messageText = messageText;
     }
 
-    public MessageRequest withDirection(PromatMessage.Direction direction) {
+    public MessageRequestDto withDirection(PromatMessage.Direction direction) {
         this.direction = direction;
         return this;
     }
 
-    public MessageRequest withMessageText(String messageText) {
+    public MessageRequestDto withMessageText(String messageText) {
         this.messageText = messageText;
         return this;
     }
@@ -41,12 +41,12 @@ public class MessageRequest implements Dto {
         if (this == o) {
             return true;
         }
-        if (!(o instanceof MessageRequest)) {
+        if (!(o instanceof MessageRequestDto)) {
             return false;
         }
-        MessageRequest aMessageRequest = (MessageRequest) o;
-        return direction == aMessageRequest.direction &&
-                Objects.equals(messageText, aMessageRequest.messageText);
+        MessageRequestDto aMessageRequestDto = (MessageRequestDto) o;
+        return direction == aMessageRequestDto.direction &&
+                Objects.equals(messageText, aMessageRequestDto.messageText);
     }
 
     @Override
@@ -56,7 +56,7 @@ public class MessageRequest implements Dto {
 
     @Override
     public String toString() {
-        return "MessageRequest{" +
+        return "MessageRequestDto{" +
                 "direction=" + direction +
                 ", messageText='" + messageText + '\'' +
                 '}';

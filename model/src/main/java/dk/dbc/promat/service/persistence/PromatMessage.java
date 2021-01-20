@@ -1,21 +1,27 @@
 package dk.dbc.promat.service.persistence;
 
-import com.fasterxml.jackson.annotation.JsonFilter;
-import com.fasterxml.jackson.annotation.JsonIdentityInfo;
-import com.fasterxml.jackson.annotation.JsonIdentityReference;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import java.time.LocalDate;
 import java.util.Objects;
+import javax.persistence.Embeddable;
+import javax.persistence.Embedded;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.OneToOne;
+import javax.persistence.NamedQueries;
+import javax.persistence.NamedQuery;
 
+@NamedQueries({
+        @NamedQuery(
+                name = PromatMessage.GET_MESSAGES_FOR_CASE,
+                query = PromatMessage.GET_MESSAGES_FOR_CASE_QUERY
+        ),
+        @NamedQuery(
+                name = PromatMessage.UPDATE_READ_STATE,
+                query = PromatMessage.UPDATE_READ_STATE_QUERY
+        )})
 @Entity
 public class PromatMessage {
     public enum Direction {
@@ -23,20 +29,108 @@ public class PromatMessage {
         EDITOR_TO_REVIEWER
     }
 
+    @Embeddable
+    public static class Author {
+        Integer authorId;
+        String authorFirstname;
+        String authorLastname;
+
+        public Integer getAuthorId() {
+            return authorId;
+        }
+
+        public void setAuthorId(Integer authorId) {
+            this.authorId = authorId;
+        }
+
+        public String getAuthorFirstname() {
+            return authorFirstname;
+        }
+
+        public void setAuthorFirstname(String authorFirstname) {
+            this.authorFirstname = authorFirstname;
+        }
+
+        public String getAuthorLastname() {
+            return authorLastname;
+        }
+
+        public void setAuthorLastname(String authorLastname) {
+            this.authorLastname = authorLastname;
+        }
+
+        public Author withAuthorId(Integer authorId) {
+            this.authorId = authorId;
+            return this;
+        }
+
+        public Author withAuthorFirstname(String authorFirstname) {
+            this.authorFirstname = authorFirstname;
+            return this;
+        }
+
+        public Author withAuthorLastname(String authorLastname) {
+            this.authorLastname = authorLastname;
+            return this;
+        }
+
+        public static Author fromPromatUser(PromatUser user) {
+            if (user == null) {
+                return null;
+            }
+            return new Author()
+                    .withAuthorId(user.getId())
+                    .withAuthorFirstname(user.getFirstName())
+                    .withAuthorLastname(user.getLastName());
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) {
+                return true;
+            }
+            if (!(o instanceof Author)) {
+                return false;
+            }
+            Author author = (Author) o;
+            return Objects.equals(authorId, author.authorId) &&
+                    Objects.equals(authorFirstname, author.authorFirstname) &&
+                    Objects.equals(authorLastname, author.authorLastname);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(authorId, authorFirstname, authorLastname);
+        }
+
+        @Override
+        public String toString() {
+            return "Author{" +
+                    "authorId=" + authorId +
+                    ", authorFirstname='" + authorFirstname + '\'' +
+                    ", authorLastname='" + authorLastname + '\'' +
+                    '}';
+        }
+    }
+
     public static final String TABLE_NAME = "promatmessage";
+    public static final String GET_MESSAGES_FOR_CASE = "PromatMessage.getMessagesForCase";
+    public static final String GET_MESSAGES_FOR_CASE_QUERY =
+            "SELECT promatmessage FROM PromatMessage promatmessage WHERE promatmessage.caseId = :caseId";
+    public static final String UPDATE_READ_STATE = "PromatMessage.updateReadState";
+    public static final String UPDATE_READ_STATE_QUERY =
+            "UPDATE PromatMessage promatMessage SET promatMessage.isRead = :isRead " +
+                    "WHERE promatMessage.caseId = :caseId AND " +
+                    "promatMessage.direction = :direction";
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @OneToOne
-    private Reviewer reviewer;
+    @Embedded
+    protected Author author;
 
-    @OneToOne
-    private Editor editor;
-
-    @OneToOne
-    private PromatCase promatCase;
+    private Integer caseId;
 
     private String messageText;
 
@@ -53,30 +147,6 @@ public class PromatMessage {
 
     public void setId(Integer id) {
         this.id = id;
-    }
-
-    public Reviewer getReviewer() {
-        return reviewer;
-    }
-
-    public void setReviewer(Reviewer reviewer) {
-        this.reviewer = reviewer;
-    }
-
-    public Editor getEditor() {
-        return editor;
-    }
-
-    public void setEditor(Editor editor) {
-        this.editor = editor;
-    }
-
-    public PromatCase getPromatCase() {
-        return promatCase;
-    }
-
-    public void setPromatCase(PromatCase promatCase) {
-        this.promatCase = promatCase;
     }
 
     public String getMessageText() {
@@ -111,19 +181,12 @@ public class PromatMessage {
         this.direction = direction;
     }
 
-    public PromatMessage withReviewer(Reviewer reviewer) {
-        this.reviewer = reviewer;
-        return this;
+    public Author getAuthor() {
+        return author;
     }
 
-    public PromatMessage withEditor(Editor editor) {
-        this.editor = editor;
-        return this;
-    }
-
-    public PromatMessage withPromatCase(PromatCase promatCase) {
-        this.promatCase = promatCase;
-        return this;
+    public void setAuthor(Author author) {
+        this.author = author;
     }
 
     public PromatMessage withMessageText(String messageText) {
@@ -145,6 +208,17 @@ public class PromatMessage {
         return this;
     }
 
+    public PromatMessage withAuthor(Author author) {
+        this.author = author;
+        return this;
+    }
+
+    public PromatMessage withCaseId(Integer caseId) {
+        this.caseId = caseId;
+        return this;
+    }
+
+
     @Override
     public boolean equals(Object o) {
         if (this == o) {
@@ -155,9 +229,8 @@ public class PromatMessage {
         }
         PromatMessage aMessage = (PromatMessage) o;
         return Objects.equals(id, aMessage.id) &&
-                Objects.equals(reviewer, aMessage.reviewer) &&
-                Objects.equals(editor, aMessage.editor) &&
-                Objects.equals(promatCase, aMessage.promatCase) &&
+                Objects.equals(author, aMessage.author) &&
+                Objects.equals(caseId, aMessage.caseId) &&
                 Objects.equals(messageText, aMessage.messageText) &&
                 Objects.equals(created, aMessage.created) &&
                 Objects.equals(isRead, aMessage.isRead) &&
@@ -166,16 +239,15 @@ public class PromatMessage {
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, reviewer, editor, promatCase, messageText, created, isRead, direction);
+        return Objects.hash(id, author, caseId, messageText, created, isRead, direction);
     }
 
     @Override
     public String toString() {
         return "PromatMessage{" +
                 "id=" + id +
-                ", reviewer=" + reviewer +
-                ", editor=" + editor +
-                ", promatCase=" + promatCase +
+                ", author=" + author +
+                ", caseId=" + caseId +
                 ", messageText='" + messageText + '\'' +
                 ", created=" + created +
                 ", isRead=" + isRead +
