@@ -12,8 +12,10 @@ import dk.dbc.promat.service.dto.GroupedPaymentList;
 import dk.dbc.promat.service.dto.PaymentList;
 import dk.dbc.promat.service.persistence.CaseStatus;
 import dk.dbc.promat.service.persistence.PromatCase;
+import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestMethodOrder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,15 +29,18 @@ import java.util.stream.Collectors;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class PaymentsIT  extends ContainerTest {
     private static final Logger LOGGER = LoggerFactory.getLogger(PaymentsIT.class);
 
     // This test needs to run as the very first test to ensure that attempt at
-    // executing payment fails and rollsback
+    // executing payment fails (later tests will check that changes made before
+    // payment was completed, has rolled back)
     @Test
     @Order(1)
     public void TestExecutePaymentShouldThrow() {
-        //Todo: Check that payment fails (and rolls back)
+        Response response = getResponse("v1/api/payments/execute");
+        assertThat("status code", response.getStatus(), is(500));
     }
 
     // This test needs to run as the second test since it modifies the preloaded
@@ -62,7 +67,7 @@ public class PaymentsIT  extends ContainerTest {
         assertThat("status code", response.getStatus(), is(200));
 
         String csv = response.readEntity(String.class);
-        assertThat("number of line", csv.lines().count(), is(20L));  // 1 header + 19 paymentlines
+        assertThat("number of lines", csv.lines().count(), is(20L));  // 1 header + 19 paymentlines
     }
 
     // This test needs to run after test that depends on the state of the preloaded cases
@@ -84,7 +89,7 @@ public class PaymentsIT  extends ContainerTest {
         assertThat("status code", response.getStatus(), is(200));
 
         String csv = response.readEntity(String.class);
-        assertThat("number of line", csv.lines().count(), is(20L));  // 1 header + 19 paymentlines
+        assertThat("number of lines", csv.lines().count(), is(20L));  // 1 header + 19 paymentlines
 
         verifyPaymentCsv(csv);
     }
@@ -92,17 +97,34 @@ public class PaymentsIT  extends ContainerTest {
     // This test needs to run after test that checks the pending-payments list
     @Order(4)
     @Test
-    public void TestExecutePayment() {
-        //Todo: Execute payment and make sure there is no more pending payments
+    public void TestExecutePayment() throws PromatServiceConnectorException {
+
+        // Pay all pending payments
+        Response response = getResponse("v1/api/payments/execute");
+        assertThat("status code", response.getStatus(), is(200));
+
+        String csv = response.readEntity(String.class);
+        assertThat("number of lines", csv.lines().count(), is(20L));  // 1 header + 19 paymentlines
+
+        // Now check that all pending payments has been payed
+        response = getResponse("v1/api/payments/preview", Map.of("format","CSV"));
+        assertThat("status code", response.getStatus(), is(200));
+
+        csv = response.readEntity(String.class);
+        assertThat("number of line", csv.lines().count(), is(1L));  // 1 header
+
+        // And finally, check that case 1060 has been changed from status PENDING_CLOSE to CLOSED
+        PromatCase fetched = promatServiceConnector.getCase(1060);
+        assertThat("case has status CLOSED", fetched.getStatus(), is(CaseStatus.CLOSED));
     }
 
     @Order(5)
     @Test
     public void TestGetPreviousPayment() {
         //Todo: Get the list of previous payments and check that there is 2..
-        //Todo: Get the payment executed in TestExecutePayment()
+        //Todo: Get the payment executed in TestExecutePayment() and verify that it is unchanged
     }
-    
+
     private void verifyPaymentCsv(String csv) {
         LOGGER.info("Received CSV output is:\n{}", csv);
 

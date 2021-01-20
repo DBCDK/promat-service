@@ -104,6 +104,7 @@ public class Reviewers {
                     .withAccepts(reviewerRequest.getAccepts())
                     .withCapacity(reviewerRequest.getCapacity());
 
+
             entity.setCulrId(culrId);
 
             entityManager.persist(entity);

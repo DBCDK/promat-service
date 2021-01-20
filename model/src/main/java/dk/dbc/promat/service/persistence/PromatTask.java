@@ -16,6 +16,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 
@@ -40,7 +41,7 @@ public class PromatTask {
 
     private LocalDate approved;
 
-    private LocalDate payed;
+    private LocalDateTime payed;
 
     private String data;
 
@@ -96,11 +97,11 @@ public class PromatTask {
         this.approved = approved;
     }
 
-    public LocalDate getPayed() {
+    public LocalDateTime getPayed() {
         return payed;
     }
 
-    public void setPayed(LocalDate payed) {
+    public void setPayed(LocalDateTime payed) {
         this.payed = payed;
     }
 
@@ -150,7 +151,7 @@ public class PromatTask {
         return this;
     }
 
-    public PromatTask withPayed(LocalDate payed) {
+    public PromatTask withPayed(LocalDateTime payed) {
         this.payed = payed;
         return this;
     }

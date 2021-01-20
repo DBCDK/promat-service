@@ -30,8 +30,8 @@ import javax.persistence.TypedQuery;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -55,7 +55,7 @@ public class Payments {
     public enum PaymentsFormat {
         CSV,
         PAYMENT_LIST,
-        PAYMENT_LIST_BY_USER, //Todo: May be superfluous, waiting on ux/frontend
+        PAYMENT_LIST_BY_USER, //Todo: updated 2021-01-20: May be superfluous, waiting on ux/frontend
         PAYMENT_LIST_BY_FAUST //Todo: ...^^
     }
 
@@ -71,9 +71,17 @@ public class Payments {
             paymentList = getPendingPayments(false);
             LOGGER.info("Has {} pending payments", paymentList.getNumFound());
         }
+        catch(ServiceErrorException se) {
+            LOGGER.error("ServiceErrorException thrown while fetching the payment list: {}", se.getServiceErrorDto().getDetails());
+            return Response.status(se.getHttpStatus())
+                    .header("Content-Type", "application/json")
+                    .entity(se.getServiceErrorDto()).build();
+        }
         catch(Exception e) {
             LOGGER.error("Unexpected exception while retrieving payments: {}", e.getMessage());
-            return ServiceErrorDto.Failed("Unexpected exception while retrieving payments");
+            return Response.status(500)
+                    .header("Content-Type", "application/json")
+                    .entity(e.getMessage()).build();
         }
 
         try {
@@ -81,7 +89,7 @@ public class Payments {
                 return Response.status(200)
                         .header("Pragma", "no-cache")
                         .header("Content-Type", "application/csv")
-                        .header("Content-Disposition", "attachment; filename=" + getPaymentsCsvFilename("promat_payments_PREVIEW"))
+                        .header("Content-Disposition", "attachment; filename=" + getPaymentsCsvFilename("promat_payments_PREVIEW.csv"))
                         .entity(convertPaymentListToCsv(paymentList))
                         .build();
             } else if(format == PaymentsFormat.PAYMENT_LIST) {
@@ -116,6 +124,39 @@ public class Payments {
             LOGGER.error("Unexpected exception while building payments list: {}", e.getMessage());
             return ServiceErrorDto.Failed("Unexpected exception while building payments list");
         }
+    }
+
+    @GET
+    @Path("payments/execute")
+    public Response execute() {
+        LOGGER.info("payments/execute (GET)");
+
+        PaymentList paymentList;
+        try {
+            paymentList = getPendingPayments(true);
+            LOGGER.info("Has {} payments", paymentList.getNumFound());
+        } catch(ServiceErrorException se) {
+            LOGGER.error("ServiceErrorException thrown while executing payments: {}", se.getServiceErrorDto().getDetails());
+            throw new WebApplicationException(se,
+                    Response.status(se.getHttpStatus())
+                            .header("Content-Type", "application/json")
+                            .entity(se.getServiceErrorDto()).build());
+
+        } catch(Exception e) {
+            LOGGER.error("Unexpected exception thrown while executing payments: {}", e.getMessage());
+            throw new WebApplicationException(e,
+                    Response.status(500)
+                            .header("Content-Type", "application/json")
+                            .entity(e.getMessage()).build());
+        }
+
+        return Response.status(200)
+                .header("Pragma", "no-cache")
+                .header("Content-Type", "application/csv")
+                .header("Content-Disposition", "attachment; filename=" +
+                        getPaymentsCsvFilename(String.format("promat_payments_%s.csv", paymentList.getStamp())))
+                .entity(convertPaymentListToCsv(paymentList))
+                .build();
     }
 
     private GroupedPaymentList groupPaymentsByUser(PaymentList paymentList) {
@@ -169,7 +210,7 @@ public class Payments {
                         .map(payment -> String.format("%s;%s;%s;%d;%s;%s\n",
                                 LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd-MM-yyyy")),
                                 payment.getPayCode(),
-                                payment.getPayCategory().value(),
+                                payment.getPayCategoryCode(),
                                 payment.getCount(),
                                 payment.getText(),
                                 payment.getReviewer().getFirstName() + " " + payment.getReviewer().getLastName()))
@@ -187,6 +228,9 @@ public class Payments {
 
         final TypedQuery<PromatCase> query = entityManager.createNamedQuery(
                 PromatCase.GET_CASES_FOR_PAYMENT_NAME, PromatCase.class);
+
+        PaymentList paymentList = new PaymentList()
+                .withStamp(LocalDateTime.now());
 
         List<Payment> payments = new ArrayList<>();
         for (PromatCase promatCase : query.getResultList()) {
@@ -229,6 +273,11 @@ public class Payments {
                                 casePayCategories.add(task.getPayCategory());
                             }
                             break;
+                    }
+
+                    if (execute) {
+                        LOGGER.info("Task {} marked as payed with stamp {}", task.getId(), paymentList.getStamp());
+                        task.setPayed(paymentList.getStamp());
                     }
                 }
 
@@ -273,10 +322,10 @@ public class Payments {
             }
         }
 
-        return new PaymentList()
-                .withStamp(LocalDate.now())
-                .withNumFound(payments.size())
-                .withPayments(payments);
+        // Add the payments and return the completed list
+        paymentList.setNumFound(paymentList.getNumFound());
+        paymentList.setPayments(payments);
+        return paymentList;
     }
 
     private String getTextCategory(PayCategory category) {

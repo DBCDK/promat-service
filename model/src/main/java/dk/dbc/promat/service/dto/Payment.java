@@ -17,28 +17,30 @@ import java.time.LocalDate;
 
 public class Payment {
 
-    String payCode;
+    private String payCode;
 
-    PayCategory payCategory;
+    private PayCategory payCategory;
 
-    int count;
+    private int count;
 
-    String text;
+    private String text;
 
     @JsonView({CaseView.Summary.class})
-    Reviewer reviewer;
+    private Reviewer reviewer;
 
-    String primaryFaust;
+    private String primaryFaust;
 
-    String relatedFausts;
+    private String relatedFausts;
 
-    String title;
+    private String title;
 
-    String weekCode;
+    private String weekCode;
 
-    MaterialType materialType;
+    private MaterialType materialType;
 
-    LocalDate deadline;
+    private LocalDate deadline;
+
+    private String payCategoryCode;
 
     public String getPayCode() {
         return payCode;
@@ -54,6 +56,7 @@ public class Payment {
 
     public void setPayCategory(PayCategory payCategory) {
         this.payCategory = payCategory;
+        this.payCategoryCode = payCategory.value();
     }
 
     public int getCount() {
@@ -128,6 +131,10 @@ public class Payment {
         this.deadline = deadline;
     }
 
+    public String getPayCategoryCode() {
+        return payCategoryCode;
+    }
+
     public Payment withPayCode(String payCode) {
         this.payCode = payCode;
         return this;
@@ -135,6 +142,7 @@ public class Payment {
 
     public Payment withPayCategory(PayCategory payCategory) {
         this.payCategory = payCategory;
+        this.payCategoryCode = payCategory.value();
         return this;
     }
 
