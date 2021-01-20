@@ -1515,15 +1515,8 @@ components:
         - 'MOVIE_NON_FICTION_GR1'
         - 'MOVIE_NON_FICTION_GR2'
         - 'MOVIE_NON_FICTION_GR3'
-        - 'NO_REVIEW'
-        - 'MUSIC_FEE'
-        - 'BKM'
-        - 'METAKOMPAS'
-        - 'BUGGI'
-        - 'EXPRESS'
       description: |
         Enum describing the type of task
-        * NONE = No tasktype set (should not be used)
         * GROUP_1_LESS_THAN_100_PAGES = Books with less than 100 pages
         * GROUP_2_100_UPTO_199_PAGES = Books with 100 to 199 pages
         * GROUP_3_200_UPTO_499_PAGES = Books with 200 to 499 pages
@@ -1536,12 +1529,6 @@ components:
         * MOVIE_NON_FICTION_GR1 = Non-fiction movie, group 1
         * MOVIE_NON_FICTION_GR2 = Non-fiction movie, group 2
         * MOVIE_NON_FICTION_GR3 = Non-fiction movie, group 3
-        * NO_REVIEW = Note but no review
-        * MUSIC_FEE = Music (assumed obsolete)
-        * BKM = Decide if this material is relevant for libraries
-        * METAKOMPAS = Special topics for Metakompasset
-        * BUGGI = Special topics for Buggi
-        * EXPRESS = This case is urgent
 
     TaskFieldType:
       type: string
