@@ -48,7 +48,7 @@ public abstract class PromatUser {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @JsonView({CaseView.Identity.class, CaseView.Summary.class})
+    @JsonView({CaseView.Summary.class})
     protected Integer id;
 
     // update/insert is managed by discriminator mechanics
@@ -63,10 +63,10 @@ public abstract class PromatUser {
     @JsonView({CaseView.Case.class})
     protected String culrId;
 
-    @JsonView({CaseView.Identity.class, CaseView.Export.class, CaseView.Summary.class})
+    @JsonView({CaseView.Export.class, CaseView.Summary.class})
     protected String firstName;
 
-    @JsonView({CaseView.Identity.class, CaseView.Export.class, CaseView.Summary.class})
+    @JsonView({CaseView.Export.class, CaseView.Summary.class})
     protected String lastName;
 
     @JsonView({CaseView.Case.class})

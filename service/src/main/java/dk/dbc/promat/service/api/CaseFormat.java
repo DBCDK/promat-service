@@ -12,8 +12,7 @@ import javax.ws.rs.WebApplicationException;
 
 public enum CaseFormat {
     EXPORT(CaseView.Export.class),
-    SUMMARY(CaseView.Summary.class),
-    IDENTITY(CaseView.Identity.class);
+    SUMMARY(CaseView.Summary.class);
 
     private Class<?> viewClass;
 
