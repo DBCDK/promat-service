@@ -49,7 +49,7 @@ public class RendererTest {
                 "<br/>\n" +
                 "Materialet er på vej til dig i posten.</p>\n" +
                 "<br/>\n" +
-                "<p>Med velig hilsen,<br/>\n" +
+                "<p>Med venlig hilsen,<br/>\n" +
                 "ProMat redaktionen\n" +
                 "</p>"));
 

@@ -11,6 +11,6 @@ Du er blevet bedt om at lave anmeldelse af følgende materiale:
 <br/>
 Materialet er på vej til dig i posten.</p>
 <br/>
-<p>Med velig hilsen,<br/>
+<p>Med venlig hilsen,<br/>
 ProMat redaktionen
 </p>
