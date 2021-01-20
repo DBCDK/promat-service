@@ -8,11 +8,42 @@ package dk.dbc.promat.service.dto;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import dk.dbc.promat.service.persistence.CaseStatus;
 import dk.dbc.promat.service.persistence.MaterialType;
+import dk.dbc.promat.service.persistence.PromatCase;
 
 import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class CaseRequestDto implements Dto {
+public class CaseRequest implements Dto {
+
+    public CaseRequest() {}
+
+    public CaseRequest(PromatCase promatCase) {
+        this.author = promatCase.getAuthor();
+        if (promatCase.getCreator() != null) {
+            this.creator = promatCase.getCreator().getId();
+        }
+        this.deadline = promatCase.getDeadline().toString();
+        this.details = promatCase.getDetails();
+        if (promatCase.getEditor() != null) {
+            this.editor = promatCase.getEditor().getId();
+        }
+        this.materialType = promatCase.getMaterialType();
+        this.primaryFaust = promatCase.getPrimaryFaust();
+        this.publisher = promatCase.getPublisher();
+        this.recordId = promatCase.getRecordId();
+        this.relatedFausts = promatCase.getRelatedFausts();
+        if (promatCase.getReviewer() != null) {
+            this.reviewer = promatCase.getReviewer().getId();
+        }
+        this.status = promatCase.getStatus();
+        if (promatCase.getSubjects() != null) {
+            this.subjects = promatCase.getSubjects().stream().map(subject -> subject.getId()).collect(Collectors.toList());
+        }
+        this.title = promatCase.getTitle();
+        this.weekCode = promatCase.getWeekCode();
+    }
 
     private String title;
 
@@ -176,83 +207,83 @@ public class CaseRequestDto implements Dto {
         this.publisher = publisher;
     }
 
-    public CaseRequestDto withTitle(String title) {
+    public CaseRequest withTitle(String title) {
         this.title = title;
         return this;
     }
 
-    public CaseRequestDto withDetails(String details) {
+    public CaseRequest withDetails(String details) {
         this.details = details;
         return this;
     }
 
-    public CaseRequestDto withPrimaryFaust(String primaryFaust) {
+    public CaseRequest withPrimaryFaust(String primaryFaust) {
         this.primaryFaust = primaryFaust;
         return this;
     }
 
-    public CaseRequestDto withRelatedFausts(List<String> relatedFausts)
+    public CaseRequest withRelatedFausts(List<String> relatedFausts)
     {
         this.relatedFausts = relatedFausts;
         return this;
     }
 
-    public CaseRequestDto withReviewer(Integer reviewer) {
+    public CaseRequest withReviewer(Integer reviewer) {
         this.reviewer = reviewer;
         return this;
     }
 
-    public CaseRequestDto withEditor(Integer editor) {
+    public CaseRequest withEditor(Integer editor) {
         this.editor = editor;
         return this;
     }
 
-    public CaseRequestDto withSubjects(List<Integer> subjects) {
+    public CaseRequest withSubjects(List<Integer> subjects) {
         this.subjects = subjects;
         return this;
     }
 
-    public CaseRequestDto withDeadline(String deadline) {
+    public CaseRequest withDeadline(String deadline) {
         this.deadline = deadline;
         return this;
     }
 
-    public CaseRequestDto withAssigned(String assigned) {
+    public CaseRequest withAssigned(String assigned) {
         this.assigned = assigned;
         return this;
     }
 
-    public CaseRequestDto withStatus(CaseStatus status) {
+    public CaseRequest withStatus(CaseStatus status) {
         this.status = status;
         return this;
     }
 
-    public CaseRequestDto withMaterialType(MaterialType materialType) {
+    public CaseRequest withMaterialType(MaterialType materialType) {
         this.materialType = materialType;
         return this;
     }
 
-    public CaseRequestDto withTasks(List<TaskDto> tasks) {
+    public CaseRequest withTasks(List<TaskDto> tasks) {
         this.tasks = tasks;
         return this;
     }
 
-    public CaseRequestDto withWeekCode(String weekCode) {
+    public CaseRequest withWeekCode(String weekCode) {
         this.weekCode = weekCode;
         return this;
     }
 
-    public CaseRequestDto withAuthor(String author) {
+    public CaseRequest withAuthor(String author) {
         this.author = author;
         return this;
     }
 
-    public CaseRequestDto withCreator(Integer creator) {
+    public CaseRequest withCreator(Integer creator) {
         this.creator = creator;
         return this;
     }
 
-    public CaseRequestDto withPublisher(String publisher) {
+    public CaseRequest withPublisher(String publisher) {
         this.publisher = publisher;
         return this;
     }
@@ -265,7 +296,7 @@ public class CaseRequestDto implements Dto {
         this.recordId = recordId;
     }
 
-    public CaseRequestDto withRecordId(String recordId) {
+    public CaseRequest withRecordId(String recordId) {
         setRecordId(recordId);
         return this;
     }
@@ -295,6 +326,7 @@ public class CaseRequestDto implements Dto {
 
     @Override
     public boolean equals(Object o) {
+<<<<<<< HEAD:model/src/main/java/dk/dbc/promat/service/dto/CaseRequestDto.java
         if (this == o) {
             return true;
         }
@@ -353,6 +385,28 @@ public class CaseRequestDto implements Dto {
             return false;
         }
         return recordId != null ? recordId.equals(that.recordId) : that.recordId == null;
+=======
+        if(this == o) return true;
+        if(o == null || getClass() != o.getClass()) return false;
+        CaseRequest that = (CaseRequest) o;
+        return title.equals(that.title) &&
+                Objects.equals(details, that.details) &&
+                primaryFaust.equals(that.primaryFaust) &&
+                Objects.equals(relatedFausts, that.relatedFausts) &&
+                Objects.equals(reviewer, that.reviewer) &&
+                Objects.equals(editor, that.editor) &&
+                Objects.equals(subjects, that.subjects) &&
+                Objects.equals(deadline, that.deadline) &&
+                Objects.equals(assigned, that.assigned) &&
+                status == that.status &&
+                materialType == that.materialType &&
+                Objects.equals(tasks, that.tasks) &&
+                Objects.equals(weekCode, that.weekCode) &&
+                Objects.equals(author, that.author) &&
+                Objects.equals(creator, that.creator) &&
+                Objects.equals(publisher, that.publisher) &&
+                Objects.equals(recordId, that.recordId);
+>>>>>>> Prepare testing of payment:model/src/main/java/dk/dbc/promat/service/dto/CaseRequest.java
     }
 
     @Override

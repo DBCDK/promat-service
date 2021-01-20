@@ -9,7 +9,7 @@ import dk.dbc.httpclient.FailSafeHttpClient;
 import dk.dbc.httpclient.HttpGet;
 import dk.dbc.httpclient.HttpPost;
 import dk.dbc.invariant.InvariantUtil;
-import dk.dbc.promat.service.dto.CaseRequestDto;
+import dk.dbc.promat.service.dto.CaseRequest;
 import dk.dbc.promat.service.dto.CaseSummaryList;
 import dk.dbc.promat.service.dto.CriteriaOperator;
 import dk.dbc.promat.service.dto.ServiceErrorDto;
@@ -88,12 +88,27 @@ public class PromatServiceConnector {
      * @return updated case
      * @throws PromatServiceConnectorException on unexpected failure for update operation
      */
-    public PromatCase updateCase(int caseID, CaseRequestDto caseRequest) throws PromatServiceConnectorException {
+    public PromatCase updateCase(int caseID, CaseRequest caseRequest) throws PromatServiceConnectorException {
         final HttpPost httpPost = new HttpPost(failSafeHttpClient)
                 .withBaseUrl(baseUrl)
                 .withPathElements("cases", String.valueOf(caseID))
                 .withJsonData(caseRequest);
         final Response response = httpPost.execute();
+        assertResponseStatus(response, Response.Status.OK);
+        return readResponseEntity(response, PromatCase.class);
+    }
+
+    /**
+     * Gets an existing case
+     * @param caseID case id
+     * @return case
+     * @throws PromatServiceConnectorException on unexpected failure for get operation
+     */
+    public PromatCase getCase(int caseID) throws PromatServiceConnectorException {
+        final HttpGet httpGet = new HttpGet(failSafeHttpClient)
+                .withBaseUrl(baseUrl)
+                .withPathElements("cases", String.valueOf(caseID));
+        final Response response = httpGet.execute();
         assertResponseStatus(response, Response.Status.OK);
         return readResponseEntity(response, PromatCase.class);
     }

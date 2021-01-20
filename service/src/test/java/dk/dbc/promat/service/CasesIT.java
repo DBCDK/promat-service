@@ -8,7 +8,7 @@ package dk.dbc.promat.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import dk.dbc.promat.service.connector.PromatServiceConnector;
 import dk.dbc.promat.service.connector.PromatServiceConnectorException;
-import dk.dbc.promat.service.dto.CaseRequestDto;
+import dk.dbc.promat.service.dto.CaseRequest;
 import dk.dbc.promat.service.dto.CaseSummaryList;
 import dk.dbc.promat.service.dto.CriteriaOperator;
 import dk.dbc.promat.service.dto.TaskDto;
@@ -16,7 +16,6 @@ import dk.dbc.promat.service.persistence.PayCategory;
 import dk.dbc.promat.service.persistence.PromatCase;
 import dk.dbc.promat.service.persistence.CaseStatus;
 import dk.dbc.promat.service.persistence.MaterialType;
-import dk.dbc.promat.service.persistence.PromatCase;
 import dk.dbc.promat.service.persistence.PromatTask;
 import dk.dbc.promat.service.persistence.Subject;
 import dk.dbc.promat.service.persistence.TaskFieldType;
@@ -43,7 +42,7 @@ public class CasesIT extends ContainerTest {
     @Test
     public void testCreateCase() throws JsonProcessingException {
 
-        CaseRequestDto dto = new CaseRequestDto();
+        CaseRequest dto = new CaseRequest();
 
         // Empty dto
         assertThat("status code", postResponse("v1/api/cases", dto).getStatus(), is(400));
@@ -77,7 +76,7 @@ public class CasesIT extends ContainerTest {
     public void testCreateCaseForExistingPrimaryFaust() {
 
         // New case with primary faust 001111 which already exists
-        CaseRequestDto dto = new CaseRequestDto()
+        CaseRequest dto = new CaseRequest()
                 .withPrimaryFaust("001111")
                 .withRelatedFausts(Arrays.asList(new String[] {"002222", "003333"}))
                 .withTitle("Title for 001111")
@@ -107,7 +106,7 @@ public class CasesIT extends ContainerTest {
         // Note: This test depends on subjects with id 3 and 4, and reviewer with id 1
         // being injected by the dumpfiles also used by the reviewer and subject tests
 
-        CaseRequestDto dto = new CaseRequestDto()
+        CaseRequest dto = new CaseRequest()
                 .withPrimaryFaust("3001111")
                 .withTitle("Title for 3001111")
                 .withMaterialType(MaterialType.BOOK)
@@ -146,7 +145,7 @@ public class CasesIT extends ContainerTest {
     @Test
     public void testCreateCaseWithTrivialFields() throws JsonProcessingException {
 
-        CaseRequestDto dto = new CaseRequestDto()
+        CaseRequest dto = new CaseRequest()
                 .withPrimaryFaust("4001111")
                 .withTitle("Title for 4001111")
                 .withDetails("Details for 4001111")
@@ -194,7 +193,7 @@ public class CasesIT extends ContainerTest {
     public void testCreateCaseWithTasks() throws JsonProcessingException {
 
         // Create case
-        CaseRequestDto dto = new CaseRequestDto()
+        CaseRequest dto = new CaseRequest()
                 .withPrimaryFaust("6001111")
                 .withTitle("Title for 6001111")
                 .withDetails("Details for 6001111")
@@ -265,7 +264,7 @@ public class CasesIT extends ContainerTest {
     public void testCreateCaseWithInvalidStatus() {
 
         // Create case with status ASSIGNED but no reviewer given
-        CaseRequestDto dto = new CaseRequestDto()
+        CaseRequest dto = new CaseRequest()
                 .withPrimaryFaust("7001111")
                 .withTitle("Title for 7001111")
                 .withDetails("Details for 7001111")
@@ -525,37 +524,37 @@ public class CasesIT extends ContainerTest {
     public void testEditCase() throws JsonProcessingException, PromatServiceConnectorException {
 
         // Update of unknown case - should return 404 NOT FOUND
-        CaseRequestDto dto = new CaseRequestDto();
+        CaseRequest dto = new CaseRequest();
         Response response = postResponse("v1/api/cases/9876", dto);
         assertThat("status code", response.getStatus(), is(404));
 
         // Attemtp to set field 'assigned' - should return 400 BAD REQUEST
-        dto = new CaseRequestDto().withAssigned("2020-11-18");
+        dto = new CaseRequest().withAssigned("2020-11-18");
         response = postResponse("v1/api/cases/1", dto);
         assertThat("status code", response.getStatus(), is(400));
 
         // Attemtp to set field 'status' - should return 400 BAD REQUEST
-        dto = new CaseRequestDto().withStatus(CaseStatus.ASSIGNED);
+        dto = new CaseRequest().withStatus(CaseStatus.ASSIGNED);
         response = postResponse("v1/api/cases/1", dto);
         assertThat("status code", response.getStatus(), is(400));
 
         // Attemtp to set field 'reviewer' with non existing reviewer - should return 400 BAD REQUEST
-        dto = new CaseRequestDto().withReviewer(9999);
+        dto = new CaseRequest().withReviewer(9999);
         response = postResponse("v1/api/cases/1", dto);
         assertThat("status code", response.getStatus(), is(400));
 
         // Attemtp to set field 'editor' with non existing editor - should return 400 BAD REQUEST
-        dto = new CaseRequestDto().withEditor(9999);
+        dto = new CaseRequest().withEditor(9999);
         response = postResponse("v1/api/cases/1", dto);
         assertThat("status code", response.getStatus(), is(400));
 
         // Attemtp to set field 'subject' with non existing subject - should return 400 BAD REQUEST
-        dto = new CaseRequestDto().withSubjects(Arrays.asList(9999));
+        dto = new CaseRequest().withSubjects(Arrays.asList(9999));
         response = postResponse("v1/api/cases/1", dto);
         assertThat("status code", response.getStatus(), is(400));
 
         // Create a new case
-        dto = new CaseRequestDto()
+        dto = new CaseRequest()
                 .withTitle("Title for 8001111")
                 .withDetails("Details for 8001111")
                 .withPrimaryFaust("8001111")
@@ -578,7 +577,7 @@ public class CasesIT extends ContainerTest {
         PromatCase created = mapper.readValue(response.readEntity(String.class), PromatCase.class);
 
         // Update case - should return 200 OK
-        dto = new CaseRequestDto()
+        dto = new CaseRequest()
                 .withTitle("New title for 8001111")
                 .withDetails("New details for 8001111")
                 .withPrimaryFaust("8002222")
@@ -674,7 +673,7 @@ public class CasesIT extends ContainerTest {
 
     @Test
     public void testCreateWithFieldsCreatorAuthorPublisherAndWeekcode() throws JsonProcessingException {
-        CaseRequestDto dto = new CaseRequestDto()
+        CaseRequest dto = new CaseRequest()
                 .withPrimaryFaust("9001211")
                 .withTitle("Title for 9001211")
                 .withDetails("Details for 9001211")
@@ -713,7 +712,7 @@ public class CasesIT extends ContainerTest {
     public void testCreateCaseWithTasksWithMissingFields() throws JsonProcessingException {
 
         // Create case without tasktype and taskfieldtype
-        CaseRequestDto dto = new CaseRequestDto()
+        CaseRequest dto = new CaseRequest()
                 .withPrimaryFaust("9001111")
                 .withTitle("Title for 9001111")
                 .withDetails("Details for 9001111")
@@ -725,7 +724,7 @@ public class CasesIT extends ContainerTest {
         assertThat("status code", postResponse("v1/api/cases", dto).getStatus(), is(400));
 
         // Create case without taskfieldtype
-        dto = new CaseRequestDto()
+        dto = new CaseRequest()
                 .withPrimaryFaust("9001111")
                 .withTitle("Title for 9001111")
                 .withDetails("Details for 9001111")
@@ -738,7 +737,7 @@ public class CasesIT extends ContainerTest {
         assertThat("status code", postResponse("v1/api/cases", dto).getStatus(), is(400));
 
         // Create case with tasktype and taskfieldtype - should succeed now
-        dto = new CaseRequestDto()
+        dto = new CaseRequest()
                 .withPrimaryFaust("9001111")
                 .withTitle("Title for 9001111")
                 .withDetails("Details for 9001111")
@@ -756,7 +755,7 @@ public class CasesIT extends ContainerTest {
     public void testAddFirstTask() throws JsonProcessingException {
 
         // Create new case
-        CaseRequestDto dto = new CaseRequestDto()
+        CaseRequest dto = new CaseRequest()
                 .withPrimaryFaust("12001111")
                 .withTitle("Title for 12001111")
                 .withDetails("Details for 12001111")
@@ -802,7 +801,7 @@ public class CasesIT extends ContainerTest {
     public void testAddNextTask() throws JsonProcessingException {
 
         // Create new case
-        CaseRequestDto dto = new CaseRequestDto()
+        CaseRequest dto = new CaseRequest()
                 .withPrimaryFaust("13001111")
                 .withTitle("Title for 13001111")
                 .withDetails("Details for 13001111")
@@ -834,7 +833,7 @@ public class CasesIT extends ContainerTest {
     public void testAddTaskWithFaustInUse() throws JsonProcessingException {
 
         // Create case 1
-        CaseRequestDto dto = new CaseRequestDto()
+        CaseRequest dto = new CaseRequest()
                 .withPrimaryFaust("14001111")
                 .withRelatedFausts(Arrays.asList("14002222"))
                 .withTitle("Title for 14001111")
@@ -850,7 +849,7 @@ public class CasesIT extends ContainerTest {
         assertThat("status code", response.getStatus(), is(201));
 
         // Create case 2
-        dto = new CaseRequestDto()
+        dto = new CaseRequest()
                 .withPrimaryFaust("15001111")
                 .withRelatedFausts(Arrays.asList("15002222"))
                 .withTitle("Title for 15001111")
@@ -890,7 +889,7 @@ public class CasesIT extends ContainerTest {
     public void testAddTaskWithMissingFields() throws JsonProcessingException {
 
         // Create new case
-        CaseRequestDto dto = new CaseRequestDto()
+        CaseRequest dto = new CaseRequest()
                 .withPrimaryFaust("16001111")
                 .withTitle("Title for 16001111")
                 .withDetails("Details for 16001111")
@@ -918,7 +917,7 @@ public class CasesIT extends ContainerTest {
     public void testCreateCaseWithTaskWithUsedFaust() {
 
         // Create case 1
-        CaseRequestDto dto = new CaseRequestDto()
+        CaseRequest dto = new CaseRequest()
                 .withPrimaryFaust("17001111")
                 .withRelatedFausts(Arrays.asList("17002222"))
                 .withTitle("Title for 17001111")
@@ -935,7 +934,7 @@ public class CasesIT extends ContainerTest {
         assertThat("status code", response.getStatus(), is(201));
 
         // Create case 2
-        dto = new CaseRequestDto()
+        dto = new CaseRequest()
                 .withPrimaryFaust("18001111")
                 .withRelatedFausts(Arrays.asList("18002222"))
                 .withTitle("Title for 18001111")

@@ -321,3 +321,28 @@ values (1150, 1151),
        (1150, 1155),
        (1150, 1156),
        (1150, 1157);
+
+-- Case 17: INVALID
+-- This construct is highly unlikely, but it triggers an exception to be thrown while
+-- building the paymentlist, which could happen for other reasons.. And we want to
+-- check exception and transaction handling
+insert into promatcase(id, title, details, primaryFaust, relatedFausts, reviewer_id, editor_id, created, deadline, assigned, status, materialType)
+values (1160, 'Case 17', 'Details', '1001160', '[1001161,1001162]', NULL, 10, '2021-01-13', '2021-02-13', '2021-01-13', 'APPROVED', 'MOVIE');
+
+insert into promattask(id, tasktype, taskfieldtype, created, paycategory, approved, payed, data, targetFausts)
+values  (1161, 'MOVIES_GR_2', 'BRIEF',          '2021-01-13', 'BRIEF',       NULL,         NULL, 'data', NULL),
+        (1162, 'MOVIES_GR_2', 'DESCRIPTION',    '2021-01-13', 'MOVIES_GR_2', NULL,         NULL, 'data', NULL),
+        (1163, 'MOVIES_GR_2', 'EVALUATION',     '2021-01-13', 'MOVIES_GR_2', NULL,         NULL, 'data', NULL),
+        (1164, 'MOVIES_GR_2', 'COMPARISON',     '2021-01-13', 'MOVIES_GR_2', NULL,         NULL, 'data', NULL),
+        (1165, 'MOVIES_GR_2', 'RECOMMENDATION', '2021-01-13', 'MOVIES_GR_2', NULL,         NULL, 'data', NULL),
+        (1166, 'MOVIES_GR_2', 'BIBLIOGRAPHIC',  '2021-01-13', 'MOVIES_GR_2', NULL,         NULL, 'data', NULL),
+        (1167, 'MOVIES_GR_2', 'BRIEF',          '2021-01-13', 'BRIEF',       '2021-01-13', NULL, 'data', '[1001152]');
+
+insert into casetasks(case_id, task_id)
+values (1160, 1161),
+       (1160, 1162),
+       (1160, 1163),
+       (1160, 1164),
+       (1160, 1165),
+       (1160, 1166),
+       (1160, 1167);

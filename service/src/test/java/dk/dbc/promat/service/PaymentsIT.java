@@ -6,8 +6,13 @@
 package dk.dbc.promat.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import dk.dbc.promat.service.connector.PromatServiceConnectorException;
+import dk.dbc.promat.service.dto.CaseRequest;
 import dk.dbc.promat.service.dto.GroupedPaymentList;
 import dk.dbc.promat.service.dto.PaymentList;
+import dk.dbc.promat.service.persistence.CaseStatus;
+import dk.dbc.promat.service.persistence.PromatCase;
+import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,6 +30,32 @@ import static org.hamcrest.core.Is.is;
 public class PaymentsIT  extends ContainerTest {
     private static final Logger LOGGER = LoggerFactory.getLogger(PaymentsIT.class);
 
+    // This test needs to run as the very first test to ensure that attempt at
+    // executing payment fails and rollsback
+    @Test
+    @Order(1)
+    public void TestExecutePaymentShouldThrow() {
+        //Todo: Check that payment fails (and rolls back)
+    }
+
+    // This test needs to run as the second test since it modifies the preloaded
+    // cases to remove the invalid case from pending payments
+    @Test
+    @Order(2)
+    public void TestGetPaymentsShouldThrow() throws PromatServiceConnectorException {
+        Response response = getResponse("v1/api/payments/preview", Map.of("format","CSV"));
+        assertThat("status code", response.getStatus(), is(500));
+
+        PromatCase fetched = promatServiceConnector.getCase(1160);
+        fetched.setStatus(CaseStatus.CLOSED);
+        promatServiceConnector.updateCase(1160, new CaseRequest(fetched));
+
+        response = getResponse("v1/api/payments/preview", Map.of("format","CSV"));
+        assertThat("status code", response.getStatus(), is(200));
+    }
+
+    // This test needs to run after test that depends on the state of the preloaded cases
+    @Order(3)
     @Test
     public void TestGetPaymentsAsCvs() {
         Response response = getResponse("v1/api/payments/preview", Map.of("format","CSV"));
@@ -34,6 +65,8 @@ public class PaymentsIT  extends ContainerTest {
         assertThat("number of line", csv.lines().count(), is(20L));  // 1 header + 19 paymentlines
     }
 
+    // This test needs to run after test that depends on the state of the preloaded cases
+    @Order(3)
     @Test
     public void TestGetPaymentsAsPaymentList() throws JsonProcessingException {
         Response response = getResponse("v1/api/payments/preview", Map.of("format","PAYMENT_LIST"));
@@ -43,6 +76,8 @@ public class PaymentsIT  extends ContainerTest {
         assertThat("number of paymentlines", payments.getPayments().size(), is(19));
     }
 
+    // This test needs to run after test that depends on the state of the preloaded cases
+    @Order(3)
     @Test
     public void TestPaymentFile() {
         Response response = getResponse("v1/api/payments/preview", Map.of("format","CSV"));
@@ -54,6 +89,20 @@ public class PaymentsIT  extends ContainerTest {
         verifyPaymentCsv(csv);
     }
 
+    // This test needs to run after test that checks the pending-payments list
+    @Order(4)
+    @Test
+    public void TestExecutePayment() {
+        //Todo: Execute payment and make sure there is no more pending payments
+    }
+
+    @Order(5)
+    @Test
+    public void TestGetPreviousPayment() {
+        //Todo: Get the list of previous payments and check that there is 2..
+        //Todo: Get the payment executed in TestExecutePayment()
+    }
+    
     private void verifyPaymentCsv(String csv) {
         LOGGER.info("Received CSV output is:\n{}", csv);
 

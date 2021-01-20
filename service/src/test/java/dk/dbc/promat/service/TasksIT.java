@@ -6,7 +6,7 @@
 package dk.dbc.promat.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import dk.dbc.promat.service.dto.CaseRequestDto;
+import dk.dbc.promat.service.dto.CaseRequest;
 import dk.dbc.promat.service.dto.TaskDto;
 import dk.dbc.promat.service.persistence.MaterialType;
 import dk.dbc.promat.service.persistence.PromatCase;
@@ -34,7 +34,7 @@ public class TasksIT extends ContainerTest {
         assertThat("status code", response.getStatus(), is(404));
 
         // Create a new case
-        CaseRequestDto caseDto = new CaseRequestDto()
+        CaseRequest caseDto = new CaseRequest()
                 .withTitle("Title for 11001111")
                 .withDetails("Details for 11001111")
                 .withPrimaryFaust("11001111")

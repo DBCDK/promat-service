@@ -7,7 +7,7 @@ package dk.dbc.promat.service.api;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dk.dbc.promat.service.Repository;
-import dk.dbc.promat.service.dto.CaseRequestDto;
+import dk.dbc.promat.service.dto.CaseRequest;
 import dk.dbc.promat.service.dto.CaseSummaryList;
 import dk.dbc.promat.service.dto.CriteriaOperator;
 import dk.dbc.promat.service.dto.ServiceErrorCode;
@@ -75,7 +75,7 @@ public class Cases {
     @Path("cases")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public Response postCase(CaseRequestDto dto) {
+    public Response postCase(CaseRequest dto) {
         LOGGER.info("cases/ (POST) body: {}", dto);
 
         // Check for required data when creating a new case
@@ -350,7 +350,7 @@ public class Cases {
     @Path("cases/{id}")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public Response patchCase(@PathParam("id") final Integer id, CaseRequestDto dto) {
+    public Response patchCase(@PathParam("id") final Integer id, CaseRequest dto) {
         LOGGER.info("cases/{} (POST) body: {}", id, dto);
 
         repository.getExclusiveAccessToTable(PromatCase.TABLE_NAME);
@@ -673,7 +673,7 @@ public class Cases {
         }
     }
 
-    private void checkValidFaustNumbers(CaseRequestDto dto) throws ServiceErrorException {
+    private void checkValidFaustNumbers(CaseRequest dto) throws ServiceErrorException {
 
         // Check that no existing case exists with the same primary or related faustnumber
         // as the given primary faustnumber and a state other than CLOSED or DONE
