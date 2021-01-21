@@ -413,8 +413,12 @@ public class Cases {
                 existing.setMaterialType(dto.getMaterialType());
             }
             if(dto.getStatus() != null) {
-                if(dto.getStatus() == CaseStatus.CLOSED) {
+                if (dto.getStatus() == CaseStatus.CLOSED) {
                     existing.setStatus(CaseStatus.CLOSED);
+                } else if (dto.getStatus() == CaseStatus.EXPORTED)  {
+                    existing.setStatus(CaseStatus.EXPORTED);
+                } else if (dto.getStatus() == CaseStatus.REVERTED)  {
+                    existing.setStatus(CaseStatus.REVERTED);
                 } else {
                     if( existing.getTasks().stream().filter(task -> task.getData() == null || task.getData().isEmpty()).count() == 0) {
                         if( existing.getTasks().stream().filter(task -> task.getApproved() == null).count() == 0) {
