@@ -135,13 +135,13 @@ public class MessagesIT extends ContainerTest {
                 is(1L));
 
         // Make sure that ONLY the assignment-mail is sent to reviewer
-        assertThat(
+        assertThat( "Only one mail is sent to reviewer",
                 size(getNotifications(), "kirsten@kirstensen.dk"),
                 is(1L)
         );
 
         // Make sure that no mails were sent to editor
-        assertThat(
+        assertThat( "No mails are sent to editor",
                 size(getNotifications(), "e.ditor@dbc.dk"),
                 is(0L)
         );
@@ -176,9 +176,8 @@ public class MessagesIT extends ContainerTest {
 
     private List<Notification> getNotifications() {
         TypedQuery<Notification> query = entityManager
-                .createQuery(Notification.SELECT_FROM_NOTIFCATION_QUEUE_QUERY, Notification.class);
-        query.setParameter("status", NotificationStatus.PENDING);
-        query.setMaxResults(1);
+                .createQuery("SELECT notification " +
+                        "FROM Notification notification ORDER BY notification.id", Notification.class);
         List<Notification> notifications = query.getResultList();
         return notifications;
     }
