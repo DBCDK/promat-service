@@ -295,7 +295,13 @@ public class Payments {
                     }
 
                     if (execute) {
-                        LOGGER.info("Task {} marked as payed with stamp {}", task.getId(),
+                        if (task.getPayed() != null) {
+                            throw new ServiceErrorException("Attempt to change payed for task which has already been paid")
+                                    .withHttpStatus(500)
+                                    .withCode(ServiceErrorCode.FAILED)
+                                    .withDetails(String.format("Task id %d has been paid previously", task.getId()));
+                        }
+                        LOGGER.info("Task {} marked as paid with stamp {}", task.getId(),
                                 paymentList.getStamp().format(DateTimeFormatter.ofPattern(TIMESTAMP_FORMAT)));
                         task.setPayed(paymentList.getStamp());
                     }
