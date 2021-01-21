@@ -39,7 +39,7 @@ public class PromatServiceConnector {
      * with older versions of the FailSafeHttpClient in use in systems using
      * this connector.
      */
-    private static final RetryPolicy<Response> RETRY_POLICY = new RetryPolicy<Response>()
+    private static final RetryPolicy RETRY_POLICY = new RetryPolicy()
             .withMaxRetries(0);
             //.handle(ProcessingException.class)
             //.handleResultIf(response -> response.getStatus() == 500)
