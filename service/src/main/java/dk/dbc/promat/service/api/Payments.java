@@ -251,19 +251,10 @@ public class Payments {
 
         // Get the tasks that has been payed / can be payed
         PaymentList paymentList = new PaymentList();
-        final TypedQuery<PromatCase> query;
-        if (stamp == null) {
-            query = entityManager.createNamedQuery(PromatCase.GET_CASES_FOR_PAYMENT_NAME, PromatCase.class);
-            paymentList.setStamp(LocalDateTime.parse(LocalDateTime.now()  // Trim last 3 digits in the timestamp (nanos)
-                    .format(DateTimeFormatter.ofPattern(TIMESTAMP_FORMAT)), DateTimeFormatter.ofPattern(TIMESTAMP_FORMAT)));
-        } else {
-            query = entityManager.createNamedQuery(PromatCase.GET_PAYED_CASES_NAME, PromatCase.class);
-            query.setParameter("stamp", LocalDateTime.parse(stamp, DateTimeFormatter.ofPattern(TIMESTAMP_FORMAT)));
-            paymentList.setStamp(LocalDateTime.parse(stamp, DateTimeFormatter.ofPattern(TIMESTAMP_FORMAT)));
-        }
+        List<PromatCase> payable = getPayable(paymentList, stamp);
 
         List<Payment> payments = new ArrayList<>();
-        for (PromatCase promatCase : query.getResultList()) {
+        for (PromatCase promatCase : payable) {
 
             // Check for serious inconsistencies
             if (promatCase.getReviewer() == null) {
@@ -280,23 +271,12 @@ public class Payments {
                 List<PayCategory> casePayCategories = new ArrayList<>();
 
                 // Count payable fields
-                // Be aware that due to the query that returns entire cases, we get tasks
-                // that either has not been approved or payed, or has been payed already. These must be filtered out!
                 for (PromatTask task : promatCase.getTasks()) {
 
-                    // Check approved and/or payed - this differs for new and old payments
-                    if (stamp == null) {
-                        if(task.getApproved() == null) { // Skip tasks that has not been approved
-                            continue;
-                        }
-                        if(task.getPayed() != null) {    // Skip tasks that has been payed already.
-                            continue;
-                        }
-                    } else {
-                        if (task.getPayed() == null ||
-                                !task.getPayed().equals(paymentList.getStamp())) { // Skip tasks that does not match the stamp
-                            continue;
-                        }
+                    // Due to the query that returns entire cases, we get tasks that either has not been approved
+                    // or payed, or has been payed already. These must be filtered out!
+                    if (!isPayableTask(stamp != null, paymentList, task)) {
+                        continue;
                     }
 
                     switch (task.getPayCategory()) {
@@ -366,6 +346,39 @@ public class Payments {
         paymentList.setNumFound(paymentList.getNumFound());
         paymentList.setPayments(payments);
         return paymentList;
+    }
+
+    private List<PromatCase> getPayable(PaymentList paymentList, String stamp) {
+        final TypedQuery<PromatCase> query;
+        if (stamp == null) {
+            query = entityManager.createNamedQuery(PromatCase.GET_CASES_FOR_PAYMENT_NAME, PromatCase.class);
+            paymentList.setStamp(LocalDateTime.parse(LocalDateTime.now()  // Trim last 3 digits in the timestamp (nanos)
+                    .format(DateTimeFormatter.ofPattern(TIMESTAMP_FORMAT)), DateTimeFormatter.ofPattern(TIMESTAMP_FORMAT)));
+        } else {
+            query = entityManager.createNamedQuery(PromatCase.GET_PAYED_CASES_NAME, PromatCase.class);
+            query.setParameter("stamp", LocalDateTime.parse(stamp, DateTimeFormatter.ofPattern(TIMESTAMP_FORMAT)));
+            paymentList.setStamp(LocalDateTime.parse(stamp, DateTimeFormatter.ofPattern(TIMESTAMP_FORMAT)));
+        }
+        return query.getResultList();
+    }
+
+    private boolean isPayableTask(boolean history, PaymentList paymentList, PromatTask task) {
+
+        // Check approved and/or payed - this differs for new and old payments
+        if (!history) {
+            if(task.getApproved() == null) { // Skip tasks that has not been approved
+                return false;
+            }
+            if(task.getPayed() != null) {    // Skip tasks that has been payed already.
+                return false;
+            }
+        } else {
+            if (task.getPayed() == null ||
+                    !task.getPayed().equals(paymentList.getStamp())) { // Skip tasks that does not match the stamp
+                return false;
+            }
+        }
+        return true;
     }
 
     private String getTextCategory(PayCategory category) {
