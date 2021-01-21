@@ -66,14 +66,15 @@ public class Payments {
 
     @GET
     @Path("payments/preview")
-    public Response preview(@QueryParam("format") final PaymentsFormat selectedformat) {
+    public Response preview(@QueryParam("format") final PaymentsFormat selectedformat,
+                            @QueryParam("stamp") final String stamp) {
 
         PaymentsFormat format = selectedformat != null ? selectedformat : PaymentsFormat.PAYMENT_LIST;
-        LOGGER.info("payments/preview/?format={} (GET)", selectedformat);
+        LOGGER.info("payments/preview/?format={}&stamp={} (GET)", selectedformat, stamp);
 
         PaymentList paymentList;
         try {
-            paymentList = getPendingPayments(false);
+            paymentList = getPendingPayments(false, stamp);
             LOGGER.info("Has {} pending payments", paymentList.getNumFound());
         }
         catch(ServiceErrorException se) {
@@ -138,7 +139,7 @@ public class Payments {
 
         PaymentList paymentList;
         try {
-            paymentList = getPendingPayments(true);
+            paymentList = getPendingPayments(true, null);
             LOGGER.info("Has {} payments", paymentList.getNumFound());
         } catch(ServiceErrorException se) {
             LOGGER.error("ServiceErrorException thrown while executing payments: {}", se.getServiceErrorDto().getDetails());
@@ -239,7 +240,7 @@ public class Payments {
                         .collect(Collectors.joining());
     }
 
-    private PaymentList getPendingPayments(boolean execute) throws ServiceErrorException {
+    private PaymentList getPendingPayments(boolean execute, String stamp) throws ServiceErrorException {
 
         // Lock all relevant tables
         if(execute) {
@@ -248,11 +249,18 @@ public class Payments {
             repository.getExclusiveAccessToTable(PromatTask.TABLE_NAME);
         }
 
-        final TypedQuery<PromatCase> query = entityManager.createNamedQuery(
-                PromatCase.GET_CASES_FOR_PAYMENT_NAME, PromatCase.class);
-
-        PaymentList paymentList = new PaymentList()
-                .withStamp(LocalDateTime.now());
+        // Get the tasks that has been payed / can be payed
+        PaymentList paymentList = new PaymentList();
+        final TypedQuery<PromatCase> query;
+        if (stamp == null) {
+            query = entityManager.createNamedQuery(PromatCase.GET_CASES_FOR_PAYMENT_NAME, PromatCase.class);
+            paymentList.setStamp(LocalDateTime.parse(LocalDateTime.now()  // Trim last 3 digits in the timestamp (nanos)
+                    .format(DateTimeFormatter.ofPattern(TIMESTAMP_FORMAT)), DateTimeFormatter.ofPattern(TIMESTAMP_FORMAT)));
+        } else {
+            query = entityManager.createNamedQuery(PromatCase.GET_PAYED_CASES_NAME, PromatCase.class);
+            query.setParameter("stamp", LocalDateTime.parse(stamp, DateTimeFormatter.ofPattern(TIMESTAMP_FORMAT)));
+            paymentList.setStamp(LocalDateTime.parse(stamp, DateTimeFormatter.ofPattern(TIMESTAMP_FORMAT)));
+        }
 
         List<Payment> payments = new ArrayList<>();
         for (PromatCase promatCase : query.getResultList()) {
@@ -272,14 +280,23 @@ public class Payments {
                 List<PayCategory> casePayCategories = new ArrayList<>();
 
                 // Count payable fields
+                // Be aware that due to the query that returns entire cases, we get tasks
+                // that either has not been approved or payed, or has been payed already. These must be filtered out!
                 for (PromatTask task : promatCase.getTasks()) {
 
-                    // Skip tasks that has not been approved and tasks that has been payed
-                    if (task.getApproved() == null) {
-                        continue;
-                    }
-                    if (task.getPayed() != null) {
-                        continue;
+                    // Check approved and/or payed - this differs for new and old payments
+                    if (stamp == null) {
+                        if(task.getApproved() == null) { // Skip tasks that has not been approved
+                            continue;
+                        }
+                        if(task.getPayed() != null) {    // Skip tasks that has been payed already.
+                            continue;
+                        }
+                    } else {
+                        if (task.getPayed() == null ||
+                                !task.getPayed().equals(paymentList.getStamp())) { // Skip tasks that does not match the stamp
+                            continue;
+                        }
                     }
 
                     switch (task.getPayCategory()) {
@@ -298,7 +315,8 @@ public class Payments {
                     }
 
                     if (execute) {
-                        LOGGER.info("Task {} marked as payed with stamp {}", task.getId(), paymentList.getStamp());
+                        LOGGER.info("Task {} marked as payed with stamp {}", task.getId(),
+                                paymentList.getStamp().format(DateTimeFormatter.ofPattern(TIMESTAMP_FORMAT)));
                         task.setPayed(paymentList.getStamp());
                     }
                 }

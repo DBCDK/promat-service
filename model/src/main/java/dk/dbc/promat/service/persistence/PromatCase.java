@@ -19,6 +19,7 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
+import javax.persistence.NamedNativeQuery;
 import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
@@ -35,6 +36,9 @@ import java.util.Objects;
 @NamedQuery(
         name = PromatCase.GET_CASES_FOR_PAYMENT_NAME,
         query = PromatCase.GET_CASES_FOR_PAYMENT_QUERY)
+@NamedQuery(
+        name = PromatCase.GET_PAYED_CASES_NAME,
+        query = PromatCase.GET_PAYED_CASES_QUERY)
 @Entity
 public class PromatCase {
     public static final String TABLE_NAME = "promatcase";
@@ -58,6 +62,17 @@ public class PromatCase {
             "                                                                    dk.dbc.promat.service.persistence.CaseStatus.REVERTED," +
             "                                                                    dk.dbc.promat.service.persistence.CaseStatus.PENDING_CLOSE)" +
             "                                                 order by c.id";
+
+    public static final String GET_PAYED_CASES_NAME =
+            "PromatCase.get.payed.cases";
+    public static final String GET_PAYED_CASES_QUERY = "select distinct c" +
+            "                                             from PromatCase c" +
+            "                                             join CaseTasks ct" +
+            "                                               on c.id = ct.case_id" +
+            "                                             join PromatTask t" +
+            "                                               on t.id = ct.task_id" +
+            "                                            where t.payed = :stamp" +
+            "                                            order by c.id";
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

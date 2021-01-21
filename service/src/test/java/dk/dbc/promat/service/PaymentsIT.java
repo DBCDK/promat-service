@@ -134,7 +134,7 @@ public class PaymentsIT  extends ContainerTest {
 
     @Order(8)
     @Test
-    public void TestGetPreviousPayment() {
+    public void TestGetPreviousPayment() throws JsonProcessingException {
 
         Response response = getResponse("v1/api/payments/history");
         assertThat("status code", response.getStatus(), is(200));
@@ -144,7 +144,7 @@ public class PaymentsIT  extends ContainerTest {
 
         // Make sure we have two old payments, in the expected order (oldest->newest)
         assertThat("first old payment", history.get(0).equals("20201210_000000000"));
-        assertThat("second old payment", history.get(1).equals("20201221_121314000"));
+        assertThat("second old payment", history.get(1).equals("20201221_121314567"));
 
         // Get stamp of the latest payment and check that it originated at a time close to now
         String stamp = history.get(2);
@@ -152,14 +152,13 @@ public class PaymentsIT  extends ContainerTest {
         assertThat("is newest payment", latest.plusMinutes(1l), is(greaterThanOrEqualTo(LocalDateTime.now())));
 
         // Check that the previous payment returns exactly the same payment as when executed
-        //Todo: Add stamp parameter in endpoint
-        /*response = getResponse("v1/api/payments/preview", Map.of("format","CSV"));
+        response = getResponse("v1/api/payments/preview", Map.of("format","CSV", "stamp", stamp));
         assertThat("status code", response.getStatus(), is(200));
 
         String csv = response.readEntity(String.class);
         assertThat("number of lines", csv.lines().count(), is(20L));  // 1 header + 19 paymentlines
 
-        verifyPaymentCsv(csv);*/
+        verifyPaymentCsv(csv);
     }
 
     private void verifyPaymentCsv(String csv) {
