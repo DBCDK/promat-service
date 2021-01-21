@@ -39,7 +39,7 @@ public class PaymentsIT  extends ContainerTest {
     @Test
     @Order(1)
     public void TestExecutePaymentShouldThrow() {
-        Response response = getResponse("v1/api/payments/execute");
+        Response response = putResponse("v1/api/payments/execute", "");
         assertThat("status code", response.getStatus(), is(500));
     }
 
@@ -100,7 +100,7 @@ public class PaymentsIT  extends ContainerTest {
     public void TestExecutePayment() throws PromatServiceConnectorException {
 
         // Pay all pending payments
-        Response response = getResponse("v1/api/payments/execute");
+        Response response = putResponse("v1/api/payments/execute", "");
         assertThat("status code", response.getStatus(), is(200));
 
         String csv = response.readEntity(String.class);
