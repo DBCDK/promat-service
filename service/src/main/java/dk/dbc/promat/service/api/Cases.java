@@ -48,6 +48,7 @@ import javax.ws.rs.core.Response;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 @Stateless
 @Path("")
@@ -354,18 +355,21 @@ public class Cases {
             // Errorchecking when trying to update fields managed by the backend solely
             if(dto.getAssigned() != null) {
                 LOGGER.info("Attempt to set 'assigned' on case {}", id);
-                return ServiceErrorDto.InvalidRequest("Forbidden field", String.format("Setting the value of 'assigned' is not allowed"));
+                return ServiceErrorDto.InvalidRequest("Forbidden field", "Setting the value of 'assigned' is not allowed");
             }
-            if(dto.getStatus() != null && dto.getStatus() != CaseStatus.CLOSED && dto.getStatus() != CaseStatus.CREATED) {
+            final Set<CaseStatus> allowedStatuses = Set.of(CaseStatus.CLOSED, CaseStatus.CREATED,
+                    CaseStatus.EXPORTED, CaseStatus.REVERTED);
+            if(dto.getStatus() != null && !allowedStatuses.contains(dto.getStatus())) {
                 LOGGER.info("Attempt to set forbidden 'status' on case {}", id);
-                return ServiceErrorDto.InvalidRequest("Forbidden status", String.format("Setting the value of 'status' to other statuses than CLOSED or CREATED is not allowed"));
+                return ServiceErrorDto.InvalidRequest("Forbidden status",
+                        String.format("Setting the value of 'status' to other statuses than %s is not allowed", allowedStatuses));
             }
 
             // Fetch an existing entity with the given id
             PromatCase existing = entityManager.find(PromatCase.class, id);
             if( existing == null ) {
                 LOGGER.info("No such case {}", id);
-                return ServiceErrorDto.NotFound("No such case", String.format("Case with id {} does not exist", id));
+                return ServiceErrorDto.NotFound("No such case", String.format("Case with id %d does not exist", id));
             }
 
             // Update fields
@@ -378,14 +382,14 @@ public class Cases {
             if(dto.getPrimaryFaust() != null) {
                 if(!Faustnumbers.checkNoOpenCaseWithFaust(entityManager, existing.getId(), dto.getPrimaryFaust())) {
                     LOGGER.info("Case with primary or related faust {} and state <> CLOSED|DONE exists", dto.getPrimaryFaust());
-                    return ServiceErrorDto.FaustInUse(String.format("Case with primary or related faust {} and status not DONE or CLOSED exists", dto.getPrimaryFaust()));
+                    return ServiceErrorDto.FaustInUse(String.format("Case with primary or related faust %s and status not DONE or CLOSED exists", dto.getPrimaryFaust()));
                 }
                 existing.setPrimaryFaust(dto.getPrimaryFaust());
             }
             if(dto.getRelatedFausts() != null) {
                 if(!Faustnumbers.checkNoOpenCaseWithFaust(entityManager, existing.getId(), dto.getRelatedFausts().toArray(String[]::new))) {
                     LOGGER.info("Case with primary or related faust {} and state <> CLOSED|DONE exists", dto.getPrimaryFaust());
-                    return ServiceErrorDto.FaustInUse(String.format("Case with primary or related fausts {} and status not DONE or CLOSED exists", dto.getRelatedFausts()));
+                    return ServiceErrorDto.FaustInUse(String.format("Case with primary or related fausts %s and status not DONE or CLOSED exists", dto.getRelatedFausts()));
                 }
                 existing.setRelatedFausts(dto.getRelatedFausts());
             }
