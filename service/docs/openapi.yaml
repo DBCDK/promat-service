@@ -23,6 +23,8 @@ tags:
     description: Cases
   - name: tasks
     description: Case tasks
+  - name: messages
+    description: Text dialogue reviewer/editor on cases
 
 paths:
   /reviewers:
@@ -550,28 +552,6 @@ paths:
               schema:
                 $ref: '#/components/schemas/ServiceError'
 
-  /cases/messages/{id}:
-    get:
-      tags:
-        - messages
-      summary: Get message with this id.
-      operationId: getMessage
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: integer
-            description: Message Id
-      responses:
-        '200':
-          description: succesful operation
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Message'
-
-
   /cases/{caseId}/messages/{userId}:
     post:
       tags:
@@ -611,8 +591,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/ServiceError'
 
-  /cases/{id}/messages/markasread/{direction}:
-    get:
+  /cases/{id}/messages/markasread:
+    put:
       tags:
         - messages
       summary: Mark all messages for case (id) with direction either REVIEWER_TO_EDITOR or EDITOR_TO_REVIEWER as 'read'
@@ -624,11 +604,12 @@ paths:
           schema:
             type: integer
             description: Case id
-        - in: path
-          name: direction
-          required: true
-          schema:
-            $ref: '#/components/schemas/Direction'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MarkAsReadRequest'
       responses:
         '200':
           description: succesful operation
@@ -638,6 +619,28 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ServiceError'
+
+  /messages/{id}:
+    get:
+      tags:
+        - messages
+      summary: Get message with this id.
+      operationId: getMessage
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            description: Message Id
+      responses:
+        '200':
+          description: succesful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+
 
   /tasks/{id}:
     put:
@@ -830,6 +833,14 @@ components:
           $ref: '#/components/schemas/Direction'
         read:
           type: boolean
+
+    MarkAsReadRequest:
+      type: object
+      properties:
+        direction:
+          $ref: '#/components/schemas/Direction'
+      required:
+        - direction
 
     Direction:
       type: string

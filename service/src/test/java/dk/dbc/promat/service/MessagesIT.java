@@ -2,6 +2,7 @@ package dk.dbc.promat.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import dk.dbc.promat.service.dto.CaseRequestDto;
+import dk.dbc.promat.service.dto.MarkAsReadRequest;
 import dk.dbc.promat.service.dto.MessageRequestDto;
 import dk.dbc.promat.service.dto.PromatMessagesList;
 import dk.dbc.promat.service.persistence.MaterialType;
@@ -40,7 +41,7 @@ public class MessagesIT extends ContainerTest {
 
         PromatMessage message = mapper.readValue(response.readEntity(String.class), PromatMessage.class);
 
-        response = getResponse(String.format("v1/api/cases/messages/%s", message.getId()));
+        response = getResponse(String.format("v1/api/messages/%s", message.getId()));
         String messageAsjson = response.readEntity(String.class);
         mapper.readValue(messageAsjson, PromatMessage.class);
 
@@ -105,9 +106,10 @@ public class MessagesIT extends ContainerTest {
 
 
         // Set all messages to reviewer on this case to "read"
-        response = getResponse(
-                String.format("v1/api/cases/%s/messages/markasread/%s",
-                        aCase.getId(), PromatMessage.Direction.EDITOR_TO_REVIEWER.name()));
+        response = putResponse(
+                String.format("v1/api/cases/%s/messages/markasread",
+                        aCase.getId()), new MarkAsReadRequest()
+                        .withDirection(PromatMessage.Direction.EDITOR_TO_REVIEWER));
         assertThat("status code", response.getStatus(), is(201));
 
         // Make sure all messages to reviewer are now status "read"
@@ -121,9 +123,10 @@ public class MessagesIT extends ContainerTest {
                 is(0L));
 
         // Set all messages to editor on this case to "read"
-        response = getResponse(
-                String.format("v1/api/cases/%s/messages/markasread/%s",
-                        aCase.getId(), PromatMessage.Direction.REVIEWER_TO_EDITOR.name()));
+        response = putResponse(
+                String.format("v1/api/cases/%s/messages/markasread",
+                        aCase.getId()), new MarkAsReadRequest().
+                        withDirection(PromatMessage.Direction.REVIEWER_TO_EDITOR));
         assertThat("status code", response.getStatus(), is(201));
 
         // Make sure all messages to editor are now status "read"

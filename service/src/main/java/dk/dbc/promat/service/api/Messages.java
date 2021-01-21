@@ -2,6 +2,7 @@ package dk.dbc.promat.service.api;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dk.dbc.promat.service.Repository;
+import dk.dbc.promat.service.dto.MarkAsReadRequest;
 import dk.dbc.promat.service.dto.MessageRequestDto;
 import dk.dbc.promat.service.dto.PromatMessagesList;
 import dk.dbc.promat.service.dto.ServiceErrorDto;
@@ -22,6 +23,7 @@ import javax.persistence.TypedQuery;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -92,7 +94,7 @@ public class Messages {
     }
 
     @GET
-    @Path("cases/messages/{id}")
+    @Path("messages/{id}")
     @Produces(MediaType.APPLICATION_JSON)
     public Response getMessage(@PathParam("id") final Integer id) {
         try {
@@ -122,15 +124,15 @@ public class Messages {
         }
     }
 
-    @GET
-    @Path("cases/{id}/messages/markasread/{direction}")
+    @PUT
+    @Path("cases/{id}/messages/markasread")
     public Response markAsRead(@PathParam("id") Integer id,
-                               @PathParam("direction") PromatMessage.Direction direction) {
+                               MarkAsReadRequest markAsReadRequest) {
         try {
             TypedQuery<PromatMessage> query =
                     entityManager.createNamedQuery(PromatMessage.UPDATE_READ_STATE, PromatMessage.class);
             query.setParameter("caseId", id);
-            query.setParameter("direction", direction);
+            query.setParameter("direction", markAsReadRequest.getDirection());
             query.setParameter("isRead", Boolean.TRUE);
             query.executeUpdate();
             entityManager.flush();
