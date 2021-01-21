@@ -1,0 +1,1 @@
+ALTER TABLE promattask ALTER COLUMN payed TYPE timestamp;

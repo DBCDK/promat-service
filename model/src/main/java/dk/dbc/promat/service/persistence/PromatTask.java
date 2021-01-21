@@ -15,14 +15,25 @@ import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.NamedQuery;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 
+@NamedQuery(
+        name = PromatTask.GET_PAYMENT_HISTORY_NAME,
+        query = PromatTask.GET_PAYMENT_HISTORY_QUERY)
 @Entity
 public class PromatTask {
     public static final String TABLE_NAME = "promattask";
+
+    public static final String GET_PAYMENT_HISTORY_NAME =
+            "PromatTask.get.payment.history";
+    public static final String GET_PAYMENT_HISTORY_QUERY = "select distinct t.payed" +
+            "                                                 from PromatTask t" +
+            "                                                where t.payed is not null" +
+            "                                                order by t.payed";
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

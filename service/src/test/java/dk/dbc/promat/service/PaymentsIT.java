@@ -6,6 +6,7 @@
 package dk.dbc.promat.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import dk.dbc.promat.service.api.Payments;
 import dk.dbc.promat.service.connector.PromatServiceConnectorException;
 import dk.dbc.promat.service.dto.CaseRequest;
 import dk.dbc.promat.service.dto.GroupedPaymentList;
@@ -28,6 +29,7 @@ import java.util.stream.Collectors;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
+import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class PaymentsIT  extends ContainerTest {
@@ -43,10 +45,22 @@ public class PaymentsIT  extends ContainerTest {
         assertThat("status code", response.getStatus(), is(500));
     }
 
+    // Check how many payed tasks exists before modifying tasks
+    @Order(2)
+    @Test
+    public void TestGetPreviousPaymentBeforeExecute() {
+
+        Response response = getResponse("v1/api/payments/history");
+        assertThat("status code", response.getStatus(), is(200));
+
+        List<String> history = response.readEntity(List.class);
+        assertThat("number of history lines is", history.size(), is(2));
+    }
+
     // This test needs to run as the second test since it modifies the preloaded
     // cases to remove the invalid case from pending payments
     @Test
-    @Order(2)
+    @Order(3)
     public void TestGetPaymentsShouldThrow() throws PromatServiceConnectorException {
         Response response = getResponse("v1/api/payments/preview", Map.of("format","CSV"));
         assertThat("status code", response.getStatus(), is(500));
@@ -60,7 +74,7 @@ public class PaymentsIT  extends ContainerTest {
     }
 
     // This test needs to run after test that depends on the state of the preloaded cases
-    @Order(3)
+    @Order(4)
     @Test
     public void TestGetPaymentsAsCvs() {
         Response response = getResponse("v1/api/payments/preview", Map.of("format","CSV"));
@@ -71,7 +85,7 @@ public class PaymentsIT  extends ContainerTest {
     }
 
     // This test needs to run after test that depends on the state of the preloaded cases
-    @Order(3)
+    @Order(5)
     @Test
     public void TestGetPaymentsAsPaymentList() throws JsonProcessingException {
         Response response = getResponse("v1/api/payments/preview", Map.of("format","PAYMENT_LIST"));
@@ -82,7 +96,7 @@ public class PaymentsIT  extends ContainerTest {
     }
 
     // This test needs to run after test that depends on the state of the preloaded cases
-    @Order(3)
+    @Order(6)
     @Test
     public void TestPaymentFile() {
         Response response = getResponse("v1/api/payments/preview", Map.of("format","CSV"));
@@ -95,7 +109,7 @@ public class PaymentsIT  extends ContainerTest {
     }
 
     // This test needs to run after test that checks the pending-payments list
-    @Order(4)
+    @Order(7)
     @Test
     public void TestExecutePayment() throws PromatServiceConnectorException {
 
@@ -118,11 +132,34 @@ public class PaymentsIT  extends ContainerTest {
         assertThat("case has status CLOSED", fetched.getStatus(), is(CaseStatus.CLOSED));
     }
 
-    @Order(5)
+    @Order(8)
     @Test
     public void TestGetPreviousPayment() {
-        //Todo: Get the list of previous payments and check that there is 2..
-        //Todo: Get the payment executed in TestExecutePayment() and verify that it is unchanged
+
+        Response response = getResponse("v1/api/payments/history");
+        assertThat("status code", response.getStatus(), is(200));
+
+        List<String> history = response.readEntity(List.class);
+        assertThat("number of history lines is", history.size(), is(3));
+
+        // Make sure we have two old payments, in the expected order (oldest->newest)
+        assertThat("first old payment", history.get(0).equals("20201210_000000000"));
+        assertThat("second old payment", history.get(1).equals("20201221_121314000"));
+
+        // Get stamp of the latest payment and check that it originated at a time close to now
+        String stamp = history.get(2);
+        LocalDateTime latest = LocalDateTime.parse(stamp, DateTimeFormatter.ofPattern(Payments.TIMESTAMP_FORMAT));
+        assertThat("is newest payment", latest.plusMinutes(1l), is(greaterThanOrEqualTo(LocalDateTime.now())));
+
+        // Check that the previous payment returns exactly the same payment as when executed
+        //Todo: Add stamp parameter in endpoint
+        /*response = getResponse("v1/api/payments/preview", Map.of("format","CSV"));
+        assertThat("status code", response.getStatus(), is(200));
+
+        String csv = response.readEntity(String.class);
+        assertThat("number of lines", csv.lines().count(), is(20L));  // 1 header + 19 paymentlines
+
+        verifyPaymentCsv(csv);*/
     }
 
     private void verifyPaymentCsv(String csv) {

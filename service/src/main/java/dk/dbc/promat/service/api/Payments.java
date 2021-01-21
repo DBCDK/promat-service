@@ -30,8 +30,10 @@ import javax.persistence.TypedQuery;
 import javax.ws.rs.GET;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -59,6 +61,8 @@ public class Payments {
         PAYMENT_LIST_BY_USER, //Todo: updated 2021-01-20: May be superfluous, waiting on ux/frontend
         PAYMENT_LIST_BY_FAUST //Todo: ...^^
     }
+
+    public static final String TIMESTAMP_FORMAT = "yyyyMMdd_HHmmssSSS";
 
     @GET
     @Path("payments/preview")
@@ -160,6 +164,23 @@ public class Payments {
                 .build();
     }
 
+    @GET
+    @Path("payments/history")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response preview() {
+        LOGGER.info("payments/history (GET)");
+
+        final TypedQuery<LocalDateTime> query = entityManager.createNamedQuery(
+                PromatTask.GET_PAYMENT_HISTORY_NAME, LocalDateTime.class);
+
+        return Response.status(200)
+                .entity(query.getResultList().stream()
+                        .map(stamp -> stamp.format(DateTimeFormatter
+                                .ofPattern(TIMESTAMP_FORMAT)))
+                        .collect(Collectors.toList()))
+                .build();
+    }
+
     private GroupedPaymentList groupPaymentsByUser(PaymentList paymentList) {
         Map<Integer, List<Payment>> grouped = paymentList
                 .getPayments()
@@ -201,7 +222,7 @@ public class Payments {
     private String getPaymentsCsvFilename(String prefix) {
         return prefix + String.format("_%s", LocalDateTime.now()
                 .format(DateTimeFormatter
-                        .ofPattern("yyyyMMdd_HHmmssSSS"))) + ".csv";
+                        .ofPattern(TIMESTAMP_FORMAT))) + ".csv";
     }
 
     private String convertPaymentListToCsv(PaymentList paymentList) {

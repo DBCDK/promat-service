@@ -758,6 +758,26 @@ paths:
               schema:
                 $ref: '#/components/schemas/ServiceError'
 
+  /payments/history:
+    get:
+      tags:
+        - payments
+      summary: Return a list of previous executed payments
+      operationId: history
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentHistory'
+        '500':
+          description: Error while building the payments preview
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+
 components:
   schemas:
     Address:
@@ -1674,3 +1694,8 @@ components:
       required:
         - numFound
         - groups
+
+    PaymentHistory:
+      type: array
+      items:
+        type: string
