@@ -740,6 +740,24 @@ paths:
               schema:
                 $ref: '#/components/schemas/ServiceError'
 
+  /payments/execute:
+    put:
+      tags:
+        - payments
+      summary: Execute and return the current payments
+      operationId: execute
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/csv: {}
+        '500':
+          description: Error while executing pending payments
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+
 components:
   schemas:
     Address:

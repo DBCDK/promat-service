@@ -130,7 +130,7 @@ public class Payments {
     @PUT
     @Path("payments/execute")
     public Response execute() {
-        LOGGER.info("payments/execute (GET)");
+        LOGGER.info("payments/execute (PUT)");
 
         PaymentList paymentList;
         try {
