@@ -213,7 +213,7 @@ public class Cases {
                                   final CriteriaOperator trimmedWeekcodeOperator,
                               @QueryParam("limit") final Integer limit,
                               @QueryParam("from") final Integer from) {
-        LOGGER.info("cases/?faust={}|status={}|reviewer={}|editor={}|title={}|trimmedWeekcode={}|trimmedWeekcodeOperator={}|limit={}|from={}",
+        LOGGER.info("cases/?faust={}|status={}|reviewer={}|editor={}|title={}|trimmedWeekcode={}|trimmedWeekcodeOperator={}|limit={}|from={}|format={}",
                 faust == null ? "null" : faust,
                 status == null ? "null" : status,
                 reviewer == null ? "null" : reviewer,
@@ -222,7 +222,8 @@ public class Cases {
                 trimmedWeekcode == null ? "null" : trimmedWeekcode,
                 trimmedWeekcodeOperator == null ? "null" : trimmedWeekcodeOperator,
                 limit == null ? "null" : limit,
-                from == null ? "null" : from);
+                from == null ? "null" : from,
+                format);
 
         // Select and return cases
         try {
