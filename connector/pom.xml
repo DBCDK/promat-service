@@ -21,7 +21,8 @@
   <dependencies>
     <dependency>
       <groupId>dk.dbc</groupId>
-      <artifactId>dbc-commons-httpclient</artifactId>
+      <artifactId>httpclient</artifactId>
+      <version>0.2</version>
     </dependency>
     <dependency>
       <groupId>dk.dbc</groupId>
@@ -32,6 +33,11 @@
       <groupId>org.eclipse.microprofile</groupId>
       <artifactId>microprofile</artifactId>
       <type>pom</type>
+    </dependency>
+    <dependency>
+      <groupId>org.glassfish.jersey.core</groupId>
+      <artifactId>jersey-client</artifactId>
+      <version>${jersey.version}</version>
     </dependency>
     <dependency>
       <groupId>org.glassfish.jersey.media</groupId>

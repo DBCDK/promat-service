@@ -10,7 +10,6 @@ import dk.dbc.promat.service.persistence.CaseStatus;
 import dk.dbc.promat.service.persistence.MaterialType;
 
 import java.util.List;
-import java.util.Objects;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class CaseRequestDto implements Dto {
@@ -296,31 +295,85 @@ public class CaseRequestDto implements Dto {
 
     @Override
     public boolean equals(Object o) {
-        if(this == o) return true;
-        if(o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
         CaseRequestDto that = (CaseRequestDto) o;
-        return title.equals(that.title) &&
-                Objects.equals(details, that.details) &&
-                primaryFaust.equals(that.primaryFaust) &&
-                Objects.equals(relatedFausts, that.relatedFausts) &&
-                Objects.equals(reviewer, that.reviewer) &&
-                Objects.equals(editor, that.editor) &&
-                Objects.equals(subjects, that.subjects) &&
-                Objects.equals(deadline, that.deadline) &&
-                Objects.equals(assigned, that.assigned) &&
-                status == that.status &&
-                materialType == that.materialType &&
-                Objects.equals(tasks, that.tasks) &&
-                Objects.equals(weekCode, that.weekCode) &&
-                Objects.equals(author, that.author) &&
-                Objects.equals(creator, that.creator) &&
-                Objects.equals(publisher, that.publisher) &&
-                Objects.equals(recordId, that.recordId);
+
+        if (title != null ? !title.equals(that.title) : that.title != null) {
+            return false;
+        }
+        if (details != null ? !details.equals(that.details) : that.details != null) {
+            return false;
+        }
+        if (primaryFaust != null ? !primaryFaust.equals(that.primaryFaust) : that.primaryFaust != null) {
+            return false;
+        }
+        if (relatedFausts != null ? !relatedFausts.equals(that.relatedFausts) : that.relatedFausts != null) {
+            return false;
+        }
+        if (reviewer != null ? !reviewer.equals(that.reviewer) : that.reviewer != null) {
+            return false;
+        }
+        if (editor != null ? !editor.equals(that.editor) : that.editor != null) {
+            return false;
+        }
+        if (subjects != null ? !subjects.equals(that.subjects) : that.subjects != null) {
+            return false;
+        }
+        if (deadline != null ? !deadline.equals(that.deadline) : that.deadline != null) {
+            return false;
+        }
+        if (assigned != null ? !assigned.equals(that.assigned) : that.assigned != null) {
+            return false;
+        }
+        if (status != that.status) {
+            return false;
+        }
+        if (materialType != that.materialType) {
+            return false;
+        }
+        if (tasks != null ? !tasks.equals(that.tasks) : that.tasks != null) {
+            return false;
+        }
+        if (weekCode != null ? !weekCode.equals(that.weekCode) : that.weekCode != null) {
+            return false;
+        }
+        if (author != null ? !author.equals(that.author) : that.author != null) {
+            return false;
+        }
+        if (creator != null ? !creator.equals(that.creator) : that.creator != null) {
+            return false;
+        }
+        if (publisher != null ? !publisher.equals(that.publisher) : that.publisher != null) {
+            return false;
+        }
+        return recordId != null ? recordId.equals(that.recordId) : that.recordId == null;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(title, details, primaryFaust, relatedFausts, reviewer, editor, subjects, deadline, assigned,
-                status, materialType, tasks, weekCode, author, creator, publisher, recordId);
+        int result = title != null ? title.hashCode() : 0;
+        result = 31 * result + (details != null ? details.hashCode() : 0);
+        result = 31 * result + (primaryFaust != null ? primaryFaust.hashCode() : 0);
+        result = 31 * result + (relatedFausts != null ? relatedFausts.hashCode() : 0);
+        result = 31 * result + (reviewer != null ? reviewer.hashCode() : 0);
+        result = 31 * result + (editor != null ? editor.hashCode() : 0);
+        result = 31 * result + (subjects != null ? subjects.hashCode() : 0);
+        result = 31 * result + (deadline != null ? deadline.hashCode() : 0);
+        result = 31 * result + (assigned != null ? assigned.hashCode() : 0);
+        result = 31 * result + (status != null ? status.hashCode() : 0);
+        result = 31 * result + (materialType != null ? materialType.hashCode() : 0);
+        result = 31 * result + (tasks != null ? tasks.hashCode() : 0);
+        result = 31 * result + (weekCode != null ? weekCode.hashCode() : 0);
+        result = 31 * result + (author != null ? author.hashCode() : 0);
+        result = 31 * result + (creator != null ? creator.hashCode() : 0);
+        result = 31 * result + (publisher != null ? publisher.hashCode() : 0);
+        result = 31 * result + (recordId != null ? recordId.hashCode() : 0);
+        return result;
     }
 }
