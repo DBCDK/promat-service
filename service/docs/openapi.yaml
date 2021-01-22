@@ -33,17 +33,6 @@ paths:
         - reviewers
       summary: Returns list of reviewers
       operationId: getReviewers
-      parameters:
-        - name: deadline
-          in: query
-          required: false
-          description: Optional deadline date as defined by RFC3339,
-                       which will return reviewers with their workloads
-                       for the week of the deadline as well as for the
-                       weeks before and after the deadline.
-          schema:
-            type: string
-            format: date
       responses:
         '200':
           description: successful operation
@@ -51,12 +40,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ReviewerList'
-        '400':
-          description: bad request, invalid deadline date
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ServiceError'
     post:
       tags:
         - reviewers
@@ -362,6 +345,19 @@ paths:
             type: string
           description: Entire or part of title of the cases returned
         - in: query
+          name: trimmedWeekcode
+          required: false
+          schema:
+            type: string
+          description: Weekcode without the catalog prefix, ie. yyyyww
+        - in: query
+          name: trimmedWeekcodeOperator
+          required: false
+          schema:
+            type: string
+            $ref: '#/components/schemas/CriteriaOperator'
+            default: EQUAL
+        - in: query
           name: limit
           required: false
           schema:
@@ -382,20 +378,24 @@ paths:
               - export
               - summary
             default: summary
-          description: View format for returned cases
+          description: View format for returned cases, ie. CaseExportList or CaseSummaryList
       responses:
         '200':
           description: successful operation
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CaseSummaryList'
+                oneOf:
+                  - $ref: '#/components/schemas/CaseExportList'
+                  - $ref: '#/components/schemas/CaseSummaryList'
         '404':
           description: No cases matched the given search parameter.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CaseSummaryList'
+                oneOf:
+                  - $ref: '#/components/schemas/CaseExportList'
+                  - $ref: '#/components/schemas/CaseSummaryList'
     post:
       tags:
         - cases
@@ -473,7 +473,7 @@ paths:
             schema:
               $ref: '#/components/schemas/CaseRequest'
       responses:
-        '201':
+        '200':
           description: successful operation
           content:
             application/json:
@@ -1063,6 +1063,86 @@ components:
           type: string
           description: The specific type as given by the dm2 record
 
+    CaseExportList:
+      type: object
+      properties:
+        numFound:
+          type: integer
+        cases:
+          type: array
+          items:
+            $ref: '#/components/schemas/CaseExport'
+      required:
+        - numFound
+        - cases
+
+    CaseExport:
+      type: object
+      nullable: true
+      properties:
+        id:
+          type: integer
+          description: Case id
+        title:
+          type: string
+          description: Case title (free form, not tied to the bibliographic title of any of the faustnumbers)
+        details:
+          type: string
+          description: Case details (free form)
+        primaryFaust:
+          type: string
+          description: Faustnumber for the primary manifestations, typically one of the paperbooks
+        relatedFausts:
+          type: array
+          items:
+            type: string
+            description: Other faustnumbers that should link to the review produced by this case
+          minItems: 0
+        reviewer:
+          $ref: '#/components/schemas/UserSummary'
+          nullable: true
+          description: Summary for the selected reviewer
+        created:
+          type: string
+          format: date-time
+          description: Time of creation
+        deadline:
+          type: string
+          format: date
+          nullable: true
+        weekCode:
+          type: string
+          nullable: true
+          description: Weekcode assigned to this case
+        author:
+          type: string
+          nullable: true
+          description: Name of author
+        publisher:
+          type: string
+          nullable: true
+          description: Name of the publisher
+        recordId:
+          type: string
+          nullable: true
+          description: FAUST number assigned to the MARC record generated for the case during export
+        materialType:
+          $ref: '#/components/schemas/MaterialType'
+        tasks:
+          type: array
+          items:
+            $ref: '#/components/schemas/Task'
+          minItems: 0
+      required:
+        - id
+        - title
+        - primaryFaust
+        - relatedFausts
+        - created
+        - status
+        - materialType
+        - tasks
+
     CaseSummaryList:
       type: object
       properties:
@@ -1203,6 +1283,10 @@ components:
           type: string
           nullable: true
           description: Name of the publisher
+        recordId:
+          type: string
+          nullable: true
+          description: FAUST number assigned to the MARC record generated for the case during export
       required:
         - id
         - title
@@ -1221,13 +1305,15 @@ components:
       properties:
         title:
           type: string
+          nullable: true
           description: Case title (free form, not tied to the bibliographic title of any of the faustnumbers)
         details:
           type: string
-          description: Case details (free form)
           nullable: true
+          description: Case details (free form)
         primaryFaust:
           type: string
+          nullable: true
           description: Faustnumber for the primary manifestations, typically one of the paperbooks
         relatedFausts:
           type: array
@@ -1287,10 +1373,10 @@ components:
           type: string
           nullable: true
           description: Name of the publisher
-      required:
-        - title
-        - primaryFaust
-        - materialType
+        recordId:
+          type: string
+          nullable: true
+          description: FAUST number assigned to the MARC record generated for the case during export
 
     CaseStatus:
       type: string
@@ -1479,3 +1565,13 @@ components:
       enum:
         - 'EDITOR'
         - 'REVIEWER'
+
+    CriteriaOperator:
+      type: string
+      enum:
+        - 'EQUAL'
+        - 'GREATER_THAN'
+        - 'GREATER_THAN_OR_EQUAL_TO'
+        - 'LESS_THAN'
+        - 'LESS_THAN_OR_EQUAL_TO'
+        - 'NOT_EQUAL'

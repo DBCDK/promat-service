@@ -1,0 +1,1 @@
+ALTER TABLE promatcase ADD COLUMN recordId TEXT DEFAULT NULL;

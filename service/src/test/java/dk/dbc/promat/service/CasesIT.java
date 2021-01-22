@@ -6,33 +6,36 @@
 package dk.dbc.promat.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-
+import dk.dbc.promat.service.connector.PromatServiceConnector;
+import dk.dbc.promat.service.connector.PromatServiceConnectorException;
 import dk.dbc.promat.service.dto.CaseRequestDto;
 import dk.dbc.promat.service.dto.CaseSummaryList;
+import dk.dbc.promat.service.dto.CriteriaOperator;
 import dk.dbc.promat.service.dto.TaskDto;
-import dk.dbc.promat.service.persistence.PromatCase;
 import dk.dbc.promat.service.persistence.CaseStatus;
 import dk.dbc.promat.service.persistence.MaterialType;
+import dk.dbc.promat.service.persistence.PromatCase;
 import dk.dbc.promat.service.persistence.PromatTask;
 import dk.dbc.promat.service.persistence.Subject;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.notNullValue;
-import static org.hamcrest.core.Is.is;
-import static org.hamcrest.Matchers.greaterThanOrEqualTo;
-
 import dk.dbc.promat.service.persistence.TaskFieldType;
 import dk.dbc.promat.service.persistence.TaskType;
-import java.util.Collections;
 import org.hamcrest.core.IsNull;
 import org.junit.jupiter.api.Test;
+
 import javax.ws.rs.core.Response;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.greaterThanOrEqualTo;
+import static org.hamcrest.Matchers.notNullValue;
+import static org.hamcrest.core.Is.is;
 
 public class CasesIT extends ContainerTest {
     @Test
@@ -304,48 +307,34 @@ public class CasesIT extends ContainerTest {
     }
 
     @Test
-    public void testGetCasesWithStatus() throws JsonProcessingException {
+    public void testGetCasesWithStatus() throws PromatServiceConnectorException {
 
-        // Cases with status CREATED
         // There are 8 cases preloaded into the database, others may have been created
         // by previously run tests
-        Response response = getResponse("v1/api/cases", Map.of("status","CREATED"));
-        assertThat("status code", response.getStatus(), is(200));
-        String obj = response.readEntity(String.class);
-        CaseSummaryList fetched = mapper.readValue(obj, CaseSummaryList.class);
-        assertThat("Number of cases with status CREATED", fetched.getNumFound(), is(greaterThanOrEqualTo(8)));
+        // Cases with status CLOSED
+        CaseSummaryList fetched = promatServiceConnector.listCases(new PromatServiceConnector.ListCasesParams()
+                .withStatus(CaseStatus.CLOSED));
+        assertThat("Number of cases with status CLOSED", fetched.getNumFound(), is(1));
 
-        // Cases with status CREATED
-        response = getResponse("v1/api/cases", Map.of("status","CLOSED"));
-        assertThat("status code", response.getStatus(), is(200));
-        obj = response.readEntity(String.class);
-        fetched = mapper.readValue(obj, CaseSummaryList.class);
-        assertThat("Number of cases with status CREATED", fetched.getNumFound(), is(1));
-
-        // Cases with status REJECTED
-        response = getResponse("v1/api/cases", Map.of("status","REJECTED"));
-        assertThat("status code", response.getStatus(), is(404));
-        obj = response.readEntity(String.class);
-        fetched = mapper.readValue(obj, CaseSummaryList.class);
-        assertThat("Number of cases with status CREATED", fetched.getNumFound(), is(0));
+        // Cases with status EXPORTED
+        fetched = promatServiceConnector.listCases(new PromatServiceConnector.ListCasesParams()
+                .withStatus(CaseStatus.EXPORTED));
+        assertThat("Number of cases with status EXPORTED", fetched.getNumFound(), is(1));
 
         // Cases with status CLOSED or EXPORTED
-        response = getResponse("v1/api/cases", Map.of("status","CLOSED,EXPORTED"));
-        assertThat("status code", response.getStatus(), is(200));
-        obj = response.readEntity(String.class);
-        fetched = mapper.readValue(obj, CaseSummaryList.class);
+        fetched = promatServiceConnector.listCases(new PromatServiceConnector.ListCasesParams()
+                .withStatus(CaseStatus.CLOSED)
+                .withStatus(CaseStatus.EXPORTED));
         assertThat("Number of cases with status CLOSED or EXPORTED", fetched.getNumFound(), is(2));
     }
 
     @Test
-    public void testGetCasesWithLimit() throws JsonProcessingException {
+    public void testGetCasesWithLimit() throws PromatServiceConnectorException {
 
         // Get 4 cases with status CREATED - there is 8 or more in the database
-        Response response = getResponse("v1/api/cases", Map.of("status", "CREATED", "limit", 4));
-        assertThat("status code", response.getStatus(), is(200));
-
-        String obj = response.readEntity(String.class);
-        CaseSummaryList fetched = mapper.readValue(obj, CaseSummaryList.class);
+        final CaseSummaryList fetched = promatServiceConnector.listCases(new PromatServiceConnector.ListCasesParams()
+                .withStatus(CaseStatus.CREATED)
+                .withLimit(4));
         assertThat("Number of cases with status CREATED", fetched.getNumFound(), is(4));
 
         // Check id ordering
@@ -381,13 +370,13 @@ public class CasesIT extends ContainerTest {
     }
 
     @Test
-    public void testGetCasesWithLimitAndFrom() throws JsonProcessingException {
+    public void testGetCasesWithLimitAndFrom() throws PromatServiceConnectorException {
 
         // Get 4 cases with status CREATED from id 1
-        Response response = getResponse("v1/api/cases", Map.of("status", "CREATED", "limit", 4, "from", 0));
-        assertThat("status code", response.getStatus(), is(200));
-        String obj = response.readEntity(String.class);
-        CaseSummaryList fetched = mapper.readValue(obj, CaseSummaryList.class);
+        CaseSummaryList fetched = promatServiceConnector.listCases(new PromatServiceConnector.ListCasesParams()
+                .withStatus(CaseStatus.CREATED)
+                .withLimit(4)
+                .withFrom(0));
         assertThat("Number of cases with status CREATED", fetched.getNumFound(), is(4));
 
         // Check id ordering
@@ -397,10 +386,10 @@ public class CasesIT extends ContainerTest {
         assertThat(fetched.getCases().get(3).getId(), is(5));
 
         // Get 4 cases with status CREATED from id 7
-        response = getResponse("v1/api/cases", Map.of("status", "CREATED", "limit", 4, "from", 5));
-        assertThat("status code", response.getStatus(), is(200));
-        obj = response.readEntity(String.class);
-        fetched = mapper.readValue(obj, CaseSummaryList.class);
+        fetched = promatServiceConnector.listCases(new PromatServiceConnector.ListCasesParams()
+                .withStatus(CaseStatus.CREATED)
+                .withLimit(4)
+                .withFrom(5));
         assertThat("Number of cases with status CREATED", fetched.getNumFound(), is(4));
 
         // Check id ordering
@@ -410,23 +399,21 @@ public class CasesIT extends ContainerTest {
         assertThat(fetched.getCases().get(3).getId(), is(11));
 
         // Get All cases with status created, then get the last few of them
-        response = getResponse("v1/api/cases", Map.of("status", "CREATED"));
-        assertThat("status code", response.getStatus(), is(200));
-        obj = response.readEntity(String.class);
-        fetched = mapper.readValue(obj, CaseSummaryList.class);
+        fetched = promatServiceConnector.listCases(new PromatServiceConnector.ListCasesParams()
+                .withStatus(CaseStatus.CREATED));
         assertThat("Number of cases with status CREATED", fetched.getNumFound(), is(greaterThanOrEqualTo(8)));
-        int lastId = fetched.getCases().get(fetched.getCases().size() - 1).getId();
+        final int lastId = fetched.getCases().get(fetched.getCases().size() - 1).getId();
 
-        response = getResponse("v1/api/cases", Map.of("status", "CREATED", "limit", 4, "from", lastId - 1));
-        assertThat("status code", response.getStatus(), is(200));
-        obj = response.readEntity(String.class);
-        fetched = mapper.readValue(obj, CaseSummaryList.class);
+        fetched = promatServiceConnector.listCases(new PromatServiceConnector.ListCasesParams()
+                .withStatus(CaseStatus.CREATED)
+                .withLimit(4)
+                .withFrom(lastId - 1));
         assertThat("Number of cases with status CREATED", fetched.getNumFound(), is(1));
         assertThat(fetched.getCases().get(0).getId(), is(lastId));
     }
 
     @Test
-    public void testGetCasesWithReviwer() throws JsonProcessingException {
+    public void testGetCasesWithReviewer() throws PromatServiceConnectorException {
 
         // Cases with reviewer '9999' (no such user)
         Response response = getResponse("v1/api/cases", Map.of("reviewer", 9999));
@@ -437,27 +424,26 @@ public class CasesIT extends ContainerTest {
         assertThat("status code", response.getStatus(), is(404));
 
         // Cases with reviewer '1'
-        response = getResponse("v1/api/cases", Map.of("reviewer", 1));
-        assertThat("status code", response.getStatus(), is(200));
-        String obj = response.readEntity(String.class);
-        CaseSummaryList fetched = mapper.readValue(obj, CaseSummaryList.class);
+        CaseSummaryList fetched = promatServiceConnector.listCases(new PromatServiceConnector.ListCasesParams()
+                .withReviewer(1));
         assertThat("Number of cases with reviewer 1", fetched.getNumFound(), is(greaterThanOrEqualTo(1)));
 
         // Cases with reviewer '1' and status 'REJECTED' (no cases with status REJECTED)
-        response = getResponse("v1/api/cases", Map.of("reviewer", 2, "status", "REJECTED"));
-        assertThat("status code", response.getStatus(), is(404));
+        fetched = promatServiceConnector.listCases(new PromatServiceConnector.ListCasesParams()
+                .withReviewer(1)
+                .withStatus(CaseStatus.REJECTED));
+        assertThat("Number of cases with reviewer 1 and status REJECTED", fetched.getNumFound(), is(0));
 
         // Cases with editor '2' and status 'CREATED'
-        response = getResponse("v1/api/cases", Map.of("reviewer", 2, "status", "CREATED"));
-        assertThat("status code", response.getStatus(), is(200));
-        obj = response.readEntity(String.class);
-        fetched = mapper.readValue(obj, CaseSummaryList.class);
+        fetched = promatServiceConnector.listCases(new PromatServiceConnector.ListCasesParams()
+                .withReviewer(2)
+                .withStatus(CaseStatus.CREATED));
         assertThat("Number of cases with reviewer 2 and status CREATED", fetched.getNumFound(), is(1));
         assertThat("case id", fetched.getCases().get(0).getId(), is(11));
     }
 
     @Test
-    public void testGetCasesWithEditor() throws JsonProcessingException {
+    public void testGetCasesWithEditor() throws PromatServiceConnectorException {
 
         // Cases with editor '9999' (no such user)
         Response response = getResponse("v1/api/cases", Map.of("editor", 9999));
@@ -468,56 +454,68 @@ public class CasesIT extends ContainerTest {
         assertThat("status code", response.getStatus(), is(404));
 
         // Cases with editor '10'
-        response = getResponse("v1/api/cases", Map.of("editor", 10));
-        assertThat("status code", response.getStatus(), is(200));
-        String obj = response.readEntity(String.class);
-        CaseSummaryList fetched = mapper.readValue(obj, CaseSummaryList.class);
+        CaseSummaryList fetched = promatServiceConnector.listCases(new PromatServiceConnector.ListCasesParams()
+                .withEditor(10));
         assertThat("Number of cases with editor 10", fetched.getNumFound(), is(greaterThanOrEqualTo(1)));
 
         // Cases with editor '11' and status 'REJECTED' (no cases with status REJECTED)
-        response = getResponse("v1/api/cases", Map.of("editor", 11, "status", "REJECTED"));
-        assertThat("status code", response.getStatus(), is(404));
+        fetched = promatServiceConnector.listCases(new PromatServiceConnector.ListCasesParams()
+                .withEditor(11)
+                .withStatus(CaseStatus.REJECTED));
+        assertThat("Number of cases with editor 11 and status REJECTED", fetched.getNumFound(), is(0));
 
         // Cases with editor '11' and status 'CREATED'
-        response = getResponse("v1/api/cases", Map.of("editor", 11, "status", "CREATED"));
-        assertThat("status code", response.getStatus(), is(200));
-        obj = response.readEntity(String.class);
-        fetched = mapper.readValue(obj, CaseSummaryList.class);
-        assertThat("Number of cases with editor 10 and status CREATED", fetched.getNumFound(), is(3));
+        fetched = promatServiceConnector.listCases(new PromatServiceConnector.ListCasesParams()
+                .withEditor(11)
+                .withStatus(CaseStatus.CREATED));
+        assertThat("Number of cases with editor 11 and status CREATED", fetched.getNumFound(), is(3));
         assertThat("case id", fetched.getCases().get(0).getId(), is(10));
     }
 
     @Test
-    public void testGetCasesWithTitle() throws JsonProcessingException {
+    public void testGetCasesWithTitle() throws PromatServiceConnectorException {
 
         // Cases with part of title 'no_such_title'
         Response response = getResponse("v1/api/cases", Map.of("title", "no_such_title"));
         assertThat("status code", response.getStatus(), is(404));
 
         // Cases with part of title 'Title'
-        response = getResponse("v1/api/cases", Map.of("title", "Title"));
-        assertThat("status code", response.getStatus(), is(200));
-        String obj = response.readEntity(String.class);
-        CaseSummaryList fetched = mapper.readValue(obj, CaseSummaryList.class);
-        assertThat("Number of cases with editor 10", fetched.getNumFound(), is(greaterThanOrEqualTo(11)));
+        CaseSummaryList fetched = promatServiceConnector.listCases(new PromatServiceConnector.ListCasesParams()
+                .withTitle("Title"));
+        assertThat("Number of cases with 'Title' as part of title", fetched.getNumFound(), is(greaterThanOrEqualTo(11)));
 
         // Cases with part of title 'title' (lowercase starting 't')
-        response = getResponse("v1/api/cases", Map.of("title", "title"));
-        assertThat("status code", response.getStatus(), is(200));
-        obj = response.readEntity(String.class);
-        fetched = mapper.readValue(obj, CaseSummaryList.class);
-        assertThat("Number of cases with editor 10", fetched.getNumFound(), is(greaterThanOrEqualTo(11)));
+        fetched = promatServiceConnector.listCases(new PromatServiceConnector.ListCasesParams()
+                .withTitle("title"));
+        assertThat("Number of cases with 'title' as part of title", fetched.getNumFound(), is(greaterThanOrEqualTo(11)));
 
         // Cases with full title 'Title for 001111'
-        response = getResponse("v1/api/cases", Map.of("title", "Title for 001111"));
-        assertThat("status code", response.getStatus(), is(200));
-        obj = response.readEntity(String.class);
-        fetched = mapper.readValue(obj, CaseSummaryList.class);
-        assertThat("Number of cases with editor 10", fetched.getNumFound(), is(1));
+        fetched = promatServiceConnector.listCases(new PromatServiceConnector.ListCasesParams()
+                .withTitle("Title for 001111"));
+        assertThat("Number of cases with title 'Title for 001111'", fetched.getNumFound(), is(1));
     }
 
     @Test
-    public void testEditCase() throws JsonProcessingException {
+    public void getCasesWithTrimmedWeekcode() throws PromatServiceConnectorException {
+        CaseSummaryList fetched = promatServiceConnector.listCases(new PromatServiceConnector.ListCasesParams()
+                .withTrimmedWeekcode("202102"));
+        assertThat("Number of cases with trimmed weekcode '202102'", fetched.getNumFound(), is(0));
+
+        fetched = promatServiceConnector.listCases(new PromatServiceConnector.ListCasesParams()
+                .withTrimmedWeekcode("202101"));
+        assertThat("Number of cases with trimmed weekcode '202101'", fetched.getNumFound(), is(1));
+        assertThat("Case with trimmed weekcode '202101'", fetched.getCases().get(0).getId(), is(1));
+
+        fetched = promatServiceConnector.listCases(new PromatServiceConnector.ListCasesParams()
+                .withTrimmedWeekcodeOperator(CriteriaOperator.LESS_THAN_OR_EQUAL_TO)
+                .withTrimmedWeekcode("202101"));
+        assertThat("Number of cases with weekcode less than '202101'", fetched.getNumFound(), is(2));
+        assertThat("1st case with weekcode less than '202101'", fetched.getCases().get(0).getId(), is(1));
+        assertThat("2nd case with weekcode less than '202101'", fetched.getCases().get(1).getId(), is(2));
+    }
+
+    @Test
+    public void testEditCase() throws JsonProcessingException, PromatServiceConnectorException {
 
         // Update of unknown case - should return 404 NOT FOUND
         CaseRequestDto dto = new CaseRequestDto();
@@ -595,9 +593,7 @@ public class CasesIT extends ContainerTest {
                                 .withTaskType(TaskType.BUGGI)
                                 .withTaskFieldType(TaskFieldType.NONE)
                 ));
-        response = postResponse("v1/api/cases/" + created.getId(), dto);
-        assertThat("status code", response.getStatus(), is(200));
-        PromatCase updated = mapper.readValue(response.readEntity(String.class), PromatCase.class);
+        PromatCase updated = promatServiceConnector.updateCase(created.getId(), dto);
 
         assertThat("updated case did not change id", updated.getId(), is(created.getId()));
         assertThat("updated title", updated.getTitle(), is("New title for 8001111"));
