@@ -343,6 +343,19 @@ paths:
             type: string
           description: Entire or part of title of the cases returned
         - in: query
+          name: trimmedWeekcode
+          required: false
+          schema:
+            type: string
+          description: Weekcode without the catalog prefix, ie. yyyyww
+        - in: query
+          name: trimmedWeekcodeOperator
+          required: false
+          schema:
+            type: string
+            $ref: '#/components/schemas/CriteriaOperator'
+            default: EQUAL
+        - in: query
           name: limit
           required: false
           schema:
@@ -1370,3 +1383,13 @@ components:
       enum:
         - 'EDITOR'
         - 'REVIEWER'
+
+    CriteriaOperator:
+      type: string
+      enum:
+        - 'EQUAL'
+        - 'GREATER_THAN'
+        - 'GREATER_THAN_OR_EQUAL_TO'
+        - 'LESS_THAN'
+        - 'LESS_THAN_OR_EQUAL_TO'
+        - 'NOT_EQUAL'
