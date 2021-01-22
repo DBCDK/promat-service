@@ -16,6 +16,7 @@ public class EditorRequest implements Dto {
     private String firstName;
     private String lastName;
     private String email;
+    private Integer paycode;
 
     public Boolean isActive() {
         return active;
@@ -29,8 +30,6 @@ public class EditorRequest implements Dto {
         this.active = active;
         return this;
     }
-
-    // Todo: We do not know, yet, if the cpr number is needed when creating editors
 
     public String getCprNumber() {
         return cprNumber;
@@ -84,31 +83,41 @@ public class EditorRequest implements Dto {
         return this;
     }
 
+    public Integer getPaycode() {
+        return paycode;
+    }
+
+    public void setPaycode(Integer paycode) {
+        this.paycode = paycode;
+    }
+
+    public EditorRequest withPaycode(Integer paycode) {
+        this.paycode = paycode;
+        return this;
+    }
+
     @Override
     public boolean equals(Object o) {
         if(this == o) return true;
         if(o == null || getClass() != o.getClass()) return false;
         EditorRequest that = (EditorRequest) o;
-        return Objects.equals(active, that.active) &&
-                Objects.equals(cprNumber, that.cprNumber) &&
-                Objects.equals(firstName, that.firstName) &&
-                Objects.equals(lastName, that.lastName) &&
-                Objects.equals(email, that.email);
+        return Objects.equals(active, that.active) && Objects.equals(cprNumber, that.cprNumber) && Objects.equals(firstName, that.firstName) && Objects.equals(lastName, that.lastName) && Objects.equals(email, that.email) && Objects.equals(paycode, that.paycode);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(active, cprNumber, firstName, lastName, email);
+        return Objects.hash(active, cprNumber, firstName, lastName, email, paycode);
     }
 
     @Override
     public String toString() {
-        return "ReviewerRequest{" +
+        return "EditorRequest{" +
                 "active=" + active +
                 ", cprNumber='" + cprNumber + '\'' +
                 ", firstName='" + firstName + '\'' +
                 ", lastName='" + lastName + '\'' +
                 ", email='" + email + '\'' +
+                ", paycode=" + paycode +
                 '}';
     }
 }

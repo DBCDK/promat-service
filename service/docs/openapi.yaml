@@ -935,19 +935,22 @@ components:
       properties:
         cprNumber:
           type: string
-          nullable: true
+          nullable: false
         active:
           type: boolean
           nullable: true
         firstName:
           type: string
-          nullable: true
+          nullable: false
         lastName:
           type: string
-          nullable: true
+          nullable: false
         email:
           type: string
-          nullable: true
+          nullable: false
+        paycode:
+          type: integer
+          nullable: false
       required:
         - cprnumber
         - firstName
