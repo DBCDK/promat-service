@@ -22,7 +22,7 @@ public class Renderer {
         String path = Renderer.class.getResource("/jte/templates/").getPath();
         LOGGER.info("Using templates at: {}", path);
         CodeResolver codeResolver = new DirectoryCodeResolver(Path.of(path));
-        templateEngine = TemplateEngine.create(codeResolver, ContentType.Html);
+        templateEngine = TemplateEngine.createPrecompiled(ContentType.Html);
     }
 
     public String render(String template, Object model) {
