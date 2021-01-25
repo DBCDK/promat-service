@@ -76,8 +76,6 @@ public class ScheduledNotificationSenderIT extends IntegrationTest {
         query.setParameter("addresses", List.of("test1@test.dk", "test2@test.dk", "test3@test.dk"));
         query.setParameter("status", NotificationStatus.DONE);
         assertThat("All notifications in db are now DONE", query.getResultList().size(), is(3));
-        verify(mailCounter, times(2)).inc();
-        verify(mailFailureGauge, times(0)).inc();
     }
 
 }
