@@ -6,21 +6,30 @@
 package dk.dbc.promat.service.dto;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import dk.dbc.promat.service.persistence.PromatUser;
 
 public class UserRole {
     private final int id;
     private final PromatUser.Role role;
+    private final String localId;
 
     @JsonCreator
-    public UserRole(@JsonProperty("id") int id, @JsonProperty("role") PromatUser.Role role) {
+    public UserRole(@JsonProperty("id") int id,
+                    @JsonProperty("role") PromatUser.Role role,
+                    @JsonProperty("localId") String localId) {
         this.id = id;
         this.role = role;
+        this.localId = localId;
     }
 
-    public UserRole(int id, String role) {
-        this(id, PromatUser.Role.valueOf(role));
+    public UserRole(int id, String role, String localId) {
+        this(id, PromatUser.Role.valueOf(role), localId);
+    }
+
+    public UserRole(int id, PromatUser.Role role) {
+        this(id, role, null);
     }
 
     public int getId() {
@@ -29,6 +38,11 @@ public class UserRole {
 
     public PromatUser.Role getRole() {
         return role;
+    }
+
+    @JsonIgnore
+    public String getLocalId() {
+        return localId;
     }
 
     @Override
@@ -45,13 +59,17 @@ public class UserRole {
         if (id != userRole.id) {
             return false;
         }
-        return role == userRole.role;
+        if (role != userRole.role) {
+            return false;
+        }
+        return localId != null ? localId.equals(userRole.localId) : userRole.localId == null;
     }
 
     @Override
     public int hashCode() {
         int result = id;
-        result = 31 * result + (role != null ? role.hashCode() : 0);
+        result = 31 * result + role.hashCode();
+        result = 31 * result + (localId != null ? localId.hashCode() : 0);
         return result;
     }
 
@@ -60,6 +78,7 @@ public class UserRole {
         return "UserRole{" +
                 "id=" + id +
                 ", role=" + role +
+                ", localId='" + localId + '\'' +
                 '}';
     }
 }

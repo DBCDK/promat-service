@@ -24,7 +24,7 @@ class UsersIT extends ContainerTest  {
         assertThat("response status", response.getStatus(), is(200));
 
         final UserRole userRole = mapper.readValue(response.readEntity(String.class), UserRole.class);
-        assertThat("user role", userRole, is(new UserRole(1, PromatUser.Role.REVIEWER)));
+        assertThat("user role", userRole, is(new UserRole(1, PromatUser.Role.REVIEWER, null)));
     }
 
     @Test

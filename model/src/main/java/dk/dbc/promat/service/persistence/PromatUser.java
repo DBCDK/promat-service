@@ -28,7 +28,8 @@ import javax.persistence.SqlResultSetMapping;
                         targetClass = dk.dbc.promat.service.dto.UserRole.class,
                         columns = {
                                 @ColumnResult(name = "id"),
-                                @ColumnResult(name = "role")})})
+                                @ColumnResult(name = "role"),
+                                @ColumnResult(name = "localid", type=String.class)})})
 @NamedNativeQuery(
         name = PromatUser.GET_USER_ROLE,
         query = PromatUser.GET_USER_ROLE_QUERY,
@@ -40,7 +41,7 @@ public abstract class PromatUser {
     public static final String GET_USER_ROLE =
             "PromatUser.getUserRole";
     public static final String GET_USER_ROLE_QUERY =
-            "SELECT id,role FROM promatuser reviewer WHERE culrId=?1";
+            "SELECT id,role,CAST(paycode AS TEXT) AS localid FROM promatuser WHERE culrId=?1";
 
     public enum Role {
         EDITOR, REVIEWER
