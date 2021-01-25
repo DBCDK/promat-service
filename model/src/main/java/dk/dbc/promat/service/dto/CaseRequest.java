@@ -326,7 +326,6 @@ public class CaseRequest implements Dto {
 
     @Override
     public boolean equals(Object o) {
-<<<<<<< HEAD:model/src/main/java/dk/dbc/promat/service/dto/CaseRequestDto.java
         if (this == o) {
             return true;
         }
@@ -334,7 +333,7 @@ public class CaseRequest implements Dto {
             return false;
         }
 
-        CaseRequestDto that = (CaseRequestDto) o;
+        CaseRequest that = (CaseRequest) o;
 
         if (title != null ? !title.equals(that.title) : that.title != null) {
             return false;
@@ -385,28 +384,6 @@ public class CaseRequest implements Dto {
             return false;
         }
         return recordId != null ? recordId.equals(that.recordId) : that.recordId == null;
-=======
-        if(this == o) return true;
-        if(o == null || getClass() != o.getClass()) return false;
-        CaseRequest that = (CaseRequest) o;
-        return title.equals(that.title) &&
-                Objects.equals(details, that.details) &&
-                primaryFaust.equals(that.primaryFaust) &&
-                Objects.equals(relatedFausts, that.relatedFausts) &&
-                Objects.equals(reviewer, that.reviewer) &&
-                Objects.equals(editor, that.editor) &&
-                Objects.equals(subjects, that.subjects) &&
-                Objects.equals(deadline, that.deadline) &&
-                Objects.equals(assigned, that.assigned) &&
-                status == that.status &&
-                materialType == that.materialType &&
-                Objects.equals(tasks, that.tasks) &&
-                Objects.equals(weekCode, that.weekCode) &&
-                Objects.equals(author, that.author) &&
-                Objects.equals(creator, that.creator) &&
-                Objects.equals(publisher, that.publisher) &&
-                Objects.equals(recordId, that.recordId);
->>>>>>> Prepare testing of payment:model/src/main/java/dk/dbc/promat/service/dto/CaseRequest.java
     }
 
     @Override

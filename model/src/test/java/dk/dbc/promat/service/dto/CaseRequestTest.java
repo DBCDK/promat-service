@@ -10,11 +10,11 @@ import org.junit.jupiter.api.Test;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
-class CaseRequestDtoTest {
+class CaseRequestTest {
     @Test
     void equals() {
-        final CaseRequestDto caseRequestDto1 = new CaseRequestDto().withRecordId("42424242");
-        final CaseRequestDto caseRequestDto2 = new CaseRequestDto().withRecordId("42424242");
+        final CaseRequest caseRequestDto1 = new CaseRequest().withRecordId("42424242");
+        final CaseRequest caseRequestDto2 = new CaseRequest().withRecordId("42424242");
         assertThat(caseRequestDto1, is(caseRequestDto2));
     }
 }
