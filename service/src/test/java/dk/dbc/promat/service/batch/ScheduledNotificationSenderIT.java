@@ -70,7 +70,10 @@ public class ScheduledNotificationSenderIT extends IntegrationTest {
         List<Message> inbox3 = Mailbox.get("test3@test.dk");
         assertThat("Test3 recieved a mail", inbox3.size(), is(1));
 
-        TypedQuery<Notification> query = entityManager.createQuery(Notification.SELECT_FROM_NOTIFCATION_QUEUE_QUERY, Notification.class);
+        TypedQuery<Notification> query = entityManager.createQuery(
+                "SELECT notification FROM Notification notification " +
+                        "WHERE notification.toAddress IN :addresses AND notification.status = :status", Notification.class);
+        query.setParameter("addresses", List.of("test1@test.dk", "test2@test.dk", "test3@test.dk"));
         query.setParameter("status", NotificationStatus.DONE);
         assertThat("All notifications in db are now DONE", query.getResultList().size(), is(3));
         verify(mailCounter, times(2)).inc();
