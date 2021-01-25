@@ -6,9 +6,9 @@ ALTER TABLE PromatTask RENAME COLUMN paycode TO payCategory;
 -- there is no guarantee that we have standard fields for all cases.
 -- If something blows up, it must be fixed manually.
 UPDATE PromatTask
-   SET taskType = NULL
+   SET taskType = 'NONE'
  WHERE taskType = 'BKM';
 
 UPDATE PromatTask
-SET taskType = NULL
+SET taskType = 'NONE'
 WHERE taskType = 'METAKOMPAS';
