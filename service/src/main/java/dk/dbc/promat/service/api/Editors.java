@@ -5,6 +5,7 @@
 
 package dk.dbc.promat.service.api;
 
+import dk.dbc.connector.culr.CulrConnectorException;
 import dk.dbc.promat.service.dto.EditorRequest;
 import dk.dbc.promat.service.dto.ServiceErrorDto;
 import dk.dbc.promat.service.persistence.Editor;
@@ -33,34 +34,59 @@ public class Editors {
     @PromatEntityManager
     EntityManager entityManager;
 
+    @Inject
+    CulrHandler culrHandler;
+
     @POST
     @Path("editors")
     @Produces({MediaType.APPLICATION_JSON})
-    public Response createEditor(EditorRequest editorRequest) {
+    public Response createEditor(EditorRequest editorRequest) throws CulrConnectorException {
         LOGGER.info("editors (POST)");
 
-        if (editorRequest.getFirstName() == null || editorRequest.getFirstName().isBlank()) {
+        final String firstName = editorRequest.getFirstName();
+        if ( firstName == null || firstName.isBlank()) {
             return ServiceErrorDto.InvalidRequest("Missing required field in the request data",
                     "Field 'firstName' must be supplied and not be blank when creating a new reviewer");
         }
-        if (editorRequest.getLastName() == null || editorRequest.getLastName().isBlank()) {
+
+        final String lastName = editorRequest.getLastName();
+        if ( lastName == null || lastName.isBlank()) {
             return ServiceErrorDto.InvalidRequest("Missing required field in the request data",
                     "Field 'lastName' must be supplied and not be blank when creating a new reviewer");
         }
-        if (editorRequest.getEmail() == null || editorRequest.getEmail().isBlank()) {
+
+        final String email = editorRequest.getEmail();
+        if ( email == null || email.isBlank()) {
             return ServiceErrorDto.InvalidRequest("Missing required field in the request data",
                     "Field 'email' must be supplied and not be blank when creating a new reviewer");
         }
 
-        // Todo: Determine how to obtain a culr-id
-        final String culrId = "";
+        final String cprNumber = editorRequest.getCprNumber();
+        if (cprNumber == null || cprNumber.isBlank()) {
+            return ServiceErrorDto.InvalidRequest("Missing required field in the request data",
+                    "Field 'cprNumber' must be supplied when creating a new reviewer");
+        }
+
+        final Integer paycode = editorRequest.getPaycode();
+        if (paycode == null) {
+            return ServiceErrorDto.InvalidRequest("Missing required field in the request data",
+                    "Field 'paycode' must be supplied when creating a new reviewer");
+        }
+
+        final String culrId;
+        try {
+            culrId = culrHandler.createCulrAccount(cprNumber, String.valueOf(paycode));
+            LOGGER.info("Obtained CulrId {} for new editor", culrId);
+        } catch (ServiceErrorException e) {
+            return Response.status(500).entity(e.getServiceErrorDto()).build();
+        }
 
         try {
             final Editor entity = new Editor()
                     .withActive(editorRequest.isActive() != null ? editorRequest.isActive() : true)  // New users defaults to active
-                    .withFirstName(editorRequest.getFirstName())
-                    .withLastName(editorRequest.getLastName())
-                    .withEmail(editorRequest.getEmail());
+                    .withFirstName(firstName)
+                    .withLastName(lastName)
+                    .withEmail(email);
 
             entity.setCulrId(culrId);
 

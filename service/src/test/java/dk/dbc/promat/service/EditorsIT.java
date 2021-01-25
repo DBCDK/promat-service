@@ -68,13 +68,14 @@ public class EditorsIT extends ContainerTest {
     }
 
     @Test
-    void addEditor() throws JsonProcessingException {
+    void createEditor() throws JsonProcessingException {
 
         final EditorRequest editorRequest = new EditorRequest()
-                .withActive(true)
-                .withEmail("edi.tore@dbc.dk")
+                .withCprNumber("2201211154")
                 .withFirstName("Edi")
-                .withLastName("Tore");
+                .withLastName("Tore")
+                .withEmail("edi.tore@dbc.dk")
+                .withPaycode(9999);
 
         Response response = postResponse("v1/api/editors", editorRequest);
         assertThat("response status", response.getStatus(), is(201));
@@ -104,7 +105,7 @@ public class EditorsIT extends ContainerTest {
 
     private void loadCreatedEditor(Editor editor) {
         editor.setActive(true);
-        editor.setCulrId("");
+        editor.setCulrId("9eb694d3-e734-43f5-b30c-b03d1db1b523");
         editor.setFirstName("Edi");
         editor.setLastName("Tore");
         editor.setEmail("edi.tore@dbc.dk");
