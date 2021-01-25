@@ -88,8 +88,10 @@ public class Records {
                                 .withAgencyId(agency)
                                 .withManifestation(faust));
 
-                        LOGGER.info("Work returned {} manifestations with primary manifestation={}", work.getRecords().length, work.getManifestation());
+                        LOGGER.info("Work returned {} manifestations", work.getRecords().length);
+                        LOGGER.info("Primary manifestations is {}", work.getRecords().length > 0 ? work.getManifestation() : "(none)");
                         for(WorkPresentationRecord record : work.getRecords()) {
+                            LOGGER.info("Adding manifestation {}", record.getManifestation());
                             relatedByWork.add(new RecordDto()
                                     .withFaust(record.getManifestation())
                                     .withPrimary(record.getManifestation().equals(work.getManifestation()))
