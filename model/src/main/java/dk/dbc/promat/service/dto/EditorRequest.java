@@ -113,7 +113,6 @@ public class EditorRequest implements Dto {
     public String toString() {
         return "EditorRequest{" +
                 "active=" + active +
-                ", cprNumber='" + cprNumber + '\'' +
                 ", firstName='" + firstName + '\'' +
                 ", lastName='" + lastName + '\'' +
                 ", email='" + email + '\'' +
