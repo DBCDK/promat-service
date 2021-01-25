@@ -19,11 +19,13 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
+import javax.persistence.NamedNativeQuery;
 import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 import javax.persistence.PrePersist;
 import javax.persistence.PreUpdate;
+import javax.persistence.OrderBy;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Objects;
@@ -31,16 +33,46 @@ import java.util.Objects;
 @NamedQuery(
         name = PromatCase.GET_CASE_NAME,
         query = PromatCase.GET_CASE_QUERY)
+@NamedQuery(
+        name = PromatCase.GET_CASES_FOR_PAYMENT_NAME,
+        query = PromatCase.GET_CASES_FOR_PAYMENT_QUERY)
+@NamedQuery(
+        name = PromatCase.GET_PAYED_CASES_NAME,
+        query = PromatCase.GET_PAYED_CASES_QUERY)
 @Entity
 public class PromatCase {
     public static final String TABLE_NAME = "promatcase";
 
     public static final String GET_CASE_NAME =
             "PromatCase.get.case";
-    public static final String GET_CASE_QUERY = "select pc " +
-            "                                      from PromatCase pc " +
-            "                                      join pc.tasks t " +
+    public static final String GET_CASE_QUERY = "select c" +
+            "                                      from PromatCase c" +
+            "                                      join c.tasks t" +
             "                                     where t.id=:taskid";
+
+    public static final String GET_CASES_FOR_PAYMENT_NAME =
+            "PromatCase.get.cases.for.payment";
+    public static final String GET_CASES_FOR_PAYMENT_QUERY = "select c" +
+            "                                                  from PromatCase c" +
+            "                                                 where c.status in (dk.dbc.promat.service.persistence.CaseStatus.APPROVED," +
+            "                                                                    dk.dbc.promat.service.persistence.CaseStatus.PENDING_MEETING," +
+            "                                                                    dk.dbc.promat.service.persistence.CaseStatus.PENDING_EXPORT," +
+            "                                                                    dk.dbc.promat.service.persistence.CaseStatus.EXPORTED," +
+            "                                                                    dk.dbc.promat.service.persistence.CaseStatus.PENDING_REVERT," +
+            "                                                                    dk.dbc.promat.service.persistence.CaseStatus.REVERTED," +
+            "                                                                    dk.dbc.promat.service.persistence.CaseStatus.PENDING_CLOSE)" +
+            "                                                 order by c.id";
+
+    public static final String GET_PAYED_CASES_NAME =
+            "PromatCase.get.payed.cases";
+    public static final String GET_PAYED_CASES_QUERY = "select distinct c" +
+            "                                             from PromatCase c" +
+            "                                             join CaseTasks ct" +
+            "                                               on c.id = ct.case_id" +
+            "                                             join PromatTask t" +
+            "                                               on t.id = ct.task_id" +
+            "                                            where t.payed = :stamp" +
+            "                                            order by c.id";
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -101,6 +133,7 @@ public class PromatCase {
             joinColumns = @JoinColumn(name = "case_id"),
             inverseJoinColumns = @JoinColumn(name = "task_id")
     )
+    @OrderBy(value = "id")
     @JsonView({CaseView.Export.class, CaseView.Case.class})
     private List<PromatTask> tasks;
 

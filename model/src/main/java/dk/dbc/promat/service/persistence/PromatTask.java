@@ -15,13 +15,25 @@ import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.NamedQuery;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 
+@NamedQuery(
+        name = PromatTask.GET_PAYMENT_HISTORY_NAME,
+        query = PromatTask.GET_PAYMENT_HISTORY_QUERY)
 @Entity
 public class PromatTask {
     public static final String TABLE_NAME = "promattask";
+
+    public static final String GET_PAYMENT_HISTORY_NAME =
+            "PromatTask.get.payment.history";
+    public static final String GET_PAYMENT_HISTORY_QUERY = "select distinct t.payed" +
+            "                                                 from PromatTask t" +
+            "                                                where t.payed is not null" +
+            "                                                order by t.payed";
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -35,11 +47,12 @@ public class PromatTask {
 
     private LocalDate created;
 
-    private String paycode;
+    @Enumerated(EnumType.STRING)
+    private PayCategory payCategory;
 
     private LocalDate approved;
 
-    private LocalDate payed;
+    private LocalDateTime payed;
 
     private String data;
 
@@ -79,12 +92,12 @@ public class PromatTask {
         this.created = created;
     }
 
-    public String getPaycode() {
-        return paycode;
+    public PayCategory getPayCategory() {
+        return payCategory;
     }
 
-    public void setPaycode(String paycode) {
-        this.paycode = paycode;
+    public void setPayCategory(PayCategory payCategory) {
+        this.payCategory = payCategory;
     }
 
     public LocalDate getApproved() {
@@ -95,11 +108,11 @@ public class PromatTask {
         this.approved = approved;
     }
 
-    public LocalDate getPayed() {
+    public LocalDateTime getPayed() {
         return payed;
     }
 
-    public void setPayed(LocalDate payed) {
+    public void setPayed(LocalDateTime payed) {
         this.payed = payed;
     }
 
@@ -139,8 +152,8 @@ public class PromatTask {
         return this;
     }
 
-    public PromatTask withPayCode(String paycode) {
-        this.paycode = paycode;
+    public PromatTask withPayCategory(PayCategory payCategory) {
+        this.payCategory = payCategory;
         return this;
     }
 
@@ -149,7 +162,7 @@ public class PromatTask {
         return this;
     }
 
-    public PromatTask withPayed(LocalDate payed) {
+    public PromatTask withPayed(LocalDateTime payed) {
         this.payed = payed;
         return this;
     }
@@ -174,7 +187,7 @@ public class PromatTask {
                 taskType == task.taskType &&
                 taskFieldType == task.taskFieldType &&
                 created.equals(task.created) &&
-                paycode.equals(task.paycode) &&
+                payCategory == task.payCategory &&
                 Objects.equals(approved, task.approved) &&
                 Objects.equals(payed, task.payed) &&
                 Objects.equals(data, task.data) &&
@@ -183,6 +196,6 @@ public class PromatTask {
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, taskType, taskFieldType, created, paycode, approved, payed, data, targetFausts);
+        return Objects.hash(id, taskType, taskFieldType, created, payCategory, approved, payed, data, targetFausts);
     }
 }

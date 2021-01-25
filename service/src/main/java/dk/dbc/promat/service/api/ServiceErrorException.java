@@ -16,6 +16,7 @@ public class ServiceErrorException extends Exception {
 
     public ServiceErrorException(String reason) {
         super(reason);
+        serviceErrorDto.setCause(reason);
     }
 
     public ServiceErrorException withHttpStatus(int status) {

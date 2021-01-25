@@ -8,6 +8,7 @@ package dk.dbc.promat.service.rest;
 import dk.dbc.promat.service.api.Cases;
 import dk.dbc.promat.service.api.Editors;
 import dk.dbc.promat.service.api.Messages;
+import dk.dbc.promat.service.api.Payments;
 import dk.dbc.promat.service.api.Records;
 import dk.dbc.promat.service.api.Reviewers;
 import dk.dbc.promat.service.api.Subjects;
@@ -23,8 +24,8 @@ import java.util.Set;
 public class PromatApplication extends Application {
     private static final Set<Class<?>> classes = Set.of(
             Cases.class, Editors.class, JacksonFeature.class, Records.class, Reviewers.class, Subjects.class,
-            Users.class, Tasks.class, PersistenceExceptionMapper.class, Messages.class);
-    
+            Users.class, Tasks.class, PersistenceExceptionMapper.class, Messages.class, Payments.class);
+
     private static final Set<Object> singletons = Set.of(new JsonMapperProvider(), new LocalDateConverterProvider());
 
     @Override

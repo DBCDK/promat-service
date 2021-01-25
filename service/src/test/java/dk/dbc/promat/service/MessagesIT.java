@@ -1,7 +1,7 @@
 package dk.dbc.promat.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import dk.dbc.promat.service.dto.CaseRequestDto;
+import dk.dbc.promat.service.dto.CaseRequest;
 import dk.dbc.promat.service.dto.MarkAsReadRequest;
 import dk.dbc.promat.service.dto.MessageRequestDto;
 import dk.dbc.promat.service.dto.PromatMessagesList;
@@ -58,7 +58,7 @@ public class MessagesIT extends ContainerTest {
         final int EDITOR_ID = 10;
         final int ANOTHER_EDITOR_ID = 11;
 
-        CaseRequestDto dto = new CaseRequestDto()
+        CaseRequest dto = new CaseRequest()
                 .withPrimaryFaust("3002111")
                 .withTitle("Title for 3002111")
                 .withMaterialType(MaterialType.BOOK)

@@ -25,6 +25,8 @@ tags:
     description: Case tasks
   - name: messages
     description: Text dialogue reviewer/editor on cases
+  - name: payments
+    description: Payments preview, execute and lock, history
 
 paths:
   /reviewers:
@@ -703,6 +705,80 @@ paths:
                 $ref: '#/components/schemas/ServiceError'
         '401':
           description: Task could not be deleted, check ServiceError in body for specifics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+
+  /payments/preview:
+    get:
+      tags:
+        - payments
+      summary: Return the current payments, as it will look when executed right now
+      operationId: preview
+      parameters:
+        - in: query
+          name: format
+          required: false
+          schema:
+            $ref: '#/components/schemas/PaymentsFormat'
+          description: Format of payments preview, default is PAYMENT_LIST
+        - in: query
+          name: stamp
+          required: false
+          schema:
+            type: string
+          description: Get previous payments with this stamp (from /payments/history)
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/csv: {}
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/PaymentList'
+                  - $ref: '#/components/schemas/GroupedPaymentList'
+        '500':
+          description: Error while building the payments preview
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+
+  /payments/execute:
+    put:
+      tags:
+        - payments
+      summary: Execute and return the current payments
+      operationId: execute
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/csv: {}
+        '500':
+          description: Error while executing pending payments
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+
+  /payments/history:
+    get:
+      tags:
+        - payments
+      summary: Return a list of previous executed payments
+      operationId: history
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentHistory'
+        '500':
+          description: Error while building the payments preview
           content:
             application/json:
               schema:
@@ -1451,7 +1527,7 @@ components:
           type: string
           format: date
           nullable: true
-          description: Date when first added to a periods payroll. This value must not change hereafter
+          description: Date when first added to a periods payments. This value must not change hereafter
         targetFausts:
           type: array
           items:
@@ -1483,15 +1559,8 @@ components:
         - 'MOVIE_NON_FICTION_GR1'
         - 'MOVIE_NON_FICTION_GR2'
         - 'MOVIE_NON_FICTION_GR3'
-        - 'NO_REVIEW'
-        - 'MUSIC_FEE'
-        - 'BKM'
-        - 'METAKOMPAS'
-        - 'BUGGI'
-        - 'EXPRESS'
       description: |
         Enum describing the type of task
-        * NONE = No tasktype set (should not be used)
         * GROUP_1_LESS_THAN_100_PAGES = Books with less than 100 pages
         * GROUP_2_100_UPTO_199_PAGES = Books with 100 to 199 pages
         * GROUP_3_200_UPTO_499_PAGES = Books with 200 to 499 pages
@@ -1504,12 +1573,6 @@ components:
         * MOVIE_NON_FICTION_GR1 = Non-fiction movie, group 1
         * MOVIE_NON_FICTION_GR2 = Non-fiction movie, group 2
         * MOVIE_NON_FICTION_GR3 = Non-fiction movie, group 3
-        * NO_REVIEW = Note but no review
-        * MUSIC_FEE = Music (assumed obsolete)
-        * BKM = Decide if this material is relevant for libraries
-        * METAKOMPAS = Special topics for Metakompasset
-        * BUGGI = Special topics for Buggi
-        * EXPRESS = This case is urgent
 
     TaskFieldType:
       type: string
@@ -1578,3 +1641,67 @@ components:
         - 'LESS_THAN'
         - 'LESS_THAN_OR_EQUAL_TO'
         - 'NOT_EQUAL'
+
+    PaymentsFormat:
+      type: string
+      enum:
+        - 'CSV'
+        - 'PAYMENT_LIST'
+        - 'PAYMENT_LIST_BY_USER'
+        - 'PAYMENT_LIST_BY_FAUST'
+
+    Payment:
+      type: object
+      properties:
+        payCode:
+          type: string
+          description: Paycode of the user who must receive this payment
+        payType:
+          type: string
+          description: Payment type based on the type of task
+        count:
+          type: integer
+          description: Number of payments of this type to this person
+        text:
+          type: string
+          description: Literal description of the task delivered
+      required:
+        - payCode
+        - payType
+        - count
+        - text
+
+    PaymentList:
+      type: object
+      properties:
+        numFound:
+          type: integer
+          description: Number of payments in the list (do note that a single payment may contain more than 1 count of the specific payment to the given person)
+        payments:
+          type: array
+          items:
+            $ref: '#/components/schemas/Payment'
+            description: Individual payments (again, do note that a single payment may contain more than 1 count of the specific payment to the given person)
+      required:
+        - numFound
+        - payments
+
+    GroupedPaymentList:
+      type: object
+      properties:
+        numFound:
+          type: integer
+          description: Number of groups
+        groups:
+          type: array
+          items:
+            $ref: '#/components/schemas/PaymentList'
+            description: Lists of payments sorted by the requested property. Group metadata can be extracted from first item in each group
+      required:
+        - numFound
+        - groups
+
+    PaymentHistory:
+      type: array
+      items:
+        type: string
