@@ -24,7 +24,7 @@ class UsersIT extends ContainerTest  {
         assertThat("response status", response.getStatus(), is(200));
 
         final UserRole userRole = mapper.readValue(response.readEntity(String.class), UserRole.class);
-        assertThat("user role", userRole, is(new UserRole(1, PromatUser.Role.REVIEWER, null)));
+        assertThat("user role", userRole, is(new UserRole(1, PromatUser.Role.REVIEWER)));
     }
 
     @Test
@@ -37,8 +37,20 @@ class UsersIT extends ContainerTest  {
     }
 
     @Test
-    void forbidden() throws JsonProcessingException {
+    void culrIdNotFoundInPromat() {
         final Response response = getResponse("v1/api/users/61/role");
+        assertThat("response status", response.getStatus(), is(401));
+    }
+
+    @Test
+    void localIdNotFoundInCulr() {
+        final Response response = getResponse("v1/api/users/52/role");
+        assertThat("response status", response.getStatus(), is(401));
+    }
+
+    @Test
+    void localIdNotMatchingCulrId() {
+        final Response response = getResponse("v1/api/users/54/role");
         assertThat("response status", response.getStatus(), is(401));
     }
 }

@@ -15,9 +15,9 @@ insert into reviewersubjects(subject_id, reviewer_id) values(5,3);
 insert into reviewersubjects(subject_id, reviewer_id) values(5,4);
 
 -- editors (IDs 10-19)
-insert into promatuser(id, role, active, culrid, firstname, lastname, email) values(10, 'EDITOR', true, '51', 'Ed', 'Itor', 'ed.itor@dbc.dk');
-insert into promatuser(id, role, active, culrid, firstname, lastname, email) values(11, 'EDITOR', true, '52', 'Edit', 'Or', 'edit.or@dbc.dk');
-insert into promatuser(id, role, active, culrid, firstname, lastname, email) values(13, 'EDITOR', true, '54', 'Editte', 'Ore', 'editte.ore@dbc.dk');
+insert into promatuser(id, role, active, culrid, firstname, lastname, email, paycode) values(10, 'EDITOR', true, '51', 'Ed', 'Itor', 'ed.itor@dbc.dk', 5678);
+insert into promatuser(id, role, active, culrid, firstname, lastname, email, paycode) values(11, 'EDITOR', true, '52', 'Edit', 'Or', 'edit.or@dbc.dk', 1111);
+insert into promatuser(id, role, active, culrid, firstname, lastname, email, paycode) values(13, 'EDITOR', true, '54', 'Editte', 'Ore', 'editte.ore@dbc.dk', 2222);
 
 -- This editor is used for update tests. Please do not rely on the value of this editor in other tests
 insert into promatuser(id, role, active, culrid, firstname, lastname, email) values(12, 'EDITOR', true, '53', 'Edi', 'tor', 'edi.tor@dbc.dk');

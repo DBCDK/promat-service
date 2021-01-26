@@ -256,7 +256,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/UserRole'
         '401':
-          description: Forbidden because CULR ID was not found
+          description: Forbidden because either CULR ID was not found in Promat, LOCAL ID was not found in CULR, or LOCAL ID and CULR ID do not match.
+          h
           content:
             application/json:
               schema:

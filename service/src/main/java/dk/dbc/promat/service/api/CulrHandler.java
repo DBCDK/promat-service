@@ -16,12 +16,14 @@ import dk.dbc.culrservice.ws.ResponseCodes;
 import dk.dbc.culrservice.ws.UserIdTypes;
 import dk.dbc.culrservice.ws.UserIdValueAndType;
 import dk.dbc.promat.service.dto.ServiceErrorCode;
+import dk.dbc.promat.service.dto.ServiceErrorDto;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+import java.util.Optional;
 
 @ApplicationScoped
 public class CulrHandler {
@@ -70,8 +72,8 @@ public class CulrHandler {
                 // user operation was interrupted.
 
                 // Assert that both CPR number and local ID belong to the same account.
-                final String guidFromCprLookup = getAccountGuid(userCredentialsCPR, authCredentials);
-                final String guidFromLocalLookup = getAccountGuid(userCredentialsLocal, authCredentials);
+                final String guidFromCprLookup = getAccountGuidOrThrow(userCredentialsCPR, authCredentials);
+                final String guidFromLocalLookup = getAccountGuidOrThrow(userCredentialsLocal, authCredentials);
                 if (!guidFromCprLookup.equals(guidFromLocalLookup)) {
                     final String cause = "CULR ID for CPR number and LOCAL ID lookups did not match";
                     LOGGER.error(cause);
@@ -83,7 +85,7 @@ public class CulrHandler {
                 }
                 return guidFromLocalLookup;
             }
-            return getAccountGuid(userCredentialsLocal, authCredentials);
+            return getAccountGuidOrThrow(userCredentialsLocal, authCredentials);
         }
 
         final ResponseCodes responseCode = culrCprResponse.getResponseStatus().getResponseCode();
@@ -93,6 +95,34 @@ public class CulrHandler {
                 .withCode(ServiceErrorCode.EXTERNAL_SERVICE_ERROR)
                 .withCause("Failed to create CULR ID for CPR number")
                 .withDetails(String.format("CULR service response was %s - %s", responseCode, responseMessage));
+    }
+
+    public Optional<ServiceErrorDto> verifyCulrAccount(String culrId, String localId) throws CulrConnectorException {
+        final AuthCredentials authCredentials = new AuthCredentials();
+        authCredentials.setUserIdAut(culrServiceUserId);
+        authCredentials.setGroupIdAut(PROMAT_AGENCY_ID);
+        authCredentials.setPasswordAut(culrServicePassword);
+
+        final UserIdValueAndType userCredentialsLocal = new UserIdValueAndType();
+        userCredentialsLocal.setUserIdType(UserIdTypes.LOCAL);
+        userCredentialsLocal.setUserIdValue(localId);
+
+        final GetAccountsByAccountIdResponse accountResponse = getAccount(userCredentialsLocal, authCredentials);
+        if (accountResponse.getResponseStatus().getResponseCode() != ResponseCodes.OK_200) {
+            return Optional.of(new ServiceErrorDto()
+                    .withCause("User not authorized")
+                    .withDetails(String.format("Local ID %s was not found in CULR", localId))
+                    .withCode(ServiceErrorCode.NOT_FOUND));
+        }
+        if (!accountResponse.getGuid().equals(culrId)) {
+            return Optional.of(new ServiceErrorDto()
+                    .withCause("User not authorized")
+                    .withDetails(String.format("Local ID belongs to CULR ID %s whereas Promat has %s",
+                            accountResponse.getGuid(), culrId))
+                    .withCode(ServiceErrorCode.FORBIDDEN));
+        }
+
+        return Optional.empty();
     }
 
     private GetAccountsByAccountIdResponse getAccount(UserIdValueAndType userCredentials, AuthCredentials authCredentials)
@@ -106,7 +136,7 @@ public class CulrHandler {
         return account.getResponseStatus().getResponseCode() == ResponseCodes.OK_200;
     }
 
-    private String getAccountGuid(UserIdValueAndType userCredentials, AuthCredentials authCredentials)
+    private String getAccountGuidOrThrow(UserIdValueAndType userCredentials, AuthCredentials authCredentials)
             throws CulrConnectorException, ServiceErrorException {
         final GetAccountsByAccountIdResponse accountResponse = getAccount(userCredentials, authCredentials);
         if (accountResponse.getResponseStatus().getResponseCode() == ResponseCodes.OK_200) {
