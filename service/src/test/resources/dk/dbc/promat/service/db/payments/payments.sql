@@ -21,6 +21,9 @@
 -- mm-dd-åååå;456;1960;1;1001130,1001131 Note Case 14;Ole Olsen
 -- mm-dd-åååå;456;1960;1;1001140,1001141,1001142 Note Case 15;Ole Olsen
 -- mm-dd-åååå;456;1960;1;1001140,1001141,1001142 Note Case 16;Ole Olsen
+-- mm-dd-åååå;456;1954;1;1001170,1001171,1001172 Case 18;Ole Olsen
+-- mm-dd-åååå;456;1960;2;1001170,1001171,1001172 Note Case 18;Ole Olsen
+-- mm-dd-åååå;456;1960;2;1001180,1001181,1001182 Note Case 19;Ole Olsen
 -- --------------------------------------------------------------------------------------------------------------------
 
 -- ********************************************************************************************************************
@@ -346,3 +349,48 @@ values (1160, 1161),
        (1160, 1165),
        (1160, 1166),
        (1160, 1167);
+
+-- Case 18: PAYMENTS EXPECTED, but EXPRESS should not be counted separately (should be ignored)
+-- Case is an express case, so an additional payment for express delivery is expected
+--
+-- mm-dd-åååå;456;1954;1;1001170,1001171,1001172 Case 18;Ole Olsen
+-- mm-dd-åååå;456;1960;2;1001170,1001171,1001172 Note Case 18;Ole Olsen
+insert into promatcase(id, title, details, primaryFaust, relatedFausts, reviewer_id, editor_id, created, deadline, assigned, status, materialType)
+values (1170, 'Case 18', 'Details', '1001170', '[1001171,1001172]', 2, 10, '2021-01-24', '2021-01-26', '2021-01-24', 'APPROVED', 'MULTIMEDIA');
+
+insert into promattask(id, tasktype, taskfieldtype, created, paycategory, approved, payed, data, targetFausts)
+values  (1171, 'MULTIMEDIA_FEE', 'BRIEF',          '2021-01-13', 'BRIEF',          '2021-01-26', NULL, 'data', NULL),
+        (1172, 'MULTIMEDIA_FEE', 'DESCRIPTION',    '2021-01-13', 'MULTIMEDIA_FEE', '2021-01-26', NULL, 'data', NULL),
+        (1173, 'MULTIMEDIA_FEE', 'EVALUATION',     '2021-01-13', 'MULTIMEDIA_FEE', '2021-01-26', NULL, 'data', NULL),
+        (1174, 'MULTIMEDIA_FEE', 'COMPARISON',     '2021-01-13', 'MULTIMEDIA_FEE', '2021-01-26', NULL, 'data', NULL),
+        (1175, 'MULTIMEDIA_FEE', 'RECOMMENDATION', '2021-01-13', 'MULTIMEDIA_FEE', '2021-01-26', NULL, 'data', NULL),
+        (1176, 'MULTIMEDIA_FEE', 'BIBLIOGRAPHIC',  '2021-01-13', 'MULTIMEDIA_FEE', '2021-01-26', NULL, 'data', NULL),
+        (1177, 'MULTIMEDIA_FEE', 'BRIEF',          '2021-01-13', 'BRIEF',          '2021-01-26', NULL, 'data', '[1001172]'),
+        (1178, 'MULTIMEDIA_FEE', 'EXPRESS',        '2021-01-13', 'EXPRESS',        '2021-01-26', NULL, 'data', NULL);
+
+insert into casetasks(case_id, task_id)
+values (1170, 1171),
+       (1170, 1172),
+       (1170, 1173),
+       (1170, 1174),
+       (1170, 1175),
+       (1170, 1176),
+       (1170, 1177),
+       (1170, 1178);
+
+-- Case 19: PAYMENTS EXPECTED, but EXPRESS should not be counted separately (should be ignored)
+-- Case is an express case, so an additional payment for express delivery is expected
+--
+-- mm-dd-åååå;456;1960;2;1001180,1001181,1001182 Note Case 19;Ole Olsen
+insert into promatcase(id, title, details, primaryFaust, relatedFausts, reviewer_id, editor_id, created, deadline, assigned, status, materialType)
+values (1180, 'Case 19', 'Details', '1001180', '[1001181,1001182]', 2, 10, '2021-01-24', '2021-01-26', '2021-01-24', 'APPROVED', 'MULTIMEDIA');
+
+insert into promattask(id, tasktype, taskfieldtype, created, paycategory, approved, payed, data, targetFausts)
+values  (1181, 'MULTIMEDIA_FEE', 'BRIEF',          '2021-01-13', 'BRIEF',       '2021-01-26', NULL, 'data', NULL),
+        (1182, 'MULTIMEDIA_FEE', 'BRIEF',          '2021-01-13', 'BRIEF',       '2021-01-26', NULL, 'data', '[1001182]'),
+        (1183, 'MULTIMEDIA_FEE', 'EXPRESS',        '2021-01-13', 'EXPRESS',     '2021-01-26', NULL, 'data', NULL);
+
+insert into casetasks(case_id, task_id)
+values (1180, 1181),
+       (1180, 1182),
+       (1180, 1183);

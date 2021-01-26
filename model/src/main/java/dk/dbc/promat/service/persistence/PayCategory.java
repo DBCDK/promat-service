@@ -31,7 +31,10 @@ public enum PayCategory {
 
     MOVIE_NON_FICTION_GR2("1983"),
 
-    MOVIE_NON_FICTION_GR3("1984");
+    MOVIE_NON_FICTION_GR3("1984"),
+
+    // To be ignored in payments, task with this category does not add extra payments
+    EXPRESS("0000");
 
     private String payCategory;
 

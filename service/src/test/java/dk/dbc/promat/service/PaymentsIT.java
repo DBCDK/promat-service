@@ -81,7 +81,7 @@ public class PaymentsIT  extends ContainerTest {
         assertThat("status code", response.getStatus(), is(200));
 
         String csv = response.readEntity(String.class);
-        assertThat("number of lines", csv.lines().count(), is(20L));  // 1 header + 19 paymentlines
+        assertThat("number of lines", csv.lines().count(), is(23L));  // 1 header + 22 paymentlines
     }
 
     // This test needs to run after test that depends on the state of the preloaded cases
@@ -92,7 +92,7 @@ public class PaymentsIT  extends ContainerTest {
         assertThat("status code", response.getStatus(), is(200));
 
         PaymentList payments = mapper.readValue(response.readEntity(String.class), PaymentList.class);
-        assertThat("number of paymentlines", payments.getPayments().size(), is(19));
+        assertThat("number of paymentlines", payments.getPayments().size(), is(22));
     }
 
     // This test needs to run after test that depends on the state of the preloaded cases
@@ -103,7 +103,7 @@ public class PaymentsIT  extends ContainerTest {
         assertThat("status code", response.getStatus(), is(200));
 
         String csv = response.readEntity(String.class);
-        assertThat("number of lines", csv.lines().count(), is(20L));  // 1 header + 19 paymentlines
+        assertThat("number of lines", csv.lines().count(), is(23L));  // 1 header + 22 paymentlines
 
         verifyPaymentCsv(csv);
     }
@@ -118,7 +118,7 @@ public class PaymentsIT  extends ContainerTest {
         assertThat("status code", response.getStatus(), is(200));
 
         String csv = response.readEntity(String.class);
-        assertThat("number of lines", csv.lines().count(), is(20L));  // 1 header + 19 paymentlines
+        assertThat("number of lines", csv.lines().count(), is(23L));  // 1 header + 22 paymentlines
 
         // Now check that all pending payments has been payed
         response = getResponse("v1/api/payments/preview", Map.of("format","CSV"));
@@ -156,7 +156,7 @@ public class PaymentsIT  extends ContainerTest {
         assertThat("status code", response.getStatus(), is(200));
 
         String csv = response.readEntity(String.class);
-        assertThat("number of lines", csv.lines().count(), is(20L));  // 1 header + 19 paymentlines
+        assertThat("number of lines", csv.lines().count(), is(23L));  // 1 header + 22 paymentlines
 
         verifyPaymentCsv(csv);
     }
@@ -185,7 +185,10 @@ public class PaymentsIT  extends ContainerTest {
                 "mm-dd-åååå;456;1960;1;1001130,1001131 Note Case 14;Ole Olsen\n" +
                 "mm-dd-åååå;456;1981;1;1001130,1001131 Case 14;Ole Olsen\n" +
                 "mm-dd-åååå;456;1960;1;1001140,1001141,1001142 Note Case 15;Ole Olsen\n" +
-                "mm-dd-åååå;456;1960;1;1001150,1001151,1001152 Note Case 16;Ole Olsen")
+                "mm-dd-åååå;456;1960;1;1001150,1001151,1001152 Note Case 16;Ole Olsen\n" +
+                "mm-dd-åååå;456;1954;1;1001170,1001171,1001172 Case 18;Ole Olsen\n" +
+                "mm-dd-åååå;456;1960;2;1001170,1001171,1001172 Note Case 18;Ole Olsen\n" +
+                "mm-dd-åååå;456;1960;2;1001180,1001181,1001182 Note Case 19;Ole Olsen")
                         .replace("mm-dd-åååå", LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd-MM-yyyy")));
         LOGGER.info("Expected CSV output is:\n{}", expected);
 

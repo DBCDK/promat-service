@@ -595,6 +595,8 @@ public class Cases {
                 return PayCategory.METAKOMPAS;
             case BKM:
                 return PayCategory.BKM;
+            case EXPRESS:
+                return PayCategory.EXPRESS;
             default: {
                 switch(taskType) {
 
