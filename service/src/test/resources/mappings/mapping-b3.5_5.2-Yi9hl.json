@@ -1,7 +1,7 @@
 {
   "id" : "4bc4ee34-c333-3b63-ac65-b261f1c18e0a",
   "request" : {
-    "url" : "/b3.5_5.2/?collectionType=work&objectFormat=marcxchange&agency=100200&stepValue=10&profile=test&query=id%3D9788764432589%20OR%20is%3D9788764432589%20OR%20bc%3D9788764432589&start=1&action=search&outputType=json&repository=rawrepo_basis",
+    "url" : "/b3.5_5.2/?collectionType=work&objectFormat=marcxchange&agency=010100&stepValue=10&profile=dbckat&query=id%3D9788764432589%20OR%20is%3D9788764432589%20OR%20bc%3D9788764432589&start=1&action=search&outputType=json&repository=rawrepo_basis",
     "method" : "GET"
   },
   "response" : {
@@ -11,7 +11,7 @@
       "Date" : "Tue, 15 Dec 2020 15:58:27 GMT",
       "Server" : "Apache/2.4.38 (Debian)",
       "dbcdk-action" : "search",
-      "dbcdk-agency" : "100200",
+      "dbcdk-agency" : "010100",
       "Keep-Alive" : "timeout=5, max=100",
       "Connection" : "Keep-Alive",
       "Transfer-Encoding" : "chunked",
