@@ -5,20 +5,16 @@
 
 package dk.dbc.promat.service.api;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import dk.dbc.promat.service.Repository;
-import dk.dbc.promat.service.dto.GroupedPaymentList;
 import dk.dbc.promat.service.dto.Payment;
 import dk.dbc.promat.service.dto.PaymentList;
 import dk.dbc.promat.service.dto.ServiceErrorCode;
 import dk.dbc.promat.service.dto.ServiceErrorDto;
 import dk.dbc.promat.service.persistence.CaseStatus;
-import dk.dbc.promat.service.persistence.CaseView;
 import dk.dbc.promat.service.persistence.PayCategory;
 import dk.dbc.promat.service.persistence.PromatCase;
 import dk.dbc.promat.service.persistence.PromatEntityManager;
 import dk.dbc.promat.service.persistence.PromatTask;
-import dk.dbc.promat.service.rest.JsonMapperProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -57,9 +53,7 @@ public class Payments {
 
     public enum PaymentsFormat {
         CSV,
-        PAYMENT_LIST,
-        PAYMENT_LIST_BY_USER, //Todo: updated 2021-01-20: May be superfluous, waiting on ux/frontend
-        PAYMENT_LIST_BY_FAUST //Todo: ...^^
+        PAYMENT_LIST
     }
 
     public static final String TIMESTAMP_FORMAT = "yyyyMMdd_HHmmssSSS";
@@ -103,22 +97,6 @@ public class Payments {
                         .header("Pragma", "no-cache")
                         .header("Content-Type", "application/json")
                         .entity(paymentList)
-                        .build();
-            } else if(format == PaymentsFormat.PAYMENT_LIST_BY_USER) {
-                ObjectMapper mapper = new JsonMapperProvider().getObjectMapper();
-                return Response.status(200)
-                        .header("Pragma", "no-cache")
-                        .header("Content-Type", "application/json")
-                        .entity(mapper.writerWithView(CaseView.Summary.class)
-                                .writeValueAsString(groupPaymentsByUser(paymentList)))
-                        .build();
-            } else if(format == PaymentsFormat.PAYMENT_LIST_BY_FAUST) {
-                ObjectMapper mapper = new JsonMapperProvider().getObjectMapper();
-                return Response.status(200)
-                        .header("Pragma", "no-cache")
-                        .header("Content-Type", "application/json")
-                        .entity(mapper.writerWithView(CaseView.Summary.class)
-                                .writeValueAsString(groupPaymentsByFaust(paymentList)))
                         .build();
             } else {
                 // Aka. "Developer note": "You forgot something!"
@@ -180,44 +158,6 @@ public class Payments {
                                 .ofPattern(TIMESTAMP_FORMAT)))
                         .collect(Collectors.toList()))
                 .build();
-    }
-
-    private GroupedPaymentList groupPaymentsByUser(PaymentList paymentList) {
-        Map<Integer, List<Payment>> grouped = paymentList
-                .getPayments()
-                .stream()
-                .collect(Collectors.groupingBy(payment -> payment.getReviewer().getId()));
-
-        List<PaymentList> paymentLists = grouped
-                .values()
-                .stream()
-                .map(group -> new PaymentList()
-                        .withNumFound(group.size())
-                        .withPayments(group))
-                .collect(Collectors.toList());
-
-        return new GroupedPaymentList()
-                .withNumFound(paymentLists.size())
-                .withGroups(paymentLists);
-    }
-
-    private GroupedPaymentList groupPaymentsByFaust(PaymentList paymentList) {
-        Map<String, List<Payment>> grouped = paymentList
-                .getPayments()
-                .stream()
-                .collect(Collectors.groupingBy(Payment::getPrimaryFaust));
-
-        List<PaymentList> paymentLists = grouped
-                .values()
-                .stream()
-                .map(group -> new PaymentList()
-                        .withNumFound(group.size())
-                        .withPayments(group))
-                .collect(Collectors.toList());
-
-        return new GroupedPaymentList()
-                .withNumFound(paymentLists.size())
-                .withGroups(paymentLists);
     }
 
     private String getPaymentsCsvFilename(String prefix) {

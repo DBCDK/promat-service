@@ -9,7 +9,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import dk.dbc.promat.service.api.Payments;
 import dk.dbc.promat.service.connector.PromatServiceConnectorException;
 import dk.dbc.promat.service.dto.CaseRequest;
-import dk.dbc.promat.service.dto.GroupedPaymentList;
 import dk.dbc.promat.service.dto.PaymentList;
 import dk.dbc.promat.service.persistence.CaseStatus;
 import dk.dbc.promat.service.persistence.PromatCase;
@@ -205,27 +204,5 @@ public class PaymentsIT  extends ContainerTest {
             assertThat("line is correct", line.equals(expectedLines.get(lineCnt - 1)));
             lineCnt++;
         }
-    }
-
-    // Todo: grouping is, most likely, not needed. If so, the test should be removed
-    //@Test
-    public void TestGetPaymentsAsPaymentListByUser() throws JsonProcessingException {
-        Response response = getResponse("v1/api/payments/preview", Map.of("format","PAYMENT_LIST_BY_USER"));
-        assertThat("status code", response.getStatus(), is(200));
-
-        GroupedPaymentList created = mapper.readValue(response.readEntity(String.class), GroupedPaymentList.class);
-        //Todo: Check that the list has groups
-        //Todo: Check that the groups has payments
-    }
-
-    // Todo: grouping is, most likely, not needed. If so, the test should be removed
-    //@Test
-    public void TestGetPaymentsAsPaymentListByFaust() throws JsonProcessingException {
-        Response response = getResponse("v1/api/payments/preview", Map.of("format","PAYMENT_LIST_BY_FAUST"));
-        assertThat("status code", response.getStatus(), is(200));
-
-        GroupedPaymentList created = mapper.readValue(response.readEntity(String.class), GroupedPaymentList.class);
-        //Todo: Check that the list has groups
-        //Todo: Check that the groups has payments
     }
 }
