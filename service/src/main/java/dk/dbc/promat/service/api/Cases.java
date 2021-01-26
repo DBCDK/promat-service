@@ -354,6 +354,7 @@ public class Cases {
         LOGGER.info("cases/{} (POST) body: {}", id, dto);
 
         repository.getExclusiveAccessToTable(PromatCase.TABLE_NAME);
+        repository.getExclusiveAccessToTable(PromatTask.TABLE_NAME);
 
         try {
 
@@ -367,7 +368,7 @@ public class Cases {
                 return ServiceErrorDto.InvalidRequest("Forbidden field", "Setting the value of 'assigned' is not allowed");
             }
             final Set<CaseStatus> allowedStatuses = Set.of(CaseStatus.CLOSED, CaseStatus.CREATED,
-                    CaseStatus.EXPORTED, CaseStatus.REVERTED);
+                    CaseStatus.EXPORTED, CaseStatus.REVERTED, CaseStatus.PENDING_CLOSE);
             if(dto.getStatus() != null && !allowedStatuses.contains(dto.getStatus())) {
                 LOGGER.info("Attempt to set forbidden 'status' on case {}", id);
                 return ServiceErrorDto.InvalidRequest("Forbidden status",
@@ -430,6 +431,13 @@ public class Cases {
                     existing.setStatus(CaseStatus.EXPORTED);
                 } else if (dto.getStatus() == CaseStatus.REVERTED)  {
                     existing.setStatus(CaseStatus.REVERTED);
+                } else if (dto.getStatus() == CaseStatus.PENDING_CLOSE)  {
+                    existing.setStatus(CaseStatus.PENDING_CLOSE);
+                    for (PromatTask task : existing.getTasks()) {
+                        if (task.getTaskFieldType().equals(TaskFieldType.BKM)) {
+                            task.setApproved(LocalDate.now());
+                        }
+                    }
                 } else {
                     if( existing.getTasks().stream().filter(task -> task.getData() == null || task.getData().isEmpty()).count() == 0) {
                         if( existing.getTasks().stream().filter(task -> task.getApproved() == null).count() == 0) {

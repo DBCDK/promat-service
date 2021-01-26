@@ -36,6 +36,7 @@ import java.util.stream.Collectors;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.notNullValue;
+import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.core.Is.is;
 
 public class CasesIT extends ContainerTest {
@@ -631,6 +632,34 @@ public class CasesIT extends ContainerTest {
         assertThat("status code", response.getStatus(), is(200));
         PromatCase fetched = mapper.readValue(response.readEntity(String.class), PromatCase.class);
         assertThat("fetched case is same as updated", updated.equals(fetched), is(true));
+
+        // Check that the BKM task is not approved
+        PromatTask bkmTask = fetched.getTasks().stream()
+                .filter(task -> task.getTaskFieldType().equals(TaskFieldType.BKM))
+                .findFirst()
+                .get();
+        assertThat("not approved", bkmTask.getApproved(), is(nullValue()));
+
+        // Change status to PENDING_CLOSE
+        dto.setStatus(CaseStatus.PENDING_CLOSE);
+        response = postResponse("v1/api/cases/" + created.getId(), dto);
+        assertThat("status code", response.getStatus(), is(200));
+        updated = mapper.readValue(response.readEntity(String.class), PromatCase.class);
+        assertThat("status", updated.getStatus(), is(CaseStatus.PENDING_CLOSE));
+
+        // Check that the BKM task is now approved
+        bkmTask = updated.getTasks().stream()
+                .filter(task -> task.getTaskFieldType().equals(TaskFieldType.BKM))
+                .findFirst()
+                .get();
+        assertThat("approved", bkmTask.getApproved(), is(notNullValue()));
+
+        // And make sure that no other task has been approved
+        long approvedTasks = fetched.getTasks().stream()
+                .filter(task -> !task.getTaskFieldType().equals(TaskFieldType.BKM))
+                .filter(task -> task.getApproved() != null)
+                .count();
+        assertThat("no other tasks is approved", approvedTasks, is(0L));
 
         // Close the case
         dto.setStatus(CaseStatus.CLOSED);
