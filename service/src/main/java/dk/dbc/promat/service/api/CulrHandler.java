@@ -26,7 +26,10 @@ import javax.inject.Inject;
 @ApplicationScoped
 public class CulrHandler {
     private static final Logger LOGGER = LoggerFactory.getLogger(CulrHandler.class);
-    private static final String PROMAT_AGENCY_ID = "190976";
+
+    @Inject
+    @ConfigProperty(name = "PROMAT_AGENCY_ID")
+    private String PROMAT_AGENCY_ID;
 
     @Inject CulrConnector culrConnector;
 
