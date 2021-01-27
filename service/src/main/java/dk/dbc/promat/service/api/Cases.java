@@ -74,7 +74,7 @@ public class Cases {
     @Path("cases")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public Response postCase(CaseRequest dto) {
+    public Response createCase(CaseRequest dto) {
         LOGGER.info("cases/ (POST) body: {}", dto);
 
         // Check for required data when creating a new case
