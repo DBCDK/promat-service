@@ -367,9 +367,10 @@ public class Cases {
                 return ServiceErrorDto.InvalidRequest("Forbidden field", "Setting the value of 'assigned' is not allowed");
             }
             final Set<CaseStatus> allowedStatuses = Set.of(CaseStatus.CLOSED, CaseStatus.CREATED,
-                    CaseStatus.EXPORTED, CaseStatus.REVERTED, CaseStatus.PENDING_CLOSE);
+                    CaseStatus.EXPORTED, CaseStatus.REVERTED, CaseStatus.PENDING_CLOSE,
+                    CaseStatus.PENDING_APPROVAL, CaseStatus.APPROVED, CaseStatus.PENDING_ISSUES);
             if(dto.getStatus() != null && !allowedStatuses.contains(dto.getStatus())) {
-                LOGGER.info("Attempt to set forbidden 'status' on case {}", id);
+                LOGGER.info("Attempt to set forbidden status {} on case {}", dto.getStatus(), id);
                 return ServiceErrorDto.InvalidRequest("Forbidden status",
                         String.format("Setting the value of 'status' to other statuses than %s is not allowed", allowedStatuses));
             }
@@ -424,31 +425,7 @@ public class Cases {
                 existing.setMaterialType(dto.getMaterialType());
             }
             if(dto.getStatus() != null) {
-                if (dto.getStatus() == CaseStatus.CLOSED) {
-                    existing.setStatus(CaseStatus.CLOSED);
-                } else if (dto.getStatus() == CaseStatus.EXPORTED)  {
-                    existing.setStatus(CaseStatus.EXPORTED);
-                } else if (dto.getStatus() == CaseStatus.REVERTED)  {
-                    existing.setStatus(CaseStatus.REVERTED);
-                } else if (dto.getStatus() == CaseStatus.PENDING_CLOSE)  {
-                    existing.setStatus(CaseStatus.PENDING_CLOSE);
-                    for (PromatTask task : existing.getTasks()) {
-                        if (task.getTaskFieldType().equals(TaskFieldType.BKM)) {
-                            task.setApproved(LocalDate.now());
-                        }
-                    }
-                } else {
-                    if( existing.getTasks().stream().filter(task -> task.getData() == null || task.getData().isEmpty()).count() == 0) {
-                        if( existing.getTasks().stream().filter(task -> task.getApproved() == null).count() == 0) {
-                            existing.setStatus(CaseStatus.APPROVED);
-                        } else {
-                            existing.setStatus(CaseStatus.PENDING_APPROVAL);
-                        }
-                    } else {
-                        existing.setStatus(CaseStatus.ASSIGNED);
-                    }
-                    // Todo: We may neeed more status handling here when the lifecycle of a task is better defined
-                }
+                setStatus(existing, dto.getStatus());
             }
             if(dto.getCreator() != null) {
                 if (existing.getCreator() != null && !existing.getCreator().getId().equals(dto.getCreator())) {
@@ -743,5 +720,90 @@ public class Cases {
                 .withIsRead(Boolean.FALSE);
         entityManager.persist(notification);
         entityManager.persist(message);
+    }
+
+    private void setStatus(PromatCase existing, CaseStatus newStatus) throws ServiceErrorException {
+        switch(newStatus) {
+
+            case CLOSED:
+                existing.setStatus(CaseStatus.CLOSED);
+                break;
+
+            case EXPORTED:
+                existing.setStatus(CaseStatus.EXPORTED);
+                break;
+
+            case REVERTED:
+                existing.setStatus(CaseStatus.REVERTED);
+                break;
+
+            case CREATED:
+                if (existing.getReviewer() != null) {
+                    existing.setStatus(CaseStatus.ASSIGNED);
+                } else {
+                    existing.setStatus(CaseStatus.CREATED);
+                }
+                break;
+
+            case PENDING_CLOSE:
+                existing.setStatus(CaseStatus.PENDING_CLOSE);
+                for(PromatTask task : existing.getTasks()) {
+                    if(task.getTaskFieldType().equals(TaskFieldType.BKM)) {
+                        task.setApproved(LocalDate.now());
+                    }
+                }
+                break;
+
+            case APPROVED:
+                if (existing.getStatus() != CaseStatus.PENDING_APPROVAL) {
+                    throw new ServiceErrorException("Not allowed to set status APPROVED when case is not in PENDING_APPROVAL")
+                            .withDetails("Attempt to set status of case to APPROVED when case is not in status PENDING_APPROVAL")
+                            .withHttpStatus(400)
+                            .withCode(ServiceErrorCode.INVALID_REQUEST);
+                }
+
+                for (PromatTask task : new ArrayList<>(existing.getTasks())) {
+                    if(task.getTaskFieldType() != TaskFieldType.METAKOMPAS ) {
+                        task.setApproved(LocalDate.now());
+                    }
+                }
+
+                if (existing.getTasks().stream()
+                        .filter(task -> task.getTaskFieldType() == TaskFieldType.METAKOMPAS && task.getApproved() == null)
+                        .count() != 0) {
+                    existing.setStatus(CaseStatus.PENDING_EXTERNAL);
+                } else {
+                    existing.setStatus(CaseStatus.APPROVED);
+                }
+
+                break;
+
+            case PENDING_APPROVAL:
+                if (existing.getStatus() != CaseStatus.ASSIGNED && existing.getStatus() != CaseStatus.PENDING_ISSUES) {
+                    throw new ServiceErrorException("Not allowed to set status PENDING_APPROVAL when case is not assigned")
+                            .withDetails("Attempt to set status of case to PENDING_APPROVAL when case is not in status ASSIGNED")
+                            .withHttpStatus(400)
+                            .withCode(ServiceErrorCode.INVALID_REQUEST);
+                }
+                existing.setStatus(CaseStatus.PENDING_APPROVAL);
+                break;
+
+            case PENDING_ISSUES:
+                if (existing.getStatus() != CaseStatus.PENDING_APPROVAL) {
+                    throw new ServiceErrorException("Not allowed to set status PENDING_ISSUES when case is not in PENDING_APPROVAL")
+                            .withDetails("Attempt to set status of case to PENDING_ISSUES when case is not in status PENDING_APPROVAL")
+                            .withHttpStatus(400)
+                            .withCode(ServiceErrorCode.INVALID_REQUEST);
+                }
+                existing.setStatus(CaseStatus.PENDING_ISSUES);
+                break;
+
+            default:
+                throw new ServiceErrorException("Unknown or forbidden status")
+                        .withDetails(String.format("Attempt to set status %s on case %d which is forbidden or impossible",
+                                newStatus.name(), existing.getId()))
+                        .withHttpStatus(400)
+                        .withCode(ServiceErrorCode.INVALID_REQUEST);
+        }
     }
 }
