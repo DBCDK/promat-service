@@ -5,6 +5,8 @@
 
 package dk.dbc.promat.service.api;
 
+import dk.dbc.connector.culr.CulrConnectorException;
+import dk.dbc.promat.service.dto.ServiceErrorCode;
 import dk.dbc.promat.service.dto.ServiceErrorDto;
 import dk.dbc.promat.service.dto.UserRole;
 import dk.dbc.promat.service.persistence.PromatEntityManager;
@@ -21,6 +23,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.List;
+import java.util.Optional;
 
 @Stateless
 @Path("users")
@@ -29,17 +32,29 @@ public class Users {
     @PromatEntityManager
     EntityManager entityManager;
 
+    @Inject
+    CulrHandler culrHandler;
+
     @GET
     @Path("{culrId}/role")
     @Produces({MediaType.APPLICATION_JSON})
-    public Response getUserRole(@PathParam("culrId") String culrId) {
+    public Response getUserRole(@PathParam("culrId") String culrId) throws CulrConnectorException {
         final TypedQuery<UserRole> query = entityManager.createNamedQuery(PromatUser.GET_USER_ROLE, UserRole.class);
         query.setParameter(1, culrId);
 
         final List<UserRole> userRole = query.getResultList();
         if (userRole.isEmpty()) {
-            return ServiceErrorDto.Forbidden("User not authorized",
-                    String.format("ID %s was not found in the set of known users", culrId));
+            final ServiceErrorDto serviceError = new ServiceErrorDto()
+                    .withCause("User not authorized")
+                    .withDetails(String.format("CULR ID %s was not found in the set of known Promat users", culrId))
+                    .withCode(ServiceErrorCode.NOT_FOUND);
+            return Response.status(401).entity(serviceError).build();
+        }
+
+        final Optional<ServiceErrorDto> verificationError =
+                culrHandler.verifyCulrAccount(culrId, userRole.get(0).getLocalId());
+        if (verificationError.isPresent()) {
+            return Response.status(401).entity(verificationError.get()).build();
         }
         return Response.ok(userRole.get(0)).build();
     }
