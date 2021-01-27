@@ -12,9 +12,9 @@ import dk.dbc.promat.service.persistence.PromatEntityManager;
 import dk.dbc.promat.service.persistence.PromatMessage;
 import dk.dbc.promat.service.persistence.PromatUser;
 import dk.dbc.promat.service.persistence.Reviewer;
-import dk.dbc.promat.service.rest.JsonMapperProvider;
-import java.time.LocalDate;
-import java.util.List;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.inject.Inject;
@@ -29,8 +29,8 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.time.LocalDate;
+import java.util.List;
 
 @Stateless
 @Path("")

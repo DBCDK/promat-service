@@ -3,17 +3,8 @@
  * See license text in LICENSE.txt or at https://opensource.dbc.dk/licenses/gpl-3.0/
  */
 
-package dk.dbc.promat.service.rest;
+package dk.dbc.promat.service.api;
 
-import dk.dbc.promat.service.api.Cases;
-import dk.dbc.promat.service.api.Editors;
-import dk.dbc.promat.service.api.Messages;
-import dk.dbc.promat.service.api.Payments;
-import dk.dbc.promat.service.api.Records;
-import dk.dbc.promat.service.api.Reviewers;
-import dk.dbc.promat.service.api.Subjects;
-import dk.dbc.promat.service.api.Tasks;
-import dk.dbc.promat.service.api.Users;
 import org.glassfish.jersey.jackson.JacksonFeature;
 
 import javax.ws.rs.ApplicationPath;
