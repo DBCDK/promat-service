@@ -291,7 +291,7 @@ public class CasesIT extends ContainerTest {
     }
 
     @Test
-    public void testCheckCaseWithFaustExists() throws JsonProcessingException {
+    public void testCheckCaseWithFaustExists() {
 
         // Check if various fausts exists.
         // (DBC's HttpClient currently do not support HEAD operations, so we use GET and throw away the response body)
@@ -310,14 +310,14 @@ public class CasesIT extends ContainerTest {
     }
 
     @Test
-    public void testGetCasesWithStatus() throws PromatServiceConnectorException, JsonProcessingException {
+    public void testGetCasesWithStatus() throws PromatServiceConnectorException {
 
         // There are 8 cases preloaded into the database, others may have been created
         // by previously run tests
         // Cases with status CLOSED
         CaseSummaryList fetched = promatServiceConnector.listCases(new PromatServiceConnector.ListCasesParams()
                 .withStatus(CaseStatus.CLOSED));
-        assertThat("Number of cases with status CLOSED", fetched.getNumFound(), is(1));
+        assertThat("Number of cases with status CLOSED", fetched.getNumFound(), is(greaterThanOrEqualTo(1)));
 
         // Cases with status CREATED
         fetched = promatServiceConnector.listCases(new PromatServiceConnector.ListCasesParams()
