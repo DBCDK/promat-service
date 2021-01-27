@@ -1,22 +1,28 @@
-package dk.dbc.promat.service;
+/*
+ * Copyright Dansk Bibliotekscenter a/s. Licensed under GPLv3
+ * See license text in LICENSE.txt or at https://opensource.dbc.dk/licenses/gpl-3.0/
+ */
+
+package dk.dbc.promat.service.api;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import dk.dbc.promat.service.ContainerTest;
 import dk.dbc.promat.service.dto.CaseRequest;
 import dk.dbc.promat.service.dto.MarkAsReadRequest;
 import dk.dbc.promat.service.dto.MessageRequestDto;
 import dk.dbc.promat.service.dto.PromatMessagesList;
 import dk.dbc.promat.service.persistence.MaterialType;
 import dk.dbc.promat.service.persistence.Notification;
-import dk.dbc.promat.service.persistence.NotificationStatus;
 import dk.dbc.promat.service.persistence.PromatCase;
 import dk.dbc.promat.service.persistence.PromatMessage;
-import java.util.Arrays;
-import java.util.List;
-import javax.persistence.TypedQuery;
-import javax.ws.rs.core.Response;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.persistence.TypedQuery;
+import javax.ws.rs.core.Response;
+import java.util.Arrays;
+import java.util.List;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.notNullValue;

@@ -3,10 +3,10 @@
  * See license text in LICENSE.txt or at https://opensource.dbc.dk/licenses/gpl-3.0/
  */
 
-package dk.dbc.promat.service;
+package dk.dbc.promat.service.api;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import dk.dbc.promat.service.api.Records;
+import dk.dbc.promat.service.ContainerTest;
 import dk.dbc.promat.service.dto.RecordsListDto;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
