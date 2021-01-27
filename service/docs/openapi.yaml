@@ -35,6 +35,13 @@ paths:
         - reviewers
       summary: Returns list of reviewers
       operationId: getReviewers
+      parameters:
+        - in: query
+          name: deadline
+          required: false
+          schema:
+            type: string
+          description: Deadline used to calculate workloads. Must be set if workloads is to be included in the response
       responses:
         '200':
           description: successful operation
