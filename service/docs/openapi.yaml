@@ -736,9 +736,7 @@ paths:
             application/csv: {}
             application/json:
               schema:
-                oneOf:
-                  - $ref: '#/components/schemas/PaymentList'
-                  - $ref: '#/components/schemas/GroupedPaymentList'
+                $ref: '#/components/schemas/PaymentList'
         '500':
           description: Error while building the payments preview
           content:
@@ -1647,8 +1645,6 @@ components:
       enum:
         - 'CSV'
         - 'PAYMENT_LIST'
-        - 'PAYMENT_LIST_BY_USER'
-        - 'PAYMENT_LIST_BY_FAUST'
 
     Payment:
       type: object
@@ -1685,21 +1681,6 @@ components:
       required:
         - numFound
         - payments
-
-    GroupedPaymentList:
-      type: object
-      properties:
-        numFound:
-          type: integer
-          description: Number of groups
-        groups:
-          type: array
-          items:
-            $ref: '#/components/schemas/PaymentList'
-            description: Lists of payments sorted by the requested property. Group metadata can be extracted from first item in each group
-      required:
-        - numFound
-        - groups
 
     PaymentHistory:
       type: array
