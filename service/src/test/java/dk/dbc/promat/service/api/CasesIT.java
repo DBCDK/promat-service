@@ -3,9 +3,10 @@
  * See license text in LICENSE.txt or at https://opensource.dbc.dk/licenses/gpl-3.0/
  */
 
-package dk.dbc.promat.service;
+package dk.dbc.promat.service.api;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import dk.dbc.promat.service.ContainerTest;
 import dk.dbc.promat.service.connector.PromatServiceConnector;
 import dk.dbc.promat.service.connector.PromatServiceConnectorException;
 import dk.dbc.promat.service.dto.CaseRequest;
@@ -36,9 +37,11 @@ import java.util.stream.Collectors;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.notNullValue;
+import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.core.Is.is;
 
 public class CasesIT extends ContainerTest {
+
     @Test
     public void testCreateCase() throws JsonProcessingException {
 
@@ -289,7 +292,7 @@ public class CasesIT extends ContainerTest {
     }
 
     @Test
-    public void testCheckCaseWithFaustExists() throws JsonProcessingException {
+    public void testCheckCaseWithFaustExists() {
 
         // Check if various fausts exists.
         // (DBC's HttpClient currently do not support HEAD operations, so we use GET and throw away the response body)
@@ -308,14 +311,14 @@ public class CasesIT extends ContainerTest {
     }
 
     @Test
-    public void testGetCasesWithStatus() throws PromatServiceConnectorException, JsonProcessingException {
+    public void testGetCasesWithStatus() throws PromatServiceConnectorException {
 
         // There are 8 cases preloaded into the database, others may have been created
         // by previously run tests
         // Cases with status CLOSED
         CaseSummaryList fetched = promatServiceConnector.listCases(new PromatServiceConnector.ListCasesParams()
                 .withStatus(CaseStatus.CLOSED));
-        assertThat("Number of cases with status CLOSED", fetched.getNumFound(), is(1));
+        assertThat("Number of cases with status CLOSED", fetched.getNumFound(), is(greaterThanOrEqualTo(1)));
 
         // Cases with status CREATED
         fetched = promatServiceConnector.listCases(new PromatServiceConnector.ListCasesParams()
@@ -631,6 +634,34 @@ public class CasesIT extends ContainerTest {
         assertThat("status code", response.getStatus(), is(200));
         PromatCase fetched = mapper.readValue(response.readEntity(String.class), PromatCase.class);
         assertThat("fetched case is same as updated", updated.equals(fetched), is(true));
+
+        // Check that the BKM task is not approved
+        PromatTask bkmTask = fetched.getTasks().stream()
+                .filter(task -> task.getTaskFieldType().equals(TaskFieldType.BKM))
+                .findFirst()
+                .get();
+        assertThat("not approved", bkmTask.getApproved(), is(nullValue()));
+
+        // Change status to PENDING_CLOSE
+        dto.setStatus(CaseStatus.PENDING_CLOSE);
+        response = postResponse("v1/api/cases/" + created.getId(), dto);
+        assertThat("status code", response.getStatus(), is(200));
+        updated = mapper.readValue(response.readEntity(String.class), PromatCase.class);
+        assertThat("status", updated.getStatus(), is(CaseStatus.PENDING_CLOSE));
+
+        // Check that the BKM task is now approved
+        bkmTask = updated.getTasks().stream()
+                .filter(task -> task.getTaskFieldType().equals(TaskFieldType.BKM))
+                .findFirst()
+                .get();
+        assertThat("approved", bkmTask.getApproved(), is(notNullValue()));
+
+        // And make sure that no other task has been approved
+        long approvedTasks = fetched.getTasks().stream()
+                .filter(task -> !task.getTaskFieldType().equals(TaskFieldType.BKM))
+                .filter(task -> task.getApproved() != null)
+                .count();
+        assertThat("no other tasks is approved", approvedTasks, is(0L));
 
         // Close the case
         dto.setStatus(CaseStatus.CLOSED);
@@ -985,7 +1016,92 @@ public class CasesIT extends ContainerTest {
         assertThat("The deleted case is amongst the cases with flagged 'deleted'",
                 fetched.getCases().stream().filter(procase -> procase.getId() == CASEID_TO_BE_DELETED).count(),
                 is(1L));
+    }
 
+    @Test
+    public void testApproveCaseWithUnfinishedMetakompasTask() throws JsonProcessingException {
 
+        // Reviewer has done his job and sets the case in state PENDING_APPROVAL
+        CaseRequest requestDto = new CaseRequest().withStatus(CaseStatus.PENDING_APPROVAL);
+        Response response = postResponse("v1/api/cases/15", requestDto);
+        assertThat("status code", response.getStatus(), is(200));
+
+        // Editor finds an error and returns the case to further editing
+        requestDto = new CaseRequest().withStatus(CaseStatus.PENDING_ISSUES);
+        response = postResponse("v1/api/cases/15", requestDto);
+        assertThat("status code", response.getStatus(), is(200));
+
+        // Reviewer has fixed the errors and sets the case in state PENDING_APPROVAL again
+        requestDto = new CaseRequest().withStatus(CaseStatus.PENDING_APPROVAL);
+        response = postResponse("v1/api/cases/15", requestDto);
+        assertThat("status code", response.getStatus(), is(200));
+
+        // Check that we are not able to set state PENDING_EXTERNAL directly
+        requestDto = new CaseRequest().withStatus(CaseStatus.PENDING_EXTERNAL);
+        response = postResponse("v1/api/cases/15", requestDto);
+        assertThat("status code", response.getStatus(), is(400));
+
+        // Editor approves the case and puts the case in state APPROVED
+        requestDto.setStatus(CaseStatus.APPROVED);
+        response = postResponse("v1/api/cases/15", requestDto);
+        assertThat("status code", response.getStatus(), is(200));
+
+        // Check that status is now PENDING_EXTERNAL due to the not approved metakompas task
+        // and that all but the metakompas task is not approved
+        PromatCase updated = mapper.readValue(response.readEntity(String.class), PromatCase.class);
+        assertThat("status", updated.getStatus(), is(CaseStatus.PENDING_EXTERNAL));
+        assertThat("approved", updated.getTasks().stream().filter(task -> task.getApproved() != null).count(), is(3L));
+        assertThat("approved", updated.getTasks().stream().filter(task -> task.getTaskFieldType() == TaskFieldType.METAKOMPAS)
+                .findFirst().get().getApproved(), is(nullValue()));
+
+        // Delete the case so that we dont mess up payments tests
+        response = deleteResponse("v1/api/cases/15");
+        assertThat("status code", response.getStatus(), is(200));
+    }
+
+    @Test
+    public void testApproveCaseWithApprovedMetakompasTask() throws JsonProcessingException {
+
+        // Reviewer has done his job and sets the case in state PENDING_APPROVAL
+        CaseRequest requestDto = new CaseRequest().withStatus(CaseStatus.PENDING_APPROVAL);
+        Response response = postResponse("v1/api/cases/16", requestDto);
+        assertThat("status code", response.getStatus(), is(200));
+
+        // Editor approves the case and puts the case in state APPROVED
+        requestDto.setStatus(CaseStatus.APPROVED);
+        response = postResponse("v1/api/cases/16", requestDto);
+        assertThat("status code", response.getStatus(), is(200));
+
+        // Check that status is now APPROVED
+        PromatCase updated = mapper.readValue(response.readEntity(String.class), PromatCase.class);
+        assertThat("status", updated.getStatus(), is(CaseStatus.APPROVED));
+        assertThat("approved", updated.getTasks().stream().filter(task -> task.getApproved() != null).count(), is(3L));
+
+        // Delete the case so that we dont mess up payments tests
+        response = deleteResponse("v1/api/cases/16");
+        assertThat("status code", response.getStatus(), is(200));
+    }
+
+    @Test
+    public void testApproveCase() throws JsonProcessingException {
+
+        // Reviewer has done his job and sets the case in state PENDING_APPROVAL
+        CaseRequest requestDto = new CaseRequest().withStatus(CaseStatus.PENDING_APPROVAL);
+        Response response = postResponse("v1/api/cases/17", requestDto);
+        assertThat("status code", response.getStatus(), is(200));
+
+        // Editor approves the case and puts the case in state APPROVED
+        requestDto.setStatus(CaseStatus.APPROVED);
+        response = postResponse("v1/api/cases/17", requestDto);
+        assertThat("status code", response.getStatus(), is(200));
+
+        // Check that status is now APPROVED
+        PromatCase updated = mapper.readValue(response.readEntity(String.class), PromatCase.class);
+        assertThat("status", updated.getStatus(), is(CaseStatus.APPROVED));
+        assertThat("approved", updated.getTasks().stream().filter(task -> task.getApproved() != null).count(), is(2L));
+
+        // Delete the case so that we dont mess up payments tests
+        response = deleteResponse("v1/api/cases/17");
+        assertThat("status code", response.getStatus(), is(200));
     }
 }

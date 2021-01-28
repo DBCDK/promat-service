@@ -35,6 +35,13 @@ paths:
         - reviewers
       summary: Returns list of reviewers
       operationId: getReviewers
+      parameters:
+        - in: query
+          name: deadline
+          required: false
+          schema:
+            type: string
+          description: Deadline used to calculate workloads. Must be set if workloads is to be included in the response
       responses:
         '200':
           description: successful operation
@@ -258,7 +265,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/UserRole'
         '401':
-          description: Forbidden because CULR ID was not found
+          description: Forbidden because either CULR ID was not found in Promat, LOCAL ID was not found in CULR, or LOCAL ID and CULR ID do not match.
           content:
             application/json:
               schema:
@@ -736,9 +743,7 @@ paths:
             application/csv: {}
             application/json:
               schema:
-                oneOf:
-                  - $ref: '#/components/schemas/PaymentList'
-                  - $ref: '#/components/schemas/GroupedPaymentList'
+                $ref: '#/components/schemas/PaymentList'
         '500':
           description: Error while building the payments preview
           content:
@@ -1647,8 +1652,6 @@ components:
       enum:
         - 'CSV'
         - 'PAYMENT_LIST'
-        - 'PAYMENT_LIST_BY_USER'
-        - 'PAYMENT_LIST_BY_FAUST'
 
     Payment:
       type: object
@@ -1685,21 +1688,6 @@ components:
       required:
         - numFound
         - payments
-
-    GroupedPaymentList:
-      type: object
-      properties:
-        numFound:
-          type: integer
-          description: Number of groups
-        groups:
-          type: array
-          items:
-            $ref: '#/components/schemas/PaymentList'
-            description: Lists of payments sorted by the requested property. Group metadata can be extracted from first item in each group
-      required:
-        - numFound
-        - groups
 
     PaymentHistory:
       type: array

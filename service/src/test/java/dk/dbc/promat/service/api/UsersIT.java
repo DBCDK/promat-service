@@ -37,8 +37,20 @@ class UsersIT extends ContainerTest  {
     }
 
     @Test
-    void forbidden() throws JsonProcessingException {
+    void culrIdNotFoundInPromat() {
         final Response response = getResponse("v1/api/users/61/role");
+        assertThat("response status", response.getStatus(), is(401));
+    }
+
+    @Test
+    void localIdNotFoundInCulr() {
+        final Response response = getResponse("v1/api/users/52/role");
+        assertThat("response status", response.getStatus(), is(401));
+    }
+
+    @Test
+    void localIdNotMatchingCulrId() {
+        final Response response = getResponse("v1/api/users/54/role");
         assertThat("response status", response.getStatus(), is(401));
     }
 }
