@@ -9,9 +9,17 @@ import com.opentable.db.postgres.embedded.EmbeddedPostgres;
 import dk.dbc.commons.jdbc.util.JDBCUtil;
 import dk.dbc.httpclient.HttpClient;
 import dk.dbc.httpclient.HttpGet;
-import dk.dbc.promat.service.batch.ScheduledNotificationSenderIT;
 import dk.dbc.promat.service.db.DatabaseMigrator;
-import dk.dbc.promat.service.rest.SubjectsIT;
+import org.junit.jupiter.api.BeforeAll;
+import org.postgresql.ds.PGSimpleDataSource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
+import javax.persistence.Persistence;
+import javax.sql.DataSource;
+import javax.ws.rs.core.Response;
 import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -23,15 +31,6 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.Persistence;
-import javax.sql.DataSource;
-import javax.ws.rs.core.Response;
-import org.junit.jupiter.api.BeforeAll;
-import org.postgresql.ds.PGSimpleDataSource;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import static org.eclipse.persistence.config.PersistenceUnitProperties.JDBC_DRIVER;
 import static org.eclipse.persistence.config.PersistenceUnitProperties.JDBC_PASSWORD;
@@ -91,17 +90,17 @@ public class IntegrationTest {
     }
 
     @BeforeAll
-    public static void setUp() throws SQLException, IOException, URISyntaxException, InterruptedException {
+    public static void setUp() throws SQLException, IOException, URISyntaxException {
         if (!setupDone) {
             LOGGER.info("Populating database for test");
             DataSource dataSource = getDataSource();
             migrate(dataSource);
             Connection connection = connectToPromatDB();
-            executeScript(connection, SubjectsIT.class.getResource("/dk/dbc/promat/service/db/subjects/subjectsdump.sql"));
-            executeScript(connection, SubjectsIT.class.getResource("/dk/dbc/promat/service/db/subjects/promatusers.sql"));
-            executeScript(connection, CasesIT.class.getResource("/dk/dbc/promat/service/db/cases/promatcases.sql"));
-            executeScript(connection, ScheduledNotificationSenderIT.class.getResource("/dk/dbc/promat/service/db/notification/notification.sql"));
-            executeScript(connection, PaymentsIT.class.getResource("/dk/dbc/promat/service/db/payments/payments.sql"));
+            executeScript(connection, IntegrationTest.class.getResource("/dk/dbc/promat/service/db/subjectsdump.sql"));
+            executeScript(connection, IntegrationTest.class.getResource("/dk/dbc/promat/service/db/promatusers.sql"));
+            executeScript(connection, IntegrationTest.class.getResource("/dk/dbc/promat/service/db/promatcases.sql"));
+            executeScript(connection, IntegrationTest.class.getResource("/dk/dbc/promat/service/db/notification.sql"));
+            executeScript(connection, IntegrationTest.class.getResource("/dk/dbc/promat/service/db/payments.sql"));
             entityManager = createEntityManager(getDataSource(),
                     "promatITPU");
             setupDone = true;

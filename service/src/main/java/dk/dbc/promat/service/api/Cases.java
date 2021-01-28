@@ -26,7 +26,6 @@ import dk.dbc.promat.service.persistence.Reviewer;
 import dk.dbc.promat.service.persistence.Subject;
 import dk.dbc.promat.service.persistence.TaskFieldType;
 import dk.dbc.promat.service.persistence.TaskType;
-import dk.dbc.promat.service.rest.JsonMapperProvider;
 import dk.dbc.promat.service.templating.NotificationFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

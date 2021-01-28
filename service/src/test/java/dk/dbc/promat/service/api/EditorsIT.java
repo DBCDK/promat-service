@@ -3,25 +3,17 @@
  * See license text in LICENSE.txt or at https://opensource.dbc.dk/licenses/gpl-3.0/
  */
 
-package dk.dbc.promat.service;
+package dk.dbc.promat.service.api;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import dk.dbc.promat.service.ContainerTest;
 import dk.dbc.promat.service.dto.EditorRequest;
-import dk.dbc.promat.service.dto.ReviewerRequest;
-import dk.dbc.promat.service.persistence.Address;
 import dk.dbc.promat.service.persistence.Editor;
-import dk.dbc.promat.service.persistence.Reviewer;
-import dk.dbc.promat.service.persistence.Subject;
-import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.ws.rs.core.Response;
-
-import java.time.LocalDate;
-import java.util.Arrays;
-import java.util.List;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
