@@ -41,6 +41,7 @@ import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.core.Is.is;
 
 public class CasesIT extends ContainerTest {
+
     @Test
     public void testCreateCase() throws JsonProcessingException {
 
@@ -1015,7 +1016,92 @@ public class CasesIT extends ContainerTest {
         assertThat("The deleted case is amongst the cases with flagged 'deleted'",
                 fetched.getCases().stream().filter(procase -> procase.getId() == CASEID_TO_BE_DELETED).count(),
                 is(1L));
+    }
 
+    @Test
+    public void testApproveCaseWithUnfinishedMetakompasTask() throws JsonProcessingException {
 
+        // Reviewer has done his job and sets the case in state PENDING_APPROVAL
+        CaseRequest requestDto = new CaseRequest().withStatus(CaseStatus.PENDING_APPROVAL);
+        Response response = postResponse("v1/api/cases/15", requestDto);
+        assertThat("status code", response.getStatus(), is(200));
+
+        // Editor finds an error and returns the case to further editing
+        requestDto = new CaseRequest().withStatus(CaseStatus.PENDING_ISSUES);
+        response = postResponse("v1/api/cases/15", requestDto);
+        assertThat("status code", response.getStatus(), is(200));
+
+        // Reviewer has fixed the errors and sets the case in state PENDING_APPROVAL again
+        requestDto = new CaseRequest().withStatus(CaseStatus.PENDING_APPROVAL);
+        response = postResponse("v1/api/cases/15", requestDto);
+        assertThat("status code", response.getStatus(), is(200));
+
+        // Check that we are not able to set state PENDING_EXTERNAL directly
+        requestDto = new CaseRequest().withStatus(CaseStatus.PENDING_EXTERNAL);
+        response = postResponse("v1/api/cases/15", requestDto);
+        assertThat("status code", response.getStatus(), is(400));
+
+        // Editor approves the case and puts the case in state APPROVED
+        requestDto.setStatus(CaseStatus.APPROVED);
+        response = postResponse("v1/api/cases/15", requestDto);
+        assertThat("status code", response.getStatus(), is(200));
+
+        // Check that status is now PENDING_EXTERNAL due to the not approved metakompas task
+        // and that all but the metakompas task is not approved
+        PromatCase updated = mapper.readValue(response.readEntity(String.class), PromatCase.class);
+        assertThat("status", updated.getStatus(), is(CaseStatus.PENDING_EXTERNAL));
+        assertThat("approved", updated.getTasks().stream().filter(task -> task.getApproved() != null).count(), is(3L));
+        assertThat("approved", updated.getTasks().stream().filter(task -> task.getTaskFieldType() == TaskFieldType.METAKOMPAS)
+                .findFirst().get().getApproved(), is(nullValue()));
+
+        // Delete the case so that we dont mess up payments tests
+        response = deleteResponse("v1/api/cases/15");
+        assertThat("status code", response.getStatus(), is(200));
+    }
+
+    @Test
+    public void testApproveCaseWithApprovedMetakompasTask() throws JsonProcessingException {
+
+        // Reviewer has done his job and sets the case in state PENDING_APPROVAL
+        CaseRequest requestDto = new CaseRequest().withStatus(CaseStatus.PENDING_APPROVAL);
+        Response response = postResponse("v1/api/cases/16", requestDto);
+        assertThat("status code", response.getStatus(), is(200));
+
+        // Editor approves the case and puts the case in state APPROVED
+        requestDto.setStatus(CaseStatus.APPROVED);
+        response = postResponse("v1/api/cases/16", requestDto);
+        assertThat("status code", response.getStatus(), is(200));
+
+        // Check that status is now APPROVED
+        PromatCase updated = mapper.readValue(response.readEntity(String.class), PromatCase.class);
+        assertThat("status", updated.getStatus(), is(CaseStatus.APPROVED));
+        assertThat("approved", updated.getTasks().stream().filter(task -> task.getApproved() != null).count(), is(3L));
+
+        // Delete the case so that we dont mess up payments tests
+        response = deleteResponse("v1/api/cases/16");
+        assertThat("status code", response.getStatus(), is(200));
+    }
+
+    @Test
+    public void testApproveCase() throws JsonProcessingException {
+
+        // Reviewer has done his job and sets the case in state PENDING_APPROVAL
+        CaseRequest requestDto = new CaseRequest().withStatus(CaseStatus.PENDING_APPROVAL);
+        Response response = postResponse("v1/api/cases/17", requestDto);
+        assertThat("status code", response.getStatus(), is(200));
+
+        // Editor approves the case and puts the case in state APPROVED
+        requestDto.setStatus(CaseStatus.APPROVED);
+        response = postResponse("v1/api/cases/17", requestDto);
+        assertThat("status code", response.getStatus(), is(200));
+
+        // Check that status is now APPROVED
+        PromatCase updated = mapper.readValue(response.readEntity(String.class), PromatCase.class);
+        assertThat("status", updated.getStatus(), is(CaseStatus.APPROVED));
+        assertThat("approved", updated.getTasks().stream().filter(task -> task.getApproved() != null).count(), is(2L));
+
+        // Delete the case so that we dont mess up payments tests
+        response = deleteResponse("v1/api/cases/17");
+        assertThat("status code", response.getStatus(), is(200));
     }
 }
