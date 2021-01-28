@@ -38,6 +38,9 @@ import java.util.Objects;
 @NamedQuery(
         name = PromatCase.GET_PAYED_CASES_NAME,
         query = PromatCase.GET_PAYED_CASES_QUERY)
+@NamedQuery(
+        name = PromatCase.GET_CASES_FOR_UPDATE_NAME,
+        query = PromatCase.GET_CASES_FOR_UPDATE_QUERY)
 @Entity
 public class PromatCase {
     public static final String TABLE_NAME = "promatcase";
@@ -72,6 +75,18 @@ public class PromatCase {
             "                                               on t.id = ct.task_id" +
             "                                            where t.payed = :stamp" +
             "                                            order by c.id";
+
+    public static final String GET_CASES_FOR_UPDATE_NAME =
+            "PromatCase.get.cases.for.update";
+    public static final String GET_CASES_FOR_UPDATE_QUERY = "select c" +
+            "                                                  from PromatCase c" +
+            "                                                 where c.status not in (dk.dbc.promat.service.persistence.CaseStatus.EXPORTED," +
+            "                                                                    dk.dbc.promat.service.persistence.CaseStatus.PENDING_REVERT," +
+            "                                                                    dk.dbc.promat.service.persistence.CaseStatus.REVERTED," +
+            "                                                                    dk.dbc.promat.service.persistence.CaseStatus.PENDING_CLOSE," +
+            "                                                                    dk.dbc.promat.service.persistence.CaseStatus.CLOSED," +
+            "                                                                    dk.dbc.promat.service.persistence.CaseStatus.DELETED)" +
+            "                                                 order by c.id";
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
