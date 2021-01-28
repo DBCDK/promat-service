@@ -57,6 +57,7 @@ public abstract class ContainerTest extends IntegrationTest {
                 .withEnv("CULR_SERVICE_URL", "http://host.testcontainers.internal:" + wireMockServer.port() + "/1.4/CulrWebService")
                 .withEnv("CULR_SERVICE_USER_ID", "connector")
                 .withEnv("CULR_SERVICE_PASSWORD", "connector-pass")
+                .withEnv("PROMAT_AGENCY_ID", "190976")
                 .withEnv("OPENSEARCH_SERVICE_URL", "http://host.testcontainers.internal:" + wireMockServer.port() + "/b3.5_5.2/")
                 .withEnv("OPENSEARCH_PROFILE", "dbckat")
                 .withEnv("OPENSEARCH_AGENCY", "010100")
