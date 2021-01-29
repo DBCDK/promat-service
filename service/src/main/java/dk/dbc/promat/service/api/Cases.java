@@ -215,17 +215,19 @@ public class Cases {
                               @QueryParam("reviewer") final Integer reviewer,
                               @QueryParam("editor") final Integer editor,
                               @QueryParam("title") final String title,
+                              @QueryParam("author") final String author,
                               @QueryParam("trimmedWeekcode") final String trimmedWeekcode,
                               @QueryParam("trimmedWeekcodeOperator") @DefaultValue("EQUAL")
                                   final CriteriaOperator trimmedWeekcodeOperator,
                               @QueryParam("limit") final Integer limit,
                               @QueryParam("from") final Integer from) {
-        LOGGER.info("cases/?faust={}|status={}|reviewer={}|editor={}|title={}|trimmedWeekcode={}|trimmedWeekcodeOperator={}|limit={}|from={}|format={}",
+        LOGGER.info("cases/?faust={}|status={}|reviewer={}|editor={}|title={}|author={}|trimmedWeekcode={}|trimmedWeekcodeOperator={}|limit={}|from={}|format={}",
                 faust == null ? "null" : faust,
                 status == null ? "null" : status,
                 reviewer == null ? "null" : reviewer,
                 editor == null ? "null" : editor,
                 title == null ? "null" : title,
+                author==null ? "null" :author,
                 trimmedWeekcode == null ? "null" : trimmedWeekcode,
                 trimmedWeekcodeOperator == null ? "null" : trimmedWeekcodeOperator,
                 limit == null ? "null" : limit,
@@ -302,6 +304,15 @@ public class Cases {
                                 .lower(root
                                         .get("title")), builder.literal("%" + title.toLowerCase() + "%")));
             }
+
+            // Get cases with an author that matches (entire, or part of) the given author
+            if(author != null && !author.isBlank() && !author.isEmpty()) {
+                allPredicates.add(builder
+                        .like(builder
+                                .lower(root
+                                        .get("author")), builder.literal("%" + author.toLowerCase() + "%")));
+            }
+
 
             if (trimmedWeekcode != null && !trimmedWeekcode.isBlank()) {
                 allPredicates.add(PredicateFactory.fromBinaryOperator(trimmedWeekcodeOperator,

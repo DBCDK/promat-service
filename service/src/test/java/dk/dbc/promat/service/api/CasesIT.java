@@ -21,6 +21,10 @@ import dk.dbc.promat.service.persistence.PromatTask;
 import dk.dbc.promat.service.persistence.Subject;
 import dk.dbc.promat.service.persistence.TaskFieldType;
 import dk.dbc.promat.service.persistence.TaskType;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.function.Function;
 import org.hamcrest.core.IsNull;
 import org.junit.jupiter.api.Test;
 
@@ -1103,5 +1107,64 @@ public class CasesIT extends ContainerTest {
         // Delete the case so that we dont mess up payments tests
         response = deleteResponse("v1/api/cases/17");
         assertThat("status code", response.getStatus(), is(200));
+    }
+
+    @Test
+    public void testLookUpOnAuthorField() throws JsonProcessingException {
+        Set<Integer> expected = createCasesWithAuthors(
+                Map.of(1, "Klavs Hansen", 2, "Niels (hansen)-Nielsen", 3, "HANSE HANSEN")
+        );
+
+        Set<Integer> others = createCasesWithAuthors(
+                Map.of(4, "Ole Olesen", 5, "Søren Sørensen")
+        );
+
+        Response response = getResponse("v1/api/cases", Map.of("author", "Hans", "format", "SUMMARY"));
+        assertThat("status code", response.getStatus(), is(200));
+        Set<Integer> actual = mapper.readValue(response.readEntity(String.class), CaseSummaryList.class)
+                                .getCases().stream().map( c -> c.getId()).collect(Collectors.toSet());
+
+        assertThat("cases num found", actual.size(), is(3));
+        assertThat("Caseids", actual, is(expected));
+
+        // Delete cases so that we dont mess up payments tests
+        for(Integer cid : expected) {
+            response = deleteResponse("v1/api/cases/"+cid);
+            assertThat("status code", response.getStatus(), is(200));
+        }
+
+        for(Integer cid : others) {
+            response = deleteResponse("v1/api/cases/"+cid);
+            assertThat("status code", response.getStatus(), is(200));
+        }
+
+    }
+
+    private PromatCase createCaseWithAuthor(Integer someUniqueIdNumber, String author) {
+        CaseRequest dto = new CaseRequest();
+        dto.withTitle(String.format("Title for %s", someUniqueIdNumber))
+                .withCreator(13)
+                .withEditor(10)
+                .withPrimaryFaust(String.format("1001111%s", someUniqueIdNumber))
+                .withMaterialType(MaterialType.BOOK)
+                .withAuthor(author);
+
+        Response response = postResponse("v1/api/cases", dto);
+        assertThat("status code", response.getStatus(), is(201));
+        try {
+            PromatCase created = mapper.readValue(response.readEntity(String.class), PromatCase.class);
+            return created;
+        } catch (JsonProcessingException e) {
+            return null;
+        }
+    }
+
+    private Set<Integer> createCasesWithAuthors(Map<Integer, String> caseData) {
+        Set<Integer> expected = new HashSet<>();
+        caseData.forEach((id, name) ->
+        {
+            expected.add(createCaseWithAuthor(id, name).getId());
+        });
+        return expected;
     }
 }
