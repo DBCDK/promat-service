@@ -306,7 +306,7 @@ public class Cases {
             }
 
             // Get cases with an author that matches (entire, or part of) the given author
-            if(author != null && !author.isBlank() && !author.isEmpty()) {
+            if(author != null && !author.isBlank()) {
                 allPredicates.add(builder
                         .like(builder
                                 .lower(root
