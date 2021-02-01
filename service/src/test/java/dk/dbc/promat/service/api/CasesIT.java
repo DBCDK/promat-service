@@ -21,10 +21,8 @@ import dk.dbc.promat.service.persistence.PromatTask;
 import dk.dbc.promat.service.persistence.Subject;
 import dk.dbc.promat.service.persistence.TaskFieldType;
 import dk.dbc.promat.service.persistence.TaskType;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.function.Function;
 import org.hamcrest.core.IsNull;
 import org.junit.jupiter.api.Test;
 
@@ -1110,7 +1108,7 @@ public class CasesIT extends ContainerTest {
     }
 
     @Test
-    public void testLookUpOnAuthorField() throws JsonProcessingException {
+    public void testLookUpOnAuthorField() throws JsonProcessingException, PromatServiceConnectorException {
         Set<Integer> expected = createCasesWithAuthors(
                 Map.of(1, "Klavs Hansen", 2, "Niels (hansen)-Nielsen", 3, "HANSE HANSEN")
         );
@@ -1119,14 +1117,15 @@ public class CasesIT extends ContainerTest {
                 Map.of(4, "Ole Olesen", 5, "Søren Sørensen")
         );
 
-        Response response = getResponse("v1/api/cases", Map.of("author", "Hans", "format", "SUMMARY"));
-        assertThat("status code", response.getStatus(), is(200));
-        Set<Integer> actual = mapper.readValue(response.readEntity(String.class), CaseSummaryList.class)
-                                .getCases().stream().map( c -> c.getId()).collect(Collectors.toSet());
+        CaseSummaryList fetched = promatServiceConnector.listCases(new PromatServiceConnector.ListCasesParams()
+                .withAuthor("Hans"));
+        assertThat("Number of cases with author 'Hans'", fetched.getNumFound(), is(3));
 
-        assertThat("cases num found", actual.size(), is(3));
-        assertThat("Caseids", actual, is(expected));
+        Set<Integer> actual = fetched.getCases().stream().map( c -> c.getId()).collect(Collectors.toSet());
+        assertThat("caseIds match", actual, is(expected));
 
+
+        Response response;
         // Delete cases so that we dont mess up payments tests
         for(Integer cid : expected) {
             response = deleteResponse("v1/api/cases/"+cid);
