@@ -1108,13 +1108,13 @@ public class CasesIT extends ContainerTest {
     }
 
     @Test
-    public void testLookUpOnAuthorField() throws JsonProcessingException, PromatServiceConnectorException {
-        Set<Integer> expected = createCasesWithAuthors(
-                Map.of(1, "Klavs Hansen", 2, "Niels (hansen)-Nielsen", 3, "HANSE HANSEN")
+    public void testLookUpOnAuthorField() throws PromatServiceConnectorException {
+        Set<Integer> expected = createCasesWithAuthorsAndWeekcodes(
+                Map.of(1, List.of("Klavs Hansen"), 2, List.of("Niels (hansen)-Nielsen"), 3, List.of("HANSE HANSEN"))
         );
 
-        Set<Integer> others = createCasesWithAuthors(
-                Map.of(4, "Ole Olesen", 5, "Søren Sørensen")
+        Set<Integer> others = createCasesWithAuthorsAndWeekcodes(
+                Map.of(4, List.of("Ole Olesen"), 5, List.of("Søren Sørensen"))
         );
 
         CaseSummaryList fetched = promatServiceConnector.listCases(new PromatServiceConnector.ListCasesParams()
@@ -1139,14 +1139,44 @@ public class CasesIT extends ContainerTest {
 
     }
 
-    private PromatCase createCaseWithAuthor(Integer someUniqueIdNumber, String author) {
+    @Test
+    public void testLookupOfWeekcodes() throws PromatServiceConnectorException {
+        Set<Integer> expected = createCasesWithAuthorsAndWeekcodes(
+                Map.of(6, List.of("NONE", "BKM202102"), 7, List.of("NONE", "BKM202103"), 8, List.of("NONE", "BKM202104"))
+        );
+
+        Integer someOther = createCaseWithAuthorAndWeekCode(9, "NONE", "BKM202052").getId();
+
+        CaseSummaryList fetched = promatServiceConnector.listCases(new PromatServiceConnector
+                .ListCasesParams()
+                .withWeekcode("BKM202101").withWeekcodeOperator(CriteriaOperator.GREATER_THAN));
+        assertThat("Cases found", fetched.getNumFound(), greaterThanOrEqualTo(3));
+        Set<Integer> actual = fetched.getCases().stream().map( c -> c.getId()).collect(Collectors.toSet());
+        assertThat("cases are all there", actual.containsAll(expected));
+        assertThat("Case prior to weekcode is not there", !actual.contains(someOther));
+
+        Response response;
+
+        // Add the 'other' to the ones that needs to be deleted
+        expected.add(someOther);
+
+        // Delete cases so that we dont mess up payments tests
+        for(Integer cid : expected) {
+            response = deleteResponse("v1/api/cases/"+cid);
+            assertThat("status code", response.getStatus(), is(200));
+        }
+    }
+
+    private PromatCase createCaseWithAuthorAndWeekCode(Integer someUniqueIdNumber, String author, String weekCode) {
         CaseRequest dto = new CaseRequest();
+
         dto.withTitle(String.format("Title for %s", someUniqueIdNumber))
                 .withCreator(13)
                 .withEditor(10)
-                .withPrimaryFaust(String.format("1001111%s", someUniqueIdNumber))
+                .withPrimaryFaust(String.format("400000000%s", someUniqueIdNumber))
                 .withMaterialType(MaterialType.BOOK)
-                .withAuthor(author);
+                .withAuthor(author)
+                .withWeekCode(weekCode);
 
         Response response = postResponse("v1/api/cases", dto);
         assertThat("status code", response.getStatus(), is(201));
@@ -1158,11 +1188,19 @@ public class CasesIT extends ContainerTest {
         }
     }
 
-    private Set<Integer> createCasesWithAuthors(Map<Integer, String> caseData) {
+    private Set<Integer> createCasesWithAuthorsAndWeekcodes(Map<Integer, List<String>> caseData) {
         Set<Integer> expected = new HashSet<>();
-        caseData.forEach((id, name) ->
+        caseData.forEach((id, fieldValues) ->
         {
-            expected.add(createCaseWithAuthor(id, name).getId());
+            String author = null;
+            String weekCode = null;
+            switch (fieldValues.size()) {
+                case 0: break;
+                case 1: author = fieldValues.get(0); break;
+                default: author = fieldValues.get(0); weekCode = fieldValues.get(1);
+            }
+
+            expected.add(createCaseWithAuthorAndWeekCode(id, author, weekCode).getId());
         });
         return expected;
     }

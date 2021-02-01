@@ -354,6 +354,12 @@ paths:
             type: string
           description: Entire or part of title of the cases returned
         - in: query
+          name: author
+          required: false
+          schema:
+            type: string
+          description: Entire or part of author name of the cases returned
+        - in: query
           name: trimmedWeekcode
           required: false
           schema:
@@ -366,6 +372,19 @@ paths:
             type: string
             $ref: '#/components/schemas/CriteriaOperator'
             default: EQUAL
+        - in: query
+          name: weekcode
+          required: false
+          schema:
+            type: string
+          description: Weekcode with catalog prefix (BKM202105 for instance)
+        - in: query
+          name: weekcodeOperator
+          schema:
+            type: string
+            $ref: '#/components/schemas/CriteriaOperator'
+            default: EQUAL
+          required: false
         - in: query
           name: limit
           required: false

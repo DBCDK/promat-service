@@ -219,9 +219,13 @@ public class Cases {
                               @QueryParam("trimmedWeekcode") final String trimmedWeekcode,
                               @QueryParam("trimmedWeekcodeOperator") @DefaultValue("EQUAL")
                                   final CriteriaOperator trimmedWeekcodeOperator,
+                              @QueryParam("weekcode") final String weekcode,
+                              @QueryParam("weekcodeOperator") @DefaultValue("EQUAL")
+                                  final CriteriaOperator weekcodeOperator,
                               @QueryParam("limit") final Integer limit,
                               @QueryParam("from") final Integer from) {
-        LOGGER.info("cases/?faust={}|status={}|reviewer={}|editor={}|title={}|author={}|trimmedWeekcode={}|trimmedWeekcodeOperator={}|limit={}|from={}|format={}",
+        LOGGER.info("cases/?faust={}|status={}|reviewer={}|editor={}|title={}|author={}|" +
+                        "trimmedWeekcode={}|trimmedWeekcodeOperator={}|weekcode={}|weekcodeOperator={}|limit={}|from={}|format={}",
                 faust == null ? "null" : faust,
                 status == null ? "null" : status,
                 reviewer == null ? "null" : reviewer,
@@ -230,6 +234,8 @@ public class Cases {
                 author==null ? "null" :author,
                 trimmedWeekcode == null ? "null" : trimmedWeekcode,
                 trimmedWeekcodeOperator == null ? "null" : trimmedWeekcodeOperator,
+                weekcode == null ? "null" : weekcode,
+                weekcodeOperator == null ? "null" : weekcodeOperator,
                 limit == null ? "null" : limit,
                 from == null ? "null" : from,
                 format);
@@ -317,6 +323,11 @@ public class Cases {
             if (trimmedWeekcode != null && !trimmedWeekcode.isBlank()) {
                 allPredicates.add(PredicateFactory.fromBinaryOperator(trimmedWeekcodeOperator,
                         root.get("trimmedWeekCode"), trimmedWeekcode, builder));
+            }
+
+            if (weekcode != null && !weekcode.isBlank()) {
+                allPredicates.add(PredicateFactory.fromBinaryOperator(weekcodeOperator,
+                        root.get("weekCode"), weekcode, builder));
             }
 
             // If a starting id has been given, add this
