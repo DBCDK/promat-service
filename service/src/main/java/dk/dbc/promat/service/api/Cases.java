@@ -50,6 +50,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.StreamingOutput;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -196,10 +197,40 @@ public class Cases {
             PromatCase requested = entityManager.find(PromatCase.class, id);
             if( requested == null ) {
                 LOGGER.info("Requested case {} does not exist", id);
-                return ServiceErrorDto.NotFound("Case not found", String.format("Requested case {} does not exist", id));
+                return ServiceErrorDto.NotFound("Case not found",
+                        String.format("Requested case %s does not exist", id));
             }
 
             return Response.status(200).entity(requested).build();
+        } catch(Exception exception) {
+            LOGGER.error("Caught exception: {}", exception.getMessage());
+            return ServiceErrorDto.Failed(exception.getMessage());
+        }
+    }
+
+    @GET
+    @Path("cases/{id}/fulltext")
+    @Produces(MediaType.APPLICATION_OCTET_STREAM)
+    public Response getFulltext(@PathParam("id") final Integer id) {
+        LOGGER.info("cases/{}/fulltext", id);
+
+        try {
+            final PromatCase promatCase = entityManager.find(PromatCase.class, id);
+            if (promatCase == null) {
+                return ServiceErrorDto.NotFound("Case not found",
+                        String.format("Requested case %s does not exist", id));
+            }
+            if (promatCase.getFulltextLink() == null) {
+                return ServiceErrorDto.InvalidRequest("Unable to get fulltext",
+                        String.format("Requested case %s does not contain a fulltext link", id));
+            }
+
+            final FulltextHandler fulltextHandler = new FulltextHandler(promatCase.getFulltextLink());
+            final StreamingOutput streamingFulltext = fulltextHandler::getFulltext;
+            return Response.status(200)
+                    .header("Content-Disposition", String.format("attachment; filename=\"%s\"",
+                            fulltextHandler.getFilename()))
+                    .entity(streamingFulltext).build();
         } catch(Exception exception) {
             LOGGER.error("Caught exception: {}", exception.getMessage());
             return ServiceErrorDto.Failed(exception.getMessage());
