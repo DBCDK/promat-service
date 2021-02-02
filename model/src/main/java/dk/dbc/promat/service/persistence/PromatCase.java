@@ -373,7 +373,7 @@ public class PromatCase {
         return this;
     }
 
-    public PromatCase withWeekcode(String weekCode) {
+    public PromatCase withWeekCode(String weekCode) {
         this.weekCode = weekCode;
         return this;
     }

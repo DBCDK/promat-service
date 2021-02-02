@@ -1124,7 +1124,6 @@ public class CasesIT extends ContainerTest {
         Set<Integer> actual = fetched.getCases().stream().map( c -> c.getId()).collect(Collectors.toSet());
         assertThat("caseIds match", actual, is(expected));
 
-
         Response response;
         // Delete cases so that we dont mess up payments tests
         for(Integer cid : expected) {
@@ -1142,14 +1141,15 @@ public class CasesIT extends ContainerTest {
     @Test
     public void testLookupOfWeekcodes() throws PromatServiceConnectorException {
         Set<Integer> expected = createCasesWithAuthorsAndWeekcodes(
-                Map.of(6, List.of("NONE", "BKM202102"), 7, List.of("NONE", "BKM202103"), 8, List.of("NONE", "BKM202104"))
+                Map.of(6, List.of("NONE", "BKM202102"), 7, List.of("NONE", "BKM202102"), 8, List.of("NONE", "BKM202102"))
         );
 
         Integer someOther = createCaseWithAuthorAndWeekCode(9, "NONE", "BKM202052").getId();
 
+
         CaseSummaryList fetched = promatServiceConnector.listCases(new PromatServiceConnector
                 .ListCasesParams()
-                .withWeekcode("BKM202101").withWeekcodeOperator(CriteriaOperator.GREATER_THAN));
+                .withWeekCode("BKM202102"));
         assertThat("Cases found", fetched.getNumFound(), greaterThanOrEqualTo(3));
         Set<Integer> actual = fetched.getCases().stream().map( c -> c.getId()).collect(Collectors.toSet());
         assertThat("cases are all there", actual.containsAll(expected));
