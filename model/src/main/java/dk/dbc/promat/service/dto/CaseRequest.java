@@ -11,7 +11,6 @@ import dk.dbc.promat.service.persistence.MaterialType;
 import dk.dbc.promat.service.persistence.PromatCase;
 
 import java.util.List;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -43,6 +42,7 @@ public class CaseRequest implements Dto {
         }
         this.title = promatCase.getTitle();
         this.weekCode = promatCase.getWeekCode();
+        this.fulltextLink = promatCase.getFulltextLink();
     }
 
     private String title;
@@ -78,6 +78,8 @@ public class CaseRequest implements Dto {
     private String publisher;
 
     private String recordId;
+
+    private String fulltextLink;
 
     public String getTitle() {
         return title;
@@ -301,6 +303,19 @@ public class CaseRequest implements Dto {
         return this;
     }
 
+    public String getFulltextLink() {
+        return fulltextLink;
+    }
+
+    public void setFulltextLink(String fulltextLink) {
+        this.fulltextLink = fulltextLink;
+    }
+
+    public CaseRequest withFulltextLink(String fulltextLink) {
+        setFulltextLink(fulltextLink);
+        return this;
+    }
+
     @Override
     public String toString() {
         return "CaseRequestDto{" +
@@ -321,6 +336,7 @@ public class CaseRequest implements Dto {
                 ", creator=" + creator +
                 ", publisher='" + publisher + '\'' +
                 ", recordId='" + recordId + '\'' +
+                ", fulltextLink='" + fulltextLink + '\'' +
                 '}';
     }
 
@@ -383,7 +399,10 @@ public class CaseRequest implements Dto {
         if (publisher != null ? !publisher.equals(that.publisher) : that.publisher != null) {
             return false;
         }
-        return recordId != null ? recordId.equals(that.recordId) : that.recordId == null;
+        if (recordId != null ? !recordId.equals(that.recordId) : that.recordId != null) {
+            return false;
+        }
+        return fulltextLink != null ? fulltextLink.equals(that.fulltextLink) : that.fulltextLink == null;
     }
 
     @Override
@@ -405,6 +424,7 @@ public class CaseRequest implements Dto {
         result = 31 * result + (creator != null ? creator.hashCode() : 0);
         result = 31 * result + (publisher != null ? publisher.hashCode() : 0);
         result = 31 * result + (recordId != null ? recordId.hashCode() : 0);
+        result = 31 * result + (fulltextLink != null ? fulltextLink.hashCode() : 0);
         return result;
     }
 }

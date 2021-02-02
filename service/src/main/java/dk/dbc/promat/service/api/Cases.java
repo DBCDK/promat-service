@@ -477,6 +477,9 @@ public class Cases {
             if (dto.getRecordId() != null) {
                 existing.setRecordId(dto.getRecordId());
             }
+            if (dto.getFulltextLink() != null) {
+                existing.setFulltextLink(dto.getFulltextLink());
+            }
 
             return Response.ok(existing).build();
         } catch(ServiceErrorException serviceErrorException) {
