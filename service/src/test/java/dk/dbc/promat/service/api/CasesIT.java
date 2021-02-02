@@ -13,18 +13,26 @@ import dk.dbc.promat.service.dto.CaseRequest;
 import dk.dbc.promat.service.dto.CaseSummaryList;
 import dk.dbc.promat.service.dto.CriteriaOperator;
 import dk.dbc.promat.service.dto.TaskDto;
-import dk.dbc.promat.service.persistence.PayCategory;
-import dk.dbc.promat.service.persistence.PromatCase;
 import dk.dbc.promat.service.persistence.CaseStatus;
 import dk.dbc.promat.service.persistence.MaterialType;
+import dk.dbc.promat.service.persistence.PayCategory;
+import dk.dbc.promat.service.persistence.PromatCase;
 import dk.dbc.promat.service.persistence.PromatTask;
 import dk.dbc.promat.service.persistence.Subject;
 import dk.dbc.promat.service.persistence.TaskFieldType;
 import dk.dbc.promat.service.persistence.TaskType;
 import org.hamcrest.core.IsNull;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 import javax.ws.rs.core.Response;
+import java.io.IOException;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -34,6 +42,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import static java.nio.file.StandardOpenOption.CREATE_NEW;
+import static java.nio.file.StandardOpenOption.WRITE;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.notNullValue;
@@ -1103,5 +1113,29 @@ public class CasesIT extends ContainerTest {
         // Delete the case so that we dont mess up payments tests
         response = deleteResponse("v1/api/cases/17");
         assertThat("status code", response.getStatus(), is(200));
+    }
+
+    @Test
+    void getFulltext(@TempDir Path tempDir) throws PromatServiceConnectorException, IOException, InterruptedException {
+        final String fulltextLink = getWiremockUrl("/testsite/downloads/downloadfile.php?file=Data16Bytes.dat&cd=attachment+filename");
+        promatServiceConnector.updateCase(1, new CaseRequest().withFulltextLink(fulltextLink));
+
+        var apiLink = promatServiceBaseUrl + "/v1/api/cases/1/fulltext";
+
+        var client = HttpClient.newBuilder()
+                .version(HttpClient.Version.HTTP_1_1)
+                .build();
+
+        var request = HttpRequest.newBuilder()
+                .uri(URI.create(apiLink))
+                .build();
+
+        final HttpResponse<Path> httpResponse = client.send(request,
+                HttpResponse.BodyHandlers.ofFileDownload(tempDir, WRITE, CREATE_NEW));
+
+        assertThat("file with name Data16Bytes.dat was downloaded",
+                Files.exists(tempDir.resolve("Data16Bytes.dat")), is(true));
+        assertThat("file content", Files.readAllBytes(httpResponse.body()),
+                is(Files.readAllBytes(Path.of("src/test/resources/__files/body-testsite-downloads-downloadfile.php-0KwVu.php"))));
     }
 }

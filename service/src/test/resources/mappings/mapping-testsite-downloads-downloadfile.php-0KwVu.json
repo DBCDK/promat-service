@@ -1,0 +1,22 @@
+{
+  "id" : "9c6d53cd-cd62-3909-ac73-4252686847ff",
+  "request" : {
+    "url" : "/testsite/downloads/downloadfile.php?file=Data16Bytes.dat&cd=attachment+filename",
+    "method" : "GET"
+  },
+  "response" : {
+    "status" : 200,
+    "bodyFileName" : "body-testsite-downloads-downloadfile.php-0KwVu.php",
+    "headers" : {
+      "Pragma" : "no-cache",
+      "Content-Type" : "application/octet-stream; charset=binary",
+      "Expires" : "0",
+      "Server" : "Microsoft-IIS/10.0",
+      "X-Powered-By" : [ "PHP/7.2.7", "ASP.NET" ],
+      "Content-Disposition" : "attachment; filename=\"Data16Bytes.dat\"",
+      "X-FRAME-OPTIONS" : "SAMEORIGIN",
+      "Date" : "Tue, 02 Feb 2021 08:54:46 GMT"
+    }
+  },
+  "uuid" : "9c6d53cd-cd62-3909-ac73-4252686847ff"
+}
