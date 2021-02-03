@@ -179,7 +179,15 @@ public class PromatServiceConnector {
             /**
              * Trimmed weekcode comparison operator
              */
-            TRIMMED_WEEKCODE_OPERATOR("trimmedWeekcodeOperator");
+            TRIMMED_WEEKCODE_OPERATOR("trimmedWeekcodeOperator"),
+            /**
+             * Weekcode for cases
+             */
+            WEEKCODE("weekCode"),
+            /**
+             * Name of author
+             */
+            AUTHOR("author");
 
             private final String keyName;
 
@@ -273,6 +281,14 @@ public class PromatServiceConnector {
             return getString(Key.TITLE);
         }
 
+        public ListCasesParams withAuthor(String author) {
+            return withString(Key.AUTHOR, author);
+        }
+
+        public String getAuthor() {
+            return getString(Key.AUTHOR);
+        }
+
         public ListCasesParams withTrimmedWeekcode(String trimmedWeekcode) {
             return withString(Key.TRIMMED_WEEKCODE, trimmedWeekcode);
         }
@@ -292,6 +308,14 @@ public class PromatServiceConnector {
                 return (CriteriaOperator) value;
             }
             return null;
+        }
+
+        public ListCasesParams withWeekCode(String weekcode) {
+            return withString(Key.WEEKCODE, weekcode);
+        }
+
+        public String getweekcode() {
+            return getString(Key.WEEKCODE);
         }
 
         private void putOrRemoveOnNull(Key param, Object value) {

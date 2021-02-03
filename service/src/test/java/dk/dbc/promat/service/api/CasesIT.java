@@ -21,6 +21,8 @@ import dk.dbc.promat.service.persistence.PromatTask;
 import dk.dbc.promat.service.persistence.Subject;
 import dk.dbc.promat.service.persistence.TaskFieldType;
 import dk.dbc.promat.service.persistence.TaskType;
+import java.util.HashSet;
+import java.util.Set;
 import org.hamcrest.core.IsNull;
 import org.junit.jupiter.api.Test;
 
@@ -1103,5 +1105,103 @@ public class CasesIT extends ContainerTest {
         // Delete the case so that we dont mess up payments tests
         response = deleteResponse("v1/api/cases/17");
         assertThat("status code", response.getStatus(), is(200));
+    }
+
+    @Test
+    public void testLookUpOnAuthorField() throws PromatServiceConnectorException {
+        Set<Integer> expected = createCasesWithAuthorsAndWeekcodes(
+                Map.of(1, List.of("Klavs Hansen"), 2, List.of("Niels (hansen)-Nielsen"), 3, List.of("HANSE HANSEN"))
+        );
+
+        Set<Integer> others = createCasesWithAuthorsAndWeekcodes(
+                Map.of(4, List.of("Ole Olesen"), 5, List.of("Søren Sørensen"))
+        );
+
+        CaseSummaryList fetched = promatServiceConnector.listCases(new PromatServiceConnector.ListCasesParams()
+                .withAuthor("Hans"));
+        assertThat("Number of cases with author 'Hans'", fetched.getNumFound(), is(3));
+
+        Set<Integer> actual = fetched.getCases().stream().map( c -> c.getId()).collect(Collectors.toSet());
+        assertThat("caseIds match", actual, is(expected));
+
+        Response response;
+        // Delete cases so that we dont mess up payments tests
+        for(Integer cid : expected) {
+            response = deleteResponse("v1/api/cases/"+cid);
+            assertThat("status code", response.getStatus(), is(200));
+        }
+
+        for(Integer cid : others) {
+            response = deleteResponse("v1/api/cases/"+cid);
+            assertThat("status code", response.getStatus(), is(200));
+        }
+
+    }
+
+    @Test
+    public void testLookupOfWeekcodes() throws PromatServiceConnectorException {
+        Set<Integer> expected = createCasesWithAuthorsAndWeekcodes(
+                Map.of(6, List.of("NONE", "BKM202102"), 7, List.of("NONE", "BKM202102"), 8, List.of("NONE", "BKM202102"))
+        );
+
+        Integer someOther = createCaseWithAuthorAndWeekCode(9, "NONE", "BKM202052").getId();
+
+
+        CaseSummaryList fetched = promatServiceConnector.listCases(new PromatServiceConnector
+                .ListCasesParams()
+                .withWeekCode("BKM202102"));
+        assertThat("Cases found", fetched.getNumFound(), greaterThanOrEqualTo(3));
+        Set<Integer> actual = fetched.getCases().stream().map( c -> c.getId()).collect(Collectors.toSet());
+        assertThat("cases are all there", actual.containsAll(expected));
+        assertThat("Case prior to weekcode is not there", !actual.contains(someOther));
+
+
+        // Add the 'other' to the ones that needs to be deleted
+        expected.add(someOther);
+
+        // Delete cases so that we dont mess up payments tests
+        Response response;
+        for(Integer cid : expected) {
+            response = deleteResponse("v1/api/cases/"+cid);
+            assertThat("status code", response.getStatus(), is(200));
+        }
+    }
+
+    private PromatCase createCaseWithAuthorAndWeekCode(Integer someUniqueIdNumber, String author, String weekCode) {
+        CaseRequest dto = new CaseRequest();
+
+        dto.withTitle(String.format("Title for %s", someUniqueIdNumber))
+                .withCreator(13)
+                .withEditor(10)
+                .withPrimaryFaust(String.format("400000000%s", someUniqueIdNumber))
+                .withMaterialType(MaterialType.BOOK)
+                .withAuthor(author)
+                .withWeekCode(weekCode);
+
+        Response response = postResponse("v1/api/cases", dto);
+        assertThat("status code", response.getStatus(), is(201));
+        try {
+            PromatCase created = mapper.readValue(response.readEntity(String.class), PromatCase.class);
+            return created;
+        } catch (JsonProcessingException e) {
+            return null;
+        }
+    }
+
+    private Set<Integer> createCasesWithAuthorsAndWeekcodes(Map<Integer, List<String>> caseData) {
+        Set<Integer> expected = new HashSet<>();
+        caseData.forEach((id, fieldValues) ->
+        {
+            String author = null;
+            String weekCode = null;
+            switch (fieldValues.size()) {
+                case 0: break;
+                case 1: author = fieldValues.get(0); break;
+                default: author = fieldValues.get(0); weekCode = fieldValues.get(1);
+            }
+
+            expected.add(createCaseWithAuthorAndWeekCode(id, author, weekCode).getId());
+        });
+        return expected;
     }
 }

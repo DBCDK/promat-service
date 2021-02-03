@@ -167,7 +167,7 @@ public class Cases {
             .withAuthor(dto.getAuthor())
             .withCreator(creator)
             .withPublisher(dto.getPublisher())
-            .withWeekcode(dto.getWeekCode());
+            .withWeekCode(dto.getWeekCode());
 
             entityManager.persist(entity);
             if (entity.getStatus() == CaseStatus.ASSIGNED) {
@@ -215,26 +215,30 @@ public class Cases {
                               @QueryParam("reviewer") final Integer reviewer,
                               @QueryParam("editor") final Integer editor,
                               @QueryParam("title") final String title,
+                              @QueryParam("author") final String author,
                               @QueryParam("trimmedWeekcode") final String trimmedWeekcode,
                               @QueryParam("trimmedWeekcodeOperator") @DefaultValue("EQUAL")
                                   final CriteriaOperator trimmedWeekcodeOperator,
+                              @QueryParam("weekCode") final String weekCode,
                               @QueryParam("limit") final Integer limit,
                               @QueryParam("from") final Integer from) {
-        LOGGER.info("cases/?faust={}|status={}|reviewer={}|editor={}|title={}|trimmedWeekcode={}|trimmedWeekcodeOperator={}|limit={}|from={}|format={}",
+        LOGGER.info("cases/?faust={}|status={}|reviewer={}|editor={}|title={}|author={}|" +
+                        "trimmedWeekcode={}|trimmedWeekcodeOperator={}|weekCode={}|limit={}|from={}|format={}",
                 faust == null ? "null" : faust,
                 status == null ? "null" : status,
                 reviewer == null ? "null" : reviewer,
                 editor == null ? "null" : editor,
                 title == null ? "null" : title,
+                author==null ? "null" :author,
                 trimmedWeekcode == null ? "null" : trimmedWeekcode,
                 trimmedWeekcodeOperator == null ? "null" : trimmedWeekcodeOperator,
+                weekCode == null ? "null" : weekCode,
                 limit == null ? "null" : limit,
                 from == null ? "null" : from,
                 format);
 
         // Select and return cases
         try {
-
             // Initialize query and criteriabuilder
             CriteriaBuilder builder = entityManager.getCriteriaBuilder();
             CriteriaQuery criteriaQuery = builder.createQuery();
@@ -303,9 +307,22 @@ public class Cases {
                                         .get("title")), builder.literal("%" + title.toLowerCase() + "%")));
             }
 
+            // Get cases with an author that matches (entire, or part of) the given author
+            if(author != null && !author.isBlank()) {
+                allPredicates.add(builder
+                        .like(builder
+                                .lower(root
+                                        .get("author")), builder.literal("%" + author.toLowerCase() + "%")));
+            }
+
+
             if (trimmedWeekcode != null && !trimmedWeekcode.isBlank()) {
                 allPredicates.add(PredicateFactory.fromBinaryOperator(trimmedWeekcodeOperator,
                         root.get("trimmedWeekCode"), trimmedWeekcode, builder));
+            }
+
+            if (weekCode != null && !weekCode.isBlank()) {
+                allPredicates.add(builder.equal(builder.lower(root.get("weekCode")), weekCode.toLowerCase()));
             }
 
             // If a starting id has been given, add this
