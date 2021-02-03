@@ -1155,12 +1155,12 @@ public class CasesIT extends ContainerTest {
         assertThat("cases are all there", actual.containsAll(expected));
         assertThat("Case prior to weekcode is not there", !actual.contains(someOther));
 
-        Response response;
 
         // Add the 'other' to the ones that needs to be deleted
         expected.add(someOther);
 
         // Delete cases so that we dont mess up payments tests
+        Response response;
         for(Integer cid : expected) {
             response = deleteResponse("v1/api/cases/"+cid);
             assertThat("status code", response.getStatus(), is(200));
