@@ -19,6 +19,7 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
+import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
@@ -29,18 +30,20 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Objects;
 
-@NamedQuery(
-        name = PromatCase.GET_CASE_NAME,
-        query = PromatCase.GET_CASE_QUERY)
-@NamedQuery(
-        name = PromatCase.GET_CASES_FOR_PAYMENT_NAME,
-        query = PromatCase.GET_CASES_FOR_PAYMENT_QUERY)
-@NamedQuery(
-        name = PromatCase.GET_PAYED_CASES_NAME,
-        query = PromatCase.GET_PAYED_CASES_QUERY)
-@NamedQuery(
-        name = PromatCase.GET_CASES_FOR_UPDATE_NAME,
-        query = PromatCase.GET_CASES_FOR_UPDATE_QUERY)
+@NamedQueries({
+        @NamedQuery(
+                name = PromatCase.GET_CASE_NAME,
+                query = PromatCase.GET_CASE_QUERY),
+        @NamedQuery(
+                name = PromatCase.GET_CASES_FOR_PAYMENT_NAME,
+                query = PromatCase.GET_CASES_FOR_PAYMENT_QUERY),
+        @NamedQuery(
+                name = PromatCase.GET_PAYED_CASES_NAME,
+                query = PromatCase.GET_PAYED_CASES_QUERY),
+        @NamedQuery(
+                name = PromatCase.GET_CASES_FOR_UPDATE_NAME,
+                query = PromatCase.GET_CASES_FOR_UPDATE_QUERY)
+})
 @Entity
 public class PromatCase {
     public static final String TABLE_NAME = "promatcase";
