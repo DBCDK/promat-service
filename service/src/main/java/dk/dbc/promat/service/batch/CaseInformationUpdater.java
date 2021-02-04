@@ -62,8 +62,8 @@ public class CaseInformationUpdater {
             BibliographicInformation bibliographicInformation = openFormatHandler.format(promatCase.getPrimaryFaust());
 
             if (!bibliographicInformation.isOk()) {
-                LOGGER.error("Failed to obtain bibliographic information for case with id {} and primary faust {}",
-                        promatCase.getId(), promatCase.getPrimaryFaust());
+                LOGGER.error("Failed to obtain bibliographic information for case with id {} and primary faust {}: {}",
+                        promatCase.getId(), promatCase.getPrimaryFaust(), bibliographicInformation.getError());
                 metricRegistry.concurrentGauge(caseUpdateFailureGaugeMetadata).inc();
                 return;
             }

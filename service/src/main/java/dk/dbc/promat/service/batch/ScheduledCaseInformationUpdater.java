@@ -72,7 +72,7 @@ public class ScheduledCaseInformationUpdater {
     }
 
     public List<PromatCase> getCasesForUpdate() {
-        TypedQuery<PromatCase> query = entityManager.createQuery(PromatCase.GET_CASES_FOR_UPDATE_QUERY, PromatCase.class);
+        TypedQuery<PromatCase> query = entityManager.createNamedQuery(PromatCase.GET_CASES_FOR_UPDATE_NAME, PromatCase.class);
         return query.getResultList();
     }
 }
