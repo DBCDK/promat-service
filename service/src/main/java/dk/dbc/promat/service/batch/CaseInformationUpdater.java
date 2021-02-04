@@ -65,6 +65,7 @@ public class CaseInformationUpdater {
                 LOGGER.error("Failed to obtain bibliographic information for case with id {} and primary faust {}",
                         promatCase.getId(), promatCase.getPrimaryFaust());
                 metricRegistry.concurrentGauge(caseUpdateFailureGaugeMetadata).inc();
+                return;
             }
             metricRegistry.simpleTimer(openformatTimerMetadata).update(Duration.ofMillis(System.currentTimeMillis() - taskStartTime));
 
