@@ -1,0 +1,19 @@
+{
+  "id" : "1d798609-6bbc-3de5-84e9-9a7b01fe5a06",
+  "request" : {
+    "url" : "/?action=formatObject&outputType=json&pid=870970-basis%3A22677780&outputFormat=promat",
+    "method" : "GET"
+  },
+  "response" : {
+    "status" : 200,
+    "bodyFileName" : "body-(root)-SkGAV.json",
+    "headers" : {
+      "Date" : "Thu, 04 Feb 2021 01:24:44 GMT",
+      "Server" : "Apache/2.4.38 (Debian)",
+      "Keep-Alive" : "timeout=5, max=99",
+      "Connection" : "Keep-Alive",
+      "Content-Type" : "application/json"
+    }
+  },
+  "uuid" : "1d798609-6bbc-3de5-84e9-9a7b01fe5a06"
+}
