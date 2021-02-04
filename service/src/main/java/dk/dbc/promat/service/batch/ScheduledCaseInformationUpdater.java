@@ -56,10 +56,9 @@ public class ScheduledCaseInformationUpdater {
 
             try {
                 caseInformationUpdater.resetUpdateCaseFailuresGauge();
-
                 List<PromatCase> casesForUpdate = getCasesForUpdate();
                 if (casesForUpdate != null && casesForUpdate.size() > 0) {
-                    for(PromatCase promatCase : getCasesForUpdate()) {
+                    for(PromatCase promatCase : casesForUpdate) {
                         caseInformationUpdater.updateCaseInformation(promatCase);
                     }
                 }
@@ -72,8 +71,8 @@ public class ScheduledCaseInformationUpdater {
         }
     }
 
-    private List<PromatCase> getCasesForUpdate() {
-        TypedQuery<PromatCase> query = entityManager.createNamedQuery(PromatCase.GET_CASES_FOR_UPDATE_NAME, PromatCase.class);
+    public List<PromatCase> getCasesForUpdate() {
+        TypedQuery<PromatCase> query = entityManager.createQuery(PromatCase.GET_CASES_FOR_UPDATE_QUERY, PromatCase.class);
         return query.getResultList();
     }
 }

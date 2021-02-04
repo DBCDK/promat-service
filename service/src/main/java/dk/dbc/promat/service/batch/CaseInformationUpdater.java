@@ -5,6 +5,9 @@
 
 package dk.dbc.promat.service.batch;
 
+import dk.dbc.connector.openformat.OpenFormatConnectorException;
+import dk.dbc.promat.service.api.BibliographicInformation;
+import dk.dbc.promat.service.api.OpenFormatHandler;
 import dk.dbc.promat.service.persistence.PromatCase;
 import org.eclipse.microprofile.metrics.ConcurrentGauge;
 import org.eclipse.microprofile.metrics.Metadata;
@@ -20,6 +23,10 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.inject.Inject;
 import java.time.Duration;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Optional;
 
 @Stateless
 public class CaseInformationUpdater {
@@ -28,6 +35,9 @@ public class CaseInformationUpdater {
     @Inject
     @RegistryType(type = MetricRegistry.Type.APPLICATION)
     MetricRegistry metricRegistry;
+
+    @Inject
+    OpenFormatHandler openFormatHandler;
 
     static final Metadata openformatTimerMetadata = Metadata.builder()
             .withName("promat_service_caseinformationupdater_openformat_timer")
@@ -45,23 +55,42 @@ public class CaseInformationUpdater {
 
     @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
     public void updateCaseInformation(PromatCase promatCase) {
-        try {return;
-            /*long taskStartTime = System.currentTimeMillis();
 
-            // Todo: Call openformat
-            // %TITLE% = [openformat.title]
-            // %WEEKCODE% = [openformat.weekcode]
+        try {
+            // Get bibliographic information for the primary faustnumber
+            long taskStartTime = System.currentTimeMillis();
+            BibliographicInformation bibliographicInformation = openFormatHandler.format(promatCase.getPrimaryFaust());
+
+            if (!bibliographicInformation.isOk()) {
+                LOGGER.error("Failed to obtain bibliographic information for case with id {} and primary faust {}",
+                        promatCase.getId(), promatCase.getPrimaryFaust());
+                metricRegistry.concurrentGauge(caseUpdateFailureGaugeMetadata).inc();
+            }
             metricRegistry.simpleTimer(openformatTimerMetadata).update(Duration.ofMillis(System.currentTimeMillis() - taskStartTime));
 
-            // Todo: Update case information
-            /*if (promatCase.getTitle() != %TITLE%) {
-                LOGGER.info("Updating title: '{}' == '{}' of case {}", promatCase.getTitle(), %TITLE%, promatCase.getId());
-                promatCase.setTitle(%TITLE%);
+            // Update title, if changed
+            if (promatCase.getTitle() != bibliographicInformation.getTitle()) {
+                LOGGER.info("Updating title: '{}' ==> '{}' of case with id {}", promatCase.getTitle(),
+                        bibliographicInformation.getTitle(), promatCase.getId());
+                promatCase.setTitle(bibliographicInformation.getTitle());
             }
-            if (promatCase.getWeekCode() != %WEEKCODE%) {
-                LOGGER.info("Updating weekcode: '{}' == '{}' of case {}", promatCase.getWeekcode(), %WEEKCODE%, promatCase.getId());
-                promatCase.setWeekCode(%WEEKCODE%);
-            }*/
+
+            // Check if the record has a BKMxxxxxx catalog code, if so - then check if we need to update the case,
+            // otherwise check if we need to clear an existing weekcode (record may have been pulled back for further
+            // editing by the cataloging team)
+            String newCode = getFirstWeekcode(bibliographicInformation.getCatalogcodes());
+            if (newCode.isEmpty() && !promatCase.getWeekCode().isEmpty()) {
+                LOGGER.info("Weekcode removed from case with id {}. Record of primary faust {} has no BKMxxxxxx catalogcode", promatCase.getId());
+                promatCase.setWeekCode("");
+            }
+            if (!newCode.isEmpty() && promatCase.getWeekCode() != newCode) {
+                LOGGER.info("Updating weekcode: '{}' ==> '{}' of case with id {}", promatCase.getWeekCode(), newCode, promatCase.getId());
+                promatCase.setWeekCode(newCode);
+            }
+        } catch(OpenFormatConnectorException e) {
+            LOGGER.error("Caught exception when trying to obtain bibliographic information for faust {} in case with id {}: {}",
+                    promatCase.getPrimaryFaust(), promatCase.getId(), e.getMessage());
+            metricRegistry.concurrentGauge(caseUpdateFailureGaugeMetadata).inc();
         } catch (Exception e) {
             LOGGER.error("Unable to update case with id {}: {}",promatCase.getId(), e.getMessage());
             metricRegistry.concurrentGauge(caseUpdateFailureGaugeMetadata).inc();
@@ -73,5 +102,16 @@ public class CaseInformationUpdater {
         while (gauge.getCount() > 0) {
             gauge.dec();
         }
+    }
+
+    private String getFirstWeekcode(List<String> codes) {
+
+        // Only look after BKM and BKX (express) catalogcodes.
+        // If Both exists (as they would for express cases), take the earliest weekcode
+        Optional<String> newCode = codes.stream()
+                .filter(code -> Arrays.asList("BKM", "BKX").contains(code.substring(0, 3)))
+                .sorted(Comparator.comparing(code -> code.substring(3)))
+                .findFirst();
+        return newCode.isPresent() ? newCode.get() : "";
     }
 }
