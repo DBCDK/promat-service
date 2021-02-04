@@ -43,9 +43,8 @@ public class ScheduledCaseInformationUpdater {
     // Run once every hour during working days and normal working hours
     @Schedule(second = "0", minute = "42", hour = "6-16", dayOfWeek = "Mon-Fri")
     public void updateCaseInformation() {
-        LOGGER.info("Starting periodic update of case information");
-
         if (serverRole == ServerRole.PRIMARY) {
+            LOGGER.info("Starting periodic update of case information");
 
             // Prevent running multiple updates at once - since the update runs only every hour,
             // we should never encounter a lock - so if we do, something is frightfully wrong!
