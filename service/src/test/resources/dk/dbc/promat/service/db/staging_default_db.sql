@@ -1,3 +1,34 @@
+-- This script provides a minimal set of data for the promat staging database or local
+-- developers databases. There is never any guarantee that no other data exists, and
+-- one must expect that the data is modified at will when in the staging database.
+-- THIS IS NOT DATA FOR STRUCTURED TESTING!
+
+-- Cleanup
+-- Just delete those we want to create, DO NOT run a complete truncate on any table
+delete from promattask
+    where id in (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23);
+delete from promattask
+    where id in (1001, 1011, 1021, 1031, 1041, 1051, 1061, 1062, 1071, 1072, 1081, 1082, 1083, 1091,
+                 1092, 1093, 1101, 1102, 1103, 1104, 1111, 1112, 1113, 1114, 1115, 1116, 1117, 1118,
+                 1121, 1122, 1123, 1124, 1125, 1126, 1127, 1128, 1131, 1132, 1133, 1134, 1135, 1136,
+                 1141, 1142, 1143, 1144, 1145, 1146, 1147, 1151, 1152, 1153, 1154, 1155, 1156, 1157,
+                 1161, 1162, 1163, 1164, 1165, 1166, 1167, 1171, 1172, 1173, 1174, 1175, 1176, 1177,
+                 1178, 1181, 1182, 1183);
+--
+delete from promatcase
+    where id in (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21);
+delete from promatcase
+    where id in (1000, 1010, 1020, 1030, 1040, 1050, 1060, 1070, 1080, 1090, 1100, 1110, 1120, 1130, 1140, 1150, 1160, 1170, 1180);
+--
+delete from promatuser
+where id in (1, 2, 10, 11, 12, 13, 14);
+--
+delete from notification
+    where id in (1, 2, 3);
+--
+delete from subject
+    where id in (1, 2, 3, 4, 5);
+
 -- Reviewers
 insert into promatuser(id, role, active, culrid, firstname, lastname, email, address1, zip, city, institution, paycode, hiatus_begin, hiatus_end, accepts, note, capacity)
 values (1, 'REVIEWER', true, '41', 'Hans', 'Hansen', 'hans@hansen.dk', 'Lillegade 1', '9999', 'Lilleved', 'Hans Hansens Bix', 123, '2020-10-28', '2020-11-01', '["MULTIMEDIA", "PS4", "PS5"]', 'note1', 1),
@@ -12,10 +43,10 @@ values (10, 'EDITOR', true, '51', 'Ed', 'Itor', 'ed.itor@dbc.dk', 5678),
        (14, 'EDITOR', true, '56', 'E', 'ditor', 'e.ditor@dbc.dk', 2860);
 
 -- Notifications
-INSERT INTO notification(bodytext, subject, toaddress, status, created)
-values ('<h1>hej1</h1>', 'test1', 'test1@test.dk', 0, now()),
-       ('<h1>hej2</h1>', 'test2', 'test2@test.dk', 1, now()),
-       ('<h1>hej3</h1>', 'test3', 'test3@test.dk', 0, now());
+INSERT INTO notification(id, bodytext, subject, toaddress, status, created)
+values (1, '<h1>hej1</h1>', 'test1', 'test1@test.dk', 0, now()),
+       (2, '<h1>hej2</h1>', 'test2', 'test2@test.dk', 1, now()),
+       (3, '<h1>hej3</h1>', 'test3', 'test3@test.dk', 0, now());
 
 -- Subjects
 insert into subject(id, name, parentid)
@@ -33,7 +64,6 @@ values(5,1),
       (4,1);
 
 -- Cases
---
 insert into promatcase(id, title, details, primaryFaust, relatedFausts, reviewer_id, editor_id, created, deadline, assigned, status, materialType, weekcode, trimmedWeekcode, creator_id)
 values (1, 'Title for 001111', 'Details for 001111', '001111', '["002222","003333"]', NULL, NULL, '2020-11-11', '2020-12-11', NULL, 'CREATED', 'BOOK', 'BKM202101', '202101', 13);
 
@@ -128,6 +158,52 @@ values (13, 'GROUP_1_LESS_THAN_100_PAGES', 'DESCRIPTION', '2021-01-27', 'GROUP_1
 insert into casetasks(case_id, task_id)
 values (17, 13),
        (17, 14);
+--
+insert into promatcase(id, title, details, primaryFaust, relatedFausts, reviewer_id, editor_id, created, deadline, assigned, status, materialType, weekcode, trimmedWeekcode, creator_id)
+values(18, 'Title for 019997', 'Details for 019997', '019997', '[]', 1, 10, '2021-01-27', '2021-02-27', '2021-01-27', 'REJECTED', 'BOOK', null, null, 13);
+
+insert into promattask(id, tasktype, taskfieldtype, created, paycategory, approved, payed, data, targetFausts)
+values (15, 'GROUP_1_LESS_THAN_100_PAGES', 'DESCRIPTION', '2021-01-27', 'GROUP_1_LESS_THAN_100_PAGES', NULL,         NULL,         'here is some data',      NULL),
+       (16, 'GROUP_1_LESS_THAN_100_PAGES', 'BRIEF',       '2021-01-27', 'BRIEF',                       NULL,         NULL,         'here is also some data', NULL);
+
+insert into casetasks(case_id, task_id)
+values (18, 15),
+       (18, 16);
+--
+insert into promatcase(id, title, details, primaryFaust, relatedFausts, reviewer_id, editor_id, created, deadline, assigned, status, materialType, weekcode, trimmedWeekcode, creator_id)
+values(19, 'Title for 019998', 'Details for 019998', '019998', '[]', 1, 10, '2020-12-27', '2021-01-27', '2021-01-27', 'ASSIGNED', 'BOOK', null, null, 13);
+
+insert into promattask(id, tasktype, taskfieldtype, created, paycategory, approved, payed, data, targetFausts)
+values (17, 'GROUP_1_LESS_THAN_100_PAGES', 'DESCRIPTION', '2021-01-27', 'GROUP_1_LESS_THAN_100_PAGES', NULL,         NULL,         'here is some data',      NULL),
+       (18, 'GROUP_1_LESS_THAN_100_PAGES', 'BRIEF',       '2021-01-27', 'BRIEF',                       NULL,         NULL,         'here is also some data', NULL);
+
+insert into casetasks(case_id, task_id)
+values (19, 17),
+       (19, 18);
+--
+insert into promatcase(id, title, details, primaryFaust, relatedFausts, reviewer_id, editor_id, created, deadline, assigned, status, materialType, weekcode, trimmedWeekcode, creator_id)
+values(20, 'Title for 019999', 'Details for 019999', '019999', '[]', 1, 10, '2020-12-27', '2021-01-27', '2021-01-27', 'PENDING_ISSUES', 'BOOK', null, null, 13);
+
+insert into promattask(id, tasktype, taskfieldtype, created, paycategory, approved, payed, data, targetFausts)
+values (19, 'GROUP_1_LESS_THAN_100_PAGES', 'DESCRIPTION', '2021-01-27', 'GROUP_1_LESS_THAN_100_PAGES', NULL,         NULL,         'here is some data',      NULL),
+       (20, 'GROUP_1_LESS_THAN_100_PAGES', 'BRIEF',       '2021-01-27', 'BRIEF',                       NULL,         NULL,         'here is also some data', NULL);
+
+insert into casetasks(case_id, task_id)
+values (20, 19),
+       (20, 20);
+--
+insert into promatcase(id, title, details, primaryFaust, relatedFausts, reviewer_id, editor_id, created, deadline, assigned, status, materialType, weekcode, trimmedWeekcode, creator_id)
+values(21, 'Title for 029999', 'Details for 029999', '029999', '[]', 1, 10, '2020-12-27', '2021-01-27', '2021-01-27', 'PENDING_EXTERNAL', 'BOOK', null, null, 13);
+
+insert into promattask(id, tasktype, taskfieldtype, created, paycategory, approved, payed, data, targetFausts)
+values (21, 'GROUP_1_LESS_THAN_100_PAGES', 'DESCRIPTION', '2021-01-27', 'GROUP_1_LESS_THAN_100_PAGES', NULL,         NULL,         'here is some data',      NULL),
+       (22, 'GROUP_1_LESS_THAN_100_PAGES', 'BRIEF',       '2021-01-27', 'BRIEF',                       NULL,         NULL,         'here is also some data', NULL),
+       (23, 'GROUP_1_LESS_THAN_100_PAGES', 'METAKOMPAS',  '2021-01-27', 'METAKOMPAS',                  NULL,         NULL,         'here is also some data', NULL);
+
+insert into casetasks(case_id, task_id)
+values (21, 21),
+       (21, 22),
+       (21, 23);
 --
 insert into promatcase(id, title, details, primaryFaust, relatedFausts, reviewer_id, editor_id, created, deadline, assigned, status, materialType)
 values (1000, 'Case 1', 'Details', '1001000', '[]', 1, 10, '2021-01-13', '2021-02-13', '2021-01-13', 'APPROVED', 'BOOK');
@@ -409,6 +485,3 @@ insert into casetasks(case_id, task_id)
 values (1180, 1181),
        (1180, 1182),
        (1180, 1183);
-
-
-
