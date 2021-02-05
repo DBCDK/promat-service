@@ -7,6 +7,8 @@ package dk.dbc.promat.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tomakehurst.wiremock.WireMockServer;
+import com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder;
+import com.github.tomakehurst.wiremock.matching.MatchResult;
 import dk.dbc.httpclient.HttpDelete;
 import dk.dbc.httpclient.HttpGet;
 import dk.dbc.httpclient.HttpPost;
@@ -14,6 +16,9 @@ import dk.dbc.httpclient.HttpPut;
 import dk.dbc.promat.service.api.JsonMapperProvider;
 import dk.dbc.promat.service.connector.PromatServiceConnector;
 import dk.dbc.promat.service.connector.PromatServiceConnectorFactory;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.Testcontainers;
@@ -26,6 +31,7 @@ import java.time.Duration;
 import java.util.Map;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.configureFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.requestMatching;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options;
 
 
@@ -37,10 +43,21 @@ public abstract class ContainerTest extends IntegrationTest {
 
     static {
         wireMockServer = new WireMockServer(options().dynamicPort());
+        wireMockServer.stubFor(requestMatching(request ->
+                MatchResult.of(request.getUrl().contains("/api/work-presentation?profile=test") &&
+                        request.queryParameter("workId").isPresent() &&
+                        request.queryParameter("workId")
+                                .firstValue().contains("work-of%3A870970-basis%3A90033")))
+                .willReturn(ResponseDefinitionBuilder
+                        .responseDefinition()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json")
+                        .withBody(genericWorkPresentationResult)));
         wireMockServer.start();
         configureFor("localhost", wireMockServer.port());
         Testcontainers.exposeHostPorts(wireMockServer.port());
         Testcontainers.exposeHostPorts(pg.getPort());
+        LOGGER.info("Wiremock server at port:{}", wireMockServer.port());
     }
 
     protected static final GenericContainer promatServiceContainer;
