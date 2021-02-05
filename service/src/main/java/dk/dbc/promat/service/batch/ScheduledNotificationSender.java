@@ -36,16 +36,24 @@ public class ScheduledNotificationSender {
     ServerRole serverRole;
 
     @Schedule(second = "0", minute = "*/5", hour = "*")
-    public void processNotifications() throws InterruptedException {
-        if (serverRole == ServerRole.PRIMARY) {
-            LOGGER.info("Checking for notifications");
-            prepareErrorsForRetry();
-            Notification notification = pop();
-            while (notification != null) {
-                LOGGER.info("Notifying: '{}' on subject '{}'", notification.getToAddress(), notification.getSubject());
-                notificationSender.notifyMailRecipient(notification);
-                notification = pop();
+    public void processNotifications() {
+        try {
+            LOGGER.info("Executing scheduled job 'processNotifications()'");
+
+            if(serverRole == ServerRole.PRIMARY) {
+                LOGGER.info("Checking for notifications");
+                prepareErrorsForRetry();
+                Notification notification = pop();
+                while(notification != null) {
+                    LOGGER.info("Notifying: '{}' on subject '{}'", notification.getToAddress(), notification.getSubject());
+                    notificationSender.notifyMailRecipient(notification);
+                    notification = pop();
+                }
+            } else {
+                LOGGER.info("Not ServerRole.PRIMARY, aborting");
             }
+        } catch (Exception e) {
+            LOGGER.error("Caught exception in scheduled job 'processNotifications()': {}", e.getMessage());
         }
     }
 
