@@ -31,7 +31,18 @@
     </properties>
   </persistence-unit>
   <persistence-unit name="promatITPU" transaction-type="RESOURCE_LOCAL">
+    <class>dk.dbc.commons.jpa.converter.EnumConverter</class>
     <class>dk.dbc.promat.service.persistence.Notification</class>
+    <class>dk.dbc.promat.service.persistence.PromatCase</class>
+    <class>dk.dbc.promat.service.persistence.PromatTask</class>
+    <class>dk.dbc.promat.service.persistence.CaseTasks</class>
+    <class>dk.dbc.promat.service.persistence.PromatUser</class>
+    <class>dk.dbc.promat.service.persistence.Editor</class>
+    <class>dk.dbc.promat.service.persistence.Subject</class>
+    <class>dk.dbc.promat.service.persistence.Reviewer</class>
+    <class>dk.dbc.commons.jpa.converter.StringListToJsonArrayConverter</class>
+    <class>dk.dbc.promat.service.persistence.AcceptsListToJsonArrayConverter</class>
+    <class>dk.dbc.promat.service.persistence.RoleConverter</class>
     <properties>
       <property name="javax.persistence.schema-generation.database.action" value="none"/>
     </properties>

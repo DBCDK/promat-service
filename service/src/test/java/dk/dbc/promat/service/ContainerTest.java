@@ -140,4 +140,8 @@ public abstract class ContainerTest extends IntegrationTest {
                 .withPathElements(path);
         return httpClient.execute(httpDelete);
     }
+
+    public static String getWiremockUrl(String path) {
+        return "http://host.testcontainers.internal:" + wireMockServer.port() + path;
+    }
 }

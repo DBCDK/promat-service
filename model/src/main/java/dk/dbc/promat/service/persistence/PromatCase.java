@@ -19,26 +19,31 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
-import javax.persistence.NamedNativeQuery;
+import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
+import javax.persistence.OrderBy;
 import javax.persistence.PrePersist;
 import javax.persistence.PreUpdate;
-import javax.persistence.OrderBy;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Objects;
 
-@NamedQuery(
-        name = PromatCase.GET_CASE_NAME,
-        query = PromatCase.GET_CASE_QUERY)
-@NamedQuery(
-        name = PromatCase.GET_CASES_FOR_PAYMENT_NAME,
-        query = PromatCase.GET_CASES_FOR_PAYMENT_QUERY)
-@NamedQuery(
-        name = PromatCase.GET_PAYED_CASES_NAME,
-        query = PromatCase.GET_PAYED_CASES_QUERY)
+@NamedQueries({
+        @NamedQuery(
+                name = PromatCase.GET_CASE_NAME,
+                query = PromatCase.GET_CASE_QUERY),
+        @NamedQuery(
+                name = PromatCase.GET_CASES_FOR_PAYMENT_NAME,
+                query = PromatCase.GET_CASES_FOR_PAYMENT_QUERY),
+        @NamedQuery(
+                name = PromatCase.GET_PAYED_CASES_NAME,
+                query = PromatCase.GET_PAYED_CASES_QUERY),
+        @NamedQuery(
+                name = PromatCase.GET_CASES_FOR_UPDATE_NAME,
+                query = PromatCase.GET_CASES_FOR_UPDATE_QUERY)
+})
 @Entity
 public class PromatCase {
     public static final String TABLE_NAME = "promatcase";
@@ -73,6 +78,18 @@ public class PromatCase {
             "                                               on t.id = ct.task_id" +
             "                                            where t.payed = :stamp" +
             "                                            order by c.id";
+
+    public static final String GET_CASES_FOR_UPDATE_NAME =
+            "PromatCase.get.cases.for.update";
+    public static final String GET_CASES_FOR_UPDATE_QUERY = "select c" +
+            "                                                  from PromatCase c" +
+            "                                                 where c.status not in (dk.dbc.promat.service.persistence.CaseStatus.EXPORTED," +
+            "                                                                    dk.dbc.promat.service.persistence.CaseStatus.PENDING_REVERT," +
+            "                                                                    dk.dbc.promat.service.persistence.CaseStatus.REVERTED," +
+            "                                                                    dk.dbc.promat.service.persistence.CaseStatus.PENDING_CLOSE," +
+            "                                                                    dk.dbc.promat.service.persistence.CaseStatus.CLOSED," +
+            "                                                                    dk.dbc.promat.service.persistence.CaseStatus.DELETED)" +
+            "                                                 order by c.id";
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -158,6 +175,9 @@ public class PromatCase {
 
     @JsonView({CaseView.Export.class, CaseView.Case.class})
     private String recordId;
+
+    @JsonView({CaseView.Export.class, CaseView.Case.class})
+    private String fulltextLink;
 
     public Integer getId() {
         return id;
@@ -419,6 +439,19 @@ public class PromatCase {
         return this;
     }
 
+    public String getFulltextLink() {
+        return fulltextLink;
+    }
+
+    public void setFulltextLink(String fulltextLink) {
+        this.fulltextLink = fulltextLink;
+    }
+
+    public PromatCase withFulltextLink(String fulltextLink) {
+        setFulltextLink(fulltextLink);
+        return this;
+    }
+
     @PrePersist
     @PreUpdate
     private void beforeUpdate() {
@@ -453,14 +486,15 @@ public class PromatCase {
                 Objects.equals(author, aCase.author) &&
                 Objects.equals(creator, aCase.creator) &&
                 Objects.equals(publisher, aCase.publisher) &&
-                Objects.equals(recordId, aCase.recordId);
+                Objects.equals(recordId, aCase.recordId) &&
+                Objects.equals(fulltextLink, aCase.fulltextLink);
     }
 
     @Override
     public int hashCode() {
         return Objects.hash(id, title, details, primaryFaust, relatedFausts, reviewer, editor, subjects, created,
                 deadline, assigned, status, materialType, tasks, weekCode, trimmedWeekCode, author, creator, publisher,
-                recordId);
+                recordId, fulltextLink);
     }
 
     @Override
@@ -486,6 +520,7 @@ public class PromatCase {
                 ", creator=" + creator +
                 ", publisher='" + publisher + '\'' +
                 ", recordId='" + recordId + '\'' +
+                ", fulltextLink='" + fulltextLink + '\'' +
                 '}';
     }
 }
