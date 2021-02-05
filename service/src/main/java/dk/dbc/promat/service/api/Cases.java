@@ -27,6 +27,7 @@ import dk.dbc.promat.service.persistence.Subject;
 import dk.dbc.promat.service.persistence.TaskFieldType;
 import dk.dbc.promat.service.persistence.TaskType;
 import dk.dbc.promat.service.templating.NotificationFactory;
+import dk.dbc.promat.service.templating.model.AssignReviewerNotification;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -66,6 +67,9 @@ public class Cases {
 
     @EJB
     Repository repository;
+
+    @EJB
+    NotificationFactory notificationFactory;
 
     // Default number of results when getting cases
     private static final int DEFAULT_CASES_LIMIT = 100;
@@ -725,7 +729,8 @@ public class Cases {
         if (promatCase.getId() == null) {
             entityManager.flush();
         }
-        Notification notification = NotificationFactory.getInstance().of(notificationType, promatCase);
+        Notification notification = notificationFactory
+                .of(new AssignReviewerNotification().withPromatCase(promatCase));
         PromatMessage message = new PromatMessage()
                 .withCaseId(promatCase.getId())
                 .withMessageText(notification.getBodyText())
