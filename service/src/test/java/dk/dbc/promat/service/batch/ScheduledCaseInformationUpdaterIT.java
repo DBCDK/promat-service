@@ -25,8 +25,6 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.configureFor;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options;
@@ -223,6 +221,40 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
             assertThat("title is updated", updated.getTitle().equals("UPDATED_TITLE"));
             assertThat("weekcode is updated", updated.getWeekCode().equals("BKM999999"));
         });
+
+        // Delete the case so that we dont mess up payments and dataio-export tests
+        response = deleteResponse("v1/api/cases/" + created.getId());
+        assertThat("status code", response.getStatus(), is(200));
+    }
+
+    @Test
+    public void testUpdateWithNoWeekcode() throws JsonProcessingException, OpenFormatConnectorException {
+
+        // Create a case with no weekcode
+        CaseRequest dto = new CaseRequest()
+                .withPrimaryFaust("23319322")
+                .withTitle("Title for 23319322")
+                .withWeekCode("NOP000000")
+                .withDetails("Details for 23319322")
+                .withMaterialType(MaterialType.BOOK)
+                .withAssigned("2021-01-28")
+                .withDeadline("2024-02-29")
+                .withCreator(10)
+                .withEditor(10)
+                .withReviewer(1);
+
+        Response response = postResponse("v1/api/cases", dto);
+        assertThat("status code", response.getStatus(), is(201));
+        PromatCase created = mapper.readValue(response.readEntity(String.class), PromatCase.class);
+
+        ScheduledCaseInformationUpdater upd = new ScheduledCaseInformationUpdater();
+        upd.caseInformationUpdater = new CaseInformationUpdater();
+        upd.caseInformationUpdater.metricRegistry = metricRegistry;
+        upd.caseInformationUpdater.openFormatHandler = new OpenFormatHandler()
+                .withConnector(OpenFormatConnectorFactory.create(wiremockHost));
+        persistenceContext.run(() -> upd.caseInformationUpdater.updateCaseInformation(created));
+
+        assertThat("weekcode is removed", created.getWeekCode(), is(""));
 
         // Delete the case so that we dont mess up payments and dataio-export tests
         response = deleteResponse("v1/api/cases/" + created.getId());
