@@ -35,7 +35,7 @@ public class ScheduledNotificationSender {
     @Inject
     ServerRole serverRole;
 
-    @Schedule(second = "0", minute = "*/5", hour = "*")
+    @Schedule(second = "0", minute = "*/5", hour = "*", persistent = false)
     public void processNotifications() {
         try {
             LOGGER.info("Executing scheduled job 'processNotifications()'");
