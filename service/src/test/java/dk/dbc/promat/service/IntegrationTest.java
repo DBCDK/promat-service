@@ -107,14 +107,14 @@ public class IntegrationTest {
             executeScript(connection, IntegrationTest.class.getResource("/dk/dbc/promat/service/db/payments.sql"));
             entityManager = createEntityManager(getDataSource(),
                     "promatITPU");
-            setupDone = true;
             LOGGER.info("..Populating database tables done");
             LOGGER.info("..Getting data for generic work presentation response");
             genericWorkPresentationResult = Files.readString(
-                    Path.of(IntegrationTest.class.getResource("/__files/body-api-work-presentation-generic.json")
+                    Path.of(IntegrationTest.class.getResource("/__files/body-openformat-generic.json")
                             .getPath()));
             LOGGER.info("..Done");
             LOGGER.info("Setup done!");
+            setupDone = true;
         } else {
             LOGGER.info("No setup stuff to do. Already done.");
         }

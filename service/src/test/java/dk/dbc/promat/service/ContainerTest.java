@@ -43,11 +43,19 @@ public abstract class ContainerTest extends IntegrationTest {
 
     static {
         wireMockServer = new WireMockServer(options().dynamicPort());
+
+        // Add a "catch-all" for openformat requests.
+        // All openformat requests will return the same json.
         wireMockServer.stubFor(requestMatching(request ->
-                MatchResult.of(request.getUrl().contains("/api/work-presentation?profile=test") &&
-                        request.queryParameter("workId").isPresent() &&
-                        request.queryParameter("workId")
-                                .firstValue().contains("work-of%3A870970-basis%3A90033")))
+                MatchResult.of(
+                        request.queryParameter("action").isPresent() &&
+                                request.queryParameter("action").containsValue("formatObject") &&
+                                request.queryParameter("outputFormat").isPresent() &&
+                                request.queryParameter("outputFormat").containsValue("promat") &&
+                                request.queryParameter("pid").isPresent() &&
+                                request.queryParameter("pid").firstValue().contains("870970-basis:")
+                ))
+
                 .willReturn(ResponseDefinitionBuilder
                         .responseDefinition()
                         .withStatus(200)
@@ -84,6 +92,7 @@ public abstract class ContainerTest extends IntegrationTest {
                 .withEnv("MAIL_HOST", "mailhost")
                 .withEnv("MAIL_USER", "mail.user")
                 .withEnv("MAIL_FROM", "some@address.dk")
+                .withEnv("OPENFORMAT_SERVICE_URL", "http://host.testcontainers.internal:" + wireMockServer.port()+"/")
                 .withExposedPorts(8080)
                 .waitingFor(Wait.forHttp("/openapi"))
                 .withStartupTimeout(Duration.ofMinutes(2));
