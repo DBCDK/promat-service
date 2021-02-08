@@ -1,0 +1,18 @@
+{
+  "id" : "a20865cd-feb5-30e2-b846-f77049fd25bb",
+  "request" : {
+    "url" : "/?action=formatObject&outputType=json&pid=870970-basis%3A51785347&outputFormat=promat",
+    "method" : "GET"
+  },
+  "response" : {
+    "status" : 200,
+    "bodyFileName" : "body-(root)-O6upg.json",
+    "headers" : {
+      "Date" : "Mon, 08 Feb 2021 09:34:09 GMT",
+      "Server" : "Apache/2.4.38 (Debian)",
+      "Keep-Alive" : "timeout=5, max=100",
+      "Content-Type" : "application/json"
+    }
+  },
+  "uuid" : "a20865cd-feb5-30e2-b846-f77049fd25bb"
+}

@@ -1,0 +1,18 @@
+{
+  "id" : "7cdad0e2-7ceb-3641-9977-4e1c331da402",
+  "request" : {
+    "url" : "/?action=formatObject&outputType=json&pid=870970-basis%3A38582801&outputFormat=promat",
+    "method" : "GET"
+  },
+  "response" : {
+    "status" : 200,
+    "bodyFileName" : "body-(root)-Mcgwa.json",
+    "headers" : {
+      "Date" : "Fri, 05 Feb 2021 14:23:47 GMT",
+      "Server" : "Apache/2.4.38 (Debian)",
+      "Keep-Alive" : "timeout=5, max=100",
+      "Content-Type" : "application/json"
+    }
+  },
+  "uuid" : "7cdad0e2-7ceb-3641-9977-4e1c331da402"
+}
