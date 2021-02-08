@@ -41,7 +41,7 @@ public class ScheduledCaseInformationUpdater {
 
     // Since every update traverses all active cases, we should not run too often.
     // Run once every hour during working days and normal working hours
-    @Schedule(second = "0", minute = "42", hour = "6-16", dayOfWeek = "Mon-Fri")
+    @Schedule(second = "0", minute = "42", hour = "6-16", dayOfWeek = "Mon-Fri", persistent = false)
     public void updateCaseInformation() {
         try {
             LOGGER.info("Executing scheduled job 'updateCaseInformation()'");
