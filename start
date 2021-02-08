@@ -22,6 +22,7 @@ docker run --rm --name promat-service -d \
     -e MAIL_HOST=${MAIL_HOST} \
     -e MAIL_USER=${MAIL_USER} \
     -e MAIL_FROM=${MAIL_FROM} \
+    -e PROMAT_AGENCY_ID=${PROMAT_AGENCY_ID} \
     -e OPENFORMAT_SERVICE_URL=${OPENFORMAT_SERVICE_URL} \
     -p ${promat_service_port}:8080 \
     $@ \
