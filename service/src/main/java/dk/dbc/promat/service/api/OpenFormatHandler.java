@@ -56,9 +56,9 @@ public class OpenFormatHandler {
         PromatElements elements = entity.getFormatResponse().getPromat().get(0).getElements();
         return new BibliographicInformation()
         .withFaust(elements.getFaust().getValue())
-        .withCreator(elements.getCreator().getValue())
+        .withCreator(elements.getCreator() == null ? null : elements.getCreator().getValue())
         .withDk5(elements.getDk5().getValue())
-        .withIsbn(elements.getIsbn().stream()
+        .withIsbn(elements.getIsbn() == null ? null : elements.getIsbn().stream()
                 .map(isbn -> isbn.getValue())
                 .collect(Collectors.toList()))
         .withMaterialtypes(elements.getMaterialtypes().getType().stream()

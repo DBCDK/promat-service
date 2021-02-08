@@ -1,26 +1,28 @@
 package dk.dbc.promat.service.templating.model;
 
+import dk.dbc.promat.service.api.BibliographicInformation;
 import dk.dbc.promat.service.persistence.PromatCase;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class AssignReviewerNotification {
     private PromatCase promatCase;
     private String note;
-    private Map<String, String> relatedFaustsTitles = new HashMap<>();
+    private List<BibliographicInformation> titleSections;
 
     public AssignReviewerNotification withPromatCase(PromatCase promatCase) {
         this.promatCase = promatCase;
         return this;
     }
 
-    public AssignReviewerNotification withRelatedFaustsTitles(Map<String, String> relatedFaustsTitles) {
-        this.relatedFaustsTitles = relatedFaustsTitles;
+    public AssignReviewerNotification withNote(String note) {
+        this.note = note;
         return this;
     }
 
-    public AssignReviewerNotification withNote(String note) {
-        this.note = note;
+    public AssignReviewerNotification withTitleSections(List<BibliographicInformation> titleSections) {
+        this.titleSections = titleSections;
         return this;
     }
 
@@ -32,8 +34,8 @@ public class AssignReviewerNotification {
         return note;
     }
 
-    public Map<String, String> getRelatedFaustsTitles() {
-        return relatedFaustsTitles;
+    public List<BibliographicInformation> getTitleSections() {
+        return titleSections;
     }
 
     public void setPromatCase(PromatCase promatCase) {
@@ -44,7 +46,7 @@ public class AssignReviewerNotification {
         this.note = note;
     }
 
-    public void setRelatedFaustsTitles(Map<String, String> relatedFaustsTitles) {
-        this.relatedFaustsTitles = relatedFaustsTitles;
+    public void setTitleSections(List<BibliographicInformation> titleSections) {
+        this.titleSections = titleSections;
     }
 }

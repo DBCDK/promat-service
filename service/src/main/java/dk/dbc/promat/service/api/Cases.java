@@ -6,6 +6,7 @@
 package dk.dbc.promat.service.api;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import dk.dbc.connector.openformat.OpenFormatConnectorException;
 import dk.dbc.promat.service.Repository;
 import dk.dbc.promat.service.dto.CaseRequest;
 import dk.dbc.promat.service.dto.CaseSummaryList;
@@ -176,7 +177,7 @@ public class Cases {
 
             entityManager.persist(entity);
             if (entity.getStatus() == CaseStatus.ASSIGNED) {
-                notifyOnReviewerChanged(NotificationType.CASE_ASSIGNED, entity);
+                notifyOnReviewerChanged(entity);
             }
             // 201 CREATED
             LOGGER.info("Created new case for primaryFaust {}", entity.getPrimaryFaust());
@@ -458,7 +459,7 @@ public class Cases {
             if(dto.getReviewer() != null) {
                 if (!dto.getReviewer().equals(existing.getReviewer())) {
                     existing.setReviewer(resolveReviewer(dto.getReviewer()));
-                    notifyOnReviewerChanged(NotificationType.CASE_ASSIGNED, existing);
+                    notifyOnReviewerChanged(existing);
                 }
                 if(existing.getStatus() == CaseStatus.CREATED) {
                     existing.setStatus(CaseStatus.ASSIGNED);
@@ -758,8 +759,8 @@ public class Cases {
         }
     }
 
-    private void notifyOnReviewerChanged(NotificationType notificationType, PromatCase promatCase)
-            throws NotificationFactory.ValidateException {
+    private void notifyOnReviewerChanged(PromatCase promatCase)
+            throws NotificationFactory.ValidateException, OpenFormatConnectorException {
         if (promatCase.getId() == null) {
             entityManager.flush();
         }
