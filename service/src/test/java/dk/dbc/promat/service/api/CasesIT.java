@@ -21,8 +21,6 @@ import dk.dbc.promat.service.persistence.PromatTask;
 import dk.dbc.promat.service.persistence.Subject;
 import dk.dbc.promat.service.persistence.TaskFieldType;
 import dk.dbc.promat.service.persistence.TaskType;
-import java.util.HashSet;
-import java.util.Set;
 import org.hamcrest.core.IsNull;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -40,8 +38,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import static java.nio.file.StandardOpenOption.CREATE_NEW;
@@ -1199,6 +1199,22 @@ public class CasesIT extends ContainerTest {
                 Files.exists(tempDir.resolve("Data16Bytes.dat")), is(true));
         assertThat("file content", Files.readAllBytes(httpResponse.body()),
                 is(Files.readAllBytes(Path.of("src/test/resources/__files/body-testsite-downloads-downloadfile.php-0KwVu.php"))));
+    }
+
+    @Test
+    void addDraftOrUpdateExistingCase_noRelatedRecordsFound() throws JsonProcessingException, PromatServiceConnectorException {
+        final CaseRequest caseRequest = new CaseRequest()
+                .withPrimaryFaust("11111111")
+                .withTitle("Title for draft with 11111111")
+                .withMaterialType(MaterialType.BOOK)
+                .withFulltextLink("link");
+
+        final Response response = postResponse("v1/api/drafts", caseRequest);
+        assertThat("status code", response.getStatus(), is(201));
+
+        final PromatCase caseCreated = mapper.readValue(response.readEntity(String.class), PromatCase.class);
+        assertThat("case created", promatServiceConnector.getCase(caseCreated.getId()).getTitle(),
+                is(caseRequest.getTitle()));
     }
 
     private PromatCase createCaseWithAuthorAndWeekCode(Integer someUniqueIdNumber, String author, String weekCode) {

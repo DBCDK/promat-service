@@ -10,6 +10,9 @@ import dk.dbc.promat.service.Repository;
 import dk.dbc.promat.service.dto.CaseRequest;
 import dk.dbc.promat.service.dto.CaseSummaryList;
 import dk.dbc.promat.service.dto.CriteriaOperator;
+import dk.dbc.promat.service.dto.Dto;
+import dk.dbc.promat.service.dto.RecordDto;
+import dk.dbc.promat.service.dto.RecordsListDto;
 import dk.dbc.promat.service.dto.ServiceErrorCode;
 import dk.dbc.promat.service.dto.ServiceErrorDto;
 import dk.dbc.promat.service.dto.TaskDto;
@@ -53,6 +56,8 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.StreamingOutput;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -67,6 +72,9 @@ public class Cases {
 
     @EJB
     Repository repository;
+
+    @EJB
+    Records records;
 
     // Default number of results when getting cases
     private static final int DEFAULT_CASES_LIMIT = 100;
@@ -168,7 +176,8 @@ public class Cases {
             .withAuthor(dto.getAuthor())
             .withCreator(creator)
             .withPublisher(dto.getPublisher())
-            .withWeekCode(dto.getWeekCode());
+            .withWeekCode(dto.getWeekCode())
+            .withFulltextLink(dto.getFulltextLink());
 
             entityManager.persist(entity);
             if (entity.getStatus() == CaseStatus.ASSIGNED) {
@@ -586,6 +595,46 @@ public class Cases {
 
         promatCase.setStatus(CaseStatus.DELETED);
         return Response.ok().build();
+    }
+
+    @POST
+    @Path("drafts")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response addDraftOrUpdateExistingCase(CaseRequest caseRequest) throws Exception {
+        LOGGER.info("POST /drafts: {}", caseRequest);
+
+        if (caseRequest.getPrimaryFaust() == null || caseRequest.getPrimaryFaust().isBlank()) {
+            return ServiceErrorDto.InvalidRequest("Missing required field in the request data",
+                    "Field 'primaryFaust' must be supplied when creating a new case draft");
+        }
+
+        final Dto dto = records.resolveId(caseRequest.getPrimaryFaust());
+        if (!(dto instanceof RecordsListDto)) {
+            return Response.status(400).entity(dto).build();
+        }
+
+        final RecordsListDto recordsList = (RecordsListDto) dto;
+        final List<RecordDto> relatedRecords = recordsList.getNumFound() == 0 ?
+                Collections.emptyList() : recordsList.getRecords();
+        final Set<PromatCase> existingCases = new HashSet<>();
+
+        for (RecordDto relatedRecord : relatedRecords) {
+            // Lookup existing open cases...
+
+            // TODO: 08/02/2021 handle existing case lookup
+        }
+
+        if (existingCases.isEmpty()) {
+            // No matching cases found, create new case draft...
+
+            // force case draft status to CREATED
+            caseRequest.setStatus(CaseStatus.CREATED);
+            return createCase(caseRequest);
+        }
+
+        // TODO: 08/02/2021 handle existing case update 
+        return null;
     }
 
     public Reviewer resolveReviewer(Integer reviewerId) throws ServiceErrorException {
