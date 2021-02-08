@@ -43,11 +43,9 @@ public class ScheduledCaseInformationUpdater {
     // Run once every hour during working days and normal working hours
     @Schedule(second = "0", minute = "42", hour = "6-16", dayOfWeek = "Mon-Fri", persistent = false)
     public void updateCaseInformation() {
-        try {
-            LOGGER.info("Executing scheduled job 'updateCaseInformation()'");
 
+        try {
             if(serverRole == ServerRole.PRIMARY) {
-                LOGGER.info("Starting periodic update of case information");
 
                 // Prevent running multiple updates at once - since the update runs only every hour,
                 // we should never encounter a lock - so if we do, something is frightfully wrong!
@@ -61,6 +59,7 @@ public class ScheduledCaseInformationUpdater {
                     List<PromatCase> casesForUpdate = getCasesForUpdate();
                     if(casesForUpdate != null && casesForUpdate.size() > 0) {
                         for(PromatCase promatCase : casesForUpdate) {
+                            LOGGER.info("Updating case with id {}", promatCase.getId());
                             caseInformationUpdater.updateCaseInformation(promatCase);
                         }
                     }
@@ -68,10 +67,7 @@ public class ScheduledCaseInformationUpdater {
                     entityManager.flush();
                 } finally {
                     updateLock.unlock();
-                    LOGGER.info("Ending periodic update of case information");
                 }
-            } else {
-                LOGGER.info("Not ServerRole.PRIMARY, aborting");
             }
         } catch (Exception e) {
             LOGGER.error("Caught exception in scheduled job 'updateCaseInformation()': {}", e.getMessage());
