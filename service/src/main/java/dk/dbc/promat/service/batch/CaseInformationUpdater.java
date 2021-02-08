@@ -70,7 +70,7 @@ public class CaseInformationUpdater {
             metricRegistry.simpleTimer(openformatTimerMetadata).update(Duration.ofMillis(System.currentTimeMillis() - taskStartTime));
 
             // Update title, if changed
-            if (promatCase.getTitle() != bibliographicInformation.getTitle()) {
+            if (!promatCase.getTitle().equals(bibliographicInformation.getTitle())) {
                 LOGGER.info("Updating title: '{}' ==> '{}' of case with id {}", promatCase.getTitle(),
                         bibliographicInformation.getTitle(), promatCase.getId());
                 promatCase.setTitle(bibliographicInformation.getTitle());
@@ -80,11 +80,11 @@ public class CaseInformationUpdater {
             // otherwise check if we need to clear an existing weekcode (record may have been pulled back for further
             // editing by the cataloging team)
             String newCode = getFirstWeekcode(bibliographicInformation.getCatalogcodes());
-            if (newCode.isEmpty() && !promatCase.getWeekCode().isEmpty()) {
-                LOGGER.info("Weekcode removed from case with id {}. Record of primary faust {} has no BKMxxxxxx catalogcode", promatCase.getId());
+            if (newCode.isEmpty() && promatCase.getWeekCode() != null && !promatCase.getWeekCode().isEmpty()) {
+                LOGGER.info("Weekcode removed from case with id {}. Record of primary faust {} has no promat related catalogcode", promatCase.getId());
                 promatCase.setWeekCode("");
             }
-            if (!newCode.isEmpty() && promatCase.getWeekCode() != newCode) {
+            if (!newCode.isEmpty() && (promatCase.getWeekCode() == null || !promatCase.getWeekCode().equals(newCode))) {
                 LOGGER.info("Updating weekcode: '{}' ==> '{}' of case with id {}", promatCase.getWeekCode(), newCode, promatCase.getId());
                 promatCase.setWeekCode(newCode);
             }

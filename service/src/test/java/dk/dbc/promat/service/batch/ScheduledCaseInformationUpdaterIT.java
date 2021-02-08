@@ -107,12 +107,46 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
     }
 
     @Test
+    public void testUpdateCaseWithNullWeekcode() throws JsonProcessingException, OpenFormatConnectorException {
+
+        // Create a case with no weekcode
+        CaseRequest dto = new CaseRequest()
+                .withPrimaryFaust("24699773")
+                .withTitle("Title for 24699773")
+                .withDetails("Details for 24699773")
+                .withMaterialType(MaterialType.BOOK)
+                .withAssigned("2021-01-28")
+                .withDeadline("2024-02-29")
+                .withCreator(10)
+                .withEditor(10)
+                .withReviewer(1);
+
+        Response response = postResponse("v1/api/cases", dto);
+        assertThat("status code", response.getStatus(), is(201));
+        PromatCase created = mapper.readValue(response.readEntity(String.class), PromatCase.class);
+
+        ScheduledCaseInformationUpdater upd = new ScheduledCaseInformationUpdater();
+        upd.caseInformationUpdater = new CaseInformationUpdater();
+        upd.caseInformationUpdater.metricRegistry = metricRegistry;
+        upd.caseInformationUpdater.openFormatHandler = new OpenFormatHandler()
+                .withConnector(OpenFormatConnectorFactory.create(wiremockHost));
+        persistenceContext.run(() -> upd.caseInformationUpdater.updateCaseInformation(created));
+
+        assertThat("weekcode is correct", created.getWeekCode(), is("BKM201105"));
+
+        // Delete the case so that we dont mess up payments and dataio-export tests
+        response = deleteResponse("v1/api/cases/" + created.getId());
+        assertThat("status code", response.getStatus(), is(200));
+    }
+
+    @Test
     public void testUpdateCaseWithEmptyWeekcode() throws JsonProcessingException, OpenFormatConnectorException {
 
         // Create a case with no weekcode
         CaseRequest dto = new CaseRequest()
                 .withPrimaryFaust("24699773")
                 .withTitle("Title for 24699773")
+                .withWeekCode("")
                 .withDetails("Details for 24699773")
                 .withMaterialType(MaterialType.BOOK)
                 .withAssigned("2021-01-28")
