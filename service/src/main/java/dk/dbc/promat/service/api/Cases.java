@@ -11,6 +11,7 @@ import dk.dbc.promat.service.dto.CaseRequest;
 import dk.dbc.promat.service.dto.CaseSummaryList;
 import dk.dbc.promat.service.dto.CriteriaOperator;
 import dk.dbc.promat.service.dto.Dto;
+import dk.dbc.promat.service.dto.ListCasesParams;
 import dk.dbc.promat.service.dto.RecordDto;
 import dk.dbc.promat.service.dto.RecordsListDto;
 import dk.dbc.promat.service.dto.ServiceErrorCode;
@@ -262,145 +263,162 @@ public class Cases {
                               @QueryParam("weekCode") final String weekCode,
                               @QueryParam("limit") final Integer limit,
                               @QueryParam("from") final Integer from) {
-        LOGGER.info("cases/?faust={}|status={}|reviewer={}|editor={}|title={}|author={}|" +
-                        "trimmedWeekcode={}|trimmedWeekcodeOperator={}|weekCode={}|limit={}|from={}|format={}",
-                faust == null ? "null" : faust,
-                status == null ? "null" : status,
-                reviewer == null ? "null" : reviewer,
-                editor == null ? "null" : editor,
-                title == null ? "null" : title,
-                author==null ? "null" :author,
-                trimmedWeekcode == null ? "null" : trimmedWeekcode,
-                trimmedWeekcodeOperator == null ? "null" : trimmedWeekcodeOperator,
-                weekCode == null ? "null" : weekCode,
-                limit == null ? "null" : limit,
-                from == null ? "null" : from,
-                format);
+
+        final ListCasesParams listCasesParams = new ListCasesParams()
+                .withFaust(faust)
+                .withStatus(status)
+                .withReviewer(reviewer)
+                .withEditor(editor)
+                .withTitle(title)
+                .withAuthor(author)
+                .withWeekCode(weekCode)
+                .withTrimmedWeekcode(trimmedWeekcode)
+                .withTrimmedWeekcodeOperator(trimmedWeekcodeOperator)
+                .withFormat(ListCasesParams.Format.valueOf(format.toString()))
+                .withLimit(limit)
+                .withFrom(from);
+
+        LOGGER.info("GET cases/ {}", listCasesParams);
 
         // Select and return cases
         try {
-            // Initialize query and criteriabuilder
-            CriteriaBuilder builder = entityManager.getCriteriaBuilder();
-            CriteriaQuery criteriaQuery = builder.createQuery();
-            Root<PromatCase> root = criteriaQuery.from(PromatCase.class);
-            criteriaQuery.select(root);
-
-            // List of all predicates to be AND'ed together on the final query
-            List<Predicate> allPredicates = new ArrayList<>();
-
-            // Get case with given primary or related
-            if(faust != null && !faust.isBlank() && !faust.isEmpty()) {
-
-                Predicate primaryFaustPredicat = builder.equal(root.get("primaryFaust"), builder.literal(faust));
-                Predicate relatedFaustsPredicat = builder.isTrue(builder.function("JsonbContainsFromString", Boolean.class, root.get("relatedFausts"), builder.literal(faust)));
-                Predicate faustPredicate = builder.or(primaryFaustPredicat, relatedFaustsPredicat);
-
-                // And status not CLOSED or DONE
-                CriteriaBuilder.In<CaseStatus> inClause = builder.in(root.get("status"));
-                inClause.value(CaseStatus.CLOSED);
-                inClause.value(CaseStatus.EXPORTED);
-                inClause.value(CaseStatus.DELETED);
-                Predicate statusPredicate = builder.not(inClause);
-
-                allPredicates.add(builder.and(faustPredicate, statusPredicate));
-            }
-
-            // Get cases with given set of statuses
-            if(status != null && !status.isBlank() && !status.isEmpty()) {
-
-                // Allthough jax.rs actually supports having multiple get arguments with the same name
-                // "?status=CREATED&status=ASSIGNED" this is not a safe implementation since other
-                // frameworks (React/NextJS or others) may have difficulties handling this. So instead
-                // a list of statuses is expected to be given as a comma separated list
-
-                List<Predicate> statusPredicates = new ArrayList<>();
-                for(String oneStatus : status.split(",")) {
-                    try {
-                        statusPredicates.add(builder.equal(root.get("status"), CaseStatus.valueOf(oneStatus)));
-                    } catch (IllegalArgumentException ex) {
-                        LOGGER.info("Invalid status code '{}' in request for cases with status", oneStatus);
-                        return ServiceErrorDto.InvalidRequest("Invalid case status code", String.format("Unknown case status={}", oneStatus));
-                    }
-                }
-
-                allPredicates.add(builder.or(statusPredicates.toArray(Predicate[]::new)));
-            } else {
-                // If no status specified: Set a status "not" deleted predicate
-                allPredicates.add(builder.notEqual(root.get("status"), CaseStatus.DELETED));
-            }
-
-            // Get cases with given reviewer
-            if(reviewer != null && reviewer > 0) {
-                allPredicates.add(builder.equal(root.get("reviewer").get("id"), reviewer));
-            }
-
-            // Get cases with given editor
-            if(editor != null && editor > 0) {
-                allPredicates.add(builder.equal(root.get("editor").get("id"), editor));
-            }
-
-            // Get cases with a title that matches (entire, or part of) the given title
-            if(title != null && !title.isBlank() && !title.isEmpty()) {
-                allPredicates.add(builder
-                        .like(builder
-                                .lower(root
-                                        .get("title")), builder.literal("%" + title.toLowerCase() + "%")));
-            }
-
-            // Get cases with an author that matches (entire, or part of) the given author
-            if(author != null && !author.isBlank()) {
-                allPredicates.add(builder
-                        .like(builder
-                                .lower(root
-                                        .get("author")), builder.literal("%" + author.toLowerCase() + "%")));
-            }
-
-
-            if (trimmedWeekcode != null && !trimmedWeekcode.isBlank()) {
-                allPredicates.add(PredicateFactory.fromBinaryOperator(trimmedWeekcodeOperator,
-                        root.get("trimmedWeekCode"), trimmedWeekcode, builder));
-            }
-
-            if (weekCode != null && !weekCode.isBlank()) {
-                allPredicates.add(builder.equal(builder.lower(root.get("weekCode")), weekCode.toLowerCase()));
-            }
-
-            // If a starting id has been given, add this
-            if( from != null ) {
-                allPredicates.add(builder.gt(root.get("id"), builder.literal(from)));
-            }
-
-            // Combine all where clauses together with AND and add them to the query
-            if(allPredicates.size() > 0) {
-                Predicate finalPredicate = builder.and(allPredicates.toArray(Predicate[]::new));
-                criteriaQuery.where(finalPredicate);
-            }
-
-            // Complete the query by adding limits and ordering
-            criteriaQuery.orderBy(builder.asc(root.get("id")));
-            TypedQuery<PromatCase> query = entityManager.createQuery(criteriaQuery);
-            query.setMaxResults(limit == null ? DEFAULT_CASES_LIMIT : limit);
-
-            // Execute the query
-            // TODO: 12/01/2021 Rename CaseSummaryList to CaseList
-            CaseSummaryList cases = new CaseSummaryList();
-            cases.getCases().addAll(query.getResultList());
-            cases.setNumFound(cases.getCases().size());
+            final CaseSummaryList caseList = listCases(listCasesParams);
 
             // Return the found cases
             // Note that the http status is set to 404 (NOT FOUND) if no case matched the query
             // this is to allow a quick(er) check for existing cases by using HEAD and checking
             // the statuscode instead of deserializing the response body and looking at numFound
             final ObjectMapper objectMapper = new JsonMapperProvider().getObjectMapper();
-            return Response.status(cases.getNumFound() > 0 ? 200 : 404)
+            return Response.status(caseList.getNumFound() > 0 ? 200 : 404)
                     .entity(objectMapper.writerWithView(format.getViewClass())
-                            .writeValueAsString(cases)).build();
-
+                            .writeValueAsString(caseList)).build();
+        } catch (ServiceErrorException e) {
+            return Response.status(e.getHttpStatus()).entity(e.getServiceErrorDto()).build();
         } catch(Exception exception) {
             LOGGER.error("Caught exception: {}", exception.getMessage());
             return ServiceErrorDto.Failed(exception.getMessage());
         }
     }
+
+    public CaseSummaryList listCases(ListCasesParams params) throws ServiceErrorException {
+        // Initialize query and criteriabuilder
+        final CriteriaBuilder builder = entityManager.getCriteriaBuilder();
+        final CriteriaQuery criteriaQuery = builder.createQuery();
+        final Root<PromatCase> root = criteriaQuery.from(PromatCase.class);
+        criteriaQuery.select(root);
+
+        // List of all predicates to be AND'ed together on the final query
+        final List<Predicate> allPredicates = new ArrayList<>();
+
+        // Get case with given primary or related
+        final String faust = params.getFaust();
+        if (faust != null && !faust.isBlank()) {
+            final Predicate primaryFaustPredicat = builder.equal(root.get("primaryFaust"), builder.literal(faust));
+            final Predicate relatedFaustsPredicat = builder.isTrue(builder.function("JsonbContainsFromString", Boolean.class, root.get("relatedFausts"), builder.literal(faust)));
+            final Predicate faustPredicate = builder.or(primaryFaustPredicat, relatedFaustsPredicat);
+
+            // And status not CLOSED or DONE
+            final CriteriaBuilder.In<CaseStatus> inClause = builder.in(root.get("status"));
+            inClause.value(CaseStatus.CLOSED);
+            inClause.value(CaseStatus.EXPORTED);
+            inClause.value(CaseStatus.DELETED);
+            Predicate statusPredicate = builder.not(inClause);
+
+            allPredicates.add(builder.and(faustPredicate, statusPredicate));
+        }
+
+        // Get cases with given set of statuses
+        final String status = params.getStatus();
+        if (status != null && !status.isBlank()) {
+            // Allthough jax.rs actually supports having multiple get arguments with the same name
+            // "?status=CREATED&status=ASSIGNED" this is not a safe implementation since other
+            // frameworks (React/NextJS or others) may have difficulties handling this. So instead
+            // a list of statuses is expected to be given as a comma separated list
+
+            final List<Predicate> statusPredicates = new ArrayList<>();
+            for (String oneStatus : status.split(",")) {
+                try {
+                    statusPredicates.add(builder.equal(root.get("status"), CaseStatus.valueOf(oneStatus)));
+                } catch (IllegalArgumentException ex) {
+                    final ServiceErrorDto error = new ServiceErrorDto()
+                            .withCode(ServiceErrorCode.INVALID_REQUEST)
+                            .withCause("Invalid case status")
+                            .withDetails(String.format("Unknown case status: %s", oneStatus));
+                    throw new ServiceErrorException(error.getCause()).withHttpStatus(400);
+                }
+            }
+            allPredicates.add(builder.or(statusPredicates.toArray(Predicate[]::new)));
+        } else {
+            // If no status specified: Set a status "not" deleted predicate
+            allPredicates.add(builder.notEqual(root.get("status"), CaseStatus.DELETED));
+        }
+
+        // Get cases with given reviewer
+        final Integer reviewer = params.getReviewer();
+        if (reviewer != null && reviewer > 0) {
+            allPredicates.add(builder.equal(root.get("reviewer").get("id"), reviewer));
+        }
+
+        // Get cases with given editor
+        final Integer editor = params.getEditor();
+        if (editor != null && editor > 0) {
+            allPredicates.add(builder.equal(root.get("editor").get("id"), editor));
+        }
+
+        // Get cases with a title that matches (entire, or part of) the given title
+        final String title = params.getTitle();
+        if (title != null && !title.isBlank()) {
+            allPredicates.add(builder
+                    .like(builder
+                            .lower(root
+                                    .get("title")), builder.literal("%" + title.toLowerCase() + "%")));
+        }
+
+        // Get cases with an author that matches (entire, or part of) the given author
+        final String author = params.getAuthor();
+        if (author != null && !author.isBlank()) {
+            allPredicates.add(builder
+                    .like(builder
+                            .lower(root
+                                    .get("author")), builder.literal("%" + author.toLowerCase() + "%")));
+        }
+
+        final String trimmedWeekcode = params.getTrimmedWeekcode();
+        if (trimmedWeekcode != null && !trimmedWeekcode.isBlank()) {
+            allPredicates.add(PredicateFactory.fromBinaryOperator(params.getTrimmedWeekcodeOperator(),
+                    root.get("trimmedWeekCode"), trimmedWeekcode, builder));
+        }
+
+        final String weekCode = params.getWeekCode();
+        if (weekCode != null && !weekCode.isBlank()) {
+            allPredicates.add(builder.equal(builder.lower(root.get("weekCode")), weekCode.toLowerCase()));
+        }
+
+        // If a starting id has been given, add this
+        final Integer from = params.getFrom();
+        if (from != null) {
+            allPredicates.add(builder.gt(root.get("id"), builder.literal(from)));
+        }
+
+        // Combine all where clauses together with AND and add them to the query
+        if (allPredicates.size() > 0) {
+            Predicate finalPredicate = builder.and(allPredicates.toArray(Predicate[]::new));
+            criteriaQuery.where(finalPredicate);
+        }
+
+        // Complete the query by adding limits and ordering
+        criteriaQuery.orderBy(builder.asc(root.get("id")));
+        final TypedQuery<PromatCase> query = entityManager.createQuery(criteriaQuery);
+        query.setMaxResults(params.getLimit() == null ? DEFAULT_CASES_LIMIT : params.getLimit());
+
+        // Execute the query
+        // TODO: 12/01/2021 Rename CaseSummaryList to CaseList
+        final CaseSummaryList caseList = new CaseSummaryList();
+        caseList.getCases().addAll(query.getResultList());
+        caseList.setNumFound(caseList.getCases().size());
+        return caseList;
+    }
+
 
     @POST
     @Path("cases/{id}")
