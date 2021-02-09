@@ -415,8 +415,8 @@ public class Cases {
                 return ServiceErrorDto.InvalidRequest("Forbidden field", "Setting the value of 'assigned' is not allowed");
             }
             final Set<CaseStatus> allowedStatuses = Set.of(CaseStatus.CLOSED, CaseStatus.CREATED,
-                    CaseStatus.EXPORTED, CaseStatus.REVERTED, CaseStatus.PENDING_CLOSE,
-                    CaseStatus.PENDING_APPROVAL, CaseStatus.APPROVED, CaseStatus.PENDING_ISSUES);
+                    CaseStatus.EXPORTED, CaseStatus.REVERTED, CaseStatus.PENDING_CLOSE, CaseStatus.PENDING_APPROVAL,
+                    CaseStatus.APPROVED, CaseStatus.PENDING_ISSUES, CaseStatus.PENDING_EXPORT);
             if(dto.getStatus() != null && !allowedStatuses.contains(dto.getStatus())) {
                 LOGGER.info("Attempt to set forbidden status {} on case {}", dto.getStatus(), id);
                 return ServiceErrorDto.InvalidRequest("Forbidden status",
@@ -781,6 +781,12 @@ public class Cases {
                 break;
 
             case EXPORTED:
+                if (existing.getStatus() != CaseStatus.PENDING_EXPORT) {
+                    throw new ServiceErrorException("Not allowed to set status EXPORTED when case is not in PENDING_EXPORT")
+                            .withDetails("Attempt to set status of case to EXPORTED when case is not in status PENDING_EXPORT")
+                            .withHttpStatus(400)
+                            .withCode(ServiceErrorCode.INVALID_REQUEST);
+                }
                 existing.setStatus(CaseStatus.EXPORTED);
                 break;
 
@@ -847,6 +853,16 @@ public class Cases {
                             .withCode(ServiceErrorCode.INVALID_REQUEST);
                 }
                 existing.setStatus(CaseStatus.PENDING_ISSUES);
+                break;
+
+            case PENDING_EXPORT:
+                if (existing.getStatus() != CaseStatus.EXPORTED) {
+                    throw new ServiceErrorException("Not allowed to set status PENDING_EXPORT when case is not in EXPORTED")
+                            .withDetails("Attempt to set status of case to PENDING_EXPORT when case is not in status PENDING_EXPORTED")
+                            .withHttpStatus(400)
+                            .withCode(ServiceErrorCode.INVALID_REQUEST);
+                }
+                existing.setStatus(CaseStatus.PENDING_EXPORT);
                 break;
 
             default:

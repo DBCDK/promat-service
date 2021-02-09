@@ -1243,4 +1243,31 @@ public class CasesIT extends ContainerTest {
         });
         return expected;
     }
+
+    @Test
+    public void testChangeStatusPendingExportToExported() throws JsonProcessingException {
+
+        // Case is ready for export, the dataio-harvester will change status to EXPORTED
+        CaseRequest requestDto = new CaseRequest().withStatus(CaseStatus.EXPORTED);
+        Response response = postResponse("v1/api/cases/18", requestDto);
+        assertThat("status code", response.getStatus(), is(200));
+
+        PromatCase updated = mapper.readValue(response.readEntity(String.class), PromatCase.class);
+        assertThat("status", updated.getStatus(), is(CaseStatus.EXPORTED));
+    }
+
+    @Test
+    public void testChangeStatusExportedToPendingExport() throws JsonProcessingException {
+
+        // Case has been exported but we need to export it again since some error occurred
+        // downstream - we dont want to edit the database directly, nor do we want to
+        // let the case go through an entire CREATED->ASSIGNED->PENDING_APPROVAL->....
+        // chain of status changes.
+        CaseRequest requestDto = new CaseRequest().withStatus(CaseStatus.PENDING_EXPORT);
+        Response response = postResponse("v1/api/cases/19", requestDto);
+        assertThat("status code", response.getStatus(), is(200));
+
+        PromatCase updated = mapper.readValue(response.readEntity(String.class), PromatCase.class);
+        assertThat("status", updated.getStatus(), is(CaseStatus.PENDING_EXPORT));
+    }
 }

@@ -16,7 +16,9 @@ values (1, 'Title for 001111', 'Details for 001111', '001111', '["002222","00333
        (14, 'Title for 019993', 'Details for 019993', '019993', '[]', 1, 10, '2021-01-13', '2021-01-13', NULL, 'CREATED', 'BOOK', null, null, 13),
        (15, 'Title for 019994', 'Details for 019994', '019994', '[]', 1, 10, '2021-01-27', '2021-02-27', '2021-01-27', 'ASSIGNED', 'BOOK', null, null, 13),
        (16, 'Title for 019995', 'Details for 019995', '019995', '[]', 1, 10, '2021-01-27', '2021-02-27', '2021-01-27', 'ASSIGNED', 'BOOK', null, null, 13),
-       (17, 'Title for 019996', 'Details for 019996', '019996', '[]', 1, 10, '2021-01-27', '2021-02-27', '2021-01-27', 'ASSIGNED', 'BOOK', null, null, 13);
+       (17, 'Title for 019996', 'Details for 019996', '019996', '[]', 1, 10, '2021-01-27', '2021-02-27', '2021-01-27', 'ASSIGNED', 'BOOK', null, null, 13),
+       (18, 'Title for 019997', 'Details for 019997', '019997', '[]', 1, 10, '2021-01-27', '2021-02-27', '2021-01-27', 'PENDING_EXPORT', 'BOOK', null, null, 13),
+       (19, 'Title for 019998', 'Details for 019998', '019998', '[]', 1, 10, '2021-01-27', '2021-02-27', '2021-01-27', 'EXPORTED', 'BOOK', null, null, 13);
 
 insert into promattask(id, tasktype, taskfieldtype, created, paycategory, approved, payed, data, targetFausts)
 values  (1,  'GROUP_1_LESS_THAN_100_PAGES', 'DESCRIPTION', '202-12-10', 'GROUP_1_LESS_THAN_100_PAGES', '2020-12-10',  NULL,         NULL,                     NULL),
