@@ -114,7 +114,8 @@ public class Cases {
                     break;
                 default:
                     LOGGER.info("Attempt to create case with invalid state {}", dto.getStatus());
-                    return ServiceErrorDto.InvalidState(String.format("Case status {} is not allowed when creating a new case", dto.getStatus()));
+                    return ServiceErrorDto.InvalidState(String.format(
+                            "Case status %s is not allowed when creating a new case", dto.getStatus()));
             }
         }
 
@@ -716,7 +717,7 @@ public class Cases {
             throw new ServiceErrorException("Attempt to resolve reviewer failed")
                     .withCode(ServiceErrorCode.INVALID_REQUEST)
                     .withCause("No such reviewer")
-                    .withDetails(String.format("Field 'reviewer' contains user id {} which does not exist", reviewerId))
+                    .withDetails(String.format("Field 'reviewer' contains user id %d which does not exist", reviewerId))
                     .withHttpStatus(400);
         }
         return reviewer;
@@ -733,7 +734,7 @@ public class Cases {
             throw new ServiceErrorException("Attempt to resolve editor failed")
                     .withCode(ServiceErrorCode.INVALID_REQUEST)
                     .withCause("No such editor")
-                    .withDetails(String.format("Field 'editor' contains user id {} which does not exist", editorId))
+                    .withDetails(String.format("Field 'editor' contains user id %d which does not exist", editorId))
                     .withHttpStatus(400);
         }
         return editor;
@@ -784,7 +785,7 @@ public class Cases {
         }
 
         throw new ServiceErrorException("Bad PayCategory")
-                .withDetails(String.format("Invalid combination of TaskType {} and TaskFieldType {} when determining paycategory", taskType, taskFieldType))
+                .withDetails(String.format("Invalid combination of TaskType %s and TaskFieldType %s when determining paycategory", taskType, taskFieldType))
                 .withCode(ServiceErrorCode.INVALID_REQUEST)
                 .withHttpStatus(400);
     }
@@ -833,11 +834,11 @@ public class Cases {
         // as the given primary faustnumber and a state other than CLOSED or DONE
         if(!Faustnumbers.checkNoOpenCaseWithFaust(entityManager, dto.getPrimaryFaust())) {
             LOGGER.info("Case with primary or related Faust {} and state <> CLOSED|DONE exists", dto.getPrimaryFaust());
-            throw new ServiceErrorException(String.format("Case with primary or related faust {} and status not DONE or CLOSED exists", dto.getPrimaryFaust()))
+            throw new ServiceErrorException(String.format("Case with primary or related faust %s and status not DONE or CLOSED exists", dto.getPrimaryFaust()))
                     .withHttpStatus(409)
                     .withCode(ServiceErrorCode.FAUST_IN_USE)
                     .withCause("Faustnumber is in use")
-                    .withDetails(String.format("Case with primary or related faust {} and status not DONE or CLOSED exists", dto.getPrimaryFaust()));
+                    .withDetails(String.format("Case with primary or related faust %s and status not DONE or CLOSED exists", dto.getPrimaryFaust()));
         }
 
         // Check that no existing case exists with the same primary or related faustnumber
@@ -845,11 +846,11 @@ public class Cases {
         if(dto.getRelatedFausts() != null && dto.getRelatedFausts().size() > 0) {
             if(!Faustnumbers.checkNoOpenCaseWithFaust(entityManager, dto.getRelatedFausts().toArray(String[]::new))) {
                 LOGGER.info("Case with primary or related {} and state <> CLOSED|DONE exists", dto.getRelatedFausts());
-                throw new ServiceErrorException(String.format("Case with primary or related faust {} and status not DONE or CLOSED exists", dto.getRelatedFausts()))
+                throw new ServiceErrorException(String.format("Case with primary or related faust %s and status not DONE or CLOSED exists", dto.getRelatedFausts()))
                         .withHttpStatus(409)
                         .withCode(ServiceErrorCode.FAUST_IN_USE)
                         .withCause("Faustnumber is in use")
-                        .withDetails(String.format("Case with primary or related faust {} and status not DONE or CLOSED exists", dto.getRelatedFausts()));
+                        .withDetails(String.format("Case with primary or related faust %s and status not DONE or CLOSED exists", dto.getRelatedFausts()));
             }
         }
 
@@ -860,11 +861,11 @@ public class Cases {
                 if(task.getTargetFausts() != null) {
                     if(!Faustnumbers.checkNoOpenCaseWithFaust(entityManager, task.getTargetFausts().toArray(String[]::new))) {
                         LOGGER.info("Case contains a task with one or more targetFaust {} used by other active cases", task.getTargetFausts());
-                        throw new ServiceErrorException(String.format("Case contains tasks with one or more targetfausts {} used by other active cases", task.getTargetFausts()))
+                        throw new ServiceErrorException(String.format("Case contains tasks with one or more targetfausts %s used by other active cases", task.getTargetFausts()))
                                 .withHttpStatus(409)
                                 .withCode(ServiceErrorCode.FAUST_IN_USE)
                                 .withCause("Faustnumber is in use")
-                                .withDetails(String.format("Case contains tasks with one or more targetfausts {} used by other active cases", task.getTargetFausts()));
+                                .withDetails(String.format("Case contains tasks with one or more targetfausts %s used by other active cases", task.getTargetFausts()));
                     }
                 }
             }
