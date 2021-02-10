@@ -5,6 +5,7 @@
 
 package dk.dbc.promat.service.api;
 
+import com.fasterxml.jackson.annotation.JsonView;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dk.dbc.promat.service.Repository;
 import dk.dbc.promat.service.dto.CaseRequest;
@@ -18,6 +19,7 @@ import dk.dbc.promat.service.dto.ServiceErrorCode;
 import dk.dbc.promat.service.dto.ServiceErrorDto;
 import dk.dbc.promat.service.dto.TaskDto;
 import dk.dbc.promat.service.persistence.CaseStatus;
+import dk.dbc.promat.service.persistence.CaseView;
 import dk.dbc.promat.service.persistence.Editor;
 import dk.dbc.promat.service.persistence.Notification;
 import dk.dbc.promat.service.persistence.NotificationType;
@@ -61,6 +63,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Stateless
 @Path("")
@@ -619,6 +622,7 @@ public class Cases {
     @Path("drafts")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
+    @JsonView({CaseView.Summary.class})
     public Response addDraftOrUpdateExistingCase(CaseRequest caseRequest) throws Exception {
         LOGGER.info("POST /drafts: {}", caseRequest);
 
@@ -639,8 +643,14 @@ public class Cases {
 
         for (RecordDto relatedRecord : relatedRecords) {
             // Lookup existing open cases...
-
-            // TODO: 08/02/2021 handle existing case lookup
+            final String faust = relatedRecord.getFaust();
+            if (faust != null && !faust.isBlank()) {
+                final CaseSummaryList caseList = listCases(new ListCasesParams()
+                        .withFaust(relatedRecord.getFaust()));
+                if (caseList.getNumFound() > 0) {
+                    existingCases.addAll(caseList.getCases());
+                }
+            }
         }
 
         if (existingCases.isEmpty()) {
@@ -651,8 +661,48 @@ public class Cases {
             return createCase(caseRequest);
         }
 
-        // TODO: 08/02/2021 handle existing case update 
-        return null;
+        if (existingCases.size() > 1) {
+            final ServiceErrorDto error = new ServiceErrorDto()
+                    .withCode(ServiceErrorCode.FAUST_IN_USE)
+                    .withCause(String.format("multiple case candidates found for faust number %s",
+                            caseRequest.getPrimaryFaust()))
+                    .withDetails(existingCases.stream()
+                            .map(PromatCase::getId)
+                            .collect(Collectors.toList())
+                            .toString());
+            return Response.status(409).entity(error).build();
+        }
+
+        // Update existing case...
+
+        repository.getExclusiveAccessToTable(PromatCase.TABLE_NAME);
+
+        final PromatCase existingCase = existingCases.iterator().next();
+
+        // Race condition check
+        if (!Faustnumbers.checkNoOpenCaseWithFaust(entityManager, existingCase.getId(), caseRequest.getPrimaryFaust())) {
+            return ServiceErrorDto.FaustInUse(String.format(
+                    "Case with faust number %s already exists", caseRequest.getPrimaryFaust()));
+        }
+
+        entityManager.refresh(existingCase);
+        if (!existingCase.getPrimaryFaust().equals(caseRequest.getPrimaryFaust())) {
+            if (existingCase.getRelatedFausts() == null) {
+                existingCase.setRelatedFausts(List.of(caseRequest.getPrimaryFaust()));
+                LOGGER.info("Set related fausts for existing case {}: {}",
+                        existingCase.getId(), existingCase.getRelatedFausts());
+            } else if (!existingCase.getRelatedFausts().contains(caseRequest.getPrimaryFaust())) {
+                final ArrayList<String> relatedFausts = new ArrayList<>(existingCase.getRelatedFausts());
+                relatedFausts.add(caseRequest.getPrimaryFaust());
+                existingCase.setRelatedFausts(relatedFausts);
+                LOGGER.info("Updated related fausts for existing case {}: {}",
+                        existingCase.getId(), existingCase.getRelatedFausts());
+            }
+        }
+        existingCase.setFulltextLink(caseRequest.getFulltextLink());
+        LOGGER.info("Updated existing case {}", existingCase.getId());
+
+        return Response.status(200).entity(existingCase).build();
     }
 
     public Reviewer resolveReviewer(Integer reviewerId) throws ServiceErrorException {

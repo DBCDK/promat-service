@@ -1201,19 +1201,40 @@ public class CasesIT extends ContainerTest {
     }
 
     @Test
-    void addDraftOrUpdateExistingCase_noRelatedRecordsFound() throws JsonProcessingException, PromatServiceConnectorException {
+    void addDraftOrUpdateExistingCase() throws JsonProcessingException, PromatServiceConnectorException {
         final CaseRequest caseRequest = new CaseRequest()
                 .withPrimaryFaust("11111111")
-                .withTitle("Title for draft with 11111111")
+                .withTitle("Title for draft - print")
                 .withMaterialType(MaterialType.BOOK)
                 .withFulltextLink("link");
 
-        final Response response = postResponse("v1/api/drafts", caseRequest);
-        assertThat("status code", response.getStatus(), is(201));
+        final Response caseCreatedResponse = postResponse("v1/api/drafts", caseRequest);
+        assertThat("case created status code", caseCreatedResponse.getStatus(), is(201));
 
-        final PromatCase caseCreated = mapper.readValue(response.readEntity(String.class), PromatCase.class);
+        final PromatCase caseCreated = mapper.readValue(caseCreatedResponse.readEntity(String.class), PromatCase.class);
         assertThat("case created", promatServiceConnector.getCase(caseCreated.getId()).getTitle(),
                 is(caseRequest.getTitle()));
+
+        final CaseRequest matchingCaseRequest = new CaseRequest()
+                .withPrimaryFaust("22222222")
+                .withTitle("Title for draft - ebook")
+                .withMaterialType(MaterialType.BOOK)
+                .withFulltextLink("updated link");
+
+        final Response caseUpdatedResponse = postResponse("v1/api/drafts", matchingCaseRequest);
+        assertThat("case updated status code", caseUpdatedResponse.getStatus(), is(200));
+        assertThat("case updated",
+                mapper.readValue(caseUpdatedResponse.readEntity(String.class), PromatCase.class).getId(),
+                is(caseCreated.getId()));
+
+        final PromatCase caseUpdated = promatServiceConnector.getCase(caseCreated.getId());
+        assertThat("manifestation added as related faust",
+                caseUpdated.getRelatedFausts().contains(matchingCaseRequest.getPrimaryFaust()),
+                is(true));
+        assertThat("fulltext link updated", caseUpdated.getFulltextLink(),
+                is(matchingCaseRequest.getFulltextLink()));
+        assertThat("title not updated", caseUpdated.getTitle(),
+                is(caseCreated.getTitle()));
     }
 
     private PromatCase createCaseWithAuthorAndWeekCode(Integer someUniqueIdNumber, String author, String weekCode) {
