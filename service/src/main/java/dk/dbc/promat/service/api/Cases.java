@@ -631,6 +631,10 @@ public class Cases {
             return ServiceErrorDto.InvalidRequest("Missing required field in the request data",
                     "Field 'primaryFaust' must be supplied when creating a new case draft");
         }
+        if (caseRequest.getReviewer() != null) {
+            return ServiceErrorDto.InvalidRequest("Illegal value in request",
+                    "Drafts cannot be created with an assigned reviewer");
+        }
 
         final Dto dto = records.resolveId(caseRequest.getPrimaryFaust());
         if (!(dto instanceof RecordsListDto)) {
