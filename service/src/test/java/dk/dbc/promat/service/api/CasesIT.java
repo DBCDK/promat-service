@@ -24,6 +24,8 @@ import dk.dbc.promat.service.persistence.TaskType;
 import org.hamcrest.core.IsNull;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.ws.rs.core.Response;
 import java.io.IOException;
@@ -1305,5 +1307,28 @@ public class CasesIT extends ContainerTest {
 
         PromatCase updated = mapper.readValue(response.readEntity(String.class), PromatCase.class);
         assertThat("status", updated.getStatus(), is(CaseStatus.PENDING_EXPORT));
+    }
+
+    @Test
+    public void testDbckatHtmlViewOfPrimaryFaust() throws IOException {
+
+        // Primary faustnumber
+        byte[] expected = Files.readAllBytes(Path.of("src/test/resources/__files/case-view-for-id-20-100000.html"));
+
+        // Todo: Fetch view and assert
+    }
+
+    @Test
+    public void testDbckatHtmlViewORelatedFausts() throws IOException {
+
+        // First related faustnumber
+        byte[] expected = Files.readAllBytes(Path.of("src/test/resources/__files/case-view-for-id-20-100001.html"));
+
+        // Todo: Fetch view and assert
+
+        // Second related faustnumber
+        expected = Files.readAllBytes(Path.of("src/test/resources/__files/case-view-for-id-20-100002.html"));
+
+        // Todo: Fetch view and assert
     }
 }
