@@ -9,6 +9,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import dk.dbc.promat.service.ContainerTest;
 import dk.dbc.promat.service.dto.ListCasesParams;
 import dk.dbc.promat.service.connector.PromatServiceConnectorException;
+import dk.dbc.promat.service.connector.PromatServiceConnectorUnexpectedStatusCodeException;
 import dk.dbc.promat.service.dto.CaseRequest;
 import dk.dbc.promat.service.dto.CaseSummaryList;
 import dk.dbc.promat.service.dto.CriteriaOperator;
@@ -24,6 +25,8 @@ import dk.dbc.promat.service.persistence.TaskType;
 import org.hamcrest.core.IsNull;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.ws.rs.core.Response;
 import java.io.IOException;
@@ -53,6 +56,7 @@ import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.core.Is.is;
 
 public class CasesIT extends ContainerTest {
+    private static final Logger LOGGER = LoggerFactory.getLogger(CasesIT.class);
 
     @Test
     public void testCreateCase() throws JsonProcessingException {
@@ -1308,25 +1312,34 @@ public class CasesIT extends ContainerTest {
     }
 
     @Test
-    public void testDbckatHtmlViewOfPrimaryFaust() throws IOException {
-
-        // Primary faustnumber
-        byte[] expected = Files.readAllBytes(Path.of("src/test/resources/__files/case-view-for-id-20-100000.html"));
-
-        // Todo: Fetch view and assert
+    public void testDbcKatHtmlViewFaustNotFoundReturnsNotFound() throws PromatServiceConnectorException {
+        try {
+            promatServiceConnector.getCaseViewHtml("98765432123456789");
+        } catch(PromatServiceConnectorUnexpectedStatusCodeException e) {
+            assertThat("must return 404 NOT FOUND", e.getStatusCode(), is(404));
+        }
     }
 
     @Test
-    public void testDbckatHtmlViewOfRelatedFausts() throws IOException {
+    public void testDbckatHtmlViewOfPrimaryFaust() throws IOException, PromatServiceConnectorException {
 
-        // First related faustnumber
-        byte[] expected = Files.readAllBytes(Path.of("src/test/resources/__files/case-view-for-id-20-100001.html"));
+        // Fetch the html view for the primary faustnumber
+        String expected = new String(Files.readAllBytes(Path.of("src/test/resources/__files/case-view-for-id-20-100000.html")));
+        String html = promatServiceConnector.getCaseViewHtml("100000");
+        // Todo: Assert. 2021/02/11: Needs reformatting of result files due to injected whitespaces from the jte templating
+    }
 
-        // Todo: Fetch view and assert
+    @Test
+    public void testDbckatHtmlViewOfRelatedFausts() throws IOException, PromatServiceConnectorException {
 
-        // Second related faustnumber
-        expected = Files.readAllBytes(Path.of("src/test/resources/__files/case-view-for-id-20-100002.html"));
+        // Fetch the html view for the first related faustnumber
+        String expected = new String(Files.readAllBytes(Path.of("src/test/resources/__files/case-view-for-id-20-100001.html")));
+        String html = promatServiceConnector.getCaseViewHtml("100001");
+        // Todo: Assert. 2021/02/11: Needs reformatting of result files due to injected whitespaces from the jte templating
 
-        // Todo: Fetch view and assert
+        // Fetch the html view for the second related faustnumber
+        expected = new String(Files.readAllBytes(Path.of("src/test/resources/__files/case-view-for-id-20-100002.html")));
+        html = promatServiceConnector.getCaseViewHtml("100002");
+        // Todo: Assert. 2021/02/11: Needs reformatting of result files due to injected whitespaces from the jte templating
     }
 }
