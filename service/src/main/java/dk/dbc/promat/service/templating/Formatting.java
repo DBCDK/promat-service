@@ -5,6 +5,7 @@
 
 package dk.dbc.promat.service.templating;
 
+import dk.dbc.promat.service.persistence.CaseStatus;
 import dk.dbc.promat.service.persistence.PromatUser;
 
 import java.time.LocalDate;
@@ -30,5 +31,42 @@ public class Formatting {
         }
 
         return names.size() > 0 ? names.stream().collect(Collectors.joining(" ")) : "";
+    }
+
+    public static String format(CaseStatus status) {
+        switch(status) {
+            case CREATED:
+                return "Oprettet";
+            case ASSIGNED:
+                return "Tildelt";
+            case REJECTED:
+                return "Afvist";
+            case PENDING_APPROVAL:
+                return "Afventer godkendelse";
+            case PENDING_ISSUES:
+                return "Afventer rettelser";
+            case PENDING_EXTERNAL:
+                return "Afventer eksterne opgaver";
+            case APPROVED:
+                return "Godkendt";
+            case PENDING_MEETING:
+                return "Klar til gennemsyn";
+            case PENDING_EXPORT:
+                return "Klar til eksport";
+            case EXPORTED:
+                return "Eksporteret";
+            case PENDING_REVERT:
+                return "Afventer tilbagetrækning";
+            case REVERTED:
+                return "Trukket tilbage";
+            case PENDING_CLOSE:
+                return "Afventer lukning";
+            case CLOSED:
+                return "Lukket";
+            case DELETED:
+                return "Slettet";
+            default:
+                return "";
+        }
     }
 }
