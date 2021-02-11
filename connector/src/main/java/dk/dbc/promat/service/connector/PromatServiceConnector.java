@@ -111,6 +111,21 @@ public class PromatServiceConnector {
         return readResponseEntity(response, PromatCase.class);
     }
 
+    /**
+     * Gets an existing case as a html view, suitable for embedded display in DBCKat a.o.
+     * @param faust Faust number
+     * @return case
+     * @throws PromatServiceConnectorException on unexpected failure for get operation
+     */
+    public String getCaseViewHtml(String faust) throws PromatServiceConnectorException {
+        final HttpGet httpGet = new HttpGet(failSafeHttpClient)
+                .withBaseUrl(baseUrl)
+                .withPathElements("cases", faust, "html");
+        final Response response = httpGet.execute();
+        assertResponseStatus(response, Response.Status.OK);
+        return readResponseEntity(response, String.class);
+    }
+
     private void assertResponseStatus(Response response, Response.Status... expectedStatus)
             throws PromatServiceConnectorException {
         final Response.Status actualStatus =
