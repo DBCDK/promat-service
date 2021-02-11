@@ -27,6 +27,8 @@ tags:
     description: Text dialogue reviewer/editor on cases
   - name: payments
     description: Payments preview, execute and lock, history
+  - name: drafts
+    description: Incomplete cases in need of further refinement
 
 paths:
   /reviewers:
@@ -843,6 +845,48 @@ paths:
                 $ref: '#/components/schemas/PaymentHistory'
         '500':
           description: Error while building the payments preview
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+
+  /drafts:
+    post:
+      tags:
+        - drafts
+      summary: Incomplete case creation
+      description: |
+        Either creates incomplete case with status CREATED,
+        or updates relatedFaust and fulltextLink properties of an existing open case
+        where the primary faust number given in the request matches the work on which the case is based
+      operationId: addDraftOrUpdateExistingCase
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CaseRequest'
+      responses:
+        '200':
+          description: Existing case successfully updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CaseSummary'
+        '201':
+          description: Draft case successfully created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CaseSummary'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '409':
+          description: Existing case conflict prevented update, check ServiceError in body for specifics
           content:
             application/json:
               schema:

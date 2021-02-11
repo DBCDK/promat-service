@@ -5,15 +5,21 @@
 
 package dk.dbc.promat.service.api;
 
+import com.fasterxml.jackson.annotation.JsonView;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dk.dbc.promat.service.Repository;
 import dk.dbc.promat.service.dto.CaseRequest;
 import dk.dbc.promat.service.dto.CaseSummaryList;
 import dk.dbc.promat.service.dto.CriteriaOperator;
+import dk.dbc.promat.service.dto.Dto;
+import dk.dbc.promat.service.dto.ListCasesParams;
+import dk.dbc.promat.service.dto.RecordDto;
+import dk.dbc.promat.service.dto.RecordsListDto;
 import dk.dbc.promat.service.dto.ServiceErrorCode;
 import dk.dbc.promat.service.dto.ServiceErrorDto;
 import dk.dbc.promat.service.dto.TaskDto;
 import dk.dbc.promat.service.persistence.CaseStatus;
+import dk.dbc.promat.service.persistence.CaseView;
 import dk.dbc.promat.service.persistence.Editor;
 import dk.dbc.promat.service.persistence.Notification;
 import dk.dbc.promat.service.persistence.NotificationType;
@@ -53,8 +59,11 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.StreamingOutput;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Stateless
 @Path("")
@@ -67,6 +76,9 @@ public class Cases {
 
     @EJB
     Repository repository;
+
+    @EJB
+    Records records;
 
     // Default number of results when getting cases
     private static final int DEFAULT_CASES_LIMIT = 100;
@@ -102,7 +114,8 @@ public class Cases {
                     break;
                 default:
                     LOGGER.info("Attempt to create case with invalid state {}", dto.getStatus());
-                    return ServiceErrorDto.InvalidState(String.format("Case status {} is not allowed when creating a new case", dto.getStatus()));
+                    return ServiceErrorDto.InvalidState(String.format(
+                            "Case status %s is not allowed when creating a new case", dto.getStatus()));
             }
         }
 
@@ -168,7 +181,8 @@ public class Cases {
             .withAuthor(dto.getAuthor())
             .withCreator(creator)
             .withPublisher(dto.getPublisher())
-            .withWeekCode(dto.getWeekCode());
+            .withWeekCode(dto.getWeekCode())
+            .withFulltextLink(dto.getFulltextLink());
 
             entityManager.persist(entity);
             if (entity.getStatus() == CaseStatus.ASSIGNED) {
@@ -253,145 +267,162 @@ public class Cases {
                               @QueryParam("weekCode") final String weekCode,
                               @QueryParam("limit") final Integer limit,
                               @QueryParam("from") final Integer from) {
-        LOGGER.info("cases/?faust={}|status={}|reviewer={}|editor={}|title={}|author={}|" +
-                        "trimmedWeekcode={}|trimmedWeekcodeOperator={}|weekCode={}|limit={}|from={}|format={}",
-                faust == null ? "null" : faust,
-                status == null ? "null" : status,
-                reviewer == null ? "null" : reviewer,
-                editor == null ? "null" : editor,
-                title == null ? "null" : title,
-                author==null ? "null" :author,
-                trimmedWeekcode == null ? "null" : trimmedWeekcode,
-                trimmedWeekcodeOperator == null ? "null" : trimmedWeekcodeOperator,
-                weekCode == null ? "null" : weekCode,
-                limit == null ? "null" : limit,
-                from == null ? "null" : from,
-                format);
+
+        final ListCasesParams listCasesParams = new ListCasesParams()
+                .withFaust(faust)
+                .withStatus(status)
+                .withReviewer(reviewer)
+                .withEditor(editor)
+                .withTitle(title)
+                .withAuthor(author)
+                .withWeekCode(weekCode)
+                .withTrimmedWeekcode(trimmedWeekcode)
+                .withTrimmedWeekcodeOperator(trimmedWeekcodeOperator)
+                .withFormat(ListCasesParams.Format.valueOf(format.toString()))
+                .withLimit(limit)
+                .withFrom(from);
+
+        LOGGER.info("GET cases/ {}", listCasesParams);
 
         // Select and return cases
         try {
-            // Initialize query and criteriabuilder
-            CriteriaBuilder builder = entityManager.getCriteriaBuilder();
-            CriteriaQuery criteriaQuery = builder.createQuery();
-            Root<PromatCase> root = criteriaQuery.from(PromatCase.class);
-            criteriaQuery.select(root);
-
-            // List of all predicates to be AND'ed together on the final query
-            List<Predicate> allPredicates = new ArrayList<>();
-
-            // Get case with given primary or related
-            if(faust != null && !faust.isBlank() && !faust.isEmpty()) {
-
-                Predicate primaryFaustPredicat = builder.equal(root.get("primaryFaust"), builder.literal(faust));
-                Predicate relatedFaustsPredicat = builder.isTrue(builder.function("JsonbContainsFromString", Boolean.class, root.get("relatedFausts"), builder.literal(faust)));
-                Predicate faustPredicate = builder.or(primaryFaustPredicat, relatedFaustsPredicat);
-
-                // And status not CLOSED or DONE
-                CriteriaBuilder.In<CaseStatus> inClause = builder.in(root.get("status"));
-                inClause.value(CaseStatus.CLOSED);
-                inClause.value(CaseStatus.EXPORTED);
-                inClause.value(CaseStatus.DELETED);
-                Predicate statusPredicate = builder.not(inClause);
-
-                allPredicates.add(builder.and(faustPredicate, statusPredicate));
-            }
-
-            // Get cases with given set of statuses
-            if(status != null && !status.isBlank() && !status.isEmpty()) {
-
-                // Allthough jax.rs actually supports having multiple get arguments with the same name
-                // "?status=CREATED&status=ASSIGNED" this is not a safe implementation since other
-                // frameworks (React/NextJS or others) may have difficulties handling this. So instead
-                // a list of statuses is expected to be given as a comma separated list
-
-                List<Predicate> statusPredicates = new ArrayList<>();
-                for(String oneStatus : status.split(",")) {
-                    try {
-                        statusPredicates.add(builder.equal(root.get("status"), CaseStatus.valueOf(oneStatus)));
-                    } catch (IllegalArgumentException ex) {
-                        LOGGER.info("Invalid status code '{}' in request for cases with status", oneStatus);
-                        return ServiceErrorDto.InvalidRequest("Invalid case status code", String.format("Unknown case status={}", oneStatus));
-                    }
-                }
-
-                allPredicates.add(builder.or(statusPredicates.toArray(Predicate[]::new)));
-            } else {
-                // If no status specified: Set a status "not" deleted predicate
-                allPredicates.add(builder.notEqual(root.get("status"), CaseStatus.DELETED));
-            }
-
-            // Get cases with given reviewer
-            if(reviewer != null && reviewer > 0) {
-                allPredicates.add(builder.equal(root.get("reviewer").get("id"), reviewer));
-            }
-
-            // Get cases with given editor
-            if(editor != null && editor > 0) {
-                allPredicates.add(builder.equal(root.get("editor").get("id"), editor));
-            }
-
-            // Get cases with a title that matches (entire, or part of) the given title
-            if(title != null && !title.isBlank() && !title.isEmpty()) {
-                allPredicates.add(builder
-                        .like(builder
-                                .lower(root
-                                        .get("title")), builder.literal("%" + title.toLowerCase() + "%")));
-            }
-
-            // Get cases with an author that matches (entire, or part of) the given author
-            if(author != null && !author.isBlank()) {
-                allPredicates.add(builder
-                        .like(builder
-                                .lower(root
-                                        .get("author")), builder.literal("%" + author.toLowerCase() + "%")));
-            }
-
-
-            if (trimmedWeekcode != null && !trimmedWeekcode.isBlank()) {
-                allPredicates.add(PredicateFactory.fromBinaryOperator(trimmedWeekcodeOperator,
-                        root.get("trimmedWeekCode"), trimmedWeekcode, builder));
-            }
-
-            if (weekCode != null && !weekCode.isBlank()) {
-                allPredicates.add(builder.equal(builder.lower(root.get("weekCode")), weekCode.toLowerCase()));
-            }
-
-            // If a starting id has been given, add this
-            if( from != null ) {
-                allPredicates.add(builder.gt(root.get("id"), builder.literal(from)));
-            }
-
-            // Combine all where clauses together with AND and add them to the query
-            if(allPredicates.size() > 0) {
-                Predicate finalPredicate = builder.and(allPredicates.toArray(Predicate[]::new));
-                criteriaQuery.where(finalPredicate);
-            }
-
-            // Complete the query by adding limits and ordering
-            criteriaQuery.orderBy(builder.asc(root.get("id")));
-            TypedQuery<PromatCase> query = entityManager.createQuery(criteriaQuery);
-            query.setMaxResults(limit == null ? DEFAULT_CASES_LIMIT : limit);
-
-            // Execute the query
-            // TODO: 12/01/2021 Rename CaseSummaryList to CaseList
-            CaseSummaryList cases = new CaseSummaryList();
-            cases.getCases().addAll(query.getResultList());
-            cases.setNumFound(cases.getCases().size());
+            final CaseSummaryList caseList = listCases(listCasesParams);
 
             // Return the found cases
             // Note that the http status is set to 404 (NOT FOUND) if no case matched the query
             // this is to allow a quick(er) check for existing cases by using HEAD and checking
             // the statuscode instead of deserializing the response body and looking at numFound
             final ObjectMapper objectMapper = new JsonMapperProvider().getObjectMapper();
-            return Response.status(cases.getNumFound() > 0 ? 200 : 404)
+            return Response.status(caseList.getNumFound() > 0 ? 200 : 404)
                     .entity(objectMapper.writerWithView(format.getViewClass())
-                            .writeValueAsString(cases)).build();
-
+                            .writeValueAsString(caseList)).build();
+        } catch (ServiceErrorException e) {
+            return Response.status(e.getHttpStatus()).entity(e.getServiceErrorDto()).build();
         } catch(Exception exception) {
             LOGGER.error("Caught exception: {}", exception.getMessage());
             return ServiceErrorDto.Failed(exception.getMessage());
         }
     }
+
+    public CaseSummaryList listCases(ListCasesParams params) throws ServiceErrorException {
+        // Initialize query and criteriabuilder
+        final CriteriaBuilder builder = entityManager.getCriteriaBuilder();
+        final CriteriaQuery criteriaQuery = builder.createQuery();
+        final Root<PromatCase> root = criteriaQuery.from(PromatCase.class);
+        criteriaQuery.select(root);
+
+        // List of all predicates to be AND'ed together on the final query
+        final List<Predicate> allPredicates = new ArrayList<>();
+
+        // Get case with given primary or related
+        final String faust = params.getFaust();
+        if (faust != null && !faust.isBlank()) {
+            final Predicate primaryFaustPredicat = builder.equal(root.get("primaryFaust"), builder.literal(faust));
+            final Predicate relatedFaustsPredicat = builder.isTrue(builder.function("JsonbContainsFromString", Boolean.class, root.get("relatedFausts"), builder.literal(faust)));
+            final Predicate faustPredicate = builder.or(primaryFaustPredicat, relatedFaustsPredicat);
+
+            // And status not CLOSED or DONE
+            final CriteriaBuilder.In<CaseStatus> inClause = builder.in(root.get("status"));
+            inClause.value(CaseStatus.CLOSED);
+            inClause.value(CaseStatus.EXPORTED);
+            inClause.value(CaseStatus.DELETED);
+            Predicate statusPredicate = builder.not(inClause);
+
+            allPredicates.add(builder.and(faustPredicate, statusPredicate));
+        }
+
+        // Get cases with given set of statuses
+        final String status = params.getStatus();
+        if (status != null && !status.isBlank()) {
+            // Allthough jax.rs actually supports having multiple get arguments with the same name
+            // "?status=CREATED&status=ASSIGNED" this is not a safe implementation since other
+            // frameworks (React/NextJS or others) may have difficulties handling this. So instead
+            // a list of statuses is expected to be given as a comma separated list
+
+            final List<Predicate> statusPredicates = new ArrayList<>();
+            for (String oneStatus : status.split(",")) {
+                try {
+                    statusPredicates.add(builder.equal(root.get("status"), CaseStatus.valueOf(oneStatus)));
+                } catch (IllegalArgumentException ex) {
+                    final ServiceErrorDto error = new ServiceErrorDto()
+                            .withCode(ServiceErrorCode.INVALID_REQUEST)
+                            .withCause("Invalid case status")
+                            .withDetails(String.format("Unknown case status: %s", oneStatus));
+                    throw new ServiceErrorException(error.getCause()).withHttpStatus(400);
+                }
+            }
+            allPredicates.add(builder.or(statusPredicates.toArray(Predicate[]::new)));
+        } else {
+            // If no status specified: Set a status "not" deleted predicate
+            allPredicates.add(builder.notEqual(root.get("status"), CaseStatus.DELETED));
+        }
+
+        // Get cases with given reviewer
+        final Integer reviewer = params.getReviewer();
+        if (reviewer != null && reviewer > 0) {
+            allPredicates.add(builder.equal(root.get("reviewer").get("id"), reviewer));
+        }
+
+        // Get cases with given editor
+        final Integer editor = params.getEditor();
+        if (editor != null && editor > 0) {
+            allPredicates.add(builder.equal(root.get("editor").get("id"), editor));
+        }
+
+        // Get cases with a title that matches (entire, or part of) the given title
+        final String title = params.getTitle();
+        if (title != null && !title.isBlank()) {
+            allPredicates.add(builder
+                    .like(builder
+                            .lower(root
+                                    .get("title")), builder.literal("%" + title.toLowerCase() + "%")));
+        }
+
+        // Get cases with an author that matches (entire, or part of) the given author
+        final String author = params.getAuthor();
+        if (author != null && !author.isBlank()) {
+            allPredicates.add(builder
+                    .like(builder
+                            .lower(root
+                                    .get("author")), builder.literal("%" + author.toLowerCase() + "%")));
+        }
+
+        final String trimmedWeekcode = params.getTrimmedWeekcode();
+        if (trimmedWeekcode != null && !trimmedWeekcode.isBlank()) {
+            allPredicates.add(PredicateFactory.fromBinaryOperator(params.getTrimmedWeekcodeOperator(),
+                    root.get("trimmedWeekCode"), trimmedWeekcode, builder));
+        }
+
+        final String weekCode = params.getWeekCode();
+        if (weekCode != null && !weekCode.isBlank()) {
+            allPredicates.add(builder.equal(builder.lower(root.get("weekCode")), weekCode.toLowerCase()));
+        }
+
+        // If a starting id has been given, add this
+        final Integer from = params.getFrom();
+        if (from != null) {
+            allPredicates.add(builder.gt(root.get("id"), builder.literal(from)));
+        }
+
+        // Combine all where clauses together with AND and add them to the query
+        if (allPredicates.size() > 0) {
+            Predicate finalPredicate = builder.and(allPredicates.toArray(Predicate[]::new));
+            criteriaQuery.where(finalPredicate);
+        }
+
+        // Complete the query by adding limits and ordering
+        criteriaQuery.orderBy(builder.asc(root.get("id")));
+        final TypedQuery<PromatCase> query = entityManager.createQuery(criteriaQuery);
+        query.setMaxResults(params.getLimit() == null ? DEFAULT_CASES_LIMIT : params.getLimit());
+
+        // Execute the query
+        // TODO: 12/01/2021 Rename CaseSummaryList to CaseList
+        final CaseSummaryList caseList = new CaseSummaryList();
+        caseList.getCases().addAll(query.getResultList());
+        caseList.setNumFound(caseList.getCases().size());
+        return caseList;
+    }
+
 
     @POST
     @Path("cases/{id}")
@@ -588,6 +619,97 @@ public class Cases {
         return Response.ok().build();
     }
 
+    @POST
+    @Path("drafts")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @JsonView({CaseView.Summary.class})
+    public Response addDraftOrUpdateExistingCase(CaseRequest caseRequest) throws Exception {
+        LOGGER.info("POST /drafts: {}", caseRequest);
+
+        if (caseRequest.getPrimaryFaust() == null || caseRequest.getPrimaryFaust().isBlank()) {
+            return ServiceErrorDto.InvalidRequest("Missing required field in the request data",
+                    "Field 'primaryFaust' must be supplied when creating a new case draft");
+        }
+        if (caseRequest.getReviewer() != null) {
+            return ServiceErrorDto.InvalidRequest("Illegal value in request",
+                    "Drafts cannot be created with an assigned reviewer");
+        }
+
+        final Dto dto = records.resolveId(caseRequest.getPrimaryFaust());
+        if (!(dto instanceof RecordsListDto)) {
+            return Response.status(400).entity(dto).build();
+        }
+
+        final RecordsListDto recordsList = (RecordsListDto) dto;
+        final List<RecordDto> relatedRecords = recordsList.getNumFound() == 0 ?
+                Collections.emptyList() : recordsList.getRecords();
+        final Set<PromatCase> existingCases = new HashSet<>();
+
+        for (RecordDto relatedRecord : relatedRecords) {
+            // Lookup existing open cases...
+            final String faust = relatedRecord.getFaust();
+            if (faust != null && !faust.isBlank()) {
+                final CaseSummaryList caseList = listCases(new ListCasesParams()
+                        .withFaust(relatedRecord.getFaust()));
+                if (caseList.getNumFound() > 0) {
+                    existingCases.addAll(caseList.getCases());
+                }
+            }
+        }
+
+        if (existingCases.isEmpty()) {
+            // No matching cases found, create new case draft...
+
+            // force case draft status to CREATED
+            caseRequest.setStatus(CaseStatus.CREATED);
+            return createCase(caseRequest);
+        }
+
+        if (existingCases.size() > 1) {
+            final ServiceErrorDto error = new ServiceErrorDto()
+                    .withCode(ServiceErrorCode.FAUST_IN_USE)
+                    .withCause(String.format("multiple case candidates found for faust number %s",
+                            caseRequest.getPrimaryFaust()))
+                    .withDetails(existingCases.stream()
+                            .map(PromatCase::getId)
+                            .collect(Collectors.toList())
+                            .toString());
+            return Response.status(409).entity(error).build();
+        }
+
+        // Update existing case...
+
+        repository.getExclusiveAccessToTable(PromatCase.TABLE_NAME);
+
+        final PromatCase existingCase = existingCases.iterator().next();
+
+        // Race condition check
+        if (!Faustnumbers.checkNoOpenCaseWithFaust(entityManager, existingCase.getId(), caseRequest.getPrimaryFaust())) {
+            return ServiceErrorDto.FaustInUse(String.format(
+                    "Case with faust number %s already exists", caseRequest.getPrimaryFaust()));
+        }
+
+        entityManager.refresh(existingCase);
+        if (!existingCase.getPrimaryFaust().equals(caseRequest.getPrimaryFaust())) {
+            if (existingCase.getRelatedFausts() == null) {
+                existingCase.setRelatedFausts(List.of(caseRequest.getPrimaryFaust()));
+                LOGGER.info("Set related fausts for existing case {}: {}",
+                        existingCase.getId(), existingCase.getRelatedFausts());
+            } else if (!existingCase.getRelatedFausts().contains(caseRequest.getPrimaryFaust())) {
+                final ArrayList<String> relatedFausts = new ArrayList<>(existingCase.getRelatedFausts());
+                relatedFausts.add(caseRequest.getPrimaryFaust());
+                existingCase.setRelatedFausts(relatedFausts);
+                LOGGER.info("Updated related fausts for existing case {}: {}",
+                        existingCase.getId(), existingCase.getRelatedFausts());
+            }
+        }
+        existingCase.setFulltextLink(caseRequest.getFulltextLink());
+        LOGGER.info("Updated existing case {}", existingCase.getId());
+
+        return Response.status(200).entity(existingCase).build();
+    }
+
     public Reviewer resolveReviewer(Integer reviewerId) throws ServiceErrorException {
         if(reviewerId == null) {
             return null;
@@ -599,7 +721,7 @@ public class Cases {
             throw new ServiceErrorException("Attempt to resolve reviewer failed")
                     .withCode(ServiceErrorCode.INVALID_REQUEST)
                     .withCause("No such reviewer")
-                    .withDetails(String.format("Field 'reviewer' contains user id {} which does not exist", reviewerId))
+                    .withDetails(String.format("Field 'reviewer' contains user id %d which does not exist", reviewerId))
                     .withHttpStatus(400);
         }
         return reviewer;
@@ -616,7 +738,7 @@ public class Cases {
             throw new ServiceErrorException("Attempt to resolve editor failed")
                     .withCode(ServiceErrorCode.INVALID_REQUEST)
                     .withCause("No such editor")
-                    .withDetails(String.format("Field 'editor' contains user id {} which does not exist", editorId))
+                    .withDetails(String.format("Field 'editor' contains user id %d which does not exist", editorId))
                     .withHttpStatus(400);
         }
         return editor;
@@ -667,7 +789,7 @@ public class Cases {
         }
 
         throw new ServiceErrorException("Bad PayCategory")
-                .withDetails(String.format("Invalid combination of TaskType {} and TaskFieldType {} when determining paycategory", taskType, taskFieldType))
+                .withDetails(String.format("Invalid combination of TaskType %s and TaskFieldType %s when determining paycategory", taskType, taskFieldType))
                 .withCode(ServiceErrorCode.INVALID_REQUEST)
                 .withHttpStatus(400);
     }
@@ -716,11 +838,11 @@ public class Cases {
         // as the given primary faustnumber and a state other than CLOSED or DONE
         if(!Faustnumbers.checkNoOpenCaseWithFaust(entityManager, dto.getPrimaryFaust())) {
             LOGGER.info("Case with primary or related Faust {} and state <> CLOSED|DONE exists", dto.getPrimaryFaust());
-            throw new ServiceErrorException(String.format("Case with primary or related faust {} and status not DONE or CLOSED exists", dto.getPrimaryFaust()))
+            throw new ServiceErrorException(String.format("Case with primary or related faust %s and status not DONE or CLOSED exists", dto.getPrimaryFaust()))
                     .withHttpStatus(409)
                     .withCode(ServiceErrorCode.FAUST_IN_USE)
                     .withCause("Faustnumber is in use")
-                    .withDetails(String.format("Case with primary or related faust {} and status not DONE or CLOSED exists", dto.getPrimaryFaust()));
+                    .withDetails(String.format("Case with primary or related faust %s and status not DONE or CLOSED exists", dto.getPrimaryFaust()));
         }
 
         // Check that no existing case exists with the same primary or related faustnumber
@@ -728,11 +850,11 @@ public class Cases {
         if(dto.getRelatedFausts() != null && dto.getRelatedFausts().size() > 0) {
             if(!Faustnumbers.checkNoOpenCaseWithFaust(entityManager, dto.getRelatedFausts().toArray(String[]::new))) {
                 LOGGER.info("Case with primary or related {} and state <> CLOSED|DONE exists", dto.getRelatedFausts());
-                throw new ServiceErrorException(String.format("Case with primary or related faust {} and status not DONE or CLOSED exists", dto.getRelatedFausts()))
+                throw new ServiceErrorException(String.format("Case with primary or related faust %s and status not DONE or CLOSED exists", dto.getRelatedFausts()))
                         .withHttpStatus(409)
                         .withCode(ServiceErrorCode.FAUST_IN_USE)
                         .withCause("Faustnumber is in use")
-                        .withDetails(String.format("Case with primary or related faust {} and status not DONE or CLOSED exists", dto.getRelatedFausts()));
+                        .withDetails(String.format("Case with primary or related faust %s and status not DONE or CLOSED exists", dto.getRelatedFausts()));
             }
         }
 
@@ -743,11 +865,11 @@ public class Cases {
                 if(task.getTargetFausts() != null) {
                     if(!Faustnumbers.checkNoOpenCaseWithFaust(entityManager, task.getTargetFausts().toArray(String[]::new))) {
                         LOGGER.info("Case contains a task with one or more targetFaust {} used by other active cases", task.getTargetFausts());
-                        throw new ServiceErrorException(String.format("Case contains tasks with one or more targetfausts {} used by other active cases", task.getTargetFausts()))
+                        throw new ServiceErrorException(String.format("Case contains tasks with one or more targetfausts %s used by other active cases", task.getTargetFausts()))
                                 .withHttpStatus(409)
                                 .withCode(ServiceErrorCode.FAUST_IN_USE)
                                 .withCause("Faustnumber is in use")
-                                .withDetails(String.format("Case contains tasks with one or more targetfausts {} used by other active cases", task.getTargetFausts()));
+                                .withDetails(String.format("Case contains tasks with one or more targetfausts %s used by other active cases", task.getTargetFausts()));
                     }
                 }
             }
