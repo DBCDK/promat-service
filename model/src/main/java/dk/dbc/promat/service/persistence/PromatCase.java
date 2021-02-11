@@ -19,6 +19,8 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
+import javax.persistence.NamedNativeQueries;
+import javax.persistence.NamedNativeQuery;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
@@ -32,8 +34,8 @@ import java.util.Objects;
 
 @NamedQueries({
         @NamedQuery(
-                name = PromatCase.GET_CASE_NAME,
-                query = PromatCase.GET_CASE_QUERY),
+                name = PromatCase.GET_CASE_WITH_TASK_ID_NAME,
+                query = PromatCase.GET_CASE_WITH_TASK_ID_QUERY),
         @NamedQuery(
                 name = PromatCase.GET_CASES_FOR_PAYMENT_NAME,
                 query = PromatCase.GET_CASES_FOR_PAYMENT_QUERY),
@@ -42,15 +44,18 @@ import java.util.Objects;
                 query = PromatCase.GET_PAYED_CASES_QUERY),
         @NamedQuery(
                 name = PromatCase.GET_CASES_FOR_UPDATE_NAME,
-                query = PromatCase.GET_CASES_FOR_UPDATE_QUERY)
+                query = PromatCase.GET_CASES_FOR_UPDATE_QUERY),
+        @NamedQuery(
+                name = PromatCase.GET_CASE_BY_FAUST_NAME,
+                query = PromatCase.GET_CASE_BY_FAUST_QUERY)
 })
 @Entity
 public class PromatCase {
     public static final String TABLE_NAME = "promatcase";
 
-    public static final String GET_CASE_NAME =
-            "PromatCase.get.case";
-    public static final String GET_CASE_QUERY = "select c" +
+    public static final String GET_CASE_WITH_TASK_ID_NAME =
+            "PromatCase.get.case.with.task.id";
+    public static final String GET_CASE_WITH_TASK_ID_QUERY = "select c" +
             "                                      from PromatCase c" +
             "                                      join c.tasks t" +
             "                                     where t.id=:taskid";
@@ -90,6 +95,13 @@ public class PromatCase {
             "                                                                    dk.dbc.promat.service.persistence.CaseStatus.CLOSED," +
             "                                                                    dk.dbc.promat.service.persistence.CaseStatus.DELETED)" +
             "                                                 order by c.id";
+
+    public static final String GET_CASE_BY_FAUST_NAME =
+            "PromatCase.get.case.by.faust";
+    public static final String GET_CASE_BY_FAUST_QUERY = "select c" +
+            "                                               from PromatCase c" +
+            "                                              where c.primaryFaust = :faust" +
+            "                                                 or function('JsonbContainsFromString', c.relatedFausts, :faust)";
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
