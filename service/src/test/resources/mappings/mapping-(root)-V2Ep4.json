@@ -1,0 +1,18 @@
+{
+  "id" : "16f80ca1-a764-3cf3-8b6e-2862e331b590",
+  "request" : {
+    "url" : "/?action=formatObject&outputType=json&pid=870970-basis%3A48951147&outputFormat=promat",
+    "method" : "GET"
+  },
+  "response" : {
+    "status" : 200,
+    "bodyFileName" : "body-(root)-V2Ep4.json",
+    "headers" : {
+      "Date" : "Thu, 11 Feb 2021 12:37:57 GMT",
+      "Server" : "Apache/2.4.38 (Debian)",
+      "Keep-Alive" : "timeout=5, max=100",
+      "Content-Type" : "application/json"
+    }
+  },
+  "uuid" : "16f80ca1-a764-3cf3-8b6e-2862e331b590"
+}

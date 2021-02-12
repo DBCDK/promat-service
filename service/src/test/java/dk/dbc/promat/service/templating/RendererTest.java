@@ -12,14 +12,15 @@ import dk.dbc.promat.service.api.OpenFormatHandler;
 import dk.dbc.promat.service.persistence.Editor;
 import dk.dbc.promat.service.persistence.Notification;
 import dk.dbc.promat.service.persistence.PromatCase;
+import dk.dbc.promat.service.persistence.PromatTask;
 import dk.dbc.promat.service.persistence.Reviewer;
-import dk.dbc.promat.service.templating.model.AssignReviewerNotification;
+import dk.dbc.promat.service.persistence.TaskFieldType;
+import dk.dbc.promat.service.templating.model.AssignReviewer;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
 import java.util.List;
+import java.util.stream.Collectors;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -34,6 +35,20 @@ import static org.hamcrest.core.Is.is;
 public class RendererTest {
     private static final NotificationFactory notificationFactory = new NotificationFactory();
     private static WireMockServer wireMockServer;
+    private final PromatCase aCase = new PromatCase()
+            .withPrimaryFaust("48742238")
+            .withDeadline(LocalDate.of(2021, 1, 16))
+            .withTitle("TvekampenAsterix og briterne")
+            .withReviewer(
+                    new Reviewer()
+                            .withFirstName("Hans")
+                            .withLastName("Hansen")
+                            .withEmail("hans@hansen.dk"))
+            .withEditor(
+                    new Editor()
+                            .withFirstName("Kresten")
+                            .withLastName("Krestensen")
+                            .withEmail("kreste@krestense.dk"));
 
     @BeforeAll
     private static void startWiremock() throws OpenFormatConnectorException {
@@ -50,41 +65,65 @@ public class RendererTest {
     }
 
     @Test
-    public void simpleTest() throws NotificationFactory.ValidateException, OpenFormatConnectorException, IOException {
-        PromatCase aCase = new PromatCase()
-                .withPrimaryFaust("48742238")
-                .withRelatedFausts(List.of("47672201", "38582801", "51785347"))
-                .withDeadline(LocalDate.of(2021, 1, 16))
-                .withTitle("TvekampenAsterix og briterne")
-                .withReviewer(
-                        new Reviewer()
-                                .withFirstName("Hans")
-                                .withLastName("Hansen")
-                                .withEmail("hans@hansen.dk"))
-                .withEditor(
-                        new Editor()
-                        .withFirstName("Kresten")
-                        .withLastName("Krestensen")
-                        .withEmail("kreste@krestense.dk")
-                );
-        Notification notification = notificationFactory.of(new AssignReviewerNotification().withPromatCase(aCase));
-        Files.writeString(Paths.get("/tmp", "test.html"), notification.getBodyText());
-        assertThat("Mailtext", notification.getBodyText(), is(
-                "\n\n\n\n<p><b>Kære Hans Hansen</b></p>\n" +
-                "<p>\n" +
-                "Du er blevet bedt om at lave anmeldelse af følgende materiale:\n" +
-                "</p>\n" +
-                "<p><i>\"TvekampenAsterix og briterne\"</i></p>\n\n" +
-                "<p>Anmeldelsen bedes udarbejdet senest: 16/1 2021\n" +
-                "<br/>\n\n" +
-                "Materialet er på vej til dig i posten.</p>\n" +
-                "<br/>\n" +
-                "<p>Med venlig hilsen,<br/>\n" +
-                "ProMat redaktionen\n" +
-                "</p>\n\n\n\n"));
+    public void testReviewCollection() throws NotificationFactory.ValidateException, OpenFormatConnectorException, IOException {
 
-        assertThat("Subject", notification.getSubject(), is("Ny promat anmeldelse"));
+        Notification notification = notificationFactory.notificationOf(new AssignReviewer()
+                .withPromatCase(aCase.withRelatedFausts(List.of("47672201", "38582801", "51785347"))
+                                .withTasks(List.of(new PromatTask()
+                                .withTaskFieldType(TaskFieldType.METAKOMPAS))))
+                .withNote("Du bedes udarbejde en samlet anmeldelse af materialerne. " +
+                        "Bøgerne er kandidater til inddatering i Metabuggi. " +
+                        "Du bedes afgøre om de er relevante for Buggi og i positiv fald tildele dem metadata."));
+        String expected = stripTrailingAndLeading(
+                Files.readString(
+                        Path.of(RendererTest.class.getResource("/mailBodys/collectionReview.html").getPath())));
+        String actual = stripTrailingAndLeading(notification.getBodyText());
+
+        assertThat("Subject", notification.getSubject(), is("Ny ProMat anmeldelse:  Frist: 16/1 2021. - TvekampenAsterix og briterne"));
+        assertThat("Mailtext", actual, is(expected));
+
+
         assertThat("Mail address", notification.getToAddress(), is("hans@hansen.dk"));
     }
 
+    @Test
+    public void testMailWithMaterialThatShouldBeDownloaded() throws OpenFormatConnectorException, NotificationFactory.ValidateException, IOException {
+        Notification notification = notificationFactory.notificationOf(new AssignReviewer()
+                .withPromatCase(aCase
+                        .withFulltextLink("Alink")
+                        .withTasks(List.of(new PromatTask()
+                            .withTaskFieldType(TaskFieldType.METAKOMPAS)))));
+        String expected = stripTrailingAndLeading(
+                Files.readString(
+                        Path.of(RendererTest.class.getResource("/mailBodys/printfileReview.html").getPath())));
+        String actual = stripTrailingAndLeading(notification.getBodyText());
+
+        assertThat("Mailtext", actual, is(expected));
     }
+
+    @Test
+    public void testMailWithMaterialEbookAndExpress() throws OpenFormatConnectorException, NotificationFactory.ValidateException, IOException {
+        Notification notification = notificationFactory.notificationOf(new AssignReviewer()
+                .withPromatCase(aCase
+                        .withPrimaryFaust("48951147")
+                        .withTasks(List.of(
+                                new PromatTask()
+                                .withTaskFieldType(TaskFieldType.METAKOMPAS),
+                                new PromatTask()
+                                .withTaskFieldType(TaskFieldType.EXPRESS)))));
+        String expected = stripTrailingAndLeading(
+                Files.readString(
+                        Path.of(RendererTest.class.getResource("/mailBodys/ebookReview.html").getPath())));
+        String actual = stripTrailingAndLeading(notification.getBodyText());
+
+        assertThat("Mailtext", actual, is(expected));
+
+        assertThat("Subject", notification.getSubject(), is("Ny ProMat anmeldelse: EKSPRES! Frist: 16/1 2021. - TvekampenAsterix og briterne"));
+        assertThat("Mail address", notification.getToAddress(), is("hans@hansen.dk"));
+    }
+
+    private String stripTrailingAndLeading(String text) {
+        return text.lines().map(String::strip).collect(Collectors.joining("\n"));
+    }
+
+}
