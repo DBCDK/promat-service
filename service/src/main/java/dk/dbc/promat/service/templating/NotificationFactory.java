@@ -11,11 +11,14 @@ import dk.dbc.promat.service.api.OpenFormatHandler;
 import dk.dbc.promat.service.persistence.Notification;
 import dk.dbc.promat.service.persistence.NotificationStatus;
 import dk.dbc.promat.service.persistence.PromatCase;
-import dk.dbc.promat.service.templating.model.AssignReviewerNotification;
+import dk.dbc.promat.service.persistence.TaskFieldType;
+import dk.dbc.promat.service.templating.model.AssignReviewer;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 import javax.ejb.Stateless;
 import javax.inject.Inject;
 import org.slf4j.Logger;
@@ -24,6 +27,7 @@ import org.slf4j.LoggerFactory;
 @Stateless
 public class NotificationFactory {
     private static final Logger LOGGER = LoggerFactory.getLogger(NotificationFactory.class);
+
     public class ValidateException extends Exception {
         ValidateException(String reason) {
             super(reason);
@@ -35,20 +39,36 @@ public class NotificationFactory {
 
     private final Renderer renderer = new Renderer();
     private final String AGENCY_ID = "870970";
+    private static String subjectTemplate;
+    static {
+        try {
+            subjectTemplate = Files.readString(
+                    Path.of(Notification.class.getResource("/mail/subject.template").getPath()));
+        } catch (IOException ioException) {
+            throw new RuntimeException(ioException);
+        }
+    }
 
-    public Notification of(AssignReviewerNotification model) throws ValidateException, OpenFormatConnectorException {
+    public Notification notificationOf(AssignReviewer model) throws ValidateException, OpenFormatConnectorException {
         Notification notification = new Notification();
         PromatCase promatCase = model.getPromatCase();
 
         // Lookup main faust and related fausts titles
         List<String> fausts = new ArrayList<>(List.of(promatCase.getPrimaryFaust()));
-        fausts.addAll(promatCase.getRelatedFausts());
-
+        if (promatCase.getRelatedFausts() != null) {
+            fausts.addAll(promatCase.getRelatedFausts());
+        }
+        String subject = String.format(subjectTemplate,
+                (promatCase.getTasks().stream().anyMatch(c -> c.getTaskFieldType() == TaskFieldType.EXPRESS)
+                        ? "EKSPRES!" : ""),
+                Formatting.format(promatCase.getDeadline()),
+                promatCase.getTitle());
 
         return notification
                 .withToAddress(promatCase.getReviewer().getEmail())
-                .withSubject("Ny promat anmeldelse")
-                .withBodyText(renderer.render("reviewer_assign_to_case.jte", model.withTitleSections(getTitleSections(fausts))))
+                .withSubject(subject)
+                .withBodyText(renderer.render("reviewer_assign_to_case.jte",
+                        model.withTitleSections(getTitleSections(fausts))))
                 .withStatus(NotificationStatus.PENDING);
     }
 

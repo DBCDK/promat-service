@@ -1,29 +1,23 @@
-@import dk.dbc.promat.service.templating.model.AssignReviewerNotification
+@import dk.dbc.promat.service.templating.model.AssignReviewer
 @import dk.dbc.promat.service.templating.Formatting
-@param AssignReviewerNotification model
+@param AssignReviewer model
 
 !{var promatCase = model.getPromatCase(); var note = model.getNote(); }
 
 
-<p><b>Kære ${promatCase.getReviewer().getFirstName()} ${promatCase.getReviewer().getLastName()}</b></p>
-<p>
-Du er blevet bedt om at lave anmeldelse af følgende materiale:
-</p>
+<p>Kære ${promatCase.getReviewer().getFirstName()} ${promatCase.getReviewer().getLastName()}</p>
+<p>Du er blevet bedt om at lave en anmeldelse af følgende materiale:</p>
 <p>@tag.title_section_tag(bibliographicInformationList = model.getTitleSections())</p>
+<p>Anmeldelsen bedes udarbejdet senest: ${Formatting.format(promatCase.getDeadline())}</p>
 @if(note != null)
-    <p><b>Note:</b>${note}</p>
+    <p>Note: ${note}</p>
 @endif
-<p>Anmeldelsen bedes udarbejdet senest: ${Formatting.format(promatCase.getDeadline())}
-<br/>
 
-Materialet er på vej til dig i posten.</p>
-<br/>
+<p>@tag.metakompas_section_tag(promatCase = promatCase)</p>
+
+@tag.how_to_get_material_tag(model = model)
+
+<p>God fornøjelse</p>
 <p>Med venlig hilsen,<br/>
 ProMat redaktionen
 </p>
-<%-- todo:
-* Add "metakompas" (0 or 1)
-* Add "Link for opening ..."
-* Add note layout (0 or 1)
-* Fix "Materialet er på vej..." (How to check for this?)
---%>
