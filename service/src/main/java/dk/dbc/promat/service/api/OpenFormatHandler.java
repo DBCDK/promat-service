@@ -64,7 +64,7 @@ public class OpenFormatHandler {
         .withMaterialtypes(elements.getMaterialtypes().getType().stream()
                 .map(materialtype -> materialtype.getValue())
                 .collect(Collectors.toList()))
-        .withExtent(elements.getExtent().getValue())
+        .withExtent(elements.getExtent() == null ? null : elements.getExtent().getValue())
         .withPublisher(elements.getPublisher().getValue())
         .withCatalogcodes(elements.getCatalogcodes().getCode().stream()
                 .map(code -> code.getValue())
