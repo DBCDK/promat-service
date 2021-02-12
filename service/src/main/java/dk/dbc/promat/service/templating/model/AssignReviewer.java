@@ -6,22 +6,22 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class AssignReviewerNotification {
+public class AssignReviewer {
     private PromatCase promatCase;
     private String note;
-    private List<BibliographicInformation> titleSections;
+    List<BibliographicInformation> titleSections;
 
-    public AssignReviewerNotification withPromatCase(PromatCase promatCase) {
+    public AssignReviewer withPromatCase(PromatCase promatCase) {
         this.promatCase = promatCase;
         return this;
     }
 
-    public AssignReviewerNotification withNote(String note) {
+    public AssignReviewer withNote(String note) {
         this.note = note;
         return this;
     }
 
-    public AssignReviewerNotification withTitleSections(List<BibliographicInformation> titleSections) {
+    public AssignReviewer withTitleSections(List<BibliographicInformation> titleSections) {
         this.titleSections = titleSections;
         return this;
     }

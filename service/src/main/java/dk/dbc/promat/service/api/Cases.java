@@ -17,7 +17,6 @@ import dk.dbc.promat.service.dto.TaskDto;
 import dk.dbc.promat.service.persistence.CaseStatus;
 import dk.dbc.promat.service.persistence.Editor;
 import dk.dbc.promat.service.persistence.Notification;
-import dk.dbc.promat.service.persistence.NotificationType;
 import dk.dbc.promat.service.persistence.PayCategory;
 import dk.dbc.promat.service.persistence.PromatCase;
 import dk.dbc.promat.service.persistence.PromatEntityManager;
@@ -28,7 +27,7 @@ import dk.dbc.promat.service.persistence.Subject;
 import dk.dbc.promat.service.persistence.TaskFieldType;
 import dk.dbc.promat.service.persistence.TaskType;
 import dk.dbc.promat.service.templating.NotificationFactory;
-import dk.dbc.promat.service.templating.model.AssignReviewerNotification;
+import dk.dbc.promat.service.templating.model.AssignReviewer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -179,6 +178,7 @@ public class Cases {
             if (entity.getStatus() == CaseStatus.ASSIGNED) {
                 notifyOnReviewerChanged(entity);
             }
+
             // 201 CREATED
             LOGGER.info("Created new case for primaryFaust {}", entity.getPrimaryFaust());
             return Response.status(201)
@@ -765,7 +765,7 @@ public class Cases {
             entityManager.flush();
         }
         Notification notification = notificationFactory
-                .of(new AssignReviewerNotification().withPromatCase(promatCase));
+                .notificationOf(new AssignReviewer().withPromatCase(promatCase));
         PromatMessage message = new PromatMessage()
                 .withCaseId(promatCase.getId())
                 .withMessageText(notification.getBodyText())
