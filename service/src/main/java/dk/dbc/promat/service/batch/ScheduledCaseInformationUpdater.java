@@ -41,32 +41,36 @@ public class ScheduledCaseInformationUpdater {
 
     // Since every update traverses all active cases, we should not run too often.
     // Run once every hour during working days and normal working hours
-    @Schedule(second = "0", minute = "42", hour = "6-16", dayOfWeek = "Mon-Fri")
+    @Schedule(second = "0", minute = "42", hour = "6-16", dayOfWeek = "Mon-Fri", persistent = false)
     public void updateCaseInformation() {
-        if (serverRole == ServerRole.PRIMARY) {
-            LOGGER.info("Starting periodic update of case information");
 
-            // Prevent running multiple updates at once - since the update runs only every hour,
-            // we should never encounter a lock - so if we do, something is frightfully wrong!
-            if (!updateLock.tryLock()) {
-                LOGGER.error("Aborting update since update is already running. Check that the service is not locked or frozen!");
-                return;
-            }
+        try {
+            if(serverRole == ServerRole.PRIMARY) {
 
-            try {
-                caseInformationUpdater.resetUpdateCaseFailuresGauge();
-                List<PromatCase> casesForUpdate = getCasesForUpdate();
-                if (casesForUpdate != null && casesForUpdate.size() > 0) {
-                    for(PromatCase promatCase : casesForUpdate) {
-                        caseInformationUpdater.updateCaseInformation(promatCase);
-                    }
+                // Prevent running multiple updates at once - since the update runs only every hour,
+                // we should never encounter a lock - so if we do, something is frightfully wrong!
+                if(!updateLock.tryLock()) {
+                    LOGGER.error("Aborting update since update is already running. Check that the service is not locked or frozen!");
+                    return;
                 }
 
-                entityManager.flush();
-            } finally {
-                updateLock.unlock();
-                LOGGER.info("Ending periodic update of case information");
+                try {
+                    caseInformationUpdater.resetUpdateCaseFailuresGauge();
+                    List<PromatCase> casesForUpdate = getCasesForUpdate();
+                    if(casesForUpdate != null && casesForUpdate.size() > 0) {
+                        for(PromatCase promatCase : casesForUpdate) {
+                            LOGGER.info("Updating case with id {}", promatCase.getId());
+                            caseInformationUpdater.updateCaseInformation(promatCase);
+                        }
+                    }
+
+                    entityManager.flush();
+                } finally {
+                    updateLock.unlock();
+                }
             }
+        } catch (Exception e) {
+            LOGGER.error("Caught exception in scheduled job 'updateCaseInformation()': {}", e.getMessage());
         }
     }
 

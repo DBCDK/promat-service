@@ -1,0 +1,20 @@
+{
+  "id" : "f5837587-17d7-3dc1-bf6a-f817bea71f62",
+  "request" : {
+    "url" : "/b3.5_5.2/?collectionType=work&objectFormat=marcxchange&agency=010100&stepValue=10&profile=dbckat&query=id%3D22222222%20OR%20is%3D22222222%20OR%20bc%3D22222222&start=1&action=search&outputType=json&repository=rawrepo_basis",
+    "method" : "GET"
+  },
+  "response" : {
+    "status" : 200,
+    "bodyFileName" : "body-addDraftOrUpdateExistingCase-os-1-hit.json",
+    "headers" : {
+      "date" : "Mon, 25 Jan 2021 09:56:39 GMT",
+      "server" : "Apache/2.4.38 (Debian)",
+      "dbcdk-action" : "search",
+      "dbcdk-agency" : "010100",
+      "transfer-encoding" : "chunked",
+      "content-type" : "application/json"
+    }
+  },
+  "uuid" : "f5837587-17d7-3dc1-bf6a-f817bea71f62"
+}

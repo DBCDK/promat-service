@@ -1,0 +1,25 @@
+{
+  "trackingId": "a1b8f1b8-4377-4d4a-8c3f-7dc8e606087f",
+  "work": {
+    "creators": [],
+    "description": "text",
+    "fullTitle": "Title for draft",
+    "records": [
+      {
+        "id": "870970-basis:11111111",
+        "types": [
+          "Bog"
+        ]
+      },
+      {
+        "id": "870970-basis:22222222",
+        "types": [
+          "Ebog"
+        ]
+      }
+    ],
+    "subjects": [],
+    "title": "Title for draft",
+    "workId": "work-of:870970-basis:11111111"
+  }
+}

@@ -35,17 +35,20 @@ public class ScheduledNotificationSender {
     @Inject
     ServerRole serverRole;
 
-    @Schedule(second = "0", minute = "*/5", hour = "*")
-    public void processNotifications() throws InterruptedException {
-        if (serverRole == ServerRole.PRIMARY) {
-            LOGGER.info("Checking for notifications");
-            prepareErrorsForRetry();
-            Notification notification = pop();
-            while (notification != null) {
-                LOGGER.info("Notifying: '{}' on subject '{}'", notification.getToAddress(), notification.getSubject());
-                notificationSender.notifyMailRecipient(notification);
-                notification = pop();
+    @Schedule(second = "0", minute = "*/5", hour = "*", persistent = false)
+    public void processNotifications() {
+        try {
+            if(serverRole == ServerRole.PRIMARY) {
+                prepareErrorsForRetry();
+                Notification notification = pop();
+                while(notification != null) {
+                    LOGGER.info("Notifying: '{}' on subject '{}'", notification.getToAddress(), notification.getSubject());
+                    notificationSender.notifyMailRecipient(notification);
+                    notification = pop();
+                }
             }
+        } catch (Exception e) {
+            LOGGER.error("Caught exception in scheduled job 'processNotifications()': {}", e.getMessage());
         }
     }
 

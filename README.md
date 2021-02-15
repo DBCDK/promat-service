@@ -15,7 +15,7 @@ Promat service
 
 ### API
 
-The service exposes a RESTful [API](https://raw.githubusercontent.com/DBCDK/promat-service/master/docs/openapi.yaml).
+The service exposes a RESTful [API](https://raw.githubusercontent.com/DBCDK/promat-service/master/service/docs/openapi.yaml).
 
 ### Development
 

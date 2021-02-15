@@ -95,7 +95,7 @@ public enum CaseStatus {
     /*
         Review has been selected for export by the editors
 
-        Transition from:    PENDING_MEETING
+        Transition from:    PENDING_MEETING, EXPORTED
         Transition to:      EXPORTED
         Payable:            Yes
         Visible in DBCKat   Yes
@@ -118,7 +118,7 @@ public enum CaseStatus {
         Review has been exported but must be withdrawn and deleted in the datawell
 
         Transition from:    EXPORTED
-        Transition to:      REVERTED
+        Transition to:      REVERTED, PENDING_EXPORT
         Payable:            Yes
         Visible in DBCKat   Yes
     */
