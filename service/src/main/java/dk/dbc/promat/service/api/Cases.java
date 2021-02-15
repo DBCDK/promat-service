@@ -35,7 +35,6 @@ import dk.dbc.promat.service.persistence.TaskType;
 import dk.dbc.promat.service.templating.NotificationFactory;
 import dk.dbc.promat.service.templating.model.AssignReviewer;
 import dk.dbc.promat.service.templating.Renderer;
-import gg.jte.ContentType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
