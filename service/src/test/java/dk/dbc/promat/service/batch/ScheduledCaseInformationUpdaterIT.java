@@ -237,7 +237,8 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
         when(mockedHandler.format(created.getPrimaryFaust()))
                 .thenReturn(new BibliographicInformation()
                         .withTitle("UPDATED_TITLE")
-                        .withCatalogcodes(Arrays.asList("BKM999999")));
+                        .withCatalogcodes(Arrays.asList("BKM999999"))
+                        .withCreator("UPDATED_AUTHOR"));
         when(mockedHandler.format(not(eq(created.getPrimaryFaust()))))
                 .thenReturn(new BibliographicInformation()
                         .withError("not real handler")); // Causing update of case to be skipped
@@ -254,6 +255,7 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
             PromatCase updated = query.getSingleResult();
             assertThat("title is updated", updated.getTitle().equals("UPDATED_TITLE"));
             assertThat("weekcode is updated", updated.getWeekCode().equals("BKM999999"));
+            assertThat("author is updated", updated.getAuthor().equals("UPDATED_AUTHOR"));
         });
 
         // Delete the case so that we dont mess up payments and dataio-export tests
@@ -289,6 +291,43 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
         persistenceContext.run(() -> upd.caseInformationUpdater.updateCaseInformation(created));
 
         assertThat("weekcode is removed", created.getWeekCode(), is(""));
+
+        // Delete the case so that we dont mess up payments and dataio-export tests
+        response = deleteResponse("v1/api/cases/" + created.getId());
+        assertThat("status code", response.getStatus(), is(200));
+    }
+
+    @Test
+    public void testUpdateWithPublisherAsArray() throws JsonProcessingException, OpenFormatConnectorException {
+
+        // Create a case with no weekcode
+        CaseRequest dto = new CaseRequest()
+                .withPrimaryFaust("38600052")
+                .withTitle("Title for 38600052")
+                .withWeekCode("NOP000000")
+                .withAuthor("Author for 38600052")
+                .withDetails("Details for 38600052")
+                .withMaterialType(MaterialType.BOOK)
+                .withAssigned("2021-01-28")
+                .withDeadline("2024-02-29")
+                .withCreator(10)
+                .withEditor(10)
+                .withReviewer(1);
+
+        Response response = postResponse("v1/api/cases", dto);
+        assertThat("status code", response.getStatus(), is(201));
+        PromatCase created = mapper.readValue(response.readEntity(String.class), PromatCase.class);
+
+        ScheduledCaseInformationUpdater upd = new ScheduledCaseInformationUpdater();
+        upd.caseInformationUpdater = new CaseInformationUpdater();
+        upd.caseInformationUpdater.metricRegistry = metricRegistry;
+        upd.caseInformationUpdater.openFormatHandler = new OpenFormatHandler()
+                .withConnector(OpenFormatConnectorFactory.create(wiremockHost));
+        persistenceContext.run(() -> upd.caseInformationUpdater.updateCaseInformation(created));
+
+        assertThat("title is updated", created.getTitle().equals("Deadpool"));
+        assertThat("weekcode is updated", created.getWeekCode().equals("BKM999999"));
+        assertThat("author is updated", created.getAuthor().equals(""));
 
         // Delete the case so that we dont mess up payments and dataio-export tests
         response = deleteResponse("v1/api/cases/" + created.getId());
