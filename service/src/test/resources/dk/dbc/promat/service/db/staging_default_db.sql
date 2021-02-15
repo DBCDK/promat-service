@@ -211,8 +211,8 @@ values (21, 400021),
        (21, 400022),
        (21, 400023);
 --
-insert into promatcase(id, title, details, primaryFaust, relatedFausts, reviewer_id, editor_id, created, deadline, assigned, status, materialType, weekcode, trimmedWeekcode, creator_id)
-values (22, 'Title for 100000', 'Details for 100000', '100000', '["100001", "100002"]', 1, 10, '2021-01-09', '2021-02-09', '2021-01-10', 'EXPORTED', 'BOOK', 'BKM202104', '202104', 13, 'Author for 100000', 'Publisher for 100000');
+insert into promatcase(id, title, details, primaryFaust, relatedFausts, reviewer_id, editor_id, created, deadline, assigned, status, materialType, weekcode, trimmedWeekcode, creator_id, author, publisher)
+values (22, 'Title for 100000', 'Details for 100000', '100000', '["100001", "100002"]', 4900, 4950, '2021-01-09', '2021-02-09', '2021-01-10', 'EXPORTED', 'BOOK', 'BKM202104', '202104', 4953, 'Author for 100000', 'Publisher for 100000');
 
 insert into promattask(id, tasktype, taskfieldtype, created, paycategory, approved, payed, data, targetFausts)
 values  (400024,  'GROUP_1_LESS_THAN_100_PAGES', 'DESCRIPTION',    '202-12-10', 'GROUP_1_LESS_THAN_100_PAGES', '2020-12-10',  NULL,         NULL,                        NULL),
@@ -235,7 +235,7 @@ values  (400024,  'GROUP_1_LESS_THAN_100_PAGES', 'DESCRIPTION',    '202-12-10', 
         (400041, 'GROUP_1_LESS_THAN_100_PAGES', 'BKM',            '2021-01-27', 'BKM',                         '2021-02-08', '2021-02-09', 'Bogen findes relevant for biblioteker på Christiansø', NULL),
         (400042, 'GROUP_1_LESS_THAN_100_PAGES', 'DESCRIPTION',    '2021-01-27', 'GROUP_1_LESS_THAN_100_PAGES', '2021-02-08', '2021-02-09', 'DESCRIPTION TEXT',          NULL),
         (400043, 'GROUP_1_LESS_THAN_100_PAGES', 'EVALUATION',     '2021-01-27', 'GROUP_1_LESS_THAN_100_PAGES', '2021-02-08', '2021-02-09', 'EVALUATION TEXT',           NULL),
-        (400044, 'GROUP_1_LESS_THAN_100_PAGES', 'COMPARISON',     '2021-01-27', 'GROUP_1_LESS_THAN_100_PAGES', '2021-02-08', '2021-02-09', 'COMPARISON TEXT',           NULL),
+        (400044, 'GROUP_1_LESS_THAN_100_PAGES', 'COMPARISON',     '2021-01-27', 'GROUP_1_LESS_THAN_100_PAGES', '2021-02-08', '2021-02-09', 'TEXT BEFORE <t>48611435 Jeg tæller mine skridt</t> TEXT BETWEEN <t>48611435 Hest horse Pferd cheval love</t> TEXT AFTER', NULL),
         (400045, 'GROUP_1_LESS_THAN_100_PAGES', 'RECOMMENDATION', '2021-01-27', 'GROUP_1_LESS_THAN_100_PAGES', '2021-02-08', '2021-02-09', 'RECOMMENDATION TEXT',       NULL),
         (400046, 'GROUP_1_LESS_THAN_100_PAGES', 'TOPICS',         '2021-01-27', 'GROUP_1_LESS_THAN_100_PAGES', '2021-02-08', '2021-02-09', 'TOPIC_1, TOPIC_2, TOPIC_3', '["100000"]'),
         (400047, 'GROUP_1_LESS_THAN_100_PAGES', 'TOPICS',         '2021-01-27', 'GROUP_1_LESS_THAN_100_PAGES', '2021-02-08', '2021-02-09', 'TOPIC_1, TOPIC_2, TOPIC_4', '["100001"]'),

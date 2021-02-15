@@ -35,6 +35,7 @@ import dk.dbc.promat.service.persistence.TaskType;
 import dk.dbc.promat.service.templating.NotificationFactory;
 import dk.dbc.promat.service.templating.model.AssignReviewer;
 import dk.dbc.promat.service.templating.Renderer;
+import gg.jte.ContentType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -282,7 +283,6 @@ public class Cases {
             var relatedFausts = new ArrayList<>(cases.get(0).getRelatedFausts());
             relatedFausts.add(cases.get(0).getPrimaryFaust());
             relatedFausts.remove(faust);
-            relatedFausts.stream().sorted();
 
             Renderer renderer = new Renderer();
             Map<String, Object> models = new HashMap<>();

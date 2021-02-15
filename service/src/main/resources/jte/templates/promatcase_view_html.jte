@@ -14,7 +14,7 @@
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head><meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>Anmeldelse for ${requestedFaustnumber} + (${relatedFaustnumbers.stream().collect(Collectors.joining(","))})</title>
+    <title>Anmeldelse for ${requestedFaustnumber} + (${relatedFaustnumbers.stream().sorted().collect(Collectors.joining(","))})</title>
 </head>
 <body>
 <div class="main">
@@ -52,8 +52,7 @@
                                 ? task.getTargetFausts().stream()
                                         .collect(Collectors.joining(", "))
                                 : promatCase.getPrimaryFaust()
-                        }
-                        : ${task.getData()}
+                        }: ${task.getData()}
                     </div>
                 </div>
             @endfor
@@ -81,7 +80,7 @@
                 <div>Andre om samme emne/genre:</div>
                 <div>
                     !{var comparison = promatCase.getTasks().stream().filter(t -> t.getTaskFieldType() == TaskFieldType.COMPARISON).findFirst(); }
-                    ${comparison.isPresent() ? comparison.get().getData().replace("<t>", "<span style=\"font-style: italic;\">").replace("</t>", "</span>") : "&nbsp;"}
+                    $unsafe{comparison.isPresent() ? comparison.get().getData().replace("<t>", "<span style=\"font-style: italic;\">").replace("</t>", "</span>") : "&nbsp;"}
                 </div>
             </div>
 
@@ -105,8 +104,7 @@
                                 ? task.getTargetFausts().stream()
                                         .collect(Collectors.joining(", "))
                                 : promatCase.getPrimaryFaust()
-                        }
-                        : ${task.getData()}
+                        }: ${task.getData()}
                     </div>
                 </div>
             @endfor

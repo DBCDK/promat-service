@@ -23,6 +23,7 @@ import dk.dbc.promat.service.persistence.Subject;
 import dk.dbc.promat.service.persistence.TaskFieldType;
 import dk.dbc.promat.service.persistence.TaskType;
 import org.hamcrest.core.IsNull;
+import org.jsoup.Jsoup;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.slf4j.Logger;
@@ -1325,8 +1326,13 @@ public class CasesIT extends ContainerTest {
 
         // Fetch the html view for the primary faustnumber
         String expected = new String(Files.readAllBytes(Path.of("src/test/resources/__files/case-view-for-id-20-100000.html")));
-        String html = promatServiceConnector.getCaseViewHtml("100000");
-        // Todo: Assert. 2021/02/11: Needs reformatting of result files due to injected whitespaces from the jte templating
+        String actual = promatServiceConnector.getCaseViewHtml("100000");
+
+        // Not checking that the documents are strictly equal comparing html output, but it does
+        // check that all textual content in the body is equal.
+        String expectedText = Jsoup.parse(expected).normalise().text();
+        String actualText = Jsoup.parse(actual).normalise().text();
+        assertThat("case view is correct", expectedText.equals(actualText));
     }
 
     @Test
@@ -1334,12 +1340,22 @@ public class CasesIT extends ContainerTest {
 
         // Fetch the html view for the first related faustnumber
         String expected = new String(Files.readAllBytes(Path.of("src/test/resources/__files/case-view-for-id-20-100001.html")));
-        String html = promatServiceConnector.getCaseViewHtml("100001");
-        // Todo: Assert. 2021/02/11: Needs reformatting of result files due to injected whitespaces from the jte templating
+        String actual = promatServiceConnector.getCaseViewHtml("100001");
+
+        // Not checking that the documents are strictly equal comparing html output, but it does
+        // check that all textual content in the body is equal.
+        String expectedText = Jsoup.parse(expected).normalise().text();
+        String actualText = Jsoup.parse(actual).normalise().text();
+        assertThat("case view is correct", expectedText.equals(actualText));
 
         // Fetch the html view for the second related faustnumber
         expected = new String(Files.readAllBytes(Path.of("src/test/resources/__files/case-view-for-id-20-100002.html")));
-        html = promatServiceConnector.getCaseViewHtml("100002");
-        // Todo: Assert. 2021/02/11: Needs reformatting of result files due to injected whitespaces from the jte templating
+        actual = promatServiceConnector.getCaseViewHtml("100002");
+
+        // Not checking that the documents are strictly equal comparing html output, but it does
+        // check that all textual content in the body is equal.
+        expectedText = Jsoup.parse(expected).normalise().text();
+        actualText = Jsoup.parse(actual).normalise().text();
+        assertThat("case view is correct", expectedText.equals(actualText));
     }
 }
