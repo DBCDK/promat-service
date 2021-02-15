@@ -5,47 +5,74 @@
 
 package dk.dbc.promat.service.templating;
 
+import dk.dbc.connector.openformat.OpenFormatConnectorException;
+import dk.dbc.promat.service.api.BibliographicInformation;
+import dk.dbc.promat.service.api.OpenFormatHandler;
 import dk.dbc.promat.service.persistence.Notification;
 import dk.dbc.promat.service.persistence.NotificationStatus;
-import dk.dbc.promat.service.persistence.NotificationType;
 import dk.dbc.promat.service.persistence.PromatCase;
+import dk.dbc.promat.service.persistence.TaskFieldType;
+import dk.dbc.promat.service.templating.model.AssignReviewer;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
+import javax.ejb.Stateless;
+import javax.inject.Inject;
 
+@Stateless
 public class NotificationFactory {
+
     public class ValidateException extends Exception {
         ValidateException(String reason) {
             super(reason);
         }
     }
-    private final Renderer renderer;
-    private static final NotificationFactory notificationFactory;
 
+    @Inject
+    OpenFormatHandler openFormatHandler;
+
+    private final Renderer renderer = new Renderer();
+    private static String subjectTemplate;
     static {
-        notificationFactory = new NotificationFactory(new Renderer());
-    }
-
-    public NotificationFactory(Renderer renderer) {
-        this.renderer = renderer;
-    }
-
-    public static NotificationFactory getInstance() {
-        return notificationFactory;
-    }
-
-    public Notification of(NotificationType notificationType, Object model) throws ValidateException {
-        Notification notification = new Notification();
-        switch(notificationType) {
-            case CASE_ASSIGNED:
-                PromatCase promatCase = (PromatCase) model;
-                if (promatCase.getEditor() == null || promatCase.getDeadline() == null) {
-                    throw new ValidateException("Editor or deadline is null");
-                }
-
-                return notification
-                        .withToAddress(((PromatCase) model).getReviewer().getEmail())
-                        .withSubject("Ny promat anmeldelse")
-                        .withBodyText(renderer.render("reviewer_assign_to_case.jte", model))
-                        .withStatus(NotificationStatus.PENDING);
-            default: return null;
+        try {
+            subjectTemplate = Files.readString(
+                    Path.of(Notification.class.getResource("/mail/subject.template").getPath()));
+        } catch (IOException ioException) {
+            throw new RuntimeException(ioException);
         }
+    }
+
+    public Notification notificationOf(AssignReviewer model) throws ValidateException, OpenFormatConnectorException {
+        Notification notification = new Notification();
+        PromatCase promatCase = model.getPromatCase();
+
+        // Lookup main faust and related fausts titles
+        List<String> fausts = new ArrayList<>(List.of(promatCase.getPrimaryFaust()));
+        if (promatCase.getRelatedFausts() != null) {
+            fausts.addAll(promatCase.getRelatedFausts());
+        }
+        String subject = String.format(subjectTemplate,
+                (promatCase.getTasks().stream().anyMatch(c -> c.getTaskFieldType() == TaskFieldType.EXPRESS)
+                        ? "EKSPRES!" : ""),
+                Formatting.format(promatCase.getDeadline()),
+                promatCase.getTitle());
+
+        return notification
+                .withToAddress(promatCase.getReviewer().getEmail())
+                .withSubject(subject)
+                .withBodyText(renderer.render("reviewer_assign_to_case.jte",
+                        model.withTitleSections(getTitleSections(fausts))))
+                .withStatus(NotificationStatus.PENDING);
+    }
+
+
+    private List<BibliographicInformation> getTitleSections(List<String> fausts) throws OpenFormatConnectorException {
+        List<BibliographicInformation> titleSections = new ArrayList<>();
+        for (String faust : fausts) {
+            titleSections.add(openFormatHandler.format(faust));
+        }
+        return titleSections;
     }
 }

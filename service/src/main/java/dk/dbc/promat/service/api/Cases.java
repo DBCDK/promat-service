@@ -7,6 +7,7 @@ package dk.dbc.promat.service.api;
 
 import com.fasterxml.jackson.annotation.JsonView;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import dk.dbc.connector.openformat.OpenFormatConnectorException;
 import dk.dbc.promat.service.Repository;
 import dk.dbc.promat.service.dto.CaseRequest;
 import dk.dbc.promat.service.dto.CaseSummaryList;
@@ -22,7 +23,6 @@ import dk.dbc.promat.service.persistence.CaseStatus;
 import dk.dbc.promat.service.persistence.CaseView;
 import dk.dbc.promat.service.persistence.Editor;
 import dk.dbc.promat.service.persistence.Notification;
-import dk.dbc.promat.service.persistence.NotificationType;
 import dk.dbc.promat.service.persistence.PayCategory;
 import dk.dbc.promat.service.persistence.PromatCase;
 import dk.dbc.promat.service.persistence.PromatEntityManager;
@@ -33,6 +33,7 @@ import dk.dbc.promat.service.persistence.Subject;
 import dk.dbc.promat.service.persistence.TaskFieldType;
 import dk.dbc.promat.service.persistence.TaskType;
 import dk.dbc.promat.service.templating.NotificationFactory;
+import dk.dbc.promat.service.templating.model.AssignReviewer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -76,6 +77,9 @@ public class Cases {
 
     @EJB
     Repository repository;
+
+    @EJB
+    NotificationFactory notificationFactory;
 
     @EJB
     Records records;
@@ -186,8 +190,9 @@ public class Cases {
 
             entityManager.persist(entity);
             if (entity.getStatus() == CaseStatus.ASSIGNED) {
-                notifyOnReviewerChanged(NotificationType.CASE_ASSIGNED, entity);
+                notifyOnReviewerChanged(entity);
             }
+
             // 201 CREATED
             LOGGER.info("Created new case for primaryFaust {}", entity.getPrimaryFaust());
             return Response.status(201)
@@ -485,7 +490,7 @@ public class Cases {
             if(dto.getReviewer() != null) {
                 if (!dto.getReviewer().equals(existing.getReviewer())) {
                     existing.setReviewer(resolveReviewer(dto.getReviewer()));
-                    notifyOnReviewerChanged(NotificationType.CASE_ASSIGNED, existing);
+                    notifyOnReviewerChanged(existing);
                 }
                 if(existing.getStatus() == CaseStatus.CREATED) {
                     existing.setStatus(CaseStatus.ASSIGNED);
@@ -876,12 +881,13 @@ public class Cases {
         }
     }
 
-    private void notifyOnReviewerChanged(NotificationType notificationType, PromatCase promatCase)
-            throws NotificationFactory.ValidateException {
+    private void notifyOnReviewerChanged(PromatCase promatCase)
+            throws NotificationFactory.ValidateException, OpenFormatConnectorException {
         if (promatCase.getId() == null) {
             entityManager.flush();
         }
-        Notification notification = NotificationFactory.getInstance().of(notificationType, promatCase);
+        Notification notification = notificationFactory
+                .notificationOf(new AssignReviewer().withPromatCase(promatCase));
         PromatMessage message = new PromatMessage()
                 .withCaseId(promatCase.getId())
                 .withMessageText(notification.getBodyText())

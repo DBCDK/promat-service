@@ -79,6 +79,8 @@ public class CaseRequest implements Dto {
 
     private String recordId;
 
+    private String note;
+
     private String fulltextLink;
 
     public String getTitle() {
@@ -209,6 +211,14 @@ public class CaseRequest implements Dto {
         this.publisher = publisher;
     }
 
+    public String getNote() {
+        return note;
+    }
+
+    public void setNote(String note) {
+        this.note = note;
+    }
+
     public CaseRequest withTitle(String title) {
         this.title = title;
         return this;
@@ -290,6 +300,10 @@ public class CaseRequest implements Dto {
         return this;
     }
 
+    public CaseRequest withNote(String note) {
+        this.note = note;
+        return this;
+    }
     public String getRecordId() {
         return recordId;
     }
@@ -336,6 +350,7 @@ public class CaseRequest implements Dto {
                 ", creator=" + creator +
                 ", publisher='" + publisher + '\'' +
                 ", recordId='" + recordId + '\'' +
+                ", note='" + note + '\'' +
                 ", fulltextLink='" + fulltextLink + '\'' +
                 '}';
     }
@@ -402,6 +417,9 @@ public class CaseRequest implements Dto {
         if (recordId != null ? !recordId.equals(that.recordId) : that.recordId != null) {
             return false;
         }
+        if (note != null ? !note.equals(that.note) : that.note != null) {
+            return false;
+        }
         return fulltextLink != null ? fulltextLink.equals(that.fulltextLink) : that.fulltextLink == null;
     }
 
@@ -424,6 +442,7 @@ public class CaseRequest implements Dto {
         result = 31 * result + (creator != null ? creator.hashCode() : 0);
         result = 31 * result + (publisher != null ? publisher.hashCode() : 0);
         result = 31 * result + (recordId != null ? recordId.hashCode() : 0);
+        result = 31 * result + (note != null ? note.hashCode() : 0);
         result = 31 * result + (fulltextLink != null ? fulltextLink.hashCode() : 0);
         return result;
     }

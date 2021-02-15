@@ -10,6 +10,8 @@ import dk.dbc.commons.jdbc.util.JDBCUtil;
 import dk.dbc.httpclient.HttpClient;
 import dk.dbc.httpclient.HttpGet;
 import dk.dbc.promat.service.db.DatabaseMigrator;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import org.junit.jupiter.api.BeforeAll;
 import org.postgresql.ds.PGSimpleDataSource;
 import org.slf4j.Logger;
@@ -43,6 +45,7 @@ public class IntegrationTest {
     protected static final HttpClient httpClient;
     protected static EntityManager entityManager;
     private static boolean setupDone;
+    protected static String genericWorkPresentationResult;
 
     static {
         httpClient = HttpClient.create(HttpClient.newClient());
@@ -92,7 +95,8 @@ public class IntegrationTest {
     @BeforeAll
     public static void setUp() throws SQLException, IOException, URISyntaxException {
         if (!setupDone) {
-            LOGGER.info("Populating database for test");
+            LOGGER.info("Doing various setup stuff");
+            LOGGER.info("..Populating database for test");
             DataSource dataSource = getDataSource();
             migrate(dataSource);
             Connection connection = connectToPromatDB();
@@ -103,10 +107,16 @@ public class IntegrationTest {
             executeScript(connection, IntegrationTest.class.getResource("/dk/dbc/promat/service/db/payments.sql"));
             entityManager = createEntityManager(getDataSource(),
                     "promatITPU");
+            LOGGER.info("..Populating database tables done");
+            LOGGER.info("..Getting data for generic work presentation response");
+            genericWorkPresentationResult = Files.readString(
+                    Path.of(IntegrationTest.class.getResource("/__files/body-openformat-generic.json")
+                            .getPath()));
+            LOGGER.info("..Done");
+            LOGGER.info("Setup done!");
             setupDone = true;
-            LOGGER.info("Populating database tables done");
         } else {
-            LOGGER.info("Database populate already done.");
+            LOGGER.info("No setup stuff to do. Already done.");
         }
     }
 

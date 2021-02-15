@@ -1,16 +1,23 @@
-@import dk.dbc.promat.service.persistence.PromatCase
+@import dk.dbc.promat.service.templating.model.AssignReviewer
 @import dk.dbc.promat.service.templating.Formatting
-@param PromatCase assignedCase
-<p><b>Kære ${assignedCase.getReviewer().getFirstName()} ${assignedCase.getReviewer().getLastName()}</b></p>
+@param AssignReviewer model
 
-<p>
-Du er blevet bedt om at lave anmeldelse af følgende materiale:
-</p>
-<p><i>"${assignedCase.getTitle()}"</i></p>
-<p>Anmeldelsen bedes udarbejdet senest: ${Formatting.format(assignedCase.getDeadline())}
-<br/>
-Materialet er på vej til dig i posten.</p>
-<br/>
+!{var promatCase = model.getPromatCase(); var note = model.getNote(); }
+
+
+<p>Kære ${promatCase.getReviewer().getFirstName()} ${promatCase.getReviewer().getLastName()}</p>
+<p>Du er blevet bedt om at lave en anmeldelse af følgende materiale:</p>
+<p>@tag.title_section_tag(bibliographicInformationList = model.getTitleSections())</p>
+<p>Anmeldelsen bedes udarbejdet senest: ${Formatting.format(promatCase.getDeadline())}</p>
+@if(note != null)
+    <p>Note: ${note}</p>
+@endif
+
+<p>@tag.metakompas_section_tag(promatCase = promatCase)</p>
+
+@tag.how_to_get_material_tag(model = model)
+
+<p>God fornøjelse</p>
 <p>Med venlig hilsen,<br/>
 ProMat redaktionen
 </p>
