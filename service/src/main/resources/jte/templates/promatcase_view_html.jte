@@ -15,6 +15,15 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head><meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <title>Anmeldelse for ${requestedFaustnumber} + (${relatedFaustnumbers.stream().sorted().collect(Collectors.joining(","))})</title>
+    <style type="text/css">
+        body {font: 10pt arial, helvetica, sans-serif;}
+        div.metadata {}
+        div.metadata div {font-weight: bold}
+        div.metadata div.data {position: relative; display: block; font-weight: normal; left: 4cm; margin-top: -20px;}
+        div.fields {padding-top: 0.6cm;}
+        div.field {padding-top: 0.2cm;}
+        div.field .type {font-weight: bold}
+    </style>
 </head>
 <body>
 <div class="main">
@@ -30,11 +39,11 @@
             <div>Redakt&oslash;r:<div class="data">${Formatting.format(promatCase.getEditor())}</div></div>
         </div>
 
-        <div class="data">
+        <div class="fields">
 
             <!-- TaskFieldType = BKM -->
-            <div class="message">
-                <div>BKM-vurdering:</div>
+            <div class="field">
+                <div class="type">BKM-vurdering:</div>
                 <div>
                     !{var bkm = promatCase.getTasks().stream().filter(t -> t.getTaskFieldType() == TaskFieldType.BKM).findFirst(); }
                     ${bkm.isPresent() ? bkm.get().getData() : "&nbsp;"}
@@ -45,8 +54,8 @@
             @for (PromatTask task : promatCase.getTasks().stream()
                     .filter(t -> t.getTaskFieldType() == TaskFieldType.BRIEF)
                     .collect(Collectors.toList()))
-                <div class="message">
-                    <div>Kort om:</div>
+                <div class="field">
+                    <div class="type">Kort om:</div>
                     <div>
                         ${task.getTargetFausts() != null && task.getTargetFausts().size() > 0
                                 ? task.getTargetFausts().stream()
@@ -58,8 +67,8 @@
             @endfor
 
             <!-- TaskFieldType = DESCRIPTION -->
-            <div class="message">
-                <div>Beskrivelse:</div>
+            <div class="field">
+                <div class="type">Beskrivelse:</div>
                 <div>
                     !{var description = promatCase.getTasks().stream().filter(t -> t.getTaskFieldType() == TaskFieldType.DESCRIPTION).findFirst(); }
                     ${description.isPresent() ? description.get().getData() : "&nbsp;"}
@@ -67,8 +76,8 @@
             </div>
 
             <!-- TaskFieldType = EVALUATION -->
-            <div class="message">
-                <div>Vurdering:</div>
+            <div class="field">
+                <div class="type">Vurdering:</div>
                 <div>
                     !{var evaluation = promatCase.getTasks().stream().filter(t -> t.getTaskFieldType() == TaskFieldType.EVALUATION).findFirst(); }
                     ${evaluation.isPresent() ? evaluation.get().getData() : "&nbsp;"}
@@ -76,8 +85,8 @@
             </div>
 
             <!-- TaskFieldType = COMPARISON -->
-            <div class="message">
-                <div>Andre om samme emne/genre:</div>
+            <div class="field">
+                <div class="type">Andre om samme emne/genre:</div>
                 <div>
                     !{var comparison = promatCase.getTasks().stream().filter(t -> t.getTaskFieldType() == TaskFieldType.COMPARISON).findFirst(); }
                     $unsafe{comparison.isPresent() ? comparison.get().getData().replace("<t>", "<span style=\"font-style: italic;\">").replace("</t>", "</span>") : "&nbsp;"}
@@ -85,8 +94,8 @@
             </div>
 
             <!-- TaskFieldType = RECOMMENDATION -->
-            <div class="message">
-                <div>Til bibliotekaren:</div>
+            <div class="field">
+                <div class="type">Til bibliotekaren:</div>
                 <div>
                     !{var recommendation = promatCase.getTasks().stream().filter(t -> t.getTaskFieldType() == TaskFieldType.RECOMMENDATION).findFirst(); }
                     ${recommendation.isPresent() ? recommendation.get().getData() : "&nbsp;"}
@@ -97,8 +106,8 @@
             @for (PromatTask task : promatCase.getTasks().stream()
                     .filter(t -> t.getTaskFieldType() == TaskFieldType.TOPICS)
                     .collect(Collectors.toList()))
-                <div class="message">
-                    <div>Emneord:</div>
+                <div class="field">
+                    <div class="type">Emneord:</div>
                     <div>
                         ${task.getTargetFausts() != null && task.getTargetFausts().size() > 0
                                 ? task.getTargetFausts().stream()
@@ -110,8 +119,8 @@
             @endfor
 
             <!-- TaskFieldType = GENRE -->
-            <div class="message">
-                <div>Genre- og formbetegnelser (anvendes til skønlitteratur for børn og voksne):</div>
+            <div class="field">
+                <div class="type">Genre- og formbetegnelser (anvendes til skønlitteratur for børn og voksne):</div>
                 <div>
                     !{var genre = promatCase.getTasks().stream().filter(t -> t.getTaskFieldType() == TaskFieldType.GENRE).findFirst(); }
                     ${genre.isPresent() ? genre.get().getData() : "&nbsp;"}
@@ -119,8 +128,8 @@
             </div>
 
             <!-- TaskFieldType = AGE -->
-            <div class="message">
-                <div>Alder (anvendes til fag- og skønlitteratur for børn):</div>
+            <div class="field">
+                <div class="type">Alder (anvendes til fag- og skønlitteratur for børn):</div>
                 <div>
                     !{var age = promatCase.getTasks().stream().filter(t -> t.getTaskFieldType() == TaskFieldType.AGE).findFirst(); }
                     ${age.isPresent() ? age.get().getData() : "&nbsp;"}
@@ -128,8 +137,8 @@
             </div>
 
             <!-- TaskFieldType = MATLEVEL -->
-            <div class="message">
-                <div>Niveau/målgruppe (anvendes til skønlitteratur for børn):</div>
+            <div class="field">
+                <div class="type">Niveau/målgruppe (anvendes til skønlitteratur for børn):</div>
                 <div>
                     !{var matlevel = promatCase.getTasks().stream().filter(t -> t.getTaskFieldType() == TaskFieldType.MATLEVEL).findFirst(); }
                     ${matlevel.isPresent() ? matlevel.get().getData() : "&nbsp;"}
