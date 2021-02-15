@@ -70,21 +70,24 @@ public class CaseInformationUpdater {
             metricRegistry.simpleTimer(openformatTimerMetadata).update(Duration.ofMillis(System.currentTimeMillis() - taskStartTime));
 
             // Update title, if changed
-            if (!promatCase.getTitle().equals(bibliographicInformation.getTitle())) {
+            if (useSameOrUpdateValue(promatCase.getTitle(), bibliographicInformation.getTitle(), false)) {
                 LOGGER.info("Updating title: '{}' ==> '{}' of case with id {}", promatCase.getTitle(),
                         bibliographicInformation.getTitle(), promatCase.getId());
                 promatCase.setTitle(bibliographicInformation.getTitle());
+            }
+
+            // Update author, if changed
+            if(useSameOrUpdateValue(promatCase.getAuthor(), bibliographicInformation.getCreator(), false)) {
+                LOGGER.info("Updating author: '{}' ==> '{}' of case with id {}", promatCase.getAuthor(),
+                        bibliographicInformation.getCreator(), promatCase.getId());
+                promatCase.setAuthor(bibliographicInformation.getCreator());
             }
 
             // Check if the record has a BKMxxxxxx catalog code, if so - then check if we need to update the case,
             // otherwise check if we need to clear an existing weekcode (record may have been pulled back for further
             // editing by the cataloging team)
             String newCode = getFirstWeekcode(bibliographicInformation.getCatalogcodes());
-            if (newCode.isEmpty() && promatCase.getWeekCode() != null && !promatCase.getWeekCode().isEmpty()) {
-                LOGGER.info("Weekcode removed from case with id {}. Record of primary faust {} has no promat related catalogcode", promatCase.getId());
-                promatCase.setWeekCode("");
-            }
-            if (!newCode.isEmpty() && (promatCase.getWeekCode() == null || !promatCase.getWeekCode().equals(newCode))) {
+            if( useSameOrUpdateValue(promatCase.getWeekCode(), newCode, true)) {
                 LOGGER.info("Updating weekcode: '{}' ==> '{}' of case with id {}", promatCase.getWeekCode(), newCode, promatCase.getId());
                 promatCase.setWeekCode(newCode);
             }
@@ -96,6 +99,19 @@ public class CaseInformationUpdater {
             LOGGER.error("Unable to update case with id {}: {}",promatCase.getId(), e.getMessage());
             metricRegistry.concurrentGauge(caseUpdateFailureGaugeMetadata).inc();
         }
+    }
+
+    public boolean useSameOrUpdateValue(String currentValue, String newValue, boolean allowNullAsNewValue) {
+        if (newValue == null) {
+            return allowNullAsNewValue;
+        }
+        if (currentValue == null) {
+            return true;
+        }
+        if (!currentValue.equals(newValue)) {
+            return true;
+        }
+        return false;
     }
 
     public void resetUpdateCaseFailuresGauge() {

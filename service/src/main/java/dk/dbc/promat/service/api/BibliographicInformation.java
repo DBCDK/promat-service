@@ -20,6 +20,7 @@ public class BibliographicInformation {
     private List<String> catalogcodes = new ArrayList<>();
     private String title = "";
     private String targetgroup = "";
+    private String metakompassubject = "";
     private String error = "";
 
     public String getFaust() {
@@ -60,6 +61,10 @@ public class BibliographicInformation {
 
     public String getTargetgroup() {
         return targetgroup;
+    }
+
+    public String getMetakompassubject() {
+        return metakompassubject;
     }
 
     public String getError() {
@@ -108,6 +113,10 @@ public class BibliographicInformation {
 
     public void setTargetgroup(String targetgroup) {
         this.targetgroup = targetgroup;
+    }
+
+    public void setMetakompassubject(String metakompassubject) {
+        this.metakompassubject = metakompassubject;
     }
 
     public void setError(String error) {
@@ -161,6 +170,11 @@ public class BibliographicInformation {
 
     public BibliographicInformation withTargetgroup(String targetgroup) {
         this.targetgroup = targetgroup;
+        return this;
+    }
+
+    public BibliographicInformation withMetakompassubject(String metakompassubject) {
+        this.metakompassubject = metakompassubject;
         return this;
     }
 

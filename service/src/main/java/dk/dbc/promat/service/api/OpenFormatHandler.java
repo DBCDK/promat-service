@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+import java.util.ArrayList;
 import java.util.stream.Collectors;
 
 @ApplicationScoped
@@ -56,20 +57,27 @@ public class OpenFormatHandler {
         PromatElements elements = entity.getFormatResponse().getPromat().get(0).getElements();
         return new BibliographicInformation()
         .withFaust(elements.getFaust().getValue())
-        .withCreator(elements.getCreator().getValue())
+        .withCreator(elements.getCreator() != null && elements.getCreator().size() > 0
+                ? elements.getCreator().stream().map(c -> c.getValue())
+                        .collect(Collectors.joining(", "))
+                : "")
         .withDk5(elements.getDk5().getValue())
-        .withIsbn(elements.getIsbn().stream()
-                .map(isbn -> isbn.getValue())
-                .collect(Collectors.toList()))
-        .withMaterialtypes(elements.getMaterialtypes().getType().stream()
-                .map(materialtype -> materialtype.getValue())
-                .collect(Collectors.toList()))
+        .withIsbn(elements.getIsbn() != null && elements.getIsbn().size() > 0
+                ? elements.getIsbn().stream().map(isbn -> isbn.getValue())
+                        .collect(Collectors.toList())
+                : new ArrayList<>())
+        .withMaterialtypes(elements.getMaterialtypes() != null && elements.getMaterialtypes().getType() != null
+                ? elements.getMaterialtypes().getType().stream().map(materialtype -> materialtype.getValue())
+                        .collect(Collectors.toList())
+                : new ArrayList<>())
         .withExtent(elements.getExtent().getValue())
-        .withPublisher(elements.getPublisher().getValue())
-        .withCatalogcodes(elements.getCatalogcodes().getCode().stream()
-                .map(code -> code.getValue())
-                .collect(Collectors.toList()))
+        .withPublisher(elements.getPublisher().stream().map(p -> p.getValue()).collect(Collectors.joining()))
+        .withCatalogcodes(elements.getCatalogcodes() != null && elements.getCatalogcodes().getCode() != null
+                ? elements.getCatalogcodes().getCode().stream().map(code -> code.getValue())
+                        .collect(Collectors.toList())
+                : new ArrayList<>())
         .withTitle(elements.getTitle().getValue())
-        .withTargetgroup(elements.getTargetgroup().getValue());
+        .withTargetgroup(elements.getTargetgroup().getValue())
+        .withMetakompassubject(elements.getMetakompassubject().getValue());
     }
 }
