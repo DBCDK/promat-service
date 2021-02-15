@@ -16,17 +16,13 @@ import dk.dbc.promat.service.templating.model.AssignReviewer;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import javax.ejb.Stateless;
 import javax.inject.Inject;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 @Stateless
 public class NotificationFactory {
-    private static final Logger LOGGER = LoggerFactory.getLogger(NotificationFactory.class);
 
     public class ValidateException extends Exception {
         ValidateException(String reason) {
@@ -38,7 +34,6 @@ public class NotificationFactory {
     OpenFormatHandler openFormatHandler;
 
     private final Renderer renderer = new Renderer();
-    private final String AGENCY_ID = "870970";
     private static String subjectTemplate;
     static {
         try {
