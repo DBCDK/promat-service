@@ -211,6 +211,70 @@ values (21, 400021),
        (21, 400022),
        (21, 400023);
 --
+insert into promatcase(id, title, details, primaryFaust, relatedFausts, reviewer_id, editor_id, created, deadline, assigned, status, materialType, weekcode, trimmedWeekcode, creator_id, author, publisher)
+values (22, 'Title for 100000', 'Details for 100000', '100000', '["100001", "100002"]', 4900, 4950, '2021-01-09', '2021-02-09', '2021-01-10', 'EXPORTED', 'BOOK', 'BKM202104', '202104', 4953, 'Author for 100000', 'Publisher for 100000');
+
+insert into promattask(id, tasktype, taskfieldtype, created, paycategory, approved, payed, data, targetFausts)
+values  (400024,  'GROUP_1_LESS_THAN_100_PAGES', 'DESCRIPTION',    '202-12-10', 'GROUP_1_LESS_THAN_100_PAGES', '2020-12-10',  NULL,         NULL,                        NULL),
+        (400025,  'GROUP_2_100_UPTO_199_PAGES',  'DESCRIPTION',    '2020-12-10', 'GROUP_2_100_UPTO_199_PAGES',  NULL,         '2020-12-10', NULL,                        NULL),
+        (400026,  'GROUP_3_200_UPTO_499_PAGES',  'DESCRIPTION',    '2020-12-10', 'GROUP_3_200_UPTO_499_PAGES',  NULL,         NULL,         'here is some data',         NULL),
+        (400027,  'GROUP_4_500_OR_MORE_PAGES',   'DESCRIPTION',    '2020-12-10', 'GROUP_4_500_OR_MORE_PAGES',   NULL,         NULL,         '',                          NULL),
+        (400028,  'MOVIES_GR_1',                 'DESCRIPTION',    '2020-12-10', 'MOVIES_GR_1',                 NULL,         NULL,         NULL,                        NULL),
+        (400029,  'GROUP_1_LESS_THAN_100_PAGES', 'DESCRIPTION',    '2021-01-27', 'GROUP_1_LESS_THAN_100_PAGES', NULL,         NULL,         'here is some data',         NULL),
+        (400030,  'GROUP_1_LESS_THAN_100_PAGES', 'BRIEF',          '2021-01-27', 'BRIEF',                       NULL,         NULL,         'here is also some data',    NULL),
+        (400031,  'GROUP_1_LESS_THAN_100_PAGES', 'BRIEF',          '2021-01-27', 'BRIEF',                       NULL,         NULL,         'here is also some data',    '["019994"]'),
+        (400032,  'GROUP_1_LESS_THAN_100_PAGES', 'METAKOMPAS',     '2021-01-27', 'METAKOMPAS',                  NULL,         NULL,         'here is unused data',       NULL),
+        (400033, 'GROUP_1_LESS_THAN_100_PAGES', 'DESCRIPTION',    '2021-01-27', 'GROUP_1_LESS_THAN_100_PAGES', NULL,         NULL,         'here is some data',         NULL),
+        (400034, 'GROUP_1_LESS_THAN_100_PAGES', 'BRIEF',          '2021-01-27', 'BRIEF',                       NULL,         NULL,         'here is also some data',    NULL),
+        (400035, 'GROUP_1_LESS_THAN_100_PAGES', 'METAKOMPAS',     '2021-01-27', 'METAKOMPAS',                  '2021-01-27', NULL,         'here is unused data',       NULL),
+        (400036, 'GROUP_1_LESS_THAN_100_PAGES', 'DESCRIPTION',    '2021-01-27', 'GROUP_1_LESS_THAN_100_PAGES', NULL,         NULL,         'here is some data',         NULL),
+        (400037, 'GROUP_1_LESS_THAN_100_PAGES', 'BRIEF',          '2021-01-27', 'BRIEF',                       NULL,         NULL,         'here is also some data',    NULL),
+        (400038, 'GROUP_1_LESS_THAN_100_PAGES', 'BRIEF',          '2021-01-27', 'BRIEF',                       '2021-02-08', '2021-02-09', 'BRIEF TEXT FOR 100000',     NULL),
+        (400039, 'GROUP_1_LESS_THAN_100_PAGES', 'BRIEF',          '2021-01-27', 'BRIEF',                       '2021-02-08', '2021-02-09', 'BRIEF TEXT FOR 100001',     '["100001"]'),
+        (400040, 'GROUP_1_LESS_THAN_100_PAGES', 'BRIEF',          '2021-01-27', 'BRIEF',                       '2021-02-08', '2021-02-09', 'BRIEF TEXT FOR 100002',     '["100001"]'),
+        (400041, 'GROUP_1_LESS_THAN_100_PAGES', 'BKM',            '2021-01-27', 'BKM',                         '2021-02-08', '2021-02-09', 'Bogen findes relevant for biblioteker på Christiansø', NULL),
+        (400042, 'GROUP_1_LESS_THAN_100_PAGES', 'DESCRIPTION',    '2021-01-27', 'GROUP_1_LESS_THAN_100_PAGES', '2021-02-08', '2021-02-09', 'DESCRIPTION TEXT',          NULL),
+        (400043, 'GROUP_1_LESS_THAN_100_PAGES', 'EVALUATION',     '2021-01-27', 'GROUP_1_LESS_THAN_100_PAGES', '2021-02-08', '2021-02-09', 'EVALUATION TEXT',           NULL),
+        (400044, 'GROUP_1_LESS_THAN_100_PAGES', 'COMPARISON',     '2021-01-27', 'GROUP_1_LESS_THAN_100_PAGES', '2021-02-08', '2021-02-09', 'TEXT BEFORE <t>48611435 Jeg tæller mine skridt</t> TEXT BETWEEN <t>48611435 Hest horse Pferd cheval love</t> TEXT AFTER', NULL),
+        (400045, 'GROUP_1_LESS_THAN_100_PAGES', 'RECOMMENDATION', '2021-01-27', 'GROUP_1_LESS_THAN_100_PAGES', '2021-02-08', '2021-02-09', 'RECOMMENDATION TEXT',       NULL),
+        (400046, 'GROUP_1_LESS_THAN_100_PAGES', 'TOPICS',         '2021-01-27', 'GROUP_1_LESS_THAN_100_PAGES', '2021-02-08', '2021-02-09', 'TOPIC_1, TOPIC_2, TOPIC_3', '["100000"]'),
+        (400047, 'GROUP_1_LESS_THAN_100_PAGES', 'TOPICS',         '2021-01-27', 'GROUP_1_LESS_THAN_100_PAGES', '2021-02-08', '2021-02-09', 'TOPIC_1, TOPIC_2, TOPIC_4', '["100001"]'),
+        (400048, 'GROUP_1_LESS_THAN_100_PAGES', 'TOPICS',         '2021-01-27', 'GROUP_1_LESS_THAN_100_PAGES', '2021-02-08', '2021-02-09', 'TOPIC_2, TOPIC_3, TOPIC_5', '["100002"]'),
+        (400049, 'GROUP_1_LESS_THAN_100_PAGES', 'GENRE',          '2021-01-27', 'GROUP_1_LESS_THAN_100_PAGES', '2021-02-08', '2021-02-09', 'GENRE TEXT',                NULL),
+        (400050, 'GROUP_1_LESS_THAN_100_PAGES', 'AGE',            '2021-01-27', 'GROUP_1_LESS_THAN_100_PAGES', '2021-02-08', '2021-02-09', 'AGE TEXT',                  NULL),
+        (400051, 'GROUP_1_LESS_THAN_100_PAGES', 'MATLEVEL',       '2021-01-27', 'GROUP_1_LESS_THAN_100_PAGES', '2021-02-08', '2021-02-09', 'MATLEVEL TEXT',             NULL);
+
+insert into casetasks(case_id, task_id)
+values (22, 400024),
+       (22, 400025),
+       (22, 400026),
+       (22, 400027),
+       (22, 400028),
+       (22, 400029),
+       (22, 400030),
+       (22, 400031),
+       (22, 400032),
+       (22, 400033),
+       (22, 400034),
+       (22, 400035),
+       (22, 400036),
+       (22, 400037),
+       (22, 400038),
+       (22, 400039),
+       (22, 400040),
+       (22, 400041),
+       (22, 400042),
+       (22, 400043),
+       (22, 400044),
+       (22, 400045),
+       (22, 400046),
+       (22, 400047),
+       (22, 400048),
+       (22, 400049),
+       (22, 400050),
+       (22, 400051);
+
+--
 insert into promatcase(id, title, details, primaryFaust, relatedFausts, reviewer_id, editor_id, created, deadline, assigned, status, materialType)
 values (1000, 'Case 1', 'Details', '1001000', '[]', 4900, 4950, '2021-01-13', '2021-02-13', '2021-01-13', 'APPROVED', 'BOOK');
 

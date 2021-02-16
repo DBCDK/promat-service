@@ -9,6 +9,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import dk.dbc.promat.service.ContainerTest;
 import dk.dbc.promat.service.dto.EditorRequest;
 import dk.dbc.promat.service.persistence.Editor;
+import dk.dbc.promat.service.templating.Formatting;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -101,5 +102,35 @@ public class EditorsIT extends ContainerTest {
         editor.setFirstName("Edi");
         editor.setLastName("Tore");
         editor.setEmail("edi.tore@dbc.dk");
+    }
+
+
+    @Test
+    public void testEditorFormat() {
+        Editor editor = new Editor();
+        String actual = Formatting.format(editor);
+        assertThat("name is correct formatted", actual.equals(""));
+
+        editor = new Editor()
+                .withFirstName("Hans Ole Erik");
+        actual = Formatting.format(editor);
+        assertThat("name is correct formatted", actual.equals("Hans Ole Erik"));
+
+        editor = new Editor()
+                .withLastName("Petersen Sørensen");
+        actual = Formatting.format(editor);
+        assertThat("name is correct formatted", actual.equals("Petersen Sørensen"));
+
+        editor = new Editor()
+                .withFirstName("Hans Ole Erik")
+                .withLastName("Petersen Sørensen");
+        actual = Formatting.format(editor);
+        assertThat("name is correct formatted", actual.equals("Hans Ole Erik Petersen Sørensen"));
+
+        editor = new Editor()
+                .withFirstName("Hans")
+                .withLastName("Hansen");
+        actual = Formatting.format(editor);
+        assertThat("name is correct formatted", actual.equals("Hans Hansen"));
     }
 }

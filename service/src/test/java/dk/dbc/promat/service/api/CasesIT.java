@@ -9,6 +9,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import dk.dbc.promat.service.ContainerTest;
 import dk.dbc.promat.service.dto.ListCasesParams;
 import dk.dbc.promat.service.connector.PromatServiceConnectorException;
+import dk.dbc.promat.service.connector.PromatServiceConnectorUnexpectedStatusCodeException;
 import dk.dbc.promat.service.dto.CaseRequest;
 import dk.dbc.promat.service.dto.CaseSummaryList;
 import dk.dbc.promat.service.dto.CriteriaOperator;
@@ -22,8 +23,11 @@ import dk.dbc.promat.service.persistence.Subject;
 import dk.dbc.promat.service.persistence.TaskFieldType;
 import dk.dbc.promat.service.persistence.TaskType;
 import org.hamcrest.core.IsNull;
+import org.jsoup.Jsoup;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.ws.rs.core.Response;
 import java.io.IOException;
@@ -53,6 +57,7 @@ import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.core.Is.is;
 
 public class CasesIT extends ContainerTest {
+    private static final Logger LOGGER = LoggerFactory.getLogger(CasesIT.class);
 
     @Test
     public void testCreateCase() throws JsonProcessingException {
@@ -1305,5 +1310,52 @@ public class CasesIT extends ContainerTest {
 
         PromatCase updated = mapper.readValue(response.readEntity(String.class), PromatCase.class);
         assertThat("status", updated.getStatus(), is(CaseStatus.PENDING_EXPORT));
+    }
+
+    @Test
+    public void testDbcKatHtmlViewFaustNotFoundReturnsNotFound() throws PromatServiceConnectorException {
+        try {
+            promatServiceConnector.getCaseViewHtml("98765432123456789");
+        } catch(PromatServiceConnectorUnexpectedStatusCodeException e) {
+            assertThat("must return 404 NOT FOUND", e.getStatusCode(), is(404));
+        }
+    }
+
+    @Test
+    public void testDbckatHtmlViewOfPrimaryFaust() throws IOException, PromatServiceConnectorException {
+
+        // Fetch the html view for the primary faustnumber
+        String expected = new String(Files.readAllBytes(Path.of("src/test/resources/__files/case-view-for-id-20-100000.html")));
+        String actual = promatServiceConnector.getCaseViewHtml("100000");
+
+        // Not checking that the documents are strictly equal comparing html output, but it does
+        // check that all textual content in the body is equal.
+        String expectedText = Jsoup.parse(expected).normalise().text();
+        String actualText = Jsoup.parse(actual).normalise().text();
+        assertThat("case view is correct", expectedText.equals(actualText));
+    }
+
+    @Test
+    public void testDbckatHtmlViewOfRelatedFausts() throws IOException, PromatServiceConnectorException {
+
+        // Fetch the html view for the first related faustnumber
+        String expected = new String(Files.readAllBytes(Path.of("src/test/resources/__files/case-view-for-id-20-100001.html")));
+        String actual = promatServiceConnector.getCaseViewHtml("100001");
+
+        // Not checking that the documents are strictly equal comparing html output, but it does
+        // check that all textual content in the body is equal.
+        String expectedText = Jsoup.parse(expected).normalise().text();
+        String actualText = Jsoup.parse(actual).normalise().text();
+        assertThat("case view is correct", expectedText.equals(actualText));
+
+        // Fetch the html view for the second related faustnumber
+        expected = new String(Files.readAllBytes(Path.of("src/test/resources/__files/case-view-for-id-20-100002.html")));
+        actual = promatServiceConnector.getCaseViewHtml("100002");
+
+        // Not checking that the documents are strictly equal comparing html output, but it does
+        // check that all textual content in the body is equal.
+        expectedText = Jsoup.parse(expected).normalise().text();
+        actualText = Jsoup.parse(actual).normalise().text();
+        assertThat("case view is correct", expectedText.equals(actualText));
     }
 }

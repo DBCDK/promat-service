@@ -16,6 +16,7 @@ import dk.dbc.promat.service.dto.ServiceErrorDto;
 import dk.dbc.promat.service.persistence.Address;
 import dk.dbc.promat.service.persistence.Reviewer;
 import dk.dbc.promat.service.persistence.Subject;
+import dk.dbc.promat.service.templating.Formatting;
 import org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
@@ -359,5 +360,34 @@ public class ReviewersIT extends ContainerTest {
                 Reviewer.Accepts.BOOK, Reviewer.Accepts.MULTIMEDIA));
         reviewer.setNote("note3");
         reviewer.setPhone("87654321");
+    }
+
+    @Test
+    public void testReviewerFormat() {
+        Reviewer reviewer = new Reviewer();
+        String actual = Formatting.format(reviewer);
+        assertThat("name is correct formatted", actual.equals(""));
+
+        reviewer = new Reviewer()
+                .withFirstName("Hans Ole Erik");
+        actual = Formatting.format(reviewer);
+        assertThat("name is correct formatted", actual.equals("Hans Ole Erik"));
+
+        reviewer = new Reviewer()
+                .withLastName("Petersen Sørensen");
+        actual = Formatting.format(reviewer);
+        assertThat("name is correct formatted", actual.equals("Petersen Sørensen"));
+
+        reviewer = new Reviewer()
+                .withFirstName("Hans Ole Erik")
+                .withLastName("Petersen Sørensen");
+        actual = Formatting.format(reviewer);
+        assertThat("name is correct formatted", actual.equals("Hans Ole Erik Petersen Sørensen"));
+
+        reviewer = new Reviewer()
+                .withFirstName("Hans")
+                .withLastName("Hansen");
+        actual = Formatting.format(reviewer);
+        assertThat("name is correct formatted", actual.equals("Hans Hansen"));
     }
 }
