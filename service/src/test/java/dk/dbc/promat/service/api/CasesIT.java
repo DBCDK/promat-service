@@ -1358,4 +1358,27 @@ public class CasesIT extends ContainerTest {
         actualText = Jsoup.parse(actual).normalise().text();
         assertThat("case view is correct", expectedText.equals(actualText));
     }
+
+    @Test
+    public void testDbckatHtmlViewOfPrimaryFaustWithNullData() throws IOException, PromatServiceConnectorException {
+
+        // Fetch the html view for the primary faustnumber
+        // Note: it is not normal that field data, or case metadata, is NULL when the case is approved (or beyond)
+        String expected = new String(Files.readAllBytes(Path.of("src/test/resources/__files/case-view-for-id-21-100003.html")));
+        String actual = promatServiceConnector.getCaseViewHtml("100003");
+
+        // Not checking that the documents are strictly equal comparing html output, but it does
+        // check that all textual content in the body is equal.
+        String expectedText = Jsoup.parse(expected).normalise().text();
+        String actualText = Jsoup.parse(actual).normalise().text();
+        assertThat("case view is correct", expectedText.equals(actualText));
+
+        // Move case back to status CREATED(==>ASSIGNED) since it is clearly not done..  Expect no html view available
+        promatServiceConnector.updateCase(21, new CaseRequest().withStatus(CaseStatus.CREATED));
+        try {
+            promatServiceConnector.getCaseViewHtml("100003");
+        } catch(PromatServiceConnectorUnexpectedStatusCodeException e) {
+            assertThat("must return 404 NOT FOUND", e.getStatusCode(), is(404));
+        }
+    }
 }

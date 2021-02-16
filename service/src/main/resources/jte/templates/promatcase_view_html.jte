@@ -14,7 +14,7 @@
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head><meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>Anmeldelse for ${requestedFaustnumber} + (${relatedFaustnumbers.stream().sorted().collect(Collectors.joining(","))})</title>
+    <title>Anmeldelse for ${requestedFaustnumber}@if(relatedFaustnumbers.size() > 0) + (${relatedFaustnumbers.stream().sorted().collect(Collectors.joining(","))})@endif</title>
     <style type="text/css">
         body {font: 10pt arial, helvetica, sans-serif;}
         div.metadata {}
@@ -42,13 +42,15 @@
         <div class="fields">
 
             <!-- TaskFieldType = BKM -->
+            !{var bkm = promatCase.getTasks().stream().filter(t -> t.getTaskFieldType() == TaskFieldType.BKM).findFirst(); }
+            @if(bkm.isPresent())
             <div class="field">
                 <div class="type">BKM-vurdering:</div>
                 <div>
-                    !{var bkm = promatCase.getTasks().stream().filter(t -> t.getTaskFieldType() == TaskFieldType.BKM).findFirst(); }
-                    ${bkm.isPresent() ? bkm.get().getData() : "&nbsp;"}
+                    ${bkm.get().getData()}
                 </div>
             </div>
+            @endif
 
             <!-- TaskFieldType = BRIEF -->
             @for (PromatTask task : promatCase.getTasks().stream()
@@ -71,7 +73,7 @@
                 <div class="type">Beskrivelse:</div>
                 <div>
                     !{var description = promatCase.getTasks().stream().filter(t -> t.getTaskFieldType() == TaskFieldType.DESCRIPTION).findFirst(); }
-                    ${description.isPresent() ? description.get().getData() : "&nbsp;"}
+                    ${description.isPresent() && description.get().getData() != null ? description.get().getData() : ""}
                 </div>
             </div>
 
@@ -80,7 +82,7 @@
                 <div class="type">Vurdering:</div>
                 <div>
                     !{var evaluation = promatCase.getTasks().stream().filter(t -> t.getTaskFieldType() == TaskFieldType.EVALUATION).findFirst(); }
-                    ${evaluation.isPresent() ? evaluation.get().getData() : "&nbsp;"}
+                    ${evaluation.isPresent() && evaluation.get().getData() != null ? evaluation.get().getData() : ""}
                 </div>
             </div>
 
@@ -89,7 +91,8 @@
                 <div class="type">Andre om samme emne/genre:</div>
                 <div>
                     !{var comparison = promatCase.getTasks().stream().filter(t -> t.getTaskFieldType() == TaskFieldType.COMPARISON).findFirst(); }
-                    $unsafe{comparison.isPresent() ? comparison.get().getData().replace("<t>", "<span style=\"font-style: italic;\">").replace("</t>", "</span>") : "&nbsp;"}
+                    !{var comparisonvalue = comparison.isPresent() ? (comparison.get().getData() != null ? comparison.get().getData() : "") : ""; }
+                    $unsafe{comparisonvalue.replace("<t>", "<span style=\"font-style: italic;\">").replace("</t>", "</span>")}
                 </div>
             </div>
 
@@ -98,7 +101,7 @@
                 <div class="type">Til bibliotekaren:</div>
                 <div>
                     !{var recommendation = promatCase.getTasks().stream().filter(t -> t.getTaskFieldType() == TaskFieldType.RECOMMENDATION).findFirst(); }
-                    ${recommendation.isPresent() ? recommendation.get().getData() : "&nbsp;"}
+                    ${recommendation.isPresent() && recommendation.get().getData() != null ? recommendation.get().getData() : ""}
                 </div>
             </div>
 
@@ -123,7 +126,7 @@
                 <div class="type">Genre- og formbetegnelser (anvendes til skønlitteratur for børn og voksne):</div>
                 <div>
                     !{var genre = promatCase.getTasks().stream().filter(t -> t.getTaskFieldType() == TaskFieldType.GENRE).findFirst(); }
-                    ${genre.isPresent() ? genre.get().getData() : "&nbsp;"}
+                    ${genre.isPresent() && genre.get().getData() != null ? genre.get().getData() : ""}
                 </div>
             </div>
 
@@ -132,7 +135,7 @@
                 <div class="type">Alder (anvendes til fag- og skønlitteratur for børn):</div>
                 <div>
                     !{var age = promatCase.getTasks().stream().filter(t -> t.getTaskFieldType() == TaskFieldType.AGE).findFirst(); }
-                    ${age.isPresent() ? age.get().getData() : "&nbsp;"}
+                    ${age.isPresent() && age.get().getData() != null ? age.get().getData() : ""}
                 </div>
             </div>
 
@@ -141,7 +144,7 @@
                 <div class="type">Niveau/målgruppe (anvendes til skønlitteratur for børn):</div>
                 <div>
                     !{var matlevel = promatCase.getTasks().stream().filter(t -> t.getTaskFieldType() == TaskFieldType.MATLEVEL).findFirst(); }
-                    ${matlevel.isPresent() ? matlevel.get().getData() : "&nbsp;"}
+                    ${matlevel.isPresent() && matlevel.get().getData() != null ? matlevel.get().getData() : ""}
                 </div>
             </div>
         </div>
