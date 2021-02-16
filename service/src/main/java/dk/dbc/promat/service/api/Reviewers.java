@@ -7,12 +7,16 @@ package dk.dbc.promat.service.api;
 
 import dk.dbc.connector.culr.CulrConnectorException;
 import dk.dbc.promat.service.Repository;
+import dk.dbc.promat.service.batch.NotificationSender;
 import dk.dbc.promat.service.dto.ReviewerList;
 import dk.dbc.promat.service.dto.ReviewerRequest;
 import dk.dbc.promat.service.dto.ReviewerWithWorkloads;
 import dk.dbc.promat.service.dto.ServiceErrorDto;
+import dk.dbc.promat.service.persistence.Notification;
 import dk.dbc.promat.service.persistence.PromatEntityManager;
 import dk.dbc.promat.service.persistence.Reviewer;
+import dk.dbc.promat.service.templating.NotificationFactory;
+import dk.dbc.promat.service.templating.model.ReviewerDataChanged;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,6 +47,12 @@ public class Reviewers {
     @Inject
     @PromatEntityManager
     EntityManager entityManager;
+
+    @EJB
+    NotificationSender notificationSender;
+
+    @Inject
+    NotificationFactory notificationFactory;
 
     @EJB
     Repository repository;
@@ -98,8 +108,8 @@ public class Reviewers {
                     .withInstitution(reviewerRequest.getInstitution())
                     .withPaycode(reviewerRequest.getPaycode())
                     .withAddress(reviewerRequest.getAddress())
-                    .withHiatus_begin(reviewerRequest.getHiatusBegin())
-                    .withHiatus_end(reviewerRequest.getHiatusEnd())
+                    .withHiatus_begin(reviewerRequest.getHiatus_begin())
+                    .withHiatus_end(reviewerRequest.getHiatus_end())
                     .withSubjects(repository.resolveSubjects(reviewerRequest.getSubjects()))
                     .withAccepts(reviewerRequest.getAccepts())
                     .withCapacity(reviewerRequest.getCapacity());
@@ -189,11 +199,11 @@ public class Reviewers {
             if(reviewerRequest.getLastName() != null) {
                 reviewer.setLastName(reviewerRequest.getLastName());
             }
-            if(reviewerRequest.getHiatusBegin() != null) {
-                reviewer.setHiatus_begin(reviewerRequest.getHiatusBegin());
+            if(reviewerRequest.getHiatus_begin() != null) {
+                reviewer.setHiatus_begin(reviewerRequest.getHiatus_begin());
             }
-            if(reviewerRequest.getHiatusEnd() != null) {
-                reviewer.setHiatus_end(reviewerRequest.getHiatusEnd());
+            if(reviewerRequest.getHiatus_end() != null) {
+                reviewer.setHiatus_end(reviewerRequest.getHiatus_end());
             }
             if(reviewerRequest.getInstitution() != null) {
                 reviewer.setInstitution(reviewerRequest.getInstitution());
@@ -207,6 +217,16 @@ public class Reviewers {
             if(reviewerRequest.getSubjects() != null) {
                 reviewer.setSubjects(repository.resolveSubjects(reviewerRequest.getSubjects()));
             }
+
+            Notification notification = notificationFactory.notificationOf(new ReviewerDataChanged()
+                    .withReviewerRequest(reviewerRequest)
+                    .withReviewer(reviewer)
+            );
+
+            // Should exceptions here always be caught?
+            //   (One could argue that reviewers changes in data should be withheld just because an
+            //    confirmation mail could not be sent)
+            notificationSender.notifyMailRecipient(notification);
 
             return Response.status(200)
                     .entity(reviewer)

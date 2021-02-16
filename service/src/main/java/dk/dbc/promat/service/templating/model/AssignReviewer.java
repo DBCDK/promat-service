@@ -2,9 +2,7 @@ package dk.dbc.promat.service.templating.model;
 
 import dk.dbc.promat.service.api.BibliographicInformation;
 import dk.dbc.promat.service.persistence.PromatCase;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public class AssignReviewer {
     private PromatCase promatCase;
