@@ -55,6 +55,8 @@ import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.core.Is.is;
+import static org.junit.Assert.assertThrows;
+import static org.junit.Assert.fail;
 
 public class CasesIT extends ContainerTest {
     private static final Logger LOGGER = LoggerFactory.getLogger(CasesIT.class);
@@ -1375,10 +1377,15 @@ public class CasesIT extends ContainerTest {
 
         // Move case back to status CREATED(==>ASSIGNED) since it is clearly not done..  Expect no html view available
         promatServiceConnector.updateCase(21, new CaseRequest().withStatus(CaseStatus.CREATED));
-        try {
-            promatServiceConnector.getCaseViewHtml("100003");
-        } catch(PromatServiceConnectorUnexpectedStatusCodeException e) {
-            assertThat("must return 404 NOT FOUND", e.getStatusCode(), is(404));
-        }
+        assertThrows(PromatServiceConnectorUnexpectedStatusCodeException.class, () -> {
+            try {
+                promatServiceConnector.getCaseViewHtml("100003");
+            } catch (PromatServiceConnectorUnexpectedStatusCodeException e) {
+                assertThat("exception is 404 NOT FOUND", e.getStatusCode(), is(404));
+                throw e;
+            } catch (Exception e) {
+                throw e;
+            }
+        });
     }
 }

@@ -61,6 +61,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.StreamingOutput;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.HashMap;
@@ -282,6 +283,13 @@ public class Cases {
                 LOGGER.error("Case with faust {} has no tasks", faust);
                 return ServiceErrorDto.NotFound("Case has no tasks",
                         String.format("Case with primary- or relatedfaust %s has no tasks", faust));
+            }
+
+            // Case must have a status that ensures that there is valid data
+            if (!Arrays.asList(CaseStatus.PENDING_EXTERNAL, CaseStatus.APPROVED, CaseStatus.PENDING_MEETING,
+                    CaseStatus.PENDING_EXPORT, CaseStatus.EXPORTED).contains(cases.get(0).getStatus())) {
+                return ServiceErrorDto.NotFound("Not found or not in valid state",
+                        String.format("No case with faust %s or a status that guarantees valid data is found", faust));
             }
 
             var relatedFausts = new ArrayList<>(cases.get(0).getRelatedFausts());
