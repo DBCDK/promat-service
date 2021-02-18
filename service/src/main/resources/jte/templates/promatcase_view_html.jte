@@ -19,7 +19,7 @@
         body {font: 10pt arial, helvetica, sans-serif;}
         div.metadata {}
         div.metadata div {font-weight: bold}
-        div.metadata div.data {position: relative; display: block; font-weight: normal; left: 4cm; margin-top: -20px;}
+        div.metadata div.data {position: relative; display: block; font-weight: normal; left: 4cm; margin-top: -20px; min-height: 20px;}
         div.fields {padding-top: 0.6cm;}
         div.field {padding-top: 0.2cm;}
         div.field .type {font-weight: bold}
