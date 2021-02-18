@@ -23,6 +23,9 @@ public class Formatting {
     public static <T extends PromatUser> String format(T user) {
         var names = new ArrayList<String>();
 
+        if (user == null) {
+            return "";
+        }
         if( user.getFirstName() != null ) {
             names.addAll(Arrays.asList(user.getFirstName().split(" ")));
         }
