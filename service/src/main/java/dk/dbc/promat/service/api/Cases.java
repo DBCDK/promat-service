@@ -278,6 +278,11 @@ public class Cases {
                 LOGGER.error("Too many cases with faust {} ({} cases)", faust, cases.size());
                 return ServiceErrorDto.Failed(String.format("Too many cases with primary- or relatedfaust %s exists", faust));
             }
+            if (cases.get(0).getTasks() == null || cases.get(0).getTasks().size() == 0) {
+                LOGGER.error("Case with faust {} has no tasks", faust);
+                return ServiceErrorDto.NotFound("Case has no tasks",
+                        String.format("Case with primary- or relatedfaust %s has no tasks", faust));
+            }
 
             var relatedFausts = new ArrayList<>(cases.get(0).getRelatedFausts());
             relatedFausts.add(cases.get(0).getPrimaryFaust());
