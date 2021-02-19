@@ -117,10 +117,10 @@ public class PromatServiceConnector {
      * @return case
      * @throws PromatServiceConnectorException on unexpected failure for get operation
      */
-    public String getCaseViewHtml(String faust) throws PromatServiceConnectorException {
+    public String getCaseview(String faust, String format) throws PromatServiceConnectorException {
         final HttpGet httpGet = new HttpGet(failSafeHttpClient)
                 .withBaseUrl(baseUrl)
-                .withPathElements("cases", faust, "HTML");
+                .withPathElements("cases", faust, format);
         final Response response = httpGet.execute();
         assertResponseStatus(response, Response.Status.OK);
         return readResponseEntity(response, String.class);

@@ -1313,7 +1313,7 @@ public class CasesIT extends ContainerTest {
     @Test
     public void testDbcKatHtmlViewFaustNotFoundReturnsNotFound() throws PromatServiceConnectorException {
         try {
-            promatServiceConnector.getCaseViewHtml("98765432123456789");
+            promatServiceConnector.getCaseview("98765432123456789", "HTML");
         } catch(PromatServiceConnectorUnexpectedStatusCodeException e) {
             assertThat("must return 404 NOT FOUND", e.getStatusCode(), is(404));
         }
@@ -1324,7 +1324,7 @@ public class CasesIT extends ContainerTest {
 
         // Fetch the html view for the primary faustnumber
         String expected = new String(Files.readAllBytes(Path.of("src/test/resources/__files/case-view-for-id-20-100000.html")));
-        String actual = promatServiceConnector.getCaseViewHtml("100000");
+        String actual = promatServiceConnector.getCaseview("100000", "HTML");
 
         // Not checking that the documents are strictly equal comparing html output, but it does
         // check that all textual content in the body is equal.
@@ -1338,7 +1338,7 @@ public class CasesIT extends ContainerTest {
 
         // Fetch the html view for the first related faustnumber
         String expected = new String(Files.readAllBytes(Path.of("src/test/resources/__files/case-view-for-id-20-100001.html")));
-        String actual = promatServiceConnector.getCaseViewHtml("100001");
+        String actual = promatServiceConnector.getCaseview("100001", "HTML");
 
         // Not checking that the documents are strictly equal comparing html output, but it does
         // check that all textual content in the body is equal.
@@ -1348,7 +1348,7 @@ public class CasesIT extends ContainerTest {
 
         // Fetch the html view for the second related faustnumber
         expected = new String(Files.readAllBytes(Path.of("src/test/resources/__files/case-view-for-id-20-100002.html")));
-        actual = promatServiceConnector.getCaseViewHtml("100002");
+        actual = promatServiceConnector.getCaseview("100002", "HTML");
 
         // Not checking that the documents are strictly equal comparing html output, but it does
         // check that all textual content in the body is equal.
@@ -1363,7 +1363,7 @@ public class CasesIT extends ContainerTest {
         // Fetch the html view for the primary faustnumber
         // Note: it is not normal that field data, or case metadata, is NULL when the case is approved (or beyond)
         String expected = new String(Files.readAllBytes(Path.of("src/test/resources/__files/case-view-for-id-21-100003.html")));
-        String actual = promatServiceConnector.getCaseViewHtml("100003");
+        String actual = promatServiceConnector.getCaseview("100003", "HTML");
 
         // Not checking that the documents are strictly equal comparing html output, but it does
         // check that all textual content in the body is equal.
@@ -1375,7 +1375,7 @@ public class CasesIT extends ContainerTest {
         promatServiceConnector.updateCase(21, new CaseRequest().withStatus(CaseStatus.CREATED));
         assertThrows(PromatServiceConnectorUnexpectedStatusCodeException.class, () -> {
             try {
-                promatServiceConnector.getCaseViewHtml("100003");
+                promatServiceConnector.getCaseview("100003", "HTML");
             } catch (PromatServiceConnectorUnexpectedStatusCodeException e) {
                 assertThat("exception is 404 NOT FOUND", e.getStatusCode(), is(404));
                 throw e;
