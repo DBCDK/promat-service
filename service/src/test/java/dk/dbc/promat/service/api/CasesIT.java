@@ -77,10 +77,6 @@ public class CasesIT extends ContainerTest {
         dto.setPrimaryFaust("1001111");
         assertThat("status code", postResponse("v1/api/cases", dto).getStatus(), is(400));
 
-        // creator set
-        dto.setCreator(13);
-        assertThat("status code", postResponse("v1/api/cases", dto).getStatus(), is(400));
-
         // materialType set
         dto.setMaterialType(MaterialType.BOOK);
         Response response = postResponse("v1/api/cases", dto);
