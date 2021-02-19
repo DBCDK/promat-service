@@ -260,15 +260,12 @@ public class Cases {
         }
     }
 
-    public enum CaseviewFormat {
-        HTML,
-        XML
-    }
+
 
     @GET
     @Path("cases/{faust}/{format}")
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_HTML, MediaType.TEXT_HTML})
-    public Response getView(@PathParam("faust") final String faust, @PathParam("format") final CaseviewFormat format) {
+    public Response getView(@PathParam("faust") final String faust, @PathParam("format") @DefaultValue("HTML") final ClassviewFormat format) {
         LOGGER.info("cases/{}/{}", faust, format);
 
         try {
