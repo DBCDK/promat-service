@@ -562,12 +562,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/ServiceError'
 
-  /cases/{faust}/html:
+  /cases/{faust}/{format}:
     get:
       tags:
         - cases
-      summary: Returns html view of the case with the given faustnumber. Used by DBCKat
-      operationId: getHtmlView
+      summary: Returns view of the case with the given faustnumber. Used by DBCKat
+      operationId: getView
       parameters:
         - in: path
           name: faust
@@ -575,6 +575,12 @@ paths:
           schema:
             type: string
             description: Faustnumber (primary or related)
+        - in: path
+          name: format
+          required: true
+          schema:
+            $ref: '#/components/schemas/CaseviewFormat'
+            description: Format of the returned view
       responses:
         '200':
           description: successful operation. The case view for the case is returned
@@ -583,8 +589,12 @@ paths:
               schema:
                 type: string
                 format: binary
+            text/xml:
+              schema:
+                type: string
+                format: binary
         '404':
-          description: Case with this faustnumber could not be found
+          description: Case with this faustnumber could not be found or case do not have an acceptable state
           content:
             application/json:
               schema:
@@ -1824,3 +1834,9 @@ components:
       type: array
       items:
         type: string
+
+    CaseviewFormat:
+      type: string
+      enum:
+        - 'HTML'
+        - 'XML'

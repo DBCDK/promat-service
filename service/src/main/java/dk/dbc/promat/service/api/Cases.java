@@ -260,11 +260,16 @@ public class Cases {
         }
     }
 
+    public enum CaseviewFormat {
+        HTML,
+        XML
+    }
+
     @GET
-    @Path("cases/{faust}/html")
-    @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_HTML})
-    public Response getHtmlview(@PathParam("faust") final String faust) {
-        LOGGER.info("cases/{}/html", faust);
+    @Path("cases/{faust}/{format}")
+    @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_HTML, MediaType.TEXT_HTML})
+    public Response getView(@PathParam("faust") final String faust, @PathParam("format") final CaseviewFormat format) {
+        LOGGER.info("cases/{}/{}", faust, format);
 
         try {
             TypedQuery query = entityManager.createNamedQuery(PromatCase.GET_CASE_BY_FAUST_NAME, PromatCase.class);
@@ -301,11 +306,22 @@ public class Cases {
             models.put("promatCase", cases.get(0));
             models.put("requestedFaustnumber", faust);
             models.put("relatedFaustnumbers", relatedFausts);
-            String html = renderer.render("promatcase_view_html.jte", models);
 
-            return Response.status(200)
-                    .header("Content-Type", "text/html; charset=utf-8")
-                    .entity(html).build();
+            switch(format) {
+                case HTML:
+                    String html = renderer.render("promatcase_view_html.jte", models);
+                    return Response.status(200)
+                            .header("Content-Type", "text/html; charset=utf-8")
+                            .entity(html).build();
+                case XML:
+                    // Todo: Handle xml output format
+                    String xml = "todo: xml view";
+                    return Response.status(200)
+                            .header("Content-Type", "text/xml; charset=utf-8")
+                            .entity(xml).build();
+                default:
+                    return ServiceErrorDto.Failed(String.format("No handling of CaseviewFormat.", format));
+            }
         } catch(Exception exception) {
             LOGGER.error("Caught exception: {}", exception.getMessage());
             return ServiceErrorDto.Failed(exception.getMessage());
