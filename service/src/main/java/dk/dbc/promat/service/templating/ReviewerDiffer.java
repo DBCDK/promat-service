@@ -16,7 +16,7 @@ import javax.enterprise.context.ApplicationScoped;
 public class ReviewerDiffer {
     private final Set<String> changeableFields = Set.of(
             "active", "firstName", "lastName", "email", "phone", "institution", "paycode",
-            "hiatus_begin", "hiatus_end", "capacity");
+            "hiatusBegin", "hiatusEnd", "capacity");
 
     private final Set<String> changeableAddressFields = Set.of(
             "address1", "address2", "zip", "city");

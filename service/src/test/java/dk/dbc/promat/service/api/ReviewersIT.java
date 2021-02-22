@@ -244,8 +244,8 @@ public class ReviewersIT extends ContainerTest {
                         new Subject()
                                 .withId(5)
                                 .withName("Multimedie")));
-        reviewer.setHiatus_begin(LocalDate.parse("2020-10-28"));
-        reviewer.setHiatus_end(LocalDate.parse("2020-11-01"));
+        reviewer.setHiatusBegin(LocalDate.parse("2020-10-28"));
+        reviewer.setHiatusEnd(LocalDate.parse("2020-11-01"));
         reviewer.setAccepts(List.of(
                 Reviewer.Accepts.MULTIMEDIA, Reviewer.Accepts.PS4, Reviewer.Accepts.PS5));
         reviewer.setNote("note1");
@@ -271,8 +271,8 @@ public class ReviewersIT extends ContainerTest {
                         new Subject()
                                 .withId(5)
                                 .withName("Multimedie")));
-        reviewer.setHiatus_begin(LocalDate.parse("2020-11-28"));
-        reviewer.setHiatus_end(LocalDate.parse("2020-12-01"));
+        reviewer.setHiatusBegin(LocalDate.parse("2020-11-28"));
+        reviewer.setHiatusEnd(LocalDate.parse("2020-12-01"));
         reviewer.setAccepts(List.of(
                 Reviewer.Accepts.MULTIMEDIA, Reviewer.Accepts.PS4, Reviewer.Accepts.PS5));
         reviewer.setNote("note2");
@@ -298,8 +298,8 @@ public class ReviewersIT extends ContainerTest {
                         new Subject()
                                 .withId(5)
                                 .withName("Multimedie")));
-        reviewer.setHiatus_begin(null);
-        reviewer.setHiatus_end(null);
+        reviewer.setHiatusBegin(null);
+        reviewer.setHiatusEnd(null);
         reviewer.setAccepts(List.of(
                 Reviewer.Accepts.BOOK));
         reviewer.setNote("note3");
@@ -320,8 +320,8 @@ public class ReviewersIT extends ContainerTest {
                         .withCity("Overlev"));
         reviewer.setInstitution("Kirstens Bix");
         reviewer.setPaycode(0);
-        reviewer.setHiatus_begin(LocalDate.parse("2021-01-11"));
-        reviewer.setHiatus_end(LocalDate.parse("2021-01-12"));
+        reviewer.setHiatusBegin(LocalDate.parse("2021-01-11"));
+        reviewer.setHiatusEnd(LocalDate.parse("2021-01-12"));
         reviewer.setAccepts(List.of(
                 Reviewer.Accepts.BOOK));
         reviewer.setSubjects(List.of(
@@ -353,8 +353,8 @@ public class ReviewersIT extends ContainerTest {
                                 .withId(3)
                                 .withName("Eventyr, fantasy")
                                 .withParentId(2)));
-        reviewer.setHiatus_begin(LocalDate.parse("2020-12-22"));
-        reviewer.setHiatus_end(LocalDate.parse("2021-01-03"));
+        reviewer.setHiatusBegin(LocalDate.parse("2020-12-22"));
+        reviewer.setHiatusEnd(LocalDate.parse("2021-01-03"));
         reviewer.setAccepts(List.of(
                 Reviewer.Accepts.BOOK, Reviewer.Accepts.MULTIMEDIA));
         reviewer.setNote("note3");

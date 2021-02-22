@@ -152,11 +152,11 @@ public class RendererTest {
                         new ChangedValue()
                                 .withFromValue("hans")
                                 .withToValue("Hans"),
-                        "hiatus_begin",
+                        "hiatusBegin",
                         new ChangedValue()
                                 .withFromValue(null)
                                 .withToValue(Formatting.format(somedaysahead)),
-                        "hiatus_end",
+                        "hiatusEnd",
                         new ChangedValue()
                                 .withFromValue(null)
                                 .withToValue(Formatting.format(alittlelater)),
@@ -202,7 +202,6 @@ public class RendererTest {
         Files.writeString(Path.of("/tmp/rwCh1.html"), notification.getBodyText());
         assertThat("Bodytext", actual, is(expected));
         assertThat("Subject", notification.getSubject(), is("ProMat anmelderprofil '1001' er ændret"));
-
     }
 
     private String stripTrailingAndLeading(String text) {

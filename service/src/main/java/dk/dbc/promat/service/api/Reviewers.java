@@ -108,8 +108,8 @@ public class Reviewers {
                     .withInstitution(reviewerRequest.getInstitution())
                     .withPaycode(reviewerRequest.getPaycode())
                     .withAddress(reviewerRequest.getAddress())
-                    .withHiatus_begin(reviewerRequest.getHiatus_begin())
-                    .withHiatus_end(reviewerRequest.getHiatus_end())
+                    .withHiatus_begin(reviewerRequest.getHiatusBegin())
+                    .withHiatus_end(reviewerRequest.getHiatusEnd())
                     .withSubjects(repository.resolveSubjects(reviewerRequest.getSubjects()))
                     .withAccepts(reviewerRequest.getAccepts())
                     .withCapacity(reviewerRequest.getCapacity());
@@ -180,6 +180,13 @@ public class Reviewers {
                 return Response.status(404).build();
             }
 
+            // Create the notification now, before we fill in the changed fields in reviewer.
+            Notification notification = notificationFactory.notificationOf(new ReviewerDataChanged()
+                    .withReviewerRequest(reviewerRequest)
+                    .withReviewer(reviewer)
+            );
+
+
             // Update by patching
             if(reviewerRequest.isActive() != null) {
                 reviewer.setActive(reviewerRequest.isActive());
@@ -199,11 +206,11 @@ public class Reviewers {
             if(reviewerRequest.getLastName() != null) {
                 reviewer.setLastName(reviewerRequest.getLastName());
             }
-            if(reviewerRequest.getHiatus_begin() != null) {
-                reviewer.setHiatus_begin(reviewerRequest.getHiatus_begin());
+            if(reviewerRequest.getHiatusBegin() != null) {
+                reviewer.setHiatusBegin(reviewerRequest.getHiatusBegin());
             }
-            if(reviewerRequest.getHiatus_end() != null) {
-                reviewer.setHiatus_end(reviewerRequest.getHiatus_end());
+            if(reviewerRequest.getHiatusEnd() != null) {
+                reviewer.setHiatusEnd(reviewerRequest.getHiatusEnd());
             }
             if(reviewerRequest.getInstitution() != null) {
                 reviewer.setInstitution(reviewerRequest.getInstitution());
@@ -217,11 +224,6 @@ public class Reviewers {
             if(reviewerRequest.getSubjects() != null) {
                 reviewer.setSubjects(repository.resolveSubjects(reviewerRequest.getSubjects()));
             }
-
-            Notification notification = notificationFactory.notificationOf(new ReviewerDataChanged()
-                    .withReviewerRequest(reviewerRequest)
-                    .withReviewer(reviewer)
-            );
 
             // Should exceptions here always be caught?
             //   (One could argue that reviewers changes in data should be withheld just because an
