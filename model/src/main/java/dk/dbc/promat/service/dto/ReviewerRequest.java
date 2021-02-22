@@ -32,10 +32,10 @@ public class ReviewerRequest implements Dto {
     private Integer capacity;
 
     @JsonSerialize(using = LocalDateSerializer.class)
-    private LocalDate hiatus_begin;
+    private LocalDate hiatusBegin;
 
     @JsonSerialize(using = LocalDateSerializer.class)
-    private LocalDate hiatus_end;
+    private LocalDate hiatusEnd;
 
     public Boolean isActive() {
         return active;
@@ -154,29 +154,29 @@ public class ReviewerRequest implements Dto {
         return this;
     }
 
-    public LocalDate getHiatus_begin() {
-        return hiatus_begin;
+    public LocalDate getHiatusBegin() {
+        return hiatusBegin;
     }
 
-    public void setHiatus_begin(LocalDate hiatus_begin) {
-        this.hiatus_begin = hiatus_begin;
+    public void setHiatusBegin(LocalDate hiatusBegin) {
+        this.hiatusBegin = hiatusBegin;
     }
 
     public ReviewerRequest withHiatusBegin(LocalDate hiatus_begin) {
-        this.hiatus_begin = hiatus_begin;
+        this.hiatusBegin = hiatus_begin;
         return this;
     }
 
-    public LocalDate getHiatus_end() {
-        return hiatus_end;
+    public LocalDate getHiatusEnd() {
+        return hiatusEnd;
     }
 
-    public void setHiatus_end(LocalDate hiatus_end) {
-        this.hiatus_end = hiatus_end;
+    public void setHiatusEnd(LocalDate hiatusEnd) {
+        this.hiatusEnd = hiatusEnd;
     }
 
     public ReviewerRequest withHiatusEnd(LocalDate hiatus_end) {
-        this.hiatus_end = hiatus_end;
+        this.hiatusEnd = hiatus_end;
         return this;
     }
 
@@ -233,8 +233,8 @@ public class ReviewerRequest implements Dto {
                 Objects.equals(institution, that.institution) &&
                 Objects.equals(paycode, that.paycode) &&
                 Objects.equals(address, that.address) &&
-                Objects.equals(hiatus_begin, that.hiatus_begin) &&
-                Objects.equals(hiatus_end, that.hiatus_end) &&
+                Objects.equals(hiatusBegin, that.hiatusBegin) &&
+                Objects.equals(hiatusEnd, that.hiatusEnd) &&
                 Objects.equals(subjects, that.subjects) &&
                 Objects.equals(accepts, that.accepts) &&
                 Objects.equals(capacity, that.capacity);
@@ -250,8 +250,8 @@ public class ReviewerRequest implements Dto {
         result = 31 * result + (institution != null ? institution.hashCode() : 0);
         result = 31 * result + (paycode != null ? paycode.hashCode() : 0);
         result = 31 * result + (address != null ? address.hashCode() : 0);
-        result = 31 * result + (hiatus_begin != null ? hiatus_begin.hashCode() : 0);
-        result = 31 * result + (hiatus_end != null ? hiatus_end.hashCode() : 0);
+        result = 31 * result + (hiatusBegin != null ? hiatusBegin.hashCode() : 0);
+        result = 31 * result + (hiatusEnd != null ? hiatusEnd.hashCode() : 0);
         result = 31 * result + (subjects != null ? subjects.hashCode() : 0);
         result = 31 * result + (accepts != null ? accepts.hashCode() : 0);
         result = 31 * result + (capacity != null ? capacity.hashCode() : 0);
@@ -270,8 +270,8 @@ public class ReviewerRequest implements Dto {
                 ", institution='" + institution + '\'' +
                 ", paycode=" + paycode +
                 ", address=" + address +
-                ", hiatus_begin='" + hiatus_begin + '\'' +
-                ", hiatus_end='" + hiatus_end + '\'' +
+                ", hiatusBegin='" + hiatusBegin + '\'' +
+                ", hiatusEnd='" + hiatusEnd + '\'' +
                 ", subjects=" + subjects +
                 ", accepts=" + accepts +
                 ", capacity=" +capacity +
