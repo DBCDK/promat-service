@@ -32,6 +32,7 @@ import dk.dbc.promat.service.persistence.Reviewer;
 import dk.dbc.promat.service.persistence.Subject;
 import dk.dbc.promat.service.persistence.TaskFieldType;
 import dk.dbc.promat.service.persistence.TaskType;
+import dk.dbc.promat.service.templating.CaseviewXmlTransformer;
 import dk.dbc.promat.service.templating.NotificationFactory;
 import dk.dbc.promat.service.templating.model.AssignReviewer;
 import dk.dbc.promat.service.templating.Renderer;
@@ -311,11 +312,11 @@ public class Cases {
                             .header("Content-Type", "text/html; charset=utf-8")
                             .entity(html).build();
                 case XML:
-                    // Todo: Handle xml output format
-                    String xml = "todo: xml view";
+                    CaseviewXmlTransformer transformer = new CaseviewXmlTransformer();
+                    byte[] transformed = transformer.toXml(faust, cases.get(0));
                     return Response.status(200)
-                            .header("Content-Type", "text/xml; charset=utf-8")
-                            .entity(xml).build();
+                            .header("Content-Type", "text/xml; charset=ISO-8859-1")
+                            .entity(transformed).build();
                 default:
                     return ServiceErrorDto.Failed(String.format("No handling of CaseviewFormat.", format));
             }

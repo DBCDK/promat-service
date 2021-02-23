@@ -1384,4 +1384,22 @@ public class CasesIT extends ContainerTest {
             }
         });
     }
+
+    @Test
+    public void testDbcKatXmlViewFaustNotFoundReturnsNotFound() throws PromatServiceConnectorException {
+        try {
+            promatServiceConnector.getCaseview("98765432123456789", "XML");
+        } catch(PromatServiceConnectorUnexpectedStatusCodeException e) {
+            assertThat("must return 404 NOT FOUND", e.getStatusCode(), is(404));
+        }
+    }
+
+    @Test
+    public void testDbckatXmlViewOfPrimaryFaust() throws IOException, PromatServiceConnectorException {
+
+        // Fetch the xml view for the primary faustnumber
+        String actual = promatServiceConnector.getCaseview("100000", "XML");
+
+        // Todo: complete test
+    }
 }
