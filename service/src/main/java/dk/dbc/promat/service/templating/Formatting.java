@@ -55,9 +55,9 @@ public class Formatting {
             case PENDING_MEETING:
                 return "Klar til gennemsyn";
             case PENDING_EXPORT:
-                return "Klar til eksport";
+                return "Klar til publicering";
             case EXPORTED:
-                return "Eksporteret";
+                return "Publiceret";
             case PENDING_REVERT:
                 return "Afventer tilbagetrækning";
             case REVERTED:
