@@ -28,13 +28,16 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.xml.sax.SAXException;
 
 import javax.ws.rs.core.Response;
+import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
@@ -56,7 +59,6 @@ import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThrows;
-import static org.junit.Assert.fail;
 
 public class CasesIT extends ContainerTest {
     private static final Logger LOGGER = LoggerFactory.getLogger(CasesIT.class);
@@ -1398,8 +1400,69 @@ public class CasesIT extends ContainerTest {
     public void testDbckatXmlViewOfPrimaryFaust() throws IOException, PromatServiceConnectorException {
 
         // Fetch the xml view for the primary faustnumber
-        String actual = promatServiceConnector.getCaseview("100000", "XML");
+        String expected = new String(Files.readAllBytes(Path.of("src/test/resources/__files/case-view-for-id-20-100000.xml")), StandardCharsets.ISO_8859_1);
+        String actual = promatServiceConnector.getCaseview("100000", "XML", StandardCharsets.ISO_8859_1);
 
-        // Todo: complete test
+        // Not checking that the documents are strictly equal comparing xml output, but it does
+        // check that all text elements contains the correct information. Attributes is not
+        // checked, but they are not important (at least not for dbckat)
+        String expectedText = Jsoup.parse(expected, StandardCharsets.ISO_8859_1.name()).normalise().text();
+        String actualText = Jsoup.parse(actual).normalise().text();
+        assertThat("case view is correct", expectedText.equals(actualText));
+    }
+
+    @Test
+    public void testDbckatXmlViewOfRelatedFaust1() throws IOException, PromatServiceConnectorException {
+
+        // Fetch the xml view for the first related faustnumber
+        String expected = new String(Files.readAllBytes(Path.of("src/test/resources/__files/case-view-for-id-20-100001.xml")), StandardCharsets.ISO_8859_1);
+        String actual = promatServiceConnector.getCaseview("100001", "XML", StandardCharsets.ISO_8859_1);
+
+        // Not checking that the documents are strictly equal comparing xml output, but it does
+        // check that all text elements contains the correct information. Attributes is not
+        // checked, but they are not important (at least not for dbckat)
+        String expectedText = Jsoup.parse(expected, StandardCharsets.ISO_8859_1.name()).normalise().text();
+        String actualText = Jsoup.parse(actual).normalise().text();
+        assertThat("case view is correct", expectedText.equals(actualText));
+
+        // Fetch the xml view for the second related faustnumber
+        expected = new String(Files.readAllBytes(Path.of("src/test/resources/__files/case-view-for-id-20-100002.xml")), StandardCharsets.ISO_8859_1);
+        actual = promatServiceConnector.getCaseview("100002", "XML", StandardCharsets.ISO_8859_1);
+
+        // Not checking that the documents are strictly equal comparing xml output, but it does
+        // check that all text elements contains the correct information. Attributes is not
+        // checked, but they are not important (at least not for dbckat)
+        expectedText = Jsoup.parse(expected, StandardCharsets.ISO_8859_1.name()).normalise().text();
+        actualText = Jsoup.parse(actual).normalise().text();
+        assertThat("case view is correct", expectedText.equals(actualText));
+    }
+
+    @Test
+    public void testDbckatXmlViewOfPrimaryFaustWithNullData() throws IOException, PromatServiceConnectorException, ParserConfigurationException, SAXException {
+
+        // Fetch the xml view for the primary faustnumber
+        // Note: it is not normal that field data, or case metadata, is NULL when the case is approved (or beyond)
+        String expected = new String(Files.readAllBytes(Path.of("src/test/resources/__files/case-view-for-id-22-100004.xml")), StandardCharsets.ISO_8859_1);
+        String actual = promatServiceConnector.getCaseview("100004", "XML", StandardCharsets.ISO_8859_1);
+
+        // Not checking that the documents are strictly equal comparing xml output, but it does
+        // check that all text elements contains the correct information. Attributes is not
+        // checked, but they are not important (at least not for dbckat)
+        String expectedText = Jsoup.parse(expected, StandardCharsets.ISO_8859_1.name()).normalise().text();
+        String actualText = Jsoup.parse(actual).normalise().text();
+        assertThat("case view is correct", expectedText.equals(actualText));
+
+        // Move case back to status CREATED(==>ASSIGNED) since it is clearly not done..  Expect no html view available
+        promatServiceConnector.updateCase(22, new CaseRequest().withStatus(CaseStatus.CREATED));
+        assertThrows(PromatServiceConnectorUnexpectedStatusCodeException.class, () -> {
+            try {
+                promatServiceConnector.getCaseview("100004", "XML");
+            } catch (PromatServiceConnectorUnexpectedStatusCodeException e) {
+                assertThat("exception is 404 NOT FOUND", e.getStatusCode(), is(404));
+                throw e;
+            } catch (Exception e) {
+                throw e;
+            }
+        });
     }
 }
