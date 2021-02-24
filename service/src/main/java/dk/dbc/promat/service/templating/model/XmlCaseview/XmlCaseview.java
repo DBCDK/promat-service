@@ -65,7 +65,6 @@ public class XmlCaseview {
         String evaluation = GetTaskDataForFaust(requestedFaust, TaskFieldType.EVALUATION, promatCase.getTasks());
         String comparison = GetTaskDataForFaust(requestedFaust, TaskFieldType.COMPARISON, promatCase.getTasks());
         String recommendation = GetTaskDataForFaust(requestedFaust, TaskFieldType.RECOMMENDATION, promatCase.getTasks());
-        String genre = GetTaskDataForFaust(requestedFaust, TaskFieldType.GENRE, promatCase.getTasks());
         String age = GetTaskDataForFaust(requestedFaust, TaskFieldType.AGE, promatCase.getTasks());
         String matlevel = GetTaskDataForFaust(requestedFaust, TaskFieldType.MATLEVEL, promatCase.getTasks());
         List<String> subjterms = Arrays.asList("term1", "term2", "term3"); // Todo: This comes as a comma separated list.. handle that
@@ -94,7 +93,6 @@ public class XmlCaseview {
                         .withEvaluation(evaluation)
                         .withComparison(comparison)
                         .withRecommendation(recommendation)
-                        .withGenre(genre)
                         .withAge(age)
                         .withMatlevel(matlevel)
                         .withSubjterm(new XmlCaseviewSubjterms(requestedFaust, subjterms)));

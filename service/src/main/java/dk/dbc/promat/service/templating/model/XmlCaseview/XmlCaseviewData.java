@@ -7,7 +7,7 @@ package dk.dbc.promat.service.templating.model.XmlCaseview;
 
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
-@JsonPropertyOrder({"bkmeval", "brief", "description", "evaluation", "comparison", "recommendation", "genre", "age", "matlevel", "subjterm"})
+@JsonPropertyOrder({"bkmeval", "brief", "description", "evaluation", "comparison", "recommendation", "age", "matlevel", "subjterm"})
 
 public class XmlCaseviewData {
 
@@ -22,8 +22,6 @@ public class XmlCaseviewData {
     private String comparison;
 
     private String recommendation;
-
-    private String genre;
 
     private String age;
 
@@ -106,19 +104,6 @@ public class XmlCaseviewData {
 
     public XmlCaseviewData withRecommendation(String recommendation) {
         this.recommendation = recommendation;
-        return this;
-    }
-
-    public String getGenre() {
-        return genre;
-    }
-
-    public void setGenre(String genre) {
-        this.genre = genre;
-    }
-
-    public XmlCaseviewData withGenre(String genre) {
-        this.genre = genre;
         return this;
     }
 

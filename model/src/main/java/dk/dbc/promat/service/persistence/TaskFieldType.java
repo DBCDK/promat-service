@@ -11,12 +11,14 @@ public enum TaskFieldType {
     EVALUATION,
     COMPARISON,
     RECOMMENDATION,
-    BIBLIOGRAPHIC,
+    @Deprecated
+    BIBLIOGRAPHIC, // Todo: Obsolete, remove when no tasks exists in the db with this taskfieldtype
     TOPICS,
     BKM,
     EXPRESS,
     METAKOMPAS,
-    GENRE,
+    @Deprecated
+    GENRE, // Todo: Obsolete, remove when no tasks exists in the db with this taskfieldtype
     AGE,
     MATLEVEL
 }
