@@ -7,6 +7,7 @@ package dk.dbc.promat.service.templating.model.XmlCaseview;
 
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
+import dk.dbc.promat.service.api.ServiceErrorException;
 import dk.dbc.promat.service.persistence.PromatCase;
 import dk.dbc.promat.service.persistence.PromatTask;
 import dk.dbc.promat.service.persistence.TaskFieldType;
@@ -15,6 +16,8 @@ import dk.dbc.promat.service.templating.Formatting;
 import javax.xml.bind.annotation.XmlElement;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 @JsonPropertyOrder({"response", "case"})
 @JacksonXmlRootElement(localName = "promat_xml_collection")
@@ -52,12 +55,36 @@ public class XmlCaseview {
         return this;
     }
 
-    private String GetTaskDataForFaust(String requestedFaust, TaskFieldType fieldType, List<PromatTask> tasks) {
-        // Todo: Return task data - make sure to html encode content so that ampersands etc. is correctly formatted
-        return "data";
+    private String GetTaskDataForFaust(String requestedFaust, TaskFieldType fieldType, List<PromatTask> tasks) throws ServiceErrorException {
+
+        // Get the task that matches faust and fieldtype
+        Optional<PromatTask> task;
+
+        // Try to get a task that has targetfaust = requested faust
+        task = tasks.stream()
+                .filter(t -> t.getTaskFieldType() == fieldType &&
+                        t.getTargetFausts() != null && t.getTargetFausts().contains(requestedFaust))
+                .findFirst();
+
+        // If no task was found, try to find a task without targetFaust (relates to the primary, or faustnumbers
+        // related to the primary faust)
+        if(!task.isPresent()) {
+            task = tasks.stream()
+                    .filter(t -> t.getTaskFieldType() == fieldType &&
+                            (t.getTargetFausts() == null || t.getTargetFausts().size() == 0))
+                    .findFirst();
+        }
+
+        // Return task data, if a task was found
+        if(task.isPresent()) {
+            return task.get().getData();
+        }
+
+        // No data was found. This is not an error - it is totally plausible that fields does not exist
+        return "";
     }
 
-    public XmlCaseview from(String hostname, String requestedFaust, PromatCase promatCase) {
+    public XmlCaseview from(String hostname, String requestedFaust, PromatCase promatCase) throws ServiceErrorException {
 
         String bkmeval = GetTaskDataForFaust(requestedFaust, TaskFieldType.BKM, promatCase.getTasks());
         String brief = GetTaskDataForFaust(requestedFaust, TaskFieldType.BRIEF, promatCase.getTasks());
@@ -67,7 +94,11 @@ public class XmlCaseview {
         String recommendation = GetTaskDataForFaust(requestedFaust, TaskFieldType.RECOMMENDATION, promatCase.getTasks());
         String age = GetTaskDataForFaust(requestedFaust, TaskFieldType.AGE, promatCase.getTasks());
         String matlevel = GetTaskDataForFaust(requestedFaust, TaskFieldType.MATLEVEL, promatCase.getTasks());
-        List<String> subjterms = Arrays.asList("term1", "term2", "term3"); // Todo: This comes as a comma separated list.. handle that
+        List<String> subjterms = Arrays.asList(GetTaskDataForFaust(requestedFaust,TaskFieldType.TOPICS, promatCase.getTasks())
+                .split("[,| ]"))
+                .stream()
+                .filter(t -> !t.isEmpty())
+                .collect(Collectors.toList());
 
         caseviewResponse = new XmlCaseviewResponse()
                 .withServer(hostname)
