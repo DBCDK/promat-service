@@ -136,7 +136,7 @@ public class PromatServiceConnector {
     public String getCaseview(String faust, String format, Charset charset) throws PromatServiceConnectorException {
         final HttpGet httpGet = new HttpGet(failSafeHttpClient)
                 .withBaseUrl(baseUrl)
-                .withPathElements("cases", faust, format);
+                .withPathElements("cases", format, faust);
         final Response response = httpGet.execute();
         assertResponseStatus(response, Response.Status.OK);
         byte[] view = readResponseEntity(response, byte[].class);
