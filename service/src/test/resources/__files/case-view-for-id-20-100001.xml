@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="ISO-8859-1" standalone="yes"?>
+<promat_xml_collection>
+    <response date="2021-02-24T16:56:38.919586">
+        <request_arg type="faustno">100001</request_arg>
+    </response>
+    <case caseid="20">
+        <case_metadata>
+            <deadline>2021-02-09</deadline>
+            <casestate>Publiceret</casestate>
+            <user>Hans Hansen</user>
+            <note>Details for 100000</note>
+        </case_metadata>
+        <bib_metadata>
+            <title>Title for 100000</title>
+            <author>Author for 100000</author>
+            <publisher>Publisher for 100000</publisher>
+            <faust>100001</faust>
+            <weekcode>
+                <code>BKM202104</code>
+            </weekcode>
+        </bib_metadata>
+        <data>
+            <bkmeval>Bogen findes relevant for biblioteker på Christiansø</bkmeval>
+            <brief>BRIEF TEXT FOR 100001 æøå</brief>
+            <description>DESCRIPTION TEXT</description>
+            <evaluation>EVALUATION TEXT</evaluation>
+            <comparison>TEXT BEFORE &lt;t>48611435 Jeg tæller mine skridt&lt;/t> TEXT BETWEEN &lt;t>48611435 Hest horse Pferd cheval love&lt;/t> TEXT AFTER</comparison>
+            <recommendation>RECOMMENDATION TEXT</recommendation>
+            <age>AGE TEXT</age>
+            <matlevel>MATLEVEL TEXT</matlevel>
+            <subjterm faust="100001">
+                <term>TOPIC_1</term>
+                <term>TOPIC_2</term>
+                <term>TOPIC_4</term>
+            </subjterm>
+        </data>
+    </case>
+</promat_xml_collection>

@@ -32,8 +32,10 @@ import dk.dbc.promat.service.persistence.Reviewer;
 import dk.dbc.promat.service.persistence.Subject;
 import dk.dbc.promat.service.persistence.TaskFieldType;
 import dk.dbc.promat.service.persistence.TaskType;
+import dk.dbc.promat.service.templating.CaseviewXmlTransformer;
 import dk.dbc.promat.service.templating.NotificationFactory;
 import dk.dbc.promat.service.templating.model.AssignReviewer;
+import dk.dbc.promat.service.templating.Renderer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -60,9 +62,12 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.StreamingOutput;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -250,6 +255,71 @@ public class Cases {
                     .header("Content-Disposition", String.format("attachment; filename=\"%s\"",
                             fulltextHandler.getFilename()))
                     .entity(streamingFulltext).build();
+        } catch(Exception exception) {
+            LOGGER.error("Caught exception: {}", exception.getMessage());
+            return ServiceErrorDto.Failed(exception.getMessage());
+        }
+    }
+
+
+
+    @GET
+    @Path("cases/{format}/{faust}")
+    @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_HTML, MediaType.TEXT_HTML})
+    public Response getView(@PathParam("format") @DefaultValue("HTML") final ClassviewFormat format, @PathParam("faust") final String faust) {
+        LOGGER.info("cases/{}/{}", faust, format);
+
+        try {
+            TypedQuery query = entityManager.createNamedQuery(PromatCase.GET_CASE_BY_FAUST_NAME, PromatCase.class);
+            query.setParameter("faust", faust);
+            List<PromatCase> cases = query.getResultList();
+            if (cases == null || cases.size() == 0) {
+                LOGGER.info("No case with faust {}", faust);
+                return ServiceErrorDto.NotFound("No case with this primary- or relatedfaust or no case in required states",
+                        String.format("No case with primary- or relatedfaust %s or in required states exists", faust));
+            }
+            if (cases.size() > 1) {
+                LOGGER.error("Too many cases with faust {} ({} cases)", faust, cases.size());
+                return ServiceErrorDto.Failed(String.format("Too many cases with primary- or relatedfaust %s exists", faust));
+            }
+            if (cases.get(0).getTasks() == null || cases.get(0).getTasks().size() == 0) {
+                LOGGER.error("Case with faust {} has no tasks", faust);
+                return ServiceErrorDto.NotFound("Case has no tasks",
+                        String.format("Case with primary- or relatedfaust %s has no tasks", faust));
+            }
+
+            // Case must have a status that ensures that there is valid data
+            if (!Arrays.asList(CaseStatus.PENDING_EXTERNAL, CaseStatus.APPROVED, CaseStatus.PENDING_MEETING,
+                    CaseStatus.PENDING_EXPORT, CaseStatus.EXPORTED).contains(cases.get(0).getStatus())) {
+                return ServiceErrorDto.NotFound("Not found or not in valid state",
+                        String.format("No case with faust %s or a status that guarantees valid data is found", faust));
+            }
+
+            var relatedFausts = new ArrayList<>(cases.get(0).getRelatedFausts());
+            relatedFausts.add(cases.get(0).getPrimaryFaust());
+            relatedFausts.remove(faust);
+
+            Renderer renderer = new Renderer();
+            Map<String, Object> models = new HashMap<>();
+            models.put("promatCase", cases.get(0));
+            models.put("requestedFaustnumber", faust);
+            models.put("relatedFaustnumbers", relatedFausts);
+
+            switch(format) {
+                case HTML:
+                    String html = renderer.render("promatcase_view_html.jte", models);
+                    return Response.status(200)
+                            .header("Content-Type", "text/html; charset=utf-8")
+                            .entity(html).build();
+                case XML:
+                    CaseviewXmlTransformer transformer = new CaseviewXmlTransformer();
+                    byte[] transformed = transformer.toXml(faust, cases.get(0));
+                    return Response.status(200)
+                            .header("Content-Type", "text/xml; charset=ISO-8859-1")
+                            .entity(transformed).build();
+                default:
+                    return ServiceErrorDto.Failed(String.format("No handling of CaseviewFormat.", format));
+            }
         } catch(Exception exception) {
             LOGGER.error("Caught exception: {}", exception.getMessage());
             return ServiceErrorDto.Failed(exception.getMessage());

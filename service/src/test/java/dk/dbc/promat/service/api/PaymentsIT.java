@@ -52,8 +52,9 @@ public class PaymentsIT  extends ContainerTest {
         Response response = getResponse("v1/api/payments/history");
         assertThat("status code", response.getStatus(), is(200));
 
+        // Note: Case #20 is defined in promatcases.sql to test html caseview
         List<String> history = response.readEntity(List.class);
-        assertThat("number of history lines is", history.size(), is(2));
+        assertThat("number of history lines is", history.size(), is(3));
     }
 
     // This test needs to run as the second test since it modifies the preloaded
@@ -138,15 +139,16 @@ public class PaymentsIT  extends ContainerTest {
         Response response = getResponse("v1/api/payments/history");
         assertThat("status code", response.getStatus(), is(200));
 
+        // Note: Case #20 is defined in promatcases.sql to test html caseview
         List<String> history = response.readEntity(List.class);
-        assertThat("number of history lines is", history.size(), is(3));
+        assertThat("number of history lines is", history.size(), is(4));
 
         // Make sure we have two old payments, in the expected order (oldest->newest)
         assertThat("first old payment", history.get(0).equals("20201210_000000000"));
         assertThat("second old payment", history.get(1).equals("20201221_121314567"));
 
         // Get stamp of the latest payment and check that it originated at a time close to now
-        String stamp = history.get(2);
+        String stamp = history.get(3);
         LocalDateTime latest = LocalDateTime.parse(stamp, DateTimeFormatter.ofPattern(Payments.TIMESTAMP_FORMAT));
         assertThat("is newest payment", latest.plusMinutes(1l), is(greaterThanOrEqualTo(LocalDateTime.now())));
 

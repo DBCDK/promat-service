@@ -12,6 +12,8 @@ import gg.jte.TemplateOutput;
 import gg.jte.output.StringOutput;
 import gg.jte.resolve.DirectoryCodeResolver;
 import java.nio.file.Path;
+import java.util.Map;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,4 +33,9 @@ public class Renderer {
         return output.toString();
     }
 
+    public String render(String template, Map<String, Object> models) {
+        TemplateOutput output = new StringOutput();
+        templateEngine.render(template, models, output);
+        return output.toString();
+    }
 }

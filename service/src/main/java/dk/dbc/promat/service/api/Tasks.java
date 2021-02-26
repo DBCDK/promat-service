@@ -139,7 +139,7 @@ public class Tasks {
 
     private PromatCase getCaseOfTask(int taskId) throws ServiceErrorException {
         final TypedQuery<PromatCase> query = entityManager.createNamedQuery(
-                PromatCase.GET_CASE_NAME, PromatCase.class);
+                PromatCase.GET_CASE_WITH_TASK_ID_NAME, PromatCase.class);
         query.setParameter("taskid", taskId);
 
         PromatCase caseOfTask = query.getResultList().stream().findFirst().orElse(null);
