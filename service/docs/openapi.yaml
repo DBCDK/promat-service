@@ -1729,9 +1729,10 @@ components:
         - 'EVALUATION'
         - 'COMPARISON'
         - 'RECOMMENDATION'
-        - 'BIBLIOGRAPHIC'
         - 'TOPICS'
         - 'BKM'
+        - 'AGE'
+        - 'MATLEVEL'
       description: |
         Enum describing the type of task field
         * NONE = No task field type (For fields without data: METAKOMPAS, BUGGI)
@@ -1740,9 +1741,10 @@ components:
         * EVALUATION = Evaluation of the material
         * COMPARISON = Other works that is comparable to the material
         * RECOMMENDATION = The reviewers conclusion on the material
-        * BIBLIOGRAPHIC = Bibliographic note for the movie/multimedia material
         * TOPICS = Suggested topics (semicolon separated) for the material
         * BKM = BKM assessment
+        * AGE = Age assessment
+        * MATLEVEL = Targetgroup / level
 
     ReviewerAccepts:
       type: string
