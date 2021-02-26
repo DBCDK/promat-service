@@ -11,11 +11,13 @@ import dk.dbc.promat.service.IntegrationTest;
 import dk.dbc.promat.service.cluster.ServerRole;
 import dk.dbc.promat.service.persistence.Notification;
 import dk.dbc.promat.service.persistence.NotificationStatus;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Properties;
 import javax.mail.Message;
 import javax.mail.MessagingException;
 import javax.mail.Session;
+import javax.mail.internet.AddressException;
 import javax.persistence.TypedQuery;
 import org.eclipse.microprofile.metrics.ConcurrentGauge;
 import org.eclipse.microprofile.metrics.Counter;
@@ -74,13 +76,15 @@ public class ScheduledNotificationSenderIT extends IntegrationTest {
         assertThat("Test2 recieved no mail", inbox2.size(), is(0));
         List<Message> inbox3 = Mailbox.get("test3@test.dk");
         assertThat("Test3 recieved a mail", inbox3.size(), is(1));
+        List<Message> inbox4 = Mailbox.get("test4@test.dk");
+        assertThat("Test4 recieved a mail", inbox4.size(), is(1));
 
         TypedQuery<Notification> query = entityManager.createQuery(
                 "SELECT notification FROM Notification notification " +
                         "WHERE notification.toAddress IN :addresses AND notification.status = :status", Notification.class);
-        query.setParameter("addresses", List.of("test1@test.dk", "test2@test.dk", "test3@test.dk"));
+        query.setParameter("addresses", List.of("test1@test.dk", "test2@test.dk", "test3@test.dk", "test4@test.dk"));
         query.setParameter("status", NotificationStatus.DONE);
-        assertThat("All notifications in db are now DONE", query.getResultList().size(), is(3));
+        assertThat("All notifications in db are now DONE", query.getResultList().size(), is(4));
     }
 
 }

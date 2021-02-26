@@ -64,8 +64,8 @@ public class ReviewerWithWorkloads extends Reviewer {
                 ", address=" + address +
                 ", institution='" + institution + '\'' +
                 ", paycode=" + paycode +
-                ", hiatus_begin=" + hiatus_begin +
-                ", hiatus_end=" + hiatus_end +
+                ", hiatusBegin=" + hiatusBegin +
+                ", hiatusEnd=" + hiatusEnd +
                 ", subjects=" + subjects +
                 ", accepts=" + accepts +
                 ", note=" + note +

@@ -39,7 +39,7 @@ public class ScheduledNotificationSender {
     public void processNotifications() {
         try {
             if(serverRole == ServerRole.PRIMARY) {
-                prepareErrorsForRetry();
+                notificationSender.resetMailFailuresGauge();
                 Notification notification = pop();
                 while(notification != null) {
                     LOGGER.info("Notifying: '{}' on subject '{}'", notification.getToAddress(), notification.getSubject());
@@ -48,26 +48,16 @@ public class ScheduledNotificationSender {
                 }
             }
         } catch (Exception e) {
-            LOGGER.error("Caught exception in scheduled job 'processNotifications()': {}", e.getMessage());
+            LOGGER.error("Caught exception in scheduled job 'processNotifications()'",e);
         }
     }
 
     private Notification pop() {
         TypedQuery<Notification> query = entityManager
                 .createQuery(Notification.SELECT_FROM_NOTIFCATION_QUEUE_QUERY, Notification.class);
-        query.setParameter("status", NotificationStatus.PENDING);
+        query.setParameter("status", List.of(NotificationStatus.PENDING, NotificationStatus.ERROR));
         query.setMaxResults(1);
         List<Notification> notifications = query.getResultList();
         return (notifications.isEmpty()) ? null : notifications.get(0);
-    }
-
-    private void prepareErrorsForRetry() {
-        TypedQuery<Notification> query = entityManager
-                .createQuery(Notification.SELECT_FROM_NOTIFCATION_QUEUE_QUERY, Notification.class);
-        query.setParameter("status", NotificationStatus.ERROR);
-        for (Notification notification : query.getResultList()) {
-            notification.setStatus(NotificationStatus.PENDING);
-        }
-        notificationSender.resetMailFailuresGauge();
     }
 }

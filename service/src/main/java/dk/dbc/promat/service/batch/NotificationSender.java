@@ -68,12 +68,10 @@ public class NotificationSender {
                     )
                     .build().send();
             notification.setStatus(NotificationStatus.DONE);
-            entityManager.merge(notification);
             metricRegistry.counter(mailCounterMetadata).inc();
         } catch (MessagingException e) {
             LOGGER.error("Unable to send mail. Notification:{}",notification.toString());
             notification.setStatus(NotificationStatus.ERROR);
-            entityManager.merge(notification);
             metricRegistry.concurrentGauge(mailFailureGaugeMetadata).inc();
         }
     }

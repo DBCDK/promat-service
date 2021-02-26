@@ -30,7 +30,7 @@ public class Notification {
     public static final String SELECT_FROM_NOTIFCATION_QUEUE_NAME = "select.from.notification.queue";
     public static final String SELECT_FROM_NOTIFCATION_QUEUE_QUERY =
             "SELECT notification FROM  Notification notification " +
-                    "WHERE notification.status = :status " +
+                    "WHERE notification.status IN :status " +
                     " ORDER BY notification.id asc ";
 
     @Id

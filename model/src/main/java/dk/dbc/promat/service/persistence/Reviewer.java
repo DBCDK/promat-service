@@ -5,9 +5,11 @@
 
 package dk.dbc.promat.service.persistence;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonView;
 import dk.dbc.promat.service.dto.ReviewerWithWorkloads;
 
+import javax.persistence.Column;
 import javax.persistence.ColumnResult;
 import javax.persistence.Convert;
 import javax.persistence.DiscriminatorValue;
@@ -84,10 +86,14 @@ public class Reviewer extends PromatUser {
     protected Integer paycode;
 
     @JsonView({CaseView.Case.class})
-    protected LocalDate hiatus_begin;
+    @JsonProperty("hiatus_begin")
+    @Column(name = "hiatus_begin")
+    protected LocalDate hiatusBegin;
 
     @JsonView({CaseView.Case.class})
-    protected LocalDate hiatus_end;
+    @JsonProperty("hiatus_end")
+    @Column(name = "hiatus_end")
+    protected LocalDate hiatusEnd;
     protected String note;
     protected Integer capacity;
 
@@ -128,20 +134,20 @@ public class Reviewer extends PromatUser {
         this.paycode = paycode;
     }
 
-    public LocalDate getHiatus_begin() {
-        return hiatus_begin;
+    public LocalDate getHiatusBegin() {
+        return hiatusBegin;
     }
 
-    public void setHiatus_begin(LocalDate hiatus_begin) {
-        this.hiatus_begin = hiatus_begin;
+    public void setHiatusBegin(LocalDate hiatus_begin) {
+        this.hiatusBegin = hiatus_begin;
     }
 
-    public LocalDate getHiatus_end() {
-        return hiatus_end;
+    public LocalDate getHiatusEnd() {
+        return hiatusEnd;
     }
 
-    public void setHiatus_end(LocalDate hiatus_end) {
-        this.hiatus_end = hiatus_end;
+    public void setHiatusEnd(LocalDate hiatus_end) {
+        this.hiatusEnd = hiatus_end;
     }
 
     public Collection<Subject> getSubjects() {
@@ -215,12 +221,12 @@ public class Reviewer extends PromatUser {
     }
 
     public Reviewer withHiatus_begin(LocalDate hiatus_begin) {
-        this.hiatus_begin = hiatus_begin;
+        this.hiatusBegin = hiatus_begin;
         return this;
     }
 
     public Reviewer withHiatus_end(LocalDate hiatus_end) {
-        this.hiatus_end = hiatus_end;
+        this.hiatusEnd = hiatus_end;
         return this;
     }
 
@@ -288,10 +294,10 @@ public class Reviewer extends PromatUser {
         if (paycode != null ? !paycode.equals(reviewer.paycode) : reviewer.paycode != null) {
             return false;
         }
-        if (hiatus_begin != null ? !hiatus_begin.equals(reviewer.hiatus_begin) : reviewer.hiatus_begin != null) {
+        if (hiatusBegin != null ? !hiatusBegin.equals(reviewer.hiatusBegin) : reviewer.hiatusBegin != null) {
             return false;
         }
-        if (hiatus_end != null ? !hiatus_end.equals(reviewer.hiatus_end) : reviewer.hiatus_end != null) {
+        if (hiatusEnd != null ? !hiatusEnd.equals(reviewer.hiatusEnd) : reviewer.hiatusEnd != null) {
             return false;
         }
         if (note != null ? !note.equals(reviewer.note) : reviewer.note != null) {
@@ -318,8 +324,8 @@ public class Reviewer extends PromatUser {
         result = 31 * result + address.hashCode();
         result = 31 * result + institution.hashCode();
         result = 31 * result + paycode.hashCode();
-        result = 31 * result + (hiatus_begin != null ? hiatus_begin.hashCode() : 0);
-        result = 31 * result + (hiatus_end != null ? hiatus_end.hashCode() : 0);
+        result = 31 * result + (hiatusBegin != null ? hiatusBegin.hashCode() : 0);
+        result = 31 * result + (hiatusEnd != null ? hiatusEnd.hashCode() : 0);
         result = 31 * result + (note != null ? note.hashCode() : 0);
         result = 31 * result + (capacity != null ? capacity.hashCode() : 0);
         result = 31 * result + (subjects != null ? subjects.hashCode() : 0);
@@ -340,8 +346,8 @@ public class Reviewer extends PromatUser {
                 ", address=" + address +
                 ", institution='" + institution + '\'' +
                 ", paycode=" + paycode +
-                ", hiatus_begin=" + hiatus_begin +
-                ", hiatus_end=" + hiatus_end +
+                ", hiatus_begin=" + hiatusBegin +
+                ", hiatus_end=" + hiatusEnd +
                 ", subjects=" + subjects +
                 ", accepts=" + accepts +
                 ", note='" + note + '\'' +
@@ -361,8 +367,8 @@ public class Reviewer extends PromatUser {
         reviewerWithWorkloads.setInstitution(institution);
         reviewerWithWorkloads.setPaycode(paycode);
         reviewerWithWorkloads.setSubjects(subjects);
-        reviewerWithWorkloads.setHiatus_begin(hiatus_begin);
-        reviewerWithWorkloads.setHiatus_end(hiatus_end);
+        reviewerWithWorkloads.setHiatusBegin(hiatusBegin);
+        reviewerWithWorkloads.setHiatusEnd(hiatusEnd);
         reviewerWithWorkloads.setAccepts(accepts);
         reviewerWithWorkloads.setNote(note);
         reviewerWithWorkloads.setCapacity(capacity);
