@@ -24,6 +24,7 @@ docker run --rm --name promat-service -d \
     -e MAIL_FROM=${MAIL_FROM} \
     -e PROMAT_AGENCY_ID=${PROMAT_AGENCY_ID} \
     -e OPENFORMAT_SERVICE_URL=${OPENFORMAT_SERVICE_URL} \
+    -e LU_MAILADDRESS=${LU_MAILADDRESS} \
     -p ${promat_service_port}:8080 \
     $@ \
     docker-io.dbc.dk/promat-service:devel
