@@ -134,6 +134,10 @@
       <artifactId>openformat-connector</artifactId>
       <version>1.2-SNAPSHOT</version>
     </dependency>
+    <dependency>
+      <groupId>com.fasterxml.jackson.dataformat</groupId>
+      <artifactId>jackson-dataformat-xml</artifactId>
+    </dependency>
   </dependencies>
 
   <build>

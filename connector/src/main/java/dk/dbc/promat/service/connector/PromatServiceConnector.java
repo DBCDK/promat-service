@@ -18,6 +18,8 @@ import net.jodah.failsafe.RetryPolicy;
 
 import javax.ws.rs.client.Client;
 import javax.ws.rs.core.Response;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Map;
 
@@ -113,17 +115,32 @@ public class PromatServiceConnector {
 
     /**
      * Gets an existing case as a html view, suitable for embedded display in DBCKat a.o.
+     * Document is expected to be in UTF-8
      * @param faust Faust number
-     * @return case
+     * @param format Document format (HTML|XML)
+     * @return caseview
      * @throws PromatServiceConnectorException on unexpected failure for get operation
      */
-    public String getCaseViewHtml(String faust) throws PromatServiceConnectorException {
+    public String getCaseview(String faust, String format) throws PromatServiceConnectorException {
+        return getCaseview(faust, format, StandardCharsets.UTF_8);
+    }
+
+    /**
+     * Gets an existing case as a html view, suitable for embedded display in DBCKat a.o.
+     * @param faust Faust number
+     * @param format Document format (HTML|XML)
+     * @param charset Document charset
+     * @return caseview
+     * @throws PromatServiceConnectorException on unexpected failure for get operation
+     */
+    public String getCaseview(String faust, String format, Charset charset) throws PromatServiceConnectorException {
         final HttpGet httpGet = new HttpGet(failSafeHttpClient)
                 .withBaseUrl(baseUrl)
-                .withPathElements("cases", faust, "html");
+                .withPathElements("cases", format, faust);
         final Response response = httpGet.execute();
         assertResponseStatus(response, Response.Status.OK);
-        return readResponseEntity(response, String.class);
+        byte[] view = readResponseEntity(response, byte[].class);
+        return new String(view, charset);
     }
 
     private void assertResponseStatus(Response response, Response.Status... expectedStatus)

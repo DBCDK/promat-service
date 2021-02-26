@@ -20,7 +20,8 @@ values (1, 'Title for 001111', 'Details for 001111', '001111', '["002222","00333
        (18, 'Title for 019997', 'Details for 019997', '019997', '[]', 1, 10, '2021-01-27', '2021-02-27', '2021-01-27', 'PENDING_EXPORT', 'BOOK', null, null, 13, '', ''),
        (19, 'Title for 019998', 'Details for 019998', '019998', '[]', 1, 10, '2021-01-27', '2021-02-27', '2021-01-27', 'EXPORTED', 'BOOK', null, null, 13, '', ''),
        (20, 'Title for 100000', 'Details for 100000', '100000', '["100001", "100002"]', 1, 10,   '2021-01-09', '2021-02-09', '2021-01-10', 'EXPORTED', 'BOOK', 'BKM202104', '202104', 13, 'Author for 100000', 'Publisher for 100000'),
-       (21, 'Title for 100003', 'Details for 100003', '100003', '[]',                   1, NULL, '2021-01-09', '2021-02-09', '2021-01-10', 'EXPORTED', 'BOOK', NULL,        '202104', 13, NULL,                 NULL);
+       (21, 'Title for 100003', 'Details for 100003', '100003', '[]',                   1, NULL, '2021-01-09', '2021-02-09', '2021-01-10', 'EXPORTED', 'BOOK', NULL,        '202104', 13, NULL,                 NULL),
+       (22, 'Title for 100004', 'Details for 100004', '100004', '[]',                   1, NULL, '2021-01-09', '2021-02-09', '2021-01-10', 'EXPORTED', 'BOOK', NULL,        '202104', 13, NULL,                 NULL);
 
 insert into promattask(id, tasktype, taskfieldtype, created, paycategory, approved, payed, data, targetFausts)
 values  (1,  'GROUP_1_LESS_THAN_100_PAGES', 'DESCRIPTION',    '202-12-10', 'GROUP_1_LESS_THAN_100_PAGES', '2020-12-10',  NULL,         NULL,                        NULL),
@@ -37,9 +38,9 @@ values  (1,  'GROUP_1_LESS_THAN_100_PAGES', 'DESCRIPTION',    '202-12-10', 'GROU
         (12, 'GROUP_1_LESS_THAN_100_PAGES', 'METAKOMPAS',     '2021-01-27', 'METAKOMPAS',                  '2021-01-27', NULL,         'here is unused data',       NULL),
         (13, 'GROUP_1_LESS_THAN_100_PAGES', 'DESCRIPTION',    '2021-01-27', 'GROUP_1_LESS_THAN_100_PAGES', NULL,         NULL,         'here is some data',         NULL),
         (14, 'GROUP_1_LESS_THAN_100_PAGES', 'BRIEF',          '2021-01-27', 'BRIEF',                       NULL,         NULL,         'here is also some data',    NULL),
-        (15, 'GROUP_1_LESS_THAN_100_PAGES', 'BRIEF',          '2021-01-27', 'BRIEF',                       '2021-02-08', '2021-02-09', 'BRIEF TEXT FOR 100000',     NULL),
-        (16, 'GROUP_1_LESS_THAN_100_PAGES', 'BRIEF',          '2021-01-27', 'BRIEF',                       '2021-02-08', '2021-02-09', 'BRIEF TEXT FOR 100001',     '["100001"]'),
-        (17, 'GROUP_1_LESS_THAN_100_PAGES', 'BRIEF',          '2021-01-27', 'BRIEF',                       '2021-02-08', '2021-02-09', 'BRIEF TEXT FOR 100002',     '["100002"]'),
+        (15, 'GROUP_1_LESS_THAN_100_PAGES', 'BRIEF',          '2021-01-27', 'BRIEF',                       '2021-02-08', '2021-02-09', 'BRIEF TEXT FOR 100000 ÆØÅ', NULL),
+        (16, 'GROUP_1_LESS_THAN_100_PAGES', 'BRIEF',          '2021-01-27', 'BRIEF',                       '2021-02-08', '2021-02-09', 'BRIEF TEXT FOR 100001 æøå', '["100001"]'),
+        (17, 'GROUP_1_LESS_THAN_100_PAGES', 'BRIEF',          '2021-01-27', 'BRIEF',                       '2021-02-08', '2021-02-09', 'BRIEF TEXT FOR 100002 éö^', '["100002"]'),
         (18, 'GROUP_1_LESS_THAN_100_PAGES', 'BKM',            '2021-01-27', 'BKM',                         '2021-02-08', '2021-02-09', 'Bogen findes relevant for biblioteker på Christiansø', NULL),
         (19, 'GROUP_1_LESS_THAN_100_PAGES', 'DESCRIPTION',    '2021-01-27', 'GROUP_1_LESS_THAN_100_PAGES', '2021-02-08', '2021-02-09', 'DESCRIPTION TEXT',          NULL),
         (20, 'GROUP_1_LESS_THAN_100_PAGES', 'EVALUATION',     '2021-01-27', 'GROUP_1_LESS_THAN_100_PAGES', '2021-02-08', '2021-02-09', 'EVALUATION TEXT',           NULL),
@@ -48,14 +49,18 @@ values  (1,  'GROUP_1_LESS_THAN_100_PAGES', 'DESCRIPTION',    '202-12-10', 'GROU
         (23, 'GROUP_1_LESS_THAN_100_PAGES', 'TOPICS',         '2021-01-27', 'GROUP_1_LESS_THAN_100_PAGES', '2021-02-08', '2021-02-09', 'TOPIC_1, TOPIC_2, TOPIC_3', '["100000"]'),
         (24, 'GROUP_1_LESS_THAN_100_PAGES', 'TOPICS',         '2021-01-27', 'GROUP_1_LESS_THAN_100_PAGES', '2021-02-08', '2021-02-09', 'TOPIC_1, TOPIC_2, TOPIC_4', '["100001"]'),
         (25, 'GROUP_1_LESS_THAN_100_PAGES', 'TOPICS',         '2021-01-27', 'GROUP_1_LESS_THAN_100_PAGES', '2021-02-08', '2021-02-09', 'TOPIC_2, TOPIC_3, TOPIC_5', '["100002"]'),
-        (26, 'GROUP_1_LESS_THAN_100_PAGES', 'GENRE',          '2021-01-27', 'GROUP_1_LESS_THAN_100_PAGES', '2021-02-08', '2021-02-09', 'GENRE TEXT',                NULL),
-        (27, 'GROUP_1_LESS_THAN_100_PAGES', 'AGE',            '2021-01-27', 'GROUP_1_LESS_THAN_100_PAGES', '2021-02-08', '2021-02-09', 'AGE TEXT',                  NULL),
-        (28, 'GROUP_1_LESS_THAN_100_PAGES', 'MATLEVEL',       '2021-01-27', 'GROUP_1_LESS_THAN_100_PAGES', '2021-02-08', '2021-02-09', 'MATLEVEL TEXT',             NULL),
-        (29, 'GROUP_1_LESS_THAN_100_PAGES', 'BRIEF',          '2021-01-27', 'BRIEF',                       '2021-02-08', '2021-02-09', null,                        NULL),
-        (30, 'GROUP_1_LESS_THAN_100_PAGES', 'COMPARISON',     '2021-01-27', 'GROUP_1_LESS_THAN_100_PAGES', '2021-02-08', '2021-02-09', null,                        NULL),
-        (31, 'GROUP_1_LESS_THAN_100_PAGES', 'DESCRIPTION',    '2021-01-27', 'GROUP_1_LESS_THAN_100_PAGES', '2021-02-08', '2021-02-09', null,                        NULL),
-        (32, 'GROUP_1_LESS_THAN_100_PAGES', 'RECOMMENDATION', '2021-01-27', 'GROUP_1_LESS_THAN_100_PAGES', '2021-02-08', '2021-02-09', NULL,                        NULL),
-        (33, 'GROUP_1_LESS_THAN_100_PAGES', 'EVALUATION',     '2021-01-27', 'GROUP_1_LESS_THAN_100_PAGES', '2021-02-08', '2021-02-09', NULL,                        NULL);
+        (26, 'GROUP_1_LESS_THAN_100_PAGES', 'AGE',            '2021-01-27', 'GROUP_1_LESS_THAN_100_PAGES', '2021-02-08', '2021-02-09', 'AGE TEXT',                  NULL),
+        (27, 'GROUP_1_LESS_THAN_100_PAGES', 'MATLEVEL',       '2021-01-27', 'GROUP_1_LESS_THAN_100_PAGES', '2021-02-08', '2021-02-09', 'MATLEVEL TEXT',             NULL),
+        (28, 'GROUP_1_LESS_THAN_100_PAGES', 'BRIEF',          '2021-01-27', 'BRIEF',                       '2021-02-08', '2021-02-09', null,                        NULL),
+        (29, 'GROUP_1_LESS_THAN_100_PAGES', 'COMPARISON',     '2021-01-27', 'GROUP_1_LESS_THAN_100_PAGES', '2021-02-08', '2021-02-09', null,                        NULL),
+        (30, 'GROUP_1_LESS_THAN_100_PAGES', 'DESCRIPTION',    '2021-01-27', 'GROUP_1_LESS_THAN_100_PAGES', '2021-02-08', '2021-02-09', null,                        NULL),
+        (31, 'GROUP_1_LESS_THAN_100_PAGES', 'RECOMMENDATION', '2021-01-27', 'GROUP_1_LESS_THAN_100_PAGES', '2021-02-08', '2021-02-09', NULL,                        NULL),
+        (32, 'GROUP_1_LESS_THAN_100_PAGES', 'EVALUATION',     '2021-01-27', 'GROUP_1_LESS_THAN_100_PAGES', '2021-02-08', '2021-02-09', NULL,                        NULL),
+        (33, 'GROUP_1_LESS_THAN_100_PAGES', 'BRIEF',          '2021-01-27', 'BRIEF',                       '2021-02-08', '2021-02-09', null,                        NULL),
+        (34, 'GROUP_1_LESS_THAN_100_PAGES', 'COMPARISON',     '2021-01-27', 'GROUP_1_LESS_THAN_100_PAGES', '2021-02-08', '2021-02-09', null,                        NULL),
+        (35, 'GROUP_1_LESS_THAN_100_PAGES', 'DESCRIPTION',    '2021-01-27', 'GROUP_1_LESS_THAN_100_PAGES', '2021-02-08', '2021-02-09', null,                        NULL),
+        (36, 'GROUP_1_LESS_THAN_100_PAGES', 'RECOMMENDATION', '2021-01-27', 'GROUP_1_LESS_THAN_100_PAGES', '2021-02-08', '2021-02-09', NULL,                        NULL),
+        (37, 'GROUP_1_LESS_THAN_100_PAGES', 'EVALUATION',     '2021-01-27', 'GROUP_1_LESS_THAN_100_PAGES', '2021-02-08', '2021-02-09', NULL,                        NULL);
 
 insert into casetasks(case_id, task_id)
 values (1, 1),
@@ -85,9 +90,13 @@ values (1, 1),
        (20, 25),
        (20, 26),
        (20, 27),
-       (20, 28),
+       (21, 28),
        (21, 29),
        (21, 30),
        (21, 31),
        (21, 32),
-       (21, 33);
+       (22, 33),
+       (22, 34),
+       (22, 35),
+       (22, 36),
+       (22, 37);

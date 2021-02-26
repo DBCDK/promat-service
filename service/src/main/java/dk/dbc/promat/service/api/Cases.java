@@ -32,6 +32,7 @@ import dk.dbc.promat.service.persistence.Reviewer;
 import dk.dbc.promat.service.persistence.Subject;
 import dk.dbc.promat.service.persistence.TaskFieldType;
 import dk.dbc.promat.service.persistence.TaskType;
+import dk.dbc.promat.service.templating.CaseviewXmlTransformer;
 import dk.dbc.promat.service.templating.NotificationFactory;
 import dk.dbc.promat.service.templating.model.AssignReviewer;
 import dk.dbc.promat.service.templating.Renderer;
@@ -260,11 +261,13 @@ public class Cases {
         }
     }
 
+
+
     @GET
-    @Path("cases/{faust}/html")
-    @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_HTML})
-    public Response getHtmlview(@PathParam("faust") final String faust) {
-        LOGGER.info("cases/{}/html", faust);
+    @Path("cases/{format}/{faust}")
+    @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_HTML, MediaType.TEXT_HTML})
+    public Response getView(@PathParam("format") @DefaultValue("HTML") final ClassviewFormat format, @PathParam("faust") final String faust) {
+        LOGGER.info("cases/{}/{}", faust, format);
 
         try {
             TypedQuery query = entityManager.createNamedQuery(PromatCase.GET_CASE_BY_FAUST_NAME, PromatCase.class);
@@ -301,11 +304,22 @@ public class Cases {
             models.put("promatCase", cases.get(0));
             models.put("requestedFaustnumber", faust);
             models.put("relatedFaustnumbers", relatedFausts);
-            String html = renderer.render("promatcase_view_html.jte", models);
 
-            return Response.status(200)
-                    .header("Content-Type", "text/html; charset=utf-8")
-                    .entity(html).build();
+            switch(format) {
+                case HTML:
+                    String html = renderer.render("promatcase_view_html.jte", models);
+                    return Response.status(200)
+                            .header("Content-Type", "text/html; charset=utf-8")
+                            .entity(html).build();
+                case XML:
+                    CaseviewXmlTransformer transformer = new CaseviewXmlTransformer();
+                    byte[] transformed = transformer.toXml(faust, cases.get(0));
+                    return Response.status(200)
+                            .header("Content-Type", "text/xml; charset=ISO-8859-1")
+                            .entity(transformed).build();
+                default:
+                    return ServiceErrorDto.Failed(String.format("No handling of CaseviewFormat.", format));
+            }
         } catch(Exception exception) {
             LOGGER.error("Caught exception: {}", exception.getMessage());
             return ServiceErrorDto.Failed(exception.getMessage());

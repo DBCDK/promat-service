@@ -121,15 +121,6 @@
                 </div>
             @endfor
 
-            <!-- TaskFieldType = GENRE -->
-            <div class="field">
-                <div class="type">Genre- og formbetegnelser (anvendes til skønlitteratur for børn og voksne):</div>
-                <div>
-                    !{var genre = promatCase.getTasks().stream().filter(t -> t.getTaskFieldType() == TaskFieldType.GENRE).findFirst(); }
-                    ${genre.isPresent() && genre.get().getData() != null ? genre.get().getData() : ""}
-                </div>
-            </div>
-
             <!-- TaskFieldType = AGE -->
             <div class="field">
                 <div class="type">Alder (anvendes til fag- og skønlitteratur for børn):</div>

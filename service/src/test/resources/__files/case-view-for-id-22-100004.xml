@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="ISO-8859-1" standalone="yes"?>
+<promat_xml_collection>
+  <response date="2021-02-24T16:56:39.051246">
+    <request_arg type="faustno">100004</request_arg>
+  </response>
+  <case caseid="22">
+    <case_metadata>
+      <deadline>2021-02-09</deadline>
+      <casestate>Publiceret</casestate>
+      <user>Hans Hansen</user>
+      <note>Details for 100004</note>
+    </case_metadata>
+    <bib_metadata>
+      <title>Title for 100004</title>
+      <faust>100004</faust>
+      <weekcode/>
+    </bib_metadata>
+    <data>
+      <brief/>
+      <subjterm faust="100004"/>
+    </data>
+  </case>
+</promat_xml_collection>
