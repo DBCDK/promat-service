@@ -7,8 +7,11 @@ package dk.dbc.promat.service;
 
 import dk.dbc.promat.service.api.ServiceErrorException;
 import dk.dbc.promat.service.dto.ServiceErrorCode;
+import dk.dbc.promat.service.persistence.PayCategory;
 import dk.dbc.promat.service.persistence.PromatEntityManager;
 import dk.dbc.promat.service.persistence.Subject;
+import dk.dbc.promat.service.persistence.TaskFieldType;
+import dk.dbc.promat.service.persistence.TaskType;
 
 import javax.ejb.Stateless;
 import javax.inject.Inject;
@@ -67,5 +70,55 @@ public class Repository {
             subjects.add(subject);
         }
         return subjects;
+    }
+
+    public static PayCategory getPayCategoryForTaskType(TaskType taskType, TaskFieldType taskFieldType) throws ServiceErrorException {
+        switch(taskFieldType) {
+            case BRIEF:
+                return PayCategory.BRIEF;
+            case METAKOMPAS:
+                return PayCategory.METAKOMPAS;
+            case BKM:
+                return PayCategory.BKM;
+            case EXPRESS:
+                return PayCategory.EXPRESS;
+            default: {
+                switch(taskType) {
+
+                    case GROUP_1_LESS_THAN_100_PAGES:
+                        return PayCategory.GROUP_1_LESS_THAN_100_PAGES;
+                    case GROUP_2_100_UPTO_199_PAGES:
+                        return PayCategory.GROUP_2_100_UPTO_199_PAGES;
+                    case GROUP_3_200_UPTO_499_PAGES:
+                        return PayCategory.GROUP_3_200_UPTO_499_PAGES;
+                    case GROUP_4_500_OR_MORE_PAGES:
+                        return PayCategory.GROUP_4_500_OR_MORE_PAGES;
+
+                    case MOVIES_GR_1:
+                        return PayCategory.MOVIES_GR_1;
+                    case MOVIES_GR_2:
+                        return PayCategory.MOVIES_GR_2;
+                    case MOVIES_GR_3:
+                        return PayCategory.MOVIES_GR_3;
+
+                    case MULTIMEDIA_FEE:
+                        return PayCategory.MULTIMEDIA_FEE;
+                    case MULTIMEDIA_FEE_GR2:
+                        return PayCategory.MULTIMEDIA_FEE_GR2;
+
+                    case MOVIE_NON_FICTION_GR1:
+                        return PayCategory.MOVIE_NON_FICTION_GR1;
+                    case MOVIE_NON_FICTION_GR2:
+                        return PayCategory.MOVIE_NON_FICTION_GR2;
+                    case MOVIE_NON_FICTION_GR3:
+                        return PayCategory.MOVIE_NON_FICTION_GR3;
+                }
+            }
+        }
+
+        throw new ServiceErrorException("Bad PayCategory")
+                .withDetails(String.format("Invalid combination of TaskType %s and TaskFieldType %s when determining paycategory", taskType, taskFieldType))
+                .withCode(ServiceErrorCode.INVALID_REQUEST)
+                .withHttpStatus(400);
     }
 }

@@ -10,6 +10,7 @@ import dk.dbc.promat.service.ContainerTest;
 import dk.dbc.promat.service.dto.CaseRequest;
 import dk.dbc.promat.service.dto.TaskDto;
 import dk.dbc.promat.service.persistence.MaterialType;
+import dk.dbc.promat.service.persistence.PayCategory;
 import dk.dbc.promat.service.persistence.PromatCase;
 import dk.dbc.promat.service.persistence.PromatTask;
 import dk.dbc.promat.service.persistence.TaskFieldType;
@@ -44,7 +45,7 @@ public class TasksIT extends ContainerTest {
                 .withTasks(Arrays.asList(
                         new TaskDto()
                                 .withTaskType(TaskType.GROUP_1_LESS_THAN_100_PAGES)
-                                .withTaskFieldType(TaskFieldType.BRIEF),
+                                .withTaskFieldType(TaskFieldType.DESCRIPTION),
                         new TaskDto()
                                 .withTaskType(TaskType.GROUP_1_LESS_THAN_100_PAGES)
                                 .withTaskFieldType(TaskFieldType.BRIEF)
@@ -64,18 +65,23 @@ public class TasksIT extends ContainerTest {
         assertThat("has task with targetFaust", taskNoTargetFaust, is(notNullValue()));
 
         // Update first task - should return 200 OK
-        dto = new TaskDto().withData("Here is data for task without targetFaust");
+        dto = new TaskDto().withData("Here is data for task without targetFaust")
+                .withTaskType(TaskType.GROUP_2_100_UPTO_199_PAGES);
         response = putResponse("v1/api/tasks/" + taskNoTargetFaust.getId(), dto);
         assertThat("status code", response.getStatus(), is(200));
         PromatTask updated = mapper.readValue(response.readEntity(String.class), PromatTask.class);
         assertThat("data value is correct", updated.getData().equals("Here is data for task without targetFaust"), is(true));
+        assertThat("tasktype value is correct", updated.getTaskType(), is(TaskType.GROUP_2_100_UPTO_199_PAGES));
 
         // Update second task - should return 200 OK
-        dto = new TaskDto().withData("Here is data for task with targetFaust");
+        dto = new TaskDto().withData("Here is data for task with targetFaust")
+                .withTaskType(TaskType.GROUP_2_100_UPTO_199_PAGES);
         response = putResponse("v1/api/tasks/" + taskWithTargetFaust.getId(), dto);
         assertThat("status code", response.getStatus(), is(200));
         updated = mapper.readValue(response.readEntity(String.class), PromatTask.class);
         assertThat("data value is correct", updated.getData().equals("Here is data for task with targetFaust"), is(true));
+        assertThat("tasktype value is correct", updated.getTaskType(), is(TaskType.GROUP_2_100_UPTO_199_PAGES));
+        assertThat("paycategory value is correct", updated.getPayCategory(), is(PayCategory.BRIEF));
 
         // Check that we can update the data field with an empty string, but not null - but neither request should fail
         dto = new TaskDto().withData(null);
@@ -83,6 +89,7 @@ public class TasksIT extends ContainerTest {
         assertThat("status code", response.getStatus(), is(200));
         updated = mapper.readValue(response.readEntity(String.class), PromatTask.class);
         assertThat("data value is correct", updated.getData().equals("Here is data for task without targetFaust"), is(true));
+        assertThat("paycategory value is correct", updated.getPayCategory(), is(PayCategory.GROUP_2_100_UPTO_199_PAGES));
 
         dto = new TaskDto().withData("");
         response = putResponse("v1/api/tasks/" + taskNoTargetFaust.getId(), dto);
