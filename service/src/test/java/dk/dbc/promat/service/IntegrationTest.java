@@ -45,7 +45,7 @@ public class IntegrationTest {
     protected static final HttpClient httpClient;
     protected static EntityManager entityManager;
     private static boolean setupDone;
-    protected static String genericWorkPresentationResult;
+    protected static String genericOpenFormatResult;
 
     static {
         httpClient = HttpClient.create(HttpClient.newClient());
@@ -109,7 +109,7 @@ public class IntegrationTest {
                     "promatITPU");
             LOGGER.info("..Populating database tables done");
             LOGGER.info("..Getting data for generic work presentation response");
-            genericWorkPresentationResult = Files.readString(
+            genericOpenFormatResult = Files.readString(
                     Path.of(IntegrationTest.class.getResource("/__files/body-openformat-generic.json")
                             .getPath()));
             LOGGER.info("..Done");

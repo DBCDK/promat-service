@@ -1,0 +1,17 @@
+{
+  "id" : "e13c98f4-ce3c-3cdd-9bd6-6a3be22d3e0a",
+  "request" : {
+    "url" : "/api/work-presentation?profile=test&agencyId=870970&workId=work-of%3A870970-basis%3A24699773",
+    "method" : "GET"
+  },
+  "response" : {
+    "status" : 301,
+    "bodyFileName" : "body-api-work-presentation-6fcCa.txt",
+    "headers" : {
+      "Server" : "Payara Micro #badassfish",
+      "Location" : "http://work-presentation-service.cisterne.svc.cloud.dbc.dk/api/work-presentation?profile=test&agencyId=870970&workId=work-of%3A870970-basis%3A27100104",
+      "X-Frame-Options" : "SAMEORIGIN"
+    }
+  },
+  "uuid" : "e13c98f4-ce3c-3cdd-9bd6-6a3be22d3e0a"
+}
