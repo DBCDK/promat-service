@@ -66,7 +66,7 @@ public class ScheduledNotificationSenderIT extends IntegrationTest {
         NotificationSender notificationSender = new NotificationSender();
         scheduledNotificationSender.notificationSender = notificationSender;
         scheduledNotificationSender.notificationSender.mailManager = mailManager;
-        scheduledNotificationSender.notificationSender.entityManager = entityManager;
+        scheduledNotificationSender.entityManager = entityManager;
         scheduledNotificationSender.notificationSender.metricRegistry = metricRegistry;
         persistenceContext.run(()->scheduledNotificationSender.processNotifications());
 

@@ -9,13 +9,9 @@ import dk.dbc.mail.Headers;
 import dk.dbc.mail.MailManager;
 import dk.dbc.promat.service.persistence.Notification;
 import dk.dbc.promat.service.persistence.NotificationStatus;
-import dk.dbc.promat.service.persistence.PromatEntityManager;
 import javax.ejb.Stateless;
-import javax.ejb.TransactionAttribute;
-import javax.ejb.TransactionAttributeType;
 import javax.inject.Inject;
 import javax.mail.MessagingException;
-import javax.persistence.EntityManager;
 import org.eclipse.microprofile.metrics.ConcurrentGauge;
 import org.eclipse.microprofile.metrics.Metadata;
 import org.eclipse.microprofile.metrics.MetricRegistry;
@@ -50,13 +46,7 @@ public class NotificationSender {
     MailManager mailManager;
 
 
-    @Inject
-    @PromatEntityManager
-    EntityManager entityManager;
-
-
-    @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-    public void notifyMailRecipient(Notification notification) {
+    public NotificationStatus notifyMailRecipient(Notification notification) {
         try {
             mailManager.newMail()
                     .withRecipients(notification.getToAddress())
@@ -67,12 +57,12 @@ public class NotificationSender {
                                     .withHeader("Content-type", "text/HTML; charset=UTF-8").build()
                     )
                     .build().send();
-            notification.setStatus(NotificationStatus.DONE);
             metricRegistry.counter(mailCounterMetadata).inc();
+            return NotificationStatus.DONE;
         } catch (MessagingException e) {
             LOGGER.error("Unable to send mail. Notification:{}",notification.toString());
-            notification.setStatus(NotificationStatus.ERROR);
             metricRegistry.concurrentGauge(mailFailureGaugeMetadata).inc();
+            return NotificationStatus.ERROR;
         }
     }
 
