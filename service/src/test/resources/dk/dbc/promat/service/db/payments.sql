@@ -16,7 +16,7 @@
 -- mm-dd-åååå;123;1960;4;1001100,1001101,1001102,1001103,1001104 Note Case 11;Hans Hansen
 -- mm-dd-åååå;123;1956;1;1001110,1001111 Case 12;Hans Hansen
 -- mm-dd-åååå;123;1960;2;1001110,1001111 Note Case 12;Hans Hansen
--- mm-dd-åååå;123;1987;1;1001110,1001111 Metadata Case 12;Hans Hansen
+-- mm-dd-åååå;123;1987;2;1001110,1001111 Metadata Case 12;Hans Hansen
 -- mm-dd-åååå;456;1981;1;1001130,1001131 Case 14;Ole Olsen
 -- mm-dd-åååå;456;1960;1;1001130,1001131 Note Case 14;Ole Olsen
 -- mm-dd-åååå;456;1960;1;1001140,1001141,1001142 Note Case 15;Ole Olsen
@@ -24,6 +24,8 @@
 -- mm-dd-åååå;456;1954;1;1001170,1001171,1001172 Case 18;Ole Olsen
 -- mm-dd-åååå;456;1960;2;1001170,1001171,1001172 Note Case 18;Ole Olsen
 -- mm-dd-åååå;456;1960;2;1001180,1001181,1001182 Note Case 19;Ole Olsen
+-- mm-dd-åååå;123;1956;1;1001190,1001191 Case 20;Hans Hansen
+-- mm-dd-åååå;123;1960;2;1001190,1001191 Note Case 20;Hans Hansen
 -- --------------------------------------------------------------------------------------------------------------------
 
 -- ********************************************************************************************************************
@@ -200,7 +202,7 @@ values (1100, 1101),
 --
 -- mm-dd-åååå;123;1956;1;1001110,1001111 Case 12;Hans Hansen
 -- mm-dd-åååå;123;1960;2;1001110,1001111 Note Case 12;Hans Hansen
--- mm-dd-åååå;123;1987;1;1001110,1001111 Metadata Case 12;Hans Hansen
+-- mm-dd-åååå;123;1987;2;1001110,1001111 Metadata Case 12;Hans Hansen
 insert into promatcase(id, title, details, primaryFaust, relatedFausts, reviewer_id, editor_id, created, deadline, assigned, status, materialType)
 values (1110, 'Case 12', 'Details', '1001110', '[1001111]', 1, 10, '2021-01-13', '2021-02-13', '2021-01-13', 'APPROVED', 'BOOK');
 
@@ -211,8 +213,9 @@ values  (1111, 'GROUP_1_LESS_THAN_100_PAGES', 'BRIEF',          '2021-01-13', 'B
         (1114, 'GROUP_1_LESS_THAN_100_PAGES', 'EVALUATION',     '2021-01-13', 'GROUP_1_LESS_THAN_100_PAGES', '2021-01-13', NULL, 'data', NULL),
         (1115, 'GROUP_1_LESS_THAN_100_PAGES', 'COMPARISON',     '2021-01-13', 'GROUP_1_LESS_THAN_100_PAGES', '2021-01-13', NULL, 'data', NULL),
         (1116, 'GROUP_1_LESS_THAN_100_PAGES', 'RECOMMENDATION', '2021-01-13', 'GROUP_1_LESS_THAN_100_PAGES', '2021-01-13', NULL, 'data', NULL),
-        (1117, 'GROUP_1_LESS_THAN_100_PAGES', 'BIBLIOGRAPHIC',  '2021-01-13', 'GROUP_1_LESS_THAN_100_PAGES', '2021-01-13', NULL, 'data', NULL),
-        (1118, 'GROUP_1_LESS_THAN_100_PAGES', 'METAKOMPAS',     '2021-01-13', 'METAKOMPAS',                  '2021-01-13', NULL, 'data', NULL);
+        (1117, 'GROUP_1_LESS_THAN_100_PAGES', 'AGE',            '2021-01-13', 'GROUP_1_LESS_THAN_100_PAGES', '2021-01-13', NULL, 'data', NULL),
+        (1118, 'GROUP_1_LESS_THAN_100_PAGES', 'METAKOMPAS',     '2021-01-13', 'METAKOMPAS',                  '2021-01-13', NULL, 'data', NULL),
+        (1119, 'GROUP_1_LESS_THAN_100_PAGES', 'METAKOMPAS',     '2021-01-13', 'METAKOMPAS',                  '2021-01-13', NULL, 'data', '[1001111]');
 
 insert into casetasks(case_id, task_id)
 values (1110, 1111),
@@ -222,7 +225,8 @@ values (1110, 1111),
        (1110, 1115),
        (1110, 1116),
        (1110, 1117),
-       (1110, 1118);
+       (1110, 1118),
+       (1110, 1119);
 
 -- Case 13: payments NOT expected
 -- Case has been changed back to ASSIGNED->PENDING_APPROVAL by adding and filling out an extra task
@@ -237,8 +241,9 @@ values  (1121, 'GROUP_1_LESS_THAN_100_PAGES', 'BRIEF',          '2021-01-13','BR
         (1124, 'GROUP_1_LESS_THAN_100_PAGES', 'EVALUATION',     '2021-01-13', 'GROUP_1_LESS_THAN_100_PAGES', '2021-01-13', NULL, 'data', NULL),
         (1125, 'GROUP_1_LESS_THAN_100_PAGES', 'COMPARISON',     '2021-01-13', 'GROUP_1_LESS_THAN_100_PAGES', NULL,         NULL, 'data', NULL), -- Here be dragons!
         (1126, 'GROUP_1_LESS_THAN_100_PAGES', 'RECOMMENDATION', '2021-01-13', 'GROUP_1_LESS_THAN_100_PAGES', '2021-01-13', NULL, 'data', NULL),
-        (1127, 'GROUP_1_LESS_THAN_100_PAGES', 'BIBLIOGRAPHIC',  '2021-01-13', 'GROUP_1_LESS_THAN_100_PAGES', '2021-01-13', NULL, 'data', NULL),
-        (1128, 'GROUP_1_LESS_THAN_100_PAGES', 'METAKOMPAS',     '2021-01-13', 'METAKOMPAS',                  '2021-01-13', NULL, 'data', NULL);
+        (1127, 'GROUP_1_LESS_THAN_100_PAGES', 'MATLEVEL',       '2021-01-13', 'GROUP_1_LESS_THAN_100_PAGES', '2021-01-13', NULL, 'data', NULL),
+        (1128, 'GROUP_1_LESS_THAN_100_PAGES', 'METAKOMPAS',     '2021-01-13', 'METAKOMPAS',                  '2021-01-13', NULL, 'data', NULL),
+        (1129, 'GROUP_1_LESS_THAN_100_PAGES', 'METAKOMPAS',     '2021-01-13', 'METAKOMPAS',                  '2021-01-13', NULL, 'data', '[1001111]');
 
 insert into casetasks(case_id, task_id)
 values (1120, 1121),
@@ -248,7 +253,8 @@ values (1120, 1121),
        (1120, 1125),
        (1120, 1126),
        (1120, 1127),
-       (1120, 1128);
+       (1120, 1128),
+       (1120, 1129);
 
 -- Case 14: PAYMENTS EXPECTED
 --
@@ -263,7 +269,8 @@ values  (1131, 'MOVIES_GR_2', 'BRIEF',          '2021-01-13','BRIEF',        '20
         (1133, 'MOVIES_GR_2', 'EVALUATION',     '2021-01-13', 'MOVIES_GR_2', '2021-01-13', NULL, 'data', NULL),
         (1134, 'MOVIES_GR_2', 'COMPARISON',     '2021-01-13', 'MOVIES_GR_2', '2021-01-13', NULL, 'data', NULL),
         (1135, 'MOVIES_GR_2', 'RECOMMENDATION', '2021-01-13', 'MOVIES_GR_2', '2021-01-13', NULL, 'data', NULL),
-        (1136, 'MOVIES_GR_2', 'BIBLIOGRAPHIC',  '2021-01-13', 'MOVIES_GR_2', '2021-01-13', NULL, 'data', NULL);
+        (1136, 'MOVIES_GR_2', 'AGE',            '2021-01-13', 'MOVIES_GR_2', '2021-01-13', NULL, 'data', NULL),
+        (1137, 'MOVIES_GR_2', 'MATLEVEL',       '2021-01-13', 'MOVIES_GR_2', '2021-01-13', NULL, 'data', NULL);
 
 insert into casetasks(case_id, task_id)
 values (1130, 1131),
@@ -271,7 +278,8 @@ values (1130, 1131),
        (1130, 1133),
        (1130, 1134),
        (1130, 1135),
-       (1130, 1136);
+       (1130, 1136),
+       (1130, 1137);
 
 -- Case 15: PAYMENTS EXPECTED
 -- Case has been payed before, then an extra task has been added, filled out and approved
@@ -286,7 +294,7 @@ values  (1141, 'MOVIES_GR_2', 'BRIEF',          '2021-01-13', 'BRIEF',       '20
         (1143, 'MOVIES_GR_2', 'EVALUATION',     '2021-01-13', 'MOVIES_GR_2', '2020-12-13', '2020-12-21 12:13:14.567', 'data', NULL),
         (1144, 'MOVIES_GR_2', 'COMPARISON',     '2021-01-13', 'MOVIES_GR_2', '2020-12-13', '2020-12-21 12:13:14.567', 'data', NULL),
         (1145, 'MOVIES_GR_2', 'RECOMMENDATION', '2021-01-13', 'MOVIES_GR_2', '2020-12-13', '2020-12-21 12:13:14.567', 'data', NULL),
-        (1146, 'MOVIES_GR_2', 'BIBLIOGRAPHIC',  '2021-01-13', 'MOVIES_GR_2', '2020-12-13', '2020-12-21 12:13:14.567', 'data', NULL),
+        (1146, 'MOVIES_GR_2', 'AGE',            '2021-01-13', 'MOVIES_GR_2', '2020-12-13', '2020-12-21 12:13:14.567', 'data', NULL),
         (1147, 'MOVIES_GR_2', 'BRIEF',          '2021-01-13', 'BRIEF',       '2021-01-13', NULL,                      'data', '[1001142]');
 
 insert into casetasks(case_id, task_id)
@@ -313,7 +321,7 @@ values  (1151, 'MOVIES_GR_2', 'BRIEF',          '2021-01-13', 'BRIEF',       NUL
         (1153, 'MOVIES_GR_2', 'EVALUATION',     '2021-01-13', 'MOVIES_GR_2', NULL,         NULL, 'data', NULL),
         (1154, 'MOVIES_GR_2', 'COMPARISON',     '2021-01-13', 'MOVIES_GR_2', NULL,         NULL, 'data', NULL),
         (1155, 'MOVIES_GR_2', 'RECOMMENDATION', '2021-01-13', 'MOVIES_GR_2', NULL,         NULL, 'data', NULL),
-        (1156, 'MOVIES_GR_2', 'BIBLIOGRAPHIC',  '2021-01-13', 'MOVIES_GR_2', NULL,         NULL, 'data', NULL),
+        (1156, 'MOVIES_GR_2', 'MATLEVEL',       '2021-01-13', 'MOVIES_GR_2', NULL,         NULL, 'data', NULL),
         (1157, 'MOVIES_GR_2', 'BRIEF',          '2021-01-13', 'BRIEF',       '2021-01-13', NULL, 'data', '[1001152]');
 
 insert into casetasks(case_id, task_id)
@@ -338,7 +346,7 @@ values  (1161, 'MOVIES_GR_2', 'BRIEF',          '2021-01-13', 'BRIEF',       NUL
         (1163, 'MOVIES_GR_2', 'EVALUATION',     '2021-01-13', 'MOVIES_GR_2', NULL,         NULL, 'data', NULL),
         (1164, 'MOVIES_GR_2', 'COMPARISON',     '2021-01-13', 'MOVIES_GR_2', NULL,         NULL, 'data', NULL),
         (1165, 'MOVIES_GR_2', 'RECOMMENDATION', '2021-01-13', 'MOVIES_GR_2', NULL,         NULL, 'data', NULL),
-        (1166, 'MOVIES_GR_2', 'BIBLIOGRAPHIC',  '2021-01-13', 'MOVIES_GR_2', NULL,         NULL, 'data', NULL),
+        (1166, 'MOVIES_GR_2', 'AGE',            '2021-01-13', 'MOVIES_GR_2', NULL,         NULL, 'data', NULL),
         (1167, 'MOVIES_GR_2', 'BRIEF',          '2021-01-13', 'BRIEF',       '2021-01-13', NULL, 'data', '[1001152]');
 
 insert into casetasks(case_id, task_id)
@@ -364,7 +372,7 @@ values  (1171, 'MULTIMEDIA_FEE', 'BRIEF',          '2021-01-13', 'BRIEF',       
         (1173, 'MULTIMEDIA_FEE', 'EVALUATION',     '2021-01-13', 'MULTIMEDIA_FEE', '2021-01-26', NULL, 'data', NULL),
         (1174, 'MULTIMEDIA_FEE', 'COMPARISON',     '2021-01-13', 'MULTIMEDIA_FEE', '2021-01-26', NULL, 'data', NULL),
         (1175, 'MULTIMEDIA_FEE', 'RECOMMENDATION', '2021-01-13', 'MULTIMEDIA_FEE', '2021-01-26', NULL, 'data', NULL),
-        (1176, 'MULTIMEDIA_FEE', 'BIBLIOGRAPHIC',  '2021-01-13', 'MULTIMEDIA_FEE', '2021-01-26', NULL, 'data', NULL),
+        (1176, 'MULTIMEDIA_FEE', 'MATLEVEL',       '2021-01-13', 'MULTIMEDIA_FEE', '2021-01-26', NULL, 'data', NULL),
         (1177, 'MULTIMEDIA_FEE', 'BRIEF',          '2021-01-13', 'BRIEF',          '2021-01-26', NULL, 'data', '[1001172]'),
         (1178, 'MULTIMEDIA_FEE', 'EXPRESS',        '2021-01-13', 'EXPRESS',        '2021-01-26', NULL, 'data', NULL);
 
@@ -394,3 +402,32 @@ insert into casetasks(case_id, task_id)
 values (1180, 1181),
        (1180, 1182),
        (1180, 1183);
+
+-- Case 20: PAYMENTS EXPECTED
+--
+-- mm-dd-åååå;123;1956;1;1001190,1001191 Case 20;Hans Hansen
+-- mm-dd-åååå;123;1960;2;1001190,1001191 Note Case 20;Hans Hansen
+insert into promatcase(id, title, details, primaryFaust, relatedFausts, reviewer_id, editor_id, created, deadline, assigned, status, materialType)
+values (1190, 'Case 20', 'Details', '1001190', '[1001191]', 1, 10, '2021-01-13', '2021-02-13', '2021-01-13', 'APPROVED', 'BOOK');
+
+insert into promattask(id, tasktype, taskfieldtype, created, paycategory, approved, payed, data, targetFausts)
+values  (1191, 'GROUP_1_LESS_THAN_100_PAGES', 'BRIEF',          '2021-01-13', 'BRIEF',                       '2021-01-13', NULL, 'data', NULL),
+        (1192, 'GROUP_1_LESS_THAN_100_PAGES', 'BRIEF',          '2021-01-13', 'BRIEF',                       '2021-01-13', NULL, 'data', '[1001191]'),
+        (1193, 'GROUP_1_LESS_THAN_100_PAGES', 'DESCRIPTION',    '2021-01-13', 'GROUP_1_LESS_THAN_100_PAGES', '2021-01-13', NULL, 'data', NULL),
+        (1194, 'GROUP_1_LESS_THAN_100_PAGES', 'EVALUATION',     '2021-01-13', 'GROUP_1_LESS_THAN_100_PAGES', '2021-01-13', NULL, 'data', NULL),
+        (1195, 'GROUP_1_LESS_THAN_100_PAGES', 'COMPARISON',     '2021-01-13', 'GROUP_1_LESS_THAN_100_PAGES', '2021-01-13', NULL, 'data', NULL),
+        (1196, 'GROUP_1_LESS_THAN_100_PAGES', 'RECOMMENDATION', '2021-01-13', 'GROUP_1_LESS_THAN_100_PAGES', '2021-01-13', NULL, 'data', NULL),
+        (1197, 'GROUP_1_LESS_THAN_100_PAGES', 'AGE',            '2021-01-13', 'GROUP_1_LESS_THAN_100_PAGES', '2021-01-13', NULL, 'data', NULL),
+        (1198, 'GROUP_1_LESS_THAN_100_PAGES', 'TOPICS',         '2021-01-13', 'GROUP_1_LESS_THAN_100_PAGES', '2021-01-13', NULL, 'data', NULL),
+        (1199, 'GROUP_1_LESS_THAN_100_PAGES', 'TOPICS',         '2021-01-13', 'GROUP_1_LESS_THAN_100_PAGES', '2021-01-13', NULL, 'data', '[1001191]');
+
+insert into casetasks(case_id, task_id)
+values (1190, 1191),
+       (1190, 1192),
+       (1190, 1193),
+       (1190, 1194),
+       (1190, 1195),
+       (1190, 1196),
+       (1190, 1197),
+       (1190, 1198),
+       (1190, 1199);
