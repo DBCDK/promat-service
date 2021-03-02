@@ -9,10 +9,8 @@ import dk.dbc.promat.service.cluster.ServerRole;
 import dk.dbc.promat.service.persistence.Notification;
 import dk.dbc.promat.service.persistence.NotificationStatus;
 import dk.dbc.promat.service.persistence.PromatEntityManager;
-import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 import javax.ejb.EJB;
 import javax.ejb.Schedule;
 import javax.ejb.Singleton;
@@ -38,27 +36,30 @@ public class ScheduledNotificationSender {
     @Inject
     ServerRole serverRole;
 
-    @Schedule(second = "0", minute = "*", hour = "*", persistent = false)
+    @Schedule(second = "0", minute = "*/10", hour = "*", persistent = false)
     public void processNotifications() {
         try {
             if(serverRole == ServerRole.PRIMARY) {
                 notificationSender.resetMailFailuresGauge();
-                TypedQuery<Notification> query = entityManager
-                        .createQuery(Notification.SELECT_FROM_NOTIFCATION_QUEUE_QUERY, Notification.class);
-                query.setParameter("status", List.of(NotificationStatus.PENDING, NotificationStatus.ERROR));
-                List<Notification> notifications = query.getResultList();
-
-                // Collect all stati from send.
-                Map<Notification, NotificationStatus> results = notifications.stream()
-                        .collect(Collectors.toMap(notification -> notification,
-                                notification -> notificationSender.notifyMailRecipient(notification)));
-
-                // Now set the stati
-                results.forEach(Notification::setStatus);
+                Notification notification = pop(-1);
+                while(notification != null) {
+                    LOGGER.info("Notifying: '{}' on subject '{}'", notification.getToAddress(), notification.getSubject());
+                    notificationSender.notifyMailRecipient(notification);
+                    notification = pop(notification.getId());
+                }
             }
         } catch (Exception e) {
             LOGGER.error("Caught exception in scheduled job 'processNotifications()'",e);
         }
     }
 
+    private Notification pop(Integer id) {
+        TypedQuery<Notification> query = entityManager
+                .createQuery(Notification.SELECT_FROM_NOTIFCATION_QUEUE_QUERY, Notification.class);
+        query.setParameter("status", List.of(NotificationStatus.PENDING, NotificationStatus.ERROR));
+        query.setParameter("lastid", id);
+        query.setMaxResults(1);
+        List<Notification> notifications = query.getResultList();
+        return (notifications.isEmpty()) ? null : notifications.get(0);
+    }
 }
