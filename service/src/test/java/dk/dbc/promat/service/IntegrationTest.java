@@ -108,7 +108,7 @@ public class IntegrationTest {
             entityManager = createEntityManager(getDataSource(),
                     "promatITPU");
             LOGGER.info("..Populating database tables done");
-            LOGGER.info("..Getting data for generic work presentation response");
+            LOGGER.info("..Getting data for generic openformat response");
             genericOpenFormatResult = Files.readString(
                     Path.of(IntegrationTest.class.getResource("/__files/body-openformat-generic.json")
                             .getPath()));
