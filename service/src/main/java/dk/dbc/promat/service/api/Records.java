@@ -16,6 +16,7 @@ import dk.dbc.opensearch.model.OpensearchSearchResult;
 import dk.dbc.opensearch.workpresentation.WorkPresentationConnector;
 import dk.dbc.opensearch.workpresentation.WorkPresentationConnectorException;
 import dk.dbc.opensearch.workpresentation.WorkPresentationQuery;
+import dk.dbc.opensearch.workpresentation.model.WorkPresentationGroup;
 import dk.dbc.opensearch.workpresentation.model.WorkPresentationRecord;
 import dk.dbc.opensearch.workpresentation.model.WorkPresentationWork;
 import dk.dbc.promat.service.dto.Dto;
@@ -88,14 +89,16 @@ public class Records {
                                 .withAgencyId(agency)
                                 .withManifestation(faust));
 
-                        LOGGER.info("Work returned {} manifestations", work.getRecords().length);
-                        LOGGER.info("Primary manifestations is {}", work.getRecords().length > 0 ? work.getManifestation() : "(none)");
-                        for(WorkPresentationRecord record : work.getRecords()) {
-                            LOGGER.info("Adding manifestation {}", record.getManifestation());
-                            relatedByWork.add(new RecordDto()
-                                    .withFaust(record.getManifestation())
-                                    .withPrimary(record.getManifestation().equals(work.getManifestation()))
-                                    .withTypes(mapRrTypes(record.getTypes())));
+                        LOGGER.info("Work returned {} manifestations", work.getGroups().length);
+                        LOGGER.info("Primary manifestations is {}", work.getGroups().length > 0 ? work.getManifestation() : "(none)");
+                        for(WorkPresentationGroup group : work.getGroups()) {
+                            for(WorkPresentationRecord record : group.getRecords()) {
+                                LOGGER.info("Adding manifestation {}", record.getManifestation());
+                                relatedByWork.add(new RecordDto()
+                                        .withFaust(record.getManifestation())
+                                        .withPrimary(record.getManifestation().equals(work.getManifestation()))
+                                        .withTypes(mapRrTypes(record.getTypes())));
+                            }
                         }
                     }
                 }
