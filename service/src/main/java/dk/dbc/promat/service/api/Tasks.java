@@ -80,6 +80,10 @@ public class Tasks {
                 existing.setTargetFausts(dto.getTargetFausts());
                 updateRelatedFausts(caseOfTask, existing);
             }
+            if(dto.getTaskType() != null) {
+                existing.setTaskType(dto.getTaskType());
+                existing.setPayCategory(Repository.getPayCategoryForTaskType(dto.getTaskType(), existing.getTaskFieldType()));
+            }
 
             return Response.ok(existing).build();
         } catch(ServiceErrorException serviceErrorException) {
