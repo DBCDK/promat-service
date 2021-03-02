@@ -72,6 +72,7 @@ public class TasksIT extends ContainerTest {
         PromatTask updated = mapper.readValue(response.readEntity(String.class), PromatTask.class);
         assertThat("data value is correct", updated.getData().equals("Here is data for task without targetFaust"), is(true));
         assertThat("tasktype value is correct", updated.getTaskType(), is(TaskType.GROUP_2_100_UPTO_199_PAGES));
+        assertThat("paycategory value is correct", updated.getPayCategory(), is(PayCategory.GROUP_2_100_UPTO_199_PAGES));
 
         // Update second task - should return 200 OK
         dto = new TaskDto().withData("Here is data for task with targetFaust")
@@ -89,7 +90,7 @@ public class TasksIT extends ContainerTest {
         assertThat("status code", response.getStatus(), is(200));
         updated = mapper.readValue(response.readEntity(String.class), PromatTask.class);
         assertThat("data value is correct", updated.getData().equals("Here is data for task without targetFaust"), is(true));
-        assertThat("paycategory value is correct", updated.getPayCategory(), is(PayCategory.GROUP_2_100_UPTO_199_PAGES));
+
 
         dto = new TaskDto().withData("");
         response = putResponse("v1/api/tasks/" + taskNoTargetFaust.getId(), dto);
