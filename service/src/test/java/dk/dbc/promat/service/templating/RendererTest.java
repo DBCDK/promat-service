@@ -199,7 +199,6 @@ public class RendererTest {
         String expected = stripTrailingAndLeading(
                 Files.readString(Path.of(RendererTest.class.getResource("/mailBodys/reviewerDataChanged.html").getPath()))
         );
-        Files.writeString(Path.of("/tmp/rwCh1.html"), notification.getBodyText());
         assertThat("Bodytext", actual, is(expected));
         assertThat("Subject", notification.getSubject(), is("ProMat anmelderprofil '1001' er ændret"));
     }
