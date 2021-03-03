@@ -9,6 +9,9 @@ import dk.dbc.connector.openformat.OpenFormatConnectorException;
 import dk.dbc.promat.service.api.BibliographicInformation;
 import dk.dbc.promat.service.api.OpenFormatHandler;
 import dk.dbc.promat.service.persistence.PromatCase;
+import dk.dbc.promat.service.persistence.PromatTask;
+import dk.dbc.promat.service.persistence.TaskFieldType;
+import dk.dbc.promat.service.util.PromatTaskUtils;
 import org.eclipse.microprofile.metrics.ConcurrentGauge;
 import org.eclipse.microprofile.metrics.Metadata;
 import org.eclipse.microprofile.metrics.MetricRegistry;
@@ -31,6 +34,7 @@ import java.util.Optional;
 @Stateless
 public class CaseInformationUpdater {
     private static final Logger LOGGER = LoggerFactory.getLogger(CaseInformationUpdater.class);
+    protected static final String METAKOMPASDATA_PRESENT = "true";
 
     @Inject
     @RegistryType(type = MetricRegistry.Type.APPLICATION)
@@ -38,6 +42,9 @@ public class CaseInformationUpdater {
 
     @Inject
     OpenFormatHandler openFormatHandler;
+
+    @Inject
+    PromatTaskUtils promatTaskUtils;
 
     static final Metadata openformatTimerMetadata = Metadata.builder()
             .withName("promat_service_caseinformationupdater_openformat_timer")
@@ -91,6 +98,40 @@ public class CaseInformationUpdater {
                 LOGGER.info("Updating weekcode: '{}' ==> '{}' of case with id {}", promatCase.getWeekCode(), newCode, promatCase.getId());
                 promatCase.setWeekCode(newCode);
             }
+
+            // Check if 'metakompas' data has changed for main faust or related fausts.
+            //
+            // Main faust
+            Optional<PromatTask> metakompasTaskMainFaust =
+                    promatTaskUtils.getTaskForMainFaust(promatCase, TaskFieldType.METAKOMPAS);
+            if (METAKOMPASDATA_PRESENT.equals(bibliographicInformation.getMetakompassubject()) &&
+                    metakompasTaskMainFaust.isPresent()) {
+                LOGGER.info("Updating metakompas for main faust: '{}' ==> '{}' of case with id {}",
+                        metakompasTaskMainFaust.get().getData(), METAKOMPASDATA_PRESENT, promatCase.getId());
+                metakompasTaskMainFaust.get().setData(METAKOMPASDATA_PRESENT);
+
+            }
+
+            // Related fausts task
+            Optional<PromatTask> metakompasRelatedFausts =
+                    promatTaskUtils.getTaskForRelatedFaust(promatCase, TaskFieldType.METAKOMPAS);
+
+            if (metakompasRelatedFausts.isPresent()) {
+                PromatTask task = metakompasRelatedFausts.get();
+                boolean allIsPresent = task.getTargetFausts()
+                        .stream().allMatch(s -> {
+                            try {
+                                return METAKOMPASDATA_PRESENT.equals(openFormatHandler.format(s).getMetakompassubject());
+                            } catch (OpenFormatConnectorException e) {
+                                LOGGER.error("Unable to look up faust {}, {}", s, e);
+                            }
+                            return false;
+                        });
+                if (allIsPresent) {
+                    task.setData(METAKOMPASDATA_PRESENT);
+                }
+            }
+
         } catch(OpenFormatConnectorException e) {
             LOGGER.error("Caught exception when trying to obtain bibliographic information for faust {} in case with id {}: {}",
                     promatCase.getPrimaryFaust(), promatCase.getId(), e.getMessage());
