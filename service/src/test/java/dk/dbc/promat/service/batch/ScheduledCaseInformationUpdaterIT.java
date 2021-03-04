@@ -21,14 +21,12 @@ import dk.dbc.promat.service.persistence.PromatCase;
 import dk.dbc.promat.service.persistence.PromatTask;
 import dk.dbc.promat.service.persistence.TaskFieldType;
 import dk.dbc.promat.service.persistence.TaskType;
-import dk.dbc.promat.service.templating.NotificationFactory;
 import dk.dbc.promat.service.util.PromatTaskUtils;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import org.eclipse.microprofile.metrics.ConcurrentGauge;
 import org.eclipse.microprofile.metrics.Metadata;
 import org.eclipse.microprofile.metrics.MetricRegistry;
@@ -41,7 +39,6 @@ import org.junit.jupiter.api.Test;
 import static com.github.tomakehurst.wiremock.client.WireMock.configureFor;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options;
 import static org.hamcrest.CoreMatchers.anyOf;
-import static org.hamcrest.CoreMatchers.either;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
@@ -57,7 +54,6 @@ import static org.mockito.AdditionalMatchers.not;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -396,7 +392,6 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
         upd.caseInformationUpdater.metricRegistry = metricRegistry;
         OpenFormatHandler openFormatHandler = mock(OpenFormatHandler.class);
         upd.caseInformationUpdater.openFormatHandler = openFormatHandler;
-        upd.caseInformationUpdater.promatTaskUtils = new PromatTaskUtils();
         when(openFormatHandler.format(anyString()))
                 .thenAnswer(invocationOnMock -> openFormatResponse.get(invocationOnMock.getArgument(0)));
 
@@ -405,13 +400,13 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
         //
         persistenceContext.run(() -> upd.caseInformationUpdater.updateCaseInformation(created));
 
-        PromatTask task = promatTaskUtils.getTaskForMainFaust(created, TaskFieldType.METAKOMPAS)
+        PromatTask task = PromatTaskUtils.getTaskForMainFaust(created, TaskFieldType.METAKOMPAS)
                 .orElseThrow(() -> new Exception("task not found"));
         assertThat("metakompasdata for main faust",
                 task.getData(),
                 is(nullValue()));
 
-        task = promatTaskUtils.getTaskForRelatedFaust(created, TaskFieldType.METAKOMPAS)
+        task = PromatTaskUtils.getTaskForRelatedFaust(created, TaskFieldType.METAKOMPAS)
                 .orElseThrow(() -> new Exception("task not found"));
 
         assertThat("metakompasdata for related faust",
@@ -422,12 +417,12 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
         //
         openFormatResponse.get("48959938").setMetakompassubject(CaseInformationUpdater.METAKOMPASDATA_PRESENT);
         persistenceContext.run(() -> upd.caseInformationUpdater.updateCaseInformation(created));
-        task = promatTaskUtils.getTaskForMainFaust(created, TaskFieldType.METAKOMPAS)
+        task = PromatTaskUtils.getTaskForMainFaust(created, TaskFieldType.METAKOMPAS)
                 .orElseThrow(() -> new Exception("task not found"));
         assertThat("metakompasdata for main faust",
                 task.getData(),
                 is("true"));
-        task = promatTaskUtils.getTaskForRelatedFaust(created, TaskFieldType.METAKOMPAS)
+        task = PromatTaskUtils.getTaskForRelatedFaust(created, TaskFieldType.METAKOMPAS)
                 .orElseThrow(() -> new Exception("task not found"));
         assertThat("metakompasdata for related faust I",
                 task.getData(), anyOf(is(nullValue()), is("false")));
@@ -438,12 +433,12 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
         //
         openFormatResponse.get("48959911").setMetakompassubject(CaseInformationUpdater.METAKOMPASDATA_PRESENT);
         persistenceContext.run(() -> upd.caseInformationUpdater.updateCaseInformation(created));
-        task = promatTaskUtils.getTaskForMainFaust(created, TaskFieldType.METAKOMPAS)
+        task = PromatTaskUtils.getTaskForMainFaust(created, TaskFieldType.METAKOMPAS)
                 .orElseThrow(() -> new Exception("task not found"));
         assertThat("metakompasdata for main faust",
                 task.getData(),
                 is("true"));
-        task = promatTaskUtils.getTaskForRelatedFaust(created, TaskFieldType.METAKOMPAS)
+        task = PromatTaskUtils.getTaskForRelatedFaust(created, TaskFieldType.METAKOMPAS)
                 .orElseThrow(() -> new Exception("task not found"));
         assertThat("metakompasdata for related faust II",
                 task.getData(), anyOf(is(nullValue()), is("false")));
@@ -454,14 +449,14 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
         //
         openFormatResponse.get("48959954").setMetakompassubject(CaseInformationUpdater.METAKOMPASDATA_PRESENT);
         persistenceContext.run(() -> upd.caseInformationUpdater.updateCaseInformation(created));
-        task = promatTaskUtils.getTaskForMainFaust(created, TaskFieldType.METAKOMPAS)
+        task = PromatTaskUtils.getTaskForMainFaust(created, TaskFieldType.METAKOMPAS)
                 .orElseThrow(() -> new Exception("task not found"));
         assertThat("metakompasdata for main faust",
                 task.getData(),
                 is("true"));
-        task = promatTaskUtils.getTaskForRelatedFaust(created, TaskFieldType.METAKOMPAS)
+        task = PromatTaskUtils.getTaskForRelatedFaust(created, TaskFieldType.METAKOMPAS)
                 .orElseThrow(() -> new Exception("task not found"));
-        assertThat("metakompasdata for related faust III",
+        assertThat("metakompasdata for related faust II",
                 task.getData(), is("true"));
     }
 

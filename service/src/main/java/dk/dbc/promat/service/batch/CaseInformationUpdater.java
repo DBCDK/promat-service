@@ -43,9 +43,6 @@ public class CaseInformationUpdater {
     @Inject
     OpenFormatHandler openFormatHandler;
 
-    @Inject
-    PromatTaskUtils promatTaskUtils;
-
     static final Metadata openformatTimerMetadata = Metadata.builder()
             .withName("promat_service_caseinformationupdater_openformat_timer")
             .withDescription("Openformat response time")
@@ -99,35 +96,41 @@ public class CaseInformationUpdater {
                 promatCase.setWeekCode(newCode);
             }
 
+            //
             // Check if 'metakompas' data has changed for main faust or related fausts.
             //
             // Main faust
             Optional<PromatTask> metakompasTaskMainFaust =
-                    promatTaskUtils.getTaskForMainFaust(promatCase, TaskFieldType.METAKOMPAS);
+                    PromatTaskUtils.getTaskForMainFaust(promatCase, TaskFieldType.METAKOMPAS);
             if (METAKOMPASDATA_PRESENT.equals(bibliographicInformation.getMetakompassubject()) &&
                     metakompasTaskMainFaust.isPresent()) {
-                LOGGER.info("Updating metakompas for main faust: '{}' ==> '{}' of case with id {}",
-                        metakompasTaskMainFaust.get().getData(), METAKOMPASDATA_PRESENT, promatCase.getId());
-                metakompasTaskMainFaust.get().setData(METAKOMPASDATA_PRESENT);
-
+                if (!METAKOMPASDATA_PRESENT.equals(metakompasTaskMainFaust.get().getData())) {
+                    LOGGER.info("Updating metakompas for main faust: '{}' ==> '{}' of case with id {}",
+                            promatCase.getPrimaryFaust(), METAKOMPASDATA_PRESENT, promatCase.getId());
+                    metakompasTaskMainFaust.get().setData(METAKOMPASDATA_PRESENT);
+                }
             }
 
             // Related fausts task
             Optional<PromatTask> metakompasRelatedFausts =
-                    promatTaskUtils.getTaskForRelatedFaust(promatCase, TaskFieldType.METAKOMPAS);
+                    PromatTaskUtils.getTaskForRelatedFaust(promatCase, TaskFieldType.METAKOMPAS);
 
-            if (metakompasRelatedFausts.isPresent()) {
+            if (metakompasRelatedFausts.isPresent() &&
+                    !METAKOMPASDATA_PRESENT.equals(metakompasRelatedFausts.get().getData())) {
                 PromatTask task = metakompasRelatedFausts.get();
                 boolean allIsPresent = task.getTargetFausts()
                         .stream().allMatch(s -> {
                             try {
-                                return METAKOMPASDATA_PRESENT.equals(openFormatHandler.format(s).getMetakompassubject());
+                                String present = openFormatHandler.format(s).getMetakompassubject();
+                                return METAKOMPASDATA_PRESENT.equals(present);
                             } catch (OpenFormatConnectorException e) {
                                 LOGGER.error("Unable to look up faust {}, {}", s, e);
                             }
                             return false;
                         });
                 if (allIsPresent) {
+                    LOGGER.info("Updating metakompas for related fausts: '{}' ==> '{}' of case with id {}. Taskid is '{}'",
+                            promatCase.getRelatedFausts(), METAKOMPASDATA_PRESENT, promatCase.getId(), task.getId());
                     task.setData(METAKOMPASDATA_PRESENT);
                 }
             }
