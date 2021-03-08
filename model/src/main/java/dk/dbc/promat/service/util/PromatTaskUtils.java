@@ -3,6 +3,7 @@ package dk.dbc.promat.service.util;
 import dk.dbc.promat.service.persistence.PromatCase;
 import dk.dbc.promat.service.persistence.PromatTask;
 import dk.dbc.promat.service.persistence.TaskFieldType;
+import java.util.List;
 import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,9 +15,8 @@ public class PromatTaskUtils {
         return promatCase.getTasks()
                 .stream()
                 .filter(promatTask -> promatTask.getTaskFieldType() == taskFieldType)
-                .filter(promatTask -> promatTask.getTargetFausts() == null || promatTask.getTargetFausts().isEmpty())
-                .findFirst();
-
+                .filter(promatTask -> promatTask.getTargetFausts() == null || promatTask.getTargetFausts().isEmpty() ||
+                        promatTask.getTargetFausts().contains(promatCase.getPrimaryFaust())).findFirst();
 
     }
 

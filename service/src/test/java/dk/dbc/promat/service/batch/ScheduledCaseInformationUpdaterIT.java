@@ -15,17 +15,15 @@ import dk.dbc.promat.service.api.BibliographicInformation;
 import dk.dbc.promat.service.api.OpenFormatHandler;
 import dk.dbc.promat.service.cluster.ServerRole;
 import dk.dbc.promat.service.dto.CaseRequest;
-import dk.dbc.promat.service.dto.TaskDto;
+import dk.dbc.promat.service.persistence.CaseStatus;
 import dk.dbc.promat.service.persistence.MaterialType;
 import dk.dbc.promat.service.persistence.PromatCase;
 import dk.dbc.promat.service.persistence.PromatTask;
 import dk.dbc.promat.service.persistence.TaskFieldType;
-import dk.dbc.promat.service.persistence.TaskType;
 import dk.dbc.promat.service.util.PromatTaskUtils;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.List;
 import java.util.Map;
 import org.eclipse.microprofile.metrics.ConcurrentGauge;
 import org.eclipse.microprofile.metrics.Metadata;
@@ -354,6 +352,8 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
 
     @Test
     public void testWaitForMetakompasData() throws Exception {
+        Integer CASE_ID = 23;
+
         Map<String, BibliographicInformation> openFormatResponse =
                 Map.of(
                         "48959938", getOpenformatResponseFromResource("48959938").withMetakompassubject(null),
@@ -361,32 +361,8 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
                         "48959954", getOpenformatResponseFromResource("48959954").withMetakompassubject(null)
                 );
 
-        // Create a case with metakompasdata
-        CaseRequest dto = new CaseRequest()
-                .withPrimaryFaust("48959938")
-                .withRelatedFausts(List.of("48959911", "48959954"))
-                .withTitle("Title for 48959938")
-                .withAuthor("Author for 48959938")
-                .withDetails("Details for 48959938")
-                .withMaterialType(MaterialType.BOOK)
-                .withAssigned("2021-01-28")
-                .withDeadline("2024-02-29")
-                .withCreator(10)
-                .withEditor(10)
-                .withReviewer(1)
-                .withTasks(
-                        List.of(new TaskDto()
-                                        .withTaskFieldType(TaskFieldType.METAKOMPAS)
-                                        .withTaskType(TaskType.GROUP_2_100_UPTO_199_PAGES),
-                                new TaskDto()
-                                        .withTargetFausts(List.of("48959911", "48959954"))
-                                        .withTaskFieldType(TaskFieldType.METAKOMPAS)
-                                        .withTaskType(TaskType.GROUP_2_100_UPTO_199_PAGES)));
 
-        Response response = postResponse("v1/api/cases", dto);
-        assertThat("status code", response.getStatus(), is(201));
-        PromatCase created = mapper.readValue(response.readEntity(String.class), PromatCase.class);
-
+        PromatCase promatCase = getCaseWithId(CASE_ID);
         ScheduledCaseInformationUpdater upd = new ScheduledCaseInformationUpdater();
         upd.caseInformationUpdater = new CaseInformationUpdater();
         upd.caseInformationUpdater.metricRegistry = metricRegistry;
@@ -398,31 +374,32 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
         //
         // First round: Lets say that none are ready yet.
         //
-        persistenceContext.run(() -> upd.caseInformationUpdater.updateCaseInformation(created));
+        persistenceContext.run(() -> upd.caseInformationUpdater.updateCaseInformation(promatCase));
 
-        PromatTask task = PromatTaskUtils.getTaskForMainFaust(created, TaskFieldType.METAKOMPAS)
+        PromatTask task = PromatTaskUtils.getTaskForMainFaust(promatCase, TaskFieldType.METAKOMPAS)
                 .orElseThrow(() -> new Exception("task not found"));
         assertThat("metakompasdata for main faust",
                 task.getData(),
                 is(nullValue()));
-
-        task = PromatTaskUtils.getTaskForRelatedFaust(created, TaskFieldType.METAKOMPAS)
+        task = PromatTaskUtils.getTaskForRelatedFaust(promatCase, TaskFieldType.METAKOMPAS)
                 .orElseThrow(() -> new Exception("task not found"));
 
         assertThat("metakompasdata for related faust",
                 task.getData(), anyOf(is(nullValue()), is("false")));
 
+
         //
         // Second round: lets say metakompasdata for primary faust now has been done.
         //
         openFormatResponse.get("48959938").setMetakompassubject(CaseInformationUpdater.METAKOMPASDATA_PRESENT);
-        persistenceContext.run(() -> upd.caseInformationUpdater.updateCaseInformation(created));
-        task = PromatTaskUtils.getTaskForMainFaust(created, TaskFieldType.METAKOMPAS)
+        persistenceContext.run(() -> upd.caseInformationUpdater.updateCaseInformation(promatCase));
+
+        task = PromatTaskUtils.getTaskForMainFaust(promatCase, TaskFieldType.METAKOMPAS)
                 .orElseThrow(() -> new Exception("task not found"));
         assertThat("metakompasdata for main faust",
                 task.getData(),
                 is("true"));
-        task = PromatTaskUtils.getTaskForRelatedFaust(created, TaskFieldType.METAKOMPAS)
+        task = PromatTaskUtils.getTaskForRelatedFaust(promatCase, TaskFieldType.METAKOMPAS)
                 .orElseThrow(() -> new Exception("task not found"));
         assertThat("metakompasdata for related faust I",
                 task.getData(), anyOf(is(nullValue()), is("false")));
@@ -432,32 +409,46 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
         // Third round: Metadata for one of the related faust has been done.
         //
         openFormatResponse.get("48959911").setMetakompassubject(CaseInformationUpdater.METAKOMPASDATA_PRESENT);
-        persistenceContext.run(() -> upd.caseInformationUpdater.updateCaseInformation(created));
-        task = PromatTaskUtils.getTaskForMainFaust(created, TaskFieldType.METAKOMPAS)
+        persistenceContext.run(() -> upd.caseInformationUpdater.updateCaseInformation(promatCase));
+        task = PromatTaskUtils.getTaskForMainFaust(getCaseWithId(CASE_ID), TaskFieldType.METAKOMPAS)
                 .orElseThrow(() -> new Exception("task not found"));
         assertThat("metakompasdata for main faust",
                 task.getData(),
                 is("true"));
-        task = PromatTaskUtils.getTaskForRelatedFaust(created, TaskFieldType.METAKOMPAS)
+        task = PromatTaskUtils.getTaskForRelatedFaust(promatCase, TaskFieldType.METAKOMPAS)
                 .orElseThrow(() -> new Exception("task not found"));
         assertThat("metakompasdata for related faust II",
                 task.getData(), anyOf(is(nullValue()), is("false")));
-
+        assertThat("cases status", getCaseWithId(CASE_ID).getStatus(), is(CaseStatus.PENDING_EXTERNAL));
 
         //
         // Fourth round: Metadata for both of the related faust has been done.
         //
         openFormatResponse.get("48959954").setMetakompassubject(CaseInformationUpdater.METAKOMPASDATA_PRESENT);
-        persistenceContext.run(() -> upd.caseInformationUpdater.updateCaseInformation(created));
-        task = PromatTaskUtils.getTaskForMainFaust(created, TaskFieldType.METAKOMPAS)
+        persistenceContext.run(() -> upd.caseInformationUpdater.updateCaseInformation(promatCase));
+
+        task = PromatTaskUtils.getTaskForMainFaust(promatCase, TaskFieldType.METAKOMPAS)
                 .orElseThrow(() -> new Exception("task not found"));
         assertThat("metakompasdata for main faust",
                 task.getData(),
                 is("true"));
-        task = PromatTaskUtils.getTaskForRelatedFaust(created, TaskFieldType.METAKOMPAS)
+        task = PromatTaskUtils.getTaskForRelatedFaust(promatCase, TaskFieldType.METAKOMPAS)
                 .orElseThrow(() -> new Exception("task not found"));
         assertThat("metakompasdata for related faust II",
                 task.getData(), is("true"));
+        assertThat("case closed", promatCase.getStatus(), is(CaseStatus.APPROVED));
+
+
+        assertThat("cases status", getCaseWithId(CASE_ID).getStatus(), is(CaseStatus.APPROVED));
+    }
+
+    private PromatCase getCaseWithId(Integer id) {
+        TypedQuery<PromatCase> query = entityManager.createQuery(
+                "SELECT c FROM PromatCase c " +
+                        "WHERE c.id = :id", PromatCase.class);
+        query.setParameter("id", id);
+        return query.getSingleResult();
+
     }
 
     private BibliographicInformation getOpenformatResponseFromResource(String faust) throws IOException {

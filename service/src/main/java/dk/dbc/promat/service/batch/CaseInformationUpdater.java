@@ -8,10 +8,12 @@ package dk.dbc.promat.service.batch;
 import dk.dbc.connector.openformat.OpenFormatConnectorException;
 import dk.dbc.promat.service.api.BibliographicInformation;
 import dk.dbc.promat.service.api.OpenFormatHandler;
+import dk.dbc.promat.service.persistence.CaseStatus;
 import dk.dbc.promat.service.persistence.PromatCase;
 import dk.dbc.promat.service.persistence.PromatTask;
 import dk.dbc.promat.service.persistence.TaskFieldType;
 import dk.dbc.promat.service.util.PromatTaskUtils;
+import java.time.LocalDate;
 import org.eclipse.microprofile.metrics.ConcurrentGauge;
 import org.eclipse.microprofile.metrics.Metadata;
 import org.eclipse.microprofile.metrics.MetricRegistry;
@@ -97,42 +99,53 @@ public class CaseInformationUpdater {
             }
 
             //
-            // Check if 'metakompas' data has changed for main faust or related fausts.
+            // Status is 'PENDING_EXTERNAL'. Now do last check of metakompas data before setting
+            // final state: APPROVED.
             //
-            // Main faust
-            Optional<PromatTask> metakompasTaskMainFaust =
-                    PromatTaskUtils.getTaskForMainFaust(promatCase, TaskFieldType.METAKOMPAS);
-            if (METAKOMPASDATA_PRESENT.equals(bibliographicInformation.getMetakompassubject()) &&
-                    metakompasTaskMainFaust.isPresent()) {
-                if (!METAKOMPASDATA_PRESENT.equals(metakompasTaskMainFaust.get().getData())) {
-                    LOGGER.info("Updating metakompas for main faust: '{}' ==> '{}' of case with id {}",
-                            promatCase.getPrimaryFaust(), METAKOMPASDATA_PRESENT, promatCase.getId());
-                    metakompasTaskMainFaust.get().setData(METAKOMPASDATA_PRESENT);
-                }
-            }
+            if (CaseStatus.PENDING_EXTERNAL == promatCase.getStatus()) {
 
-            // Related fausts task
-            Optional<PromatTask> metakompasRelatedFausts =
-                    PromatTaskUtils.getTaskForRelatedFaust(promatCase, TaskFieldType.METAKOMPAS);
+                LOGGER.info("Case '{}' is in PENDING_EXTERNAL state. Checking 'metakompas' data", promatCase.getId());
 
-            if (metakompasRelatedFausts.isPresent() &&
-                    !METAKOMPASDATA_PRESENT.equals(metakompasRelatedFausts.get().getData())) {
-                PromatTask task = metakompasRelatedFausts.get();
-                boolean allIsPresent = task.getTargetFausts()
-                        .stream().allMatch(s -> {
-                            try {
-                                String present = openFormatHandler.format(s).getMetakompassubject();
-                                return METAKOMPASDATA_PRESENT.equals(present);
-                            } catch (OpenFormatConnectorException e) {
-                                LOGGER.error("Unable to look up faust {}, {}", s, e);
-                            }
-                            return false;
-                        });
-                if (allIsPresent) {
-                    LOGGER.info("Updating metakompas for related fausts: '{}' ==> '{}' of case with id {}. Taskid is '{}'",
-                            promatCase.getRelatedFausts(), METAKOMPASDATA_PRESENT, promatCase.getId(), task.getId());
-                    task.setData(METAKOMPASDATA_PRESENT);
+                // Main faust
+                Optional<PromatTask> metakompasTaskMainFaust =
+                        PromatTaskUtils.getTaskForMainFaust(promatCase, TaskFieldType.METAKOMPAS);
+                if (METAKOMPASDATA_PRESENT.equals(bibliographicInformation.getMetakompassubject()) &&
+                        metakompasTaskMainFaust.isPresent()) {
+                    if (!METAKOMPASDATA_PRESENT.equals(metakompasTaskMainFaust.get().getData())) {
+                        LOGGER.info("Updating metakompas for main faust: '{}' ==> '{}' of case with id {}",
+                                promatCase.getPrimaryFaust(), METAKOMPASDATA_PRESENT, promatCase.getId());
+                        PromatTask task = metakompasTaskMainFaust.get();
+                        task.setData(METAKOMPASDATA_PRESENT);
+                        task.setApproved(LocalDate.now());
+                    }
                 }
+
+                // Related fausts task
+                Optional<PromatTask> metakompasRelatedFausts =
+                        PromatTaskUtils.getTaskForRelatedFaust(promatCase, TaskFieldType.METAKOMPAS);
+
+                if (metakompasRelatedFausts.isPresent() &&
+                        !METAKOMPASDATA_PRESENT.equals(metakompasRelatedFausts.get().getData())) {
+                    PromatTask task = metakompasRelatedFausts.get();
+                    boolean allIsPresent = task.getTargetFausts()
+                            .stream().allMatch(s -> {
+                                try {
+                                    String present = openFormatHandler.format(s).getMetakompassubject();
+                                    return METAKOMPASDATA_PRESENT.equals(present);
+                                } catch (OpenFormatConnectorException e) {
+                                    LOGGER.error("Unable to look up faust {}, {}", s, e);
+                                }
+                                return false;
+                            });
+                    if (allIsPresent) {
+                        LOGGER.info("Updating metakompas for related fausts: '{}' ==> '{}' of case with id {}. Taskid is '{}'",
+                                promatCase.getRelatedFausts(), METAKOMPASDATA_PRESENT, promatCase.getId(), task.getId());
+                        task.setData(METAKOMPASDATA_PRESENT);
+                        task.setApproved(LocalDate.now());
+                    }
+                }
+                boolean approved = promatCase.getTasks().stream().allMatch(promatTask -> promatTask.getApproved() != null);
+                promatCase.setStatus(approved ? CaseStatus.APPROVED : CaseStatus.PENDING_EXTERNAL);
             }
 
         } catch(OpenFormatConnectorException e) {

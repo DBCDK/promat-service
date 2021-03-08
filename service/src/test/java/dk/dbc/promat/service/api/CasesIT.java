@@ -535,7 +535,7 @@ public class CasesIT extends ContainerTest {
         fetched = promatServiceConnector.listCases(new ListCasesParams()
                 .withTrimmedWeekcodeOperator(CriteriaOperator.LESS_THAN_OR_EQUAL_TO)
                 .withTrimmedWeekcode("202101"));
-        assertThat("Number of cases with weekcode less than '202101'", fetched.getNumFound(), is(2));
+        assertThat("Number of cases with weekcode less than '202101'", fetched.getNumFound(), is(3));
         assertThat("1st case with weekcode less than '202101'", fetched.getCases().get(0).getId(), is(1));
         assertThat("2nd case with weekcode less than '202101'", fetched.getCases().get(1).getId(), is(2));
     }
