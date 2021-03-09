@@ -1,0 +1,17 @@
+{
+  "id" : "acea8ed6-d45a-3710-8129-d5860ead4871",
+  "request" : {
+    "url" : "/api/work-presentation?profile=test&agencyId=190002&workId=work-of%3A190002-basis%3Ae80bb123",
+    "method" : "GET"
+  },
+  "response" : {
+    "status" : 404,
+    "bodyFileName" : "body-api-work-presentation-KOjh3.json",
+    "headers" : {
+      "Server" : "Payara Micro #badassfish",
+      "Content-Type" : "application/json",
+      "X-Frame-Options" : "SAMEORIGIN"
+    }
+  },
+  "uuid" : "acea8ed6-d45a-3710-8129-d5860ead4871"
+}
