@@ -22,7 +22,7 @@ values (1, 'Title for 001111', 'Details for 001111', '001111', '["002222","00333
        (20, 'Title for 100000', 'Details for 100000', '100000', '["100001", "100002"]', 1, 10,   '2021-01-09', '2021-02-09', '2021-01-10', 'EXPORTED', 'BOOK', 'BKM202104', '202104', 13, 'Author for 100000', 'Publisher for 100000'),
        (21, 'Title for 100003', 'Details for 100003', '100003', '[]',                   1, NULL, '2021-01-09', '2021-02-09', '2021-01-10', 'EXPORTED', 'BOOK', NULL,        '202104', 13, NULL,                 NULL),
        (22, 'Title for 100004', 'Details for 100004', '100004', '[]',                   1, NULL, '2021-01-09', '2021-02-09', '2021-01-10', 'EXPORTED', 'BOOK', NULL,        '202104', 13, NULL,                 NULL),
-       (23, 'Title for 100005', 'Details for 100005', '48959938', '["48959911", "48959954"]', 1, 10, '2021-03-08', '2021-04-08', '2021-03-08', 'PENDING_EXTERNAL', 'BOOK', null, null, 1, null, null);
+       (23, 'Title for 100005', 'Details for 100005', '48959938', '["48959911", "48959954"]', 1, 10, '2021-03-08', '2021-04-08', '2021-03-08', 'PENDING_EXTERNAL', 'BOOK', '202108', null, 1, null, null);
 
 insert into promattask(id, tasktype, taskfieldtype, created, paycategory, approved, payed, data, targetFausts)
 values  (1,  'GROUP_1_LESS_THAN_100_PAGES', 'DESCRIPTION',    '202-12-10', 'GROUP_1_LESS_THAN_100_PAGES', '2020-12-10',  NULL,         NULL,                        NULL),
