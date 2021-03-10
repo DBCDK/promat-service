@@ -146,7 +146,7 @@ public class Cases {
             creator = resolveEditor(dto.getCreator());
 
             // Create tasks (and update related fausts if needed)
-            tasks = createTasks(dto.getTasks(), relatedFausts);
+            tasks = createTasks(dto.getPrimaryFaust(), dto.getTasks(), relatedFausts);
 
         } catch(ServiceErrorException serviceErrorException) {
             LOGGER.info("Received serviceErrorException while mapping entities: {}", serviceErrorException.getMessage());
@@ -817,7 +817,7 @@ public class Cases {
         return editor;
     }
 
-    private List<PromatTask> createTasks(List<TaskDto> taskDtos, List<String> relatedFausts) throws ServiceErrorException {
+    private List<PromatTask> createTasks(String primaryFaust, List<TaskDto> taskDtos, List<String> relatedFausts) throws ServiceErrorException {
         ArrayList<PromatTask> tasks = new ArrayList<>();
 
         if( taskDtos != null && taskDtos.size() > 0) {
@@ -834,7 +834,7 @@ public class Cases {
 
                 if( task.getTargetFausts() != null ) {
                     for(String faust : task.getTargetFausts() ) {
-                        if(!relatedFausts.contains(faust)) {
+                        if(!relatedFausts.contains(faust) && !faust.equals(primaryFaust)) {
                             relatedFausts.add(faust);
                         }
                     }
