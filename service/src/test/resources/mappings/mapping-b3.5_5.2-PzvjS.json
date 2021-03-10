@@ -1,0 +1,21 @@
+{
+  "id" : "b65bca5f-e09c-3c6c-aa39-7ed095d07621",
+  "request" : {
+    "url" : "/b3.5_5.2/?collectionType=work&objectFormat=marcxchange&agency=010100&stepValue=10&profile=dbckat&query=id%3D226777809%20OR%20is%3D226777809%20OR%20bc%3D226777809&start=1&action=search&outputType=json&repository=rawrepo_basis",
+    "method" : "GET"
+  },
+  "response" : {
+    "status" : 200,
+    "bodyFileName" : "body-b3.5_5.2-PzvjS.json",
+    "headers" : {
+      "Date" : "Tue, 09 Mar 2021 17:22:24 GMT",
+      "Server" : "Apache/2.4.38 (Debian)",
+      "dbcdk-action" : "search",
+      "dbcdk-agency" : "010100",
+      "Keep-Alive" : "timeout=5, max=99",
+      "Connection" : "Keep-Alive",
+      "Content-Type" : "application/json"
+    }
+  },
+  "uuid" : "b65bca5f-e09c-3c6c-aa39-7ed095d07621"
+}

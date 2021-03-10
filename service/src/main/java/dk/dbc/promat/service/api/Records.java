@@ -38,6 +38,8 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 @Stateless
@@ -70,7 +72,7 @@ public class Records {
             OpensearchResult result = response.getResult();
             if( result.hitCount == 0 ) {
                 LOGGER.info("No results from opensearch. Id is unknown");
-                return new RecordsListDto();
+                return new RecordsListDto().withNumFound(0).withRecords(Collections.emptyList());
             }
             LOGGER.info("Got {} opensearch results ", result.hitCount);
 
