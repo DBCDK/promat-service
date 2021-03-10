@@ -440,6 +440,10 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
 
 
         assertThat("cases status", getCaseWithId(CASE_ID).getStatus(), is(CaseStatus.APPROVED));
+
+        // Delete the case so that we dont mess up payments and dataio-export tests
+        Response response = deleteResponse("v1/api/cases/" + CASE_ID);
+        assertThat("status code", response.getStatus(), is(200));
     }
 
     private PromatCase getCaseWithId(Integer id) {
