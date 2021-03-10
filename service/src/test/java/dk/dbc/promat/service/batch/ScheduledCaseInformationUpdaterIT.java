@@ -15,8 +15,16 @@ import dk.dbc.promat.service.api.BibliographicInformation;
 import dk.dbc.promat.service.api.OpenFormatHandler;
 import dk.dbc.promat.service.cluster.ServerRole;
 import dk.dbc.promat.service.dto.CaseRequest;
+import dk.dbc.promat.service.persistence.CaseStatus;
 import dk.dbc.promat.service.persistence.MaterialType;
 import dk.dbc.promat.service.persistence.PromatCase;
+import dk.dbc.promat.service.persistence.PromatTask;
+import dk.dbc.promat.service.persistence.TaskFieldType;
+import dk.dbc.promat.service.util.PromatTaskUtils;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Map;
 import org.eclipse.microprofile.metrics.ConcurrentGauge;
 import org.eclipse.microprofile.metrics.Metadata;
 import org.eclipse.microprofile.metrics.MetricRegistry;
@@ -28,6 +36,8 @@ import org.junit.jupiter.api.Test;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.configureFor;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options;
+import static org.hamcrest.CoreMatchers.anyOf;
+import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 
@@ -35,9 +45,12 @@ import javax.persistence.TypedQuery;
 import javax.ws.rs.core.Response;
 
 import java.util.Arrays;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static org.mockito.AdditionalMatchers.not;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -49,6 +62,8 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
     private final ConcurrentGauge gauge = mock(ConcurrentGauge.class);
     private static WireMockServer wireMockServer;
     private static String wiremockHost;
+    private static PromatTaskUtils promatTaskUtils;
+    private static final Logger LOGGER = LoggerFactory.getLogger(ScheduledCaseInformationUpdaterIT.class);
 
     @BeforeAll
     public static void startWiremock() {
@@ -56,6 +71,7 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
         wireMockServer.start();
         configureFor("localhost", wireMockServer.port());
         wiremockHost = wireMockServer.baseUrl();
+        promatTaskUtils = new PromatTaskUtils();
     }
 
     @AfterAll
@@ -332,5 +348,114 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
         // Delete the case so that we dont mess up payments and dataio-export tests
         response = deleteResponse("v1/api/cases/" + created.getId());
         assertThat("status code", response.getStatus(), is(200));
+    }
+
+    @Test
+    public void testWaitForMetakompasData() throws Exception {
+        Integer CASE_ID = 23;
+
+        Map<String, BibliographicInformation> openFormatResponse =
+                Map.of(
+                        "48959938", getOpenformatResponseFromResource("48959938").withMetakompassubject(null),
+                        "48959911", getOpenformatResponseFromResource("48959911").withMetakompassubject("false"),
+                        "48959954", getOpenformatResponseFromResource("48959954").withMetakompassubject(null)
+                );
+
+
+        PromatCase promatCase = getCaseWithId(CASE_ID);
+        ScheduledCaseInformationUpdater upd = new ScheduledCaseInformationUpdater();
+        upd.caseInformationUpdater = new CaseInformationUpdater();
+        upd.caseInformationUpdater.metricRegistry = metricRegistry;
+        OpenFormatHandler openFormatHandler = mock(OpenFormatHandler.class);
+        upd.caseInformationUpdater.openFormatHandler = openFormatHandler;
+        when(openFormatHandler.format(anyString()))
+                .thenAnswer(invocationOnMock -> openFormatResponse.get(invocationOnMock.getArgument(0)));
+
+        //
+        // First round: Lets say that none are ready yet.
+        //
+        persistenceContext.run(() -> upd.caseInformationUpdater.updateCaseInformation(promatCase));
+
+        PromatTask task = PromatTaskUtils.getTaskForMainFaust(promatCase, TaskFieldType.METAKOMPAS)
+                .orElseThrow(() -> new Exception("task not found"));
+        assertThat("metakompasdata for main faust",
+                task.getData(),
+                is(nullValue()));
+        task = PromatTaskUtils.getTaskForRelatedFaust(promatCase, TaskFieldType.METAKOMPAS)
+                .orElseThrow(() -> new Exception("task not found"));
+
+        assertThat("metakompasdata for related faust",
+                task.getData(), anyOf(is(nullValue()), is("false")));
+
+
+        //
+        // Second round: lets say metakompasdata for primary faust now has been done.
+        //
+        openFormatResponse.get("48959938").setMetakompassubject(CaseInformationUpdater.METAKOMPASDATA_PRESENT);
+        persistenceContext.run(() -> upd.caseInformationUpdater.updateCaseInformation(promatCase));
+
+        task = PromatTaskUtils.getTaskForMainFaust(promatCase, TaskFieldType.METAKOMPAS)
+                .orElseThrow(() -> new Exception("task not found"));
+        assertThat("metakompasdata for main faust",
+                task.getData(),
+                is("true"));
+        task = PromatTaskUtils.getTaskForRelatedFaust(promatCase, TaskFieldType.METAKOMPAS)
+                .orElseThrow(() -> new Exception("task not found"));
+        assertThat("metakompasdata for related faust I",
+                task.getData(), anyOf(is(nullValue()), is("false")));
+
+
+        //
+        // Third round: Metadata for one of the related faust has been done.
+        //
+        openFormatResponse.get("48959911").setMetakompassubject(CaseInformationUpdater.METAKOMPASDATA_PRESENT);
+        persistenceContext.run(() -> upd.caseInformationUpdater.updateCaseInformation(promatCase));
+        task = PromatTaskUtils.getTaskForMainFaust(getCaseWithId(CASE_ID), TaskFieldType.METAKOMPAS)
+                .orElseThrow(() -> new Exception("task not found"));
+        assertThat("metakompasdata for main faust",
+                task.getData(),
+                is("true"));
+        task = PromatTaskUtils.getTaskForRelatedFaust(promatCase, TaskFieldType.METAKOMPAS)
+                .orElseThrow(() -> new Exception("task not found"));
+        assertThat("metakompasdata for related faust II",
+                task.getData(), anyOf(is(nullValue()), is("false")));
+        assertThat("cases status", getCaseWithId(CASE_ID).getStatus(), is(CaseStatus.PENDING_EXTERNAL));
+
+        //
+        // Fourth round: Metadata for both of the related faust has been done.
+        //
+        openFormatResponse.get("48959954").setMetakompassubject(CaseInformationUpdater.METAKOMPASDATA_PRESENT);
+        persistenceContext.run(() -> upd.caseInformationUpdater.updateCaseInformation(promatCase));
+
+        task = PromatTaskUtils.getTaskForMainFaust(promatCase, TaskFieldType.METAKOMPAS)
+                .orElseThrow(() -> new Exception("task not found"));
+        assertThat("metakompasdata for main faust",
+                task.getData(),
+                is("true"));
+        task = PromatTaskUtils.getTaskForRelatedFaust(promatCase, TaskFieldType.METAKOMPAS)
+                .orElseThrow(() -> new Exception("task not found"));
+        assertThat("metakompasdata for related faust II",
+                task.getData(), is("true"));
+        assertThat("case closed", promatCase.getStatus(), is(CaseStatus.APPROVED));
+
+
+        assertThat("cases status", getCaseWithId(CASE_ID).getStatus(), is(CaseStatus.APPROVED));
+    }
+
+    private PromatCase getCaseWithId(Integer id) {
+        TypedQuery<PromatCase> query = entityManager.createQuery(
+                "SELECT c FROM PromatCase c " +
+                        "WHERE c.id = :id", PromatCase.class);
+        query.setParameter("id", id);
+        return query.getSingleResult();
+
+    }
+
+    private BibliographicInformation getOpenformatResponseFromResource(String faust) throws IOException {
+        return mapper.readValue(
+                Files.readString(
+                        Path.of(ScheduledCaseInformationUpdaterIT.class
+                                .getResource(String.format("/openformat/%s.json", faust))
+                .getPath())), BibliographicInformation.class);
     }
 }

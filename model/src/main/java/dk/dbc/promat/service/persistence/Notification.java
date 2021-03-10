@@ -31,6 +31,7 @@ public class Notification {
     public static final String SELECT_FROM_NOTIFCATION_QUEUE_QUERY =
             "SELECT notification FROM  Notification notification " +
                     "WHERE notification.status IN :status " +
+                    "AND notification.id > :lastid "+
                     " ORDER BY notification.id asc ";
 
     @Id
