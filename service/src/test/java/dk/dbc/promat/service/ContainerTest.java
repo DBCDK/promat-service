@@ -57,7 +57,7 @@ public abstract class ContainerTest extends IntegrationTest {
                         .responseDefinition()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json")
-                        .withBody(genericWorkPresentationResult)));
+                        .withBody(genericOpenFormatResult)));
         wireMockServer.start();
         configureFor("localhost", wireMockServer.port());
         Testcontainers.exposeHostPorts(wireMockServer.port());

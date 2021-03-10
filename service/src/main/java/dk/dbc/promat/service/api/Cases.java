@@ -23,7 +23,6 @@ import dk.dbc.promat.service.persistence.CaseStatus;
 import dk.dbc.promat.service.persistence.CaseView;
 import dk.dbc.promat.service.persistence.Editor;
 import dk.dbc.promat.service.persistence.Notification;
-import dk.dbc.promat.service.persistence.PayCategory;
 import dk.dbc.promat.service.persistence.PromatCase;
 import dk.dbc.promat.service.persistence.PromatEntityManager;
 import dk.dbc.promat.service.persistence.PromatMessage;
@@ -31,7 +30,6 @@ import dk.dbc.promat.service.persistence.PromatTask;
 import dk.dbc.promat.service.persistence.Reviewer;
 import dk.dbc.promat.service.persistence.Subject;
 import dk.dbc.promat.service.persistence.TaskFieldType;
-import dk.dbc.promat.service.persistence.TaskType;
 import dk.dbc.promat.service.templating.CaseviewXmlTransformer;
 import dk.dbc.promat.service.templating.NotificationFactory;
 import dk.dbc.promat.service.templating.model.AssignReviewer;
@@ -651,7 +649,7 @@ public class Cases {
                     .withTaskFieldType(dto.getTaskFieldType())
                     .withData(dto.getData())  // null is allowed here since it is the default value anyway
                     .withCreated(LocalDate.now())
-                    .withPayCategory(getPayCategoryForTaskType(dto.getTaskType(), dto.getTaskFieldType()))
+                    .withPayCategory(Repository.getPayCategoryForTaskType(dto.getTaskType(), dto.getTaskFieldType()))
                     .withTargetFausts(dto.getTargetFausts());
 
             // Add the new task
@@ -819,56 +817,6 @@ public class Cases {
         return editor;
     }
 
-    private PayCategory getPayCategoryForTaskType(TaskType taskType, TaskFieldType taskFieldType) throws ServiceErrorException {
-        switch(taskFieldType) {
-            case BRIEF:
-                return PayCategory.BRIEF;
-            case METAKOMPAS:
-                return PayCategory.METAKOMPAS;
-            case BKM:
-                return PayCategory.BKM;
-            case EXPRESS:
-                return PayCategory.EXPRESS;
-            default: {
-                switch(taskType) {
-
-                    case GROUP_1_LESS_THAN_100_PAGES:
-                        return PayCategory.GROUP_1_LESS_THAN_100_PAGES;
-                    case GROUP_2_100_UPTO_199_PAGES:
-                        return PayCategory.GROUP_2_100_UPTO_199_PAGES;
-                    case GROUP_3_200_UPTO_499_PAGES:
-                        return PayCategory.GROUP_3_200_UPTO_499_PAGES;
-                    case GROUP_4_500_OR_MORE_PAGES:
-                        return PayCategory.GROUP_4_500_OR_MORE_PAGES;
-
-                    case MOVIES_GR_1:
-                        return PayCategory.MOVIES_GR_1;
-                    case MOVIES_GR_2:
-                        return PayCategory.MOVIES_GR_2;
-                    case MOVIES_GR_3:
-                        return PayCategory.MOVIES_GR_3;
-
-                    case MULTIMEDIA_FEE:
-                        return PayCategory.MULTIMEDIA_FEE;
-                    case MULTIMEDIA_FEE_GR2:
-                        return PayCategory.MULTIMEDIA_FEE_GR2;
-
-                    case MOVIE_NON_FICTION_GR1:
-                        return PayCategory.MOVIE_NON_FICTION_GR1;
-                    case MOVIE_NON_FICTION_GR2:
-                        return PayCategory.MOVIE_NON_FICTION_GR2;
-                    case MOVIE_NON_FICTION_GR3:
-                        return PayCategory.MOVIE_NON_FICTION_GR3;
-                }
-            }
-        }
-
-        throw new ServiceErrorException("Bad PayCategory")
-                .withDetails(String.format("Invalid combination of TaskType %s and TaskFieldType %s when determining paycategory", taskType, taskFieldType))
-                .withCode(ServiceErrorCode.INVALID_REQUEST)
-                .withHttpStatus(400);
-    }
-
     private List<PromatTask> createTasks(List<TaskDto> taskDtos, List<String> relatedFausts) throws ServiceErrorException {
         ArrayList<PromatTask> tasks = new ArrayList<>();
 
@@ -879,7 +827,8 @@ public class Cases {
                 tasks.add(new PromatTask()
                         .withTaskType(task.getTaskType())
                         .withTaskFieldType(task.getTaskFieldType())
-                        .withPayCategory(getPayCategoryForTaskType(task.getTaskType(), task.getTaskFieldType()))
+                        .withPayCategory(
+                                Repository.getPayCategoryForTaskType(task.getTaskType(), task.getTaskFieldType()))
                         .withCreated(LocalDate.now())
                         .withTargetFausts(task.getTargetFausts() == null ? null : task.getTargetFausts()));
 

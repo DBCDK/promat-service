@@ -4,18 +4,18 @@
     "creators": [],
     "description": "text",
     "fullTitle": "Title for draft",
-    "records": [
+    "groups": [
       {
-        "id": "870970-basis:11111111",
-        "types": [
-          "Bog"
-        ]
+        "records": [{
+          "id": "870970-basis:11111111",
+          "types": ["Bog"]
+        }]
       },
       {
-        "id": "870970-basis:22222222",
-        "types": [
-          "Ebog"
-        ]
+        "records": [{
+          "id": "870970-basis:22222222",
+          "types": ["Ebog"]
+        }]
       }
     ],
     "subjects": [],

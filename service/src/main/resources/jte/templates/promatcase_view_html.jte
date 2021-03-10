@@ -17,26 +17,24 @@
     <title>Anmeldelse for ${requestedFaustnumber}@if(relatedFaustnumbers.size() > 0) + (${relatedFaustnumbers.stream().sorted().collect(Collectors.joining(","))})@endif</title>
     <style type="text/css">
         body {font: 10pt arial, helvetica, sans-serif;}
-        div.metadata {}
-        div.metadata div {font-weight: bold}
-        div.metadata div.data {position: relative; display: block; font-weight: normal; left: 4cm; margin-top: -20px; min-height: 20px;}
-        div.fields {padding-top: 0.6cm;}
-        div.field {padding-top: 0.2cm;}
-        div.field .type {font-weight: bold}
+        div.metadata div.container {font-weight: bold;}
+        div.metadata div.data {font-weight: normal; margin-bottom: 5px;}
+        div.fields {margin-top: 20px;}
+        div.field .type {font-weight: bold; margin-top: 10px;}
     </style>
 </head>
 <body>
 <div class="main">
     <div class="firstrecord">
         <div class="metadata">
-            <div>Titel:<div class="data">${promatCase.getTitle()}</div></div>
-            <div>Forfatter:<div class="data">${promatCase.getAuthor()}</div></div>
-            <div>Forlag:<div class="data">${promatCase.getPublisher()}</div></div>
-            <div>Faustnr:<div class="data">${promatCase.getPrimaryFaust()}</div></div>
-            <div>Anmelder:<div class="data">${Formatting.format(promatCase.getReviewer())}</div></div>
-            <div>Frist:<div class="data">${Formatting.format(promatCase.getDeadline())}</div></div>
-            <div>Status:<div class="data">${Formatting.format(promatCase.getStatus())}</div></div>
-            <div>Redakt&oslash;r:<div class="data">${Formatting.format(promatCase.getEditor())}</div></div>
+            <div class="container">Titel:<div class="data">${promatCase.getTitle()}</div></div>
+            <div class="container">Forfatter:<div class="data">${promatCase.getAuthor()}</div></div>
+            <div class="container">Forlag:<div class="data">${promatCase.getPublisher()}</div></div>
+            <div class="container">Faustnr:<div class="data">${promatCase.getPrimaryFaust()}</div></div>
+            <div class="container">Anmelder:<div class="data">${Formatting.format(promatCase.getReviewer())}</div></div>
+            <div class="container">Frist:<div class="data">${Formatting.format(promatCase.getDeadline())}</div></div>
+            <div class="container">Status:<div class="data">${Formatting.format(promatCase.getStatus())}</div></div>
+            <div class="container">Redakt&oslash;r:<div class="data">${Formatting.format(promatCase.getEditor())}</div></div>
         </div>
 
         <div class="fields">
