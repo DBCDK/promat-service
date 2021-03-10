@@ -846,7 +846,7 @@ public class Cases {
     }
 
     private void validateTaskDto(TaskDto dto) throws ServiceErrorException {
-        if(dto.getTaskType() == null || dto.getTaskFieldType() == null) {
+        if(dto.getTaskType() == null || dto.getTaskFieldType() == null || dto.getTargetFausts() == null || dto.getTargetFausts().size() == 0) {
             LOGGER.info("Task dto is missing the taskType and/or taskFieldType field");
             throw new ServiceErrorException("Task dto is missing the taskType and/or taskFieldType field")
                     .withCause("Missing required field(s) in the request data")

@@ -228,7 +228,8 @@ public class CasesIT extends ContainerTest {
                 .withTasks(Arrays.asList(
                         new TaskDto()
                                 .withTaskType(TaskType.GROUP_1_LESS_THAN_100_PAGES)
-                                .withTaskFieldType(TaskFieldType.BRIEF),
+                                .withTaskFieldType(TaskFieldType.BRIEF)
+                                .withTargetFausts(Arrays.asList("6001111")),
                         new TaskDto()
                                 .withTaskType(TaskType.GROUP_1_LESS_THAN_100_PAGES)
                                 .withTaskFieldType(TaskFieldType.BRIEF)
@@ -250,7 +251,7 @@ public class CasesIT extends ContainerTest {
         assertThat("task 1 created", created.getTasks().get(0).getCreated(), is(LocalDate.now()));
         assertThat("task 1 approved", created.getTasks().get(0).getApproved(), is(IsNull.nullValue()));
         assertThat("task 1 payed", created.getTasks().get(0).getPayed(), is(IsNull.nullValue()));
-        assertThat("task 1 targetFausts", created.getTasks().get(0).getTargetFausts(), is(IsNull.nullValue()));
+        assertThat("task 1 targetFausts", created.getTasks().get(0).getTargetFausts(), is(Arrays.asList("6001111")));
 
         // Check the second created task
         assertThat("task 2 type", created.getTasks().get(1).getTaskType(), is(TaskType.GROUP_1_LESS_THAN_100_PAGES));
@@ -591,6 +592,7 @@ public class CasesIT extends ContainerTest {
                         new TaskDto()
                                 .withTaskType(TaskType.GROUP_1_LESS_THAN_100_PAGES)
                                 .withTaskFieldType(TaskFieldType.BKM)
+                                .withTargetFausts(Arrays.asList("8001111"))
                 ));
         response = postResponse("v1/api/cases", dto);
         assertThat("status code", response.getStatus(), is(201));
@@ -601,7 +603,7 @@ public class CasesIT extends ContainerTest {
                 .withTitle("New title for 8001111")
                 .withDetails("New details for 8001111")
                 .withPrimaryFaust("8002222")
-                .withRelatedFausts(Arrays.asList("8001111", "8003333", "8004444"))
+                .withRelatedFausts(Arrays.asList("8001111", "8003333", "8004444")) // This is incorrect, but has no consequences other than being confusing
                 .withReviewer(1)
                 .withEditor(11)
                 .withSubjects(Arrays.asList(5))
@@ -614,10 +616,12 @@ public class CasesIT extends ContainerTest {
                                 .withTargetFausts(Arrays.asList(new String[] {"8001111", "8004444"})),
                         new TaskDto()
                                 .withTaskType(TaskType.GROUP_1_LESS_THAN_100_PAGES)
-                                .withTaskFieldType(TaskFieldType.BKM),
+                                .withTaskFieldType(TaskFieldType.BKM)
+                                .withTargetFausts(Arrays.asList("8002222")),
                         new TaskDto()
                                 .withTaskType(TaskType.GROUP_1_LESS_THAN_100_PAGES)
                                 .withTaskFieldType(TaskFieldType.DESCRIPTION)
+                                .withTargetFausts(Arrays.asList("8003333"))
                 ));
         PromatCase updated = promatServiceConnector.updateCase(created.getId(), dto);
 
@@ -725,7 +729,10 @@ public class CasesIT extends ContainerTest {
                 .withPrimaryFaust("9001211")
                 .withTitle("Title for 9001211")
                 .withDetails("Details for 9001211")
-                .withTasks(Collections.singletonList(new TaskDto().withTaskType(TaskType.GROUP_1_LESS_THAN_100_PAGES).withTaskFieldType(TaskFieldType.BKM)))
+                .withTasks(Collections.singletonList(new TaskDto()
+                        .withTaskType(TaskType.GROUP_1_LESS_THAN_100_PAGES)
+                        .withTaskFieldType(TaskFieldType.BKM)
+                        .withTargetFausts(Arrays.asList("9001211"))))
                 .withPublisher("Publisher for 9001211")
                 .withAuthor("Author for 9001211")
                 .withWeekCode("Weekcode for 9001211")
@@ -794,6 +801,7 @@ public class CasesIT extends ContainerTest {
                         new TaskDto()
                                 .withTaskType(TaskType.GROUP_1_LESS_THAN_100_PAGES)
                                 .withTaskFieldType(TaskFieldType.BRIEF)
+                                .withTargetFausts(Arrays.asList("9001111"))
                 ));
 
         assertThat("status code", postResponse("v1/api/cases", dto).getStatus(), is(201));
@@ -858,6 +866,7 @@ public class CasesIT extends ContainerTest {
                         new TaskDto()
                                 .withTaskType(TaskType.GROUP_1_LESS_THAN_100_PAGES)
                                 .withTaskFieldType(TaskFieldType.BRIEF)
+                                .withTargetFausts(Arrays.asList("13001111"))
                 ));
         Response response = postResponse("v1/api/cases", dto);
         assertThat("status code", response.getStatus(), is(201));
@@ -866,7 +875,8 @@ public class CasesIT extends ContainerTest {
 
         TaskDto taskDto = new TaskDto()
                 .withTaskType(TaskType.GROUP_1_LESS_THAN_100_PAGES)
-                .withTaskFieldType(TaskFieldType.BRIEF);
+                .withTaskFieldType(TaskFieldType.DESCRIPTION)
+                .withTargetFausts(Arrays.asList("13001111"));
         response = postResponse("v1/api/cases/" + created.getId() + "/tasks", taskDto);
         assertThat("status code", response.getStatus(), is(201));
 
@@ -958,6 +968,10 @@ public class CasesIT extends ContainerTest {
 
         // Add TaskFieldType
         taskDto.setTaskFieldType(TaskFieldType.BRIEF);
+        assertThat("status code", postResponse("v1/api/cases/" + created.getId() + "/tasks", taskDto).getStatus(), is(400));
+
+        // Add Targetfaust
+        taskDto.setTargetFausts(Arrays.asList("16001111"));
         assertThat("status code", postResponse("v1/api/cases/" + created.getId() + "/tasks", taskDto).getStatus(), is(201));
     }
 
