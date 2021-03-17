@@ -12,6 +12,7 @@ import dk.dbc.promat.service.persistence.PromatEntityManager;
 import dk.dbc.promat.service.persistence.PromatMessage;
 import dk.dbc.promat.service.persistence.PromatUser;
 import dk.dbc.promat.service.persistence.Reviewer;
+import java.time.LocalDateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -75,7 +76,7 @@ public class Messages {
                     .withCaseId(caseId)
                     .withAuthor(PromatMessage.Author.fromPromatUser(promatUser))
                     .withDirection(messageRequestDto.getDirection())
-                    .withCreated(LocalDate.now())
+                    .withCreated(LocalDateTime.now())
                     .withIsRead(Boolean.FALSE);
 
             // Todo: Should we also send a mail when EDITOR_TO_REVIEWER?

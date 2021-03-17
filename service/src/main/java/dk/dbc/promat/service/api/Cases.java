@@ -22,6 +22,7 @@ import dk.dbc.promat.service.dto.TaskDto;
 import dk.dbc.promat.service.persistence.CaseStatus;
 import dk.dbc.promat.service.persistence.CaseView;
 import dk.dbc.promat.service.persistence.Editor;
+import dk.dbc.promat.service.persistence.MaterialType;
 import dk.dbc.promat.service.persistence.Notification;
 import dk.dbc.promat.service.persistence.PromatCase;
 import dk.dbc.promat.service.persistence.PromatEntityManager;
@@ -34,6 +35,7 @@ import dk.dbc.promat.service.templating.CaseviewXmlTransformer;
 import dk.dbc.promat.service.templating.NotificationFactory;
 import dk.dbc.promat.service.templating.model.AssignReviewer;
 import dk.dbc.promat.service.templating.Renderer;
+import java.time.LocalDateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -339,7 +341,8 @@ public class Cases {
                                   final CriteriaOperator trimmedWeekcodeOperator,
                               @QueryParam("weekCode") final String weekCode,
                               @QueryParam("limit") final Integer limit,
-                              @QueryParam("from") final Integer from) {
+                              @QueryParam("from") final Integer from,
+                              @QueryParam("materials") final String materials) {
 
         final ListCasesParams listCasesParams = new ListCasesParams()
                 .withFaust(faust)
@@ -353,7 +356,8 @@ public class Cases {
                 .withTrimmedWeekcodeOperator(trimmedWeekcodeOperator)
                 .withFormat(ListCasesParams.Format.valueOf(format.toString()))
                 .withLimit(limit)
-                .withFrom(from);
+                .withFrom(from)
+                .withMaterials(materials);
 
         LOGGER.info("GET cases/ {}", listCasesParams);
 
@@ -469,6 +473,24 @@ public class Cases {
         final String weekCode = params.getWeekCode();
         if (weekCode != null && !weekCode.isBlank()) {
             allPredicates.add(builder.equal(builder.lower(root.get("weekCode")), weekCode.toLowerCase()));
+        }
+
+        // Get cases with these (commaseparated) materials
+        final String materials = params.getMaterials();
+        if (materials != null && !materials.isBlank()) {
+            final List<Predicate> materialsPredicates = new ArrayList<>();
+            for (String oneMaterial : materials.split(",")) {
+                try {
+                    materialsPredicates.add(builder.equal(root.get("materialType"), MaterialType.valueOf(oneMaterial)));
+                } catch (IllegalArgumentException ex) {
+                    final ServiceErrorDto error = new ServiceErrorDto()
+                            .withCode(ServiceErrorCode.INVALID_REQUEST)
+                            .withCause("Invalid material type")
+                            .withDetails(String.format("Unknown material: %s", oneMaterial));
+                    throw new ServiceErrorException(error.getCause()).withHttpStatus(400);
+                }
+            }
+            allPredicates.add(builder.or(materialsPredicates.toArray(Predicate[]::new)));
         }
 
         // If a starting id has been given, add this
@@ -914,7 +936,7 @@ public class Cases {
                 .withAuthor(
                         PromatMessage.Author.fromPromatUser(promatCase.getEditor())
                 )
-                .withCreated(LocalDate.now())
+                .withCreated(LocalDateTime.now())
                 .withIsRead(Boolean.FALSE);
         entityManager.persist(notification);
         entityManager.persist(message);
@@ -1020,4 +1042,5 @@ public class Cases {
                         .withCode(ServiceErrorCode.INVALID_REQUEST);
         }
     }
+
 }

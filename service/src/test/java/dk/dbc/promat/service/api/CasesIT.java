@@ -1479,4 +1479,113 @@ public class CasesIT extends ContainerTest {
             }
         });
     }
+
+    @Test
+    public void testMaterialsFilterQuery() throws PromatServiceConnectorException, JsonProcessingException {
+        // Create a BOOK case
+        CaseRequest dto = new CaseRequest()
+                .withTitle("Title for 80011112")
+                .withDetails("Details for 80011112")
+                .withPrimaryFaust("80011112")
+                .withRelatedFausts(Arrays.asList("80022222", "80033332"))
+                .withEditor(10)
+                .withSubjects(Arrays.asList(3, 4))
+                .withDeadline("2021-04-01")
+                .withMaterialType(MaterialType.BOOK)
+                .withTasks(Arrays.asList(
+                        new TaskDto()
+                                .withTaskType(TaskType.GROUP_1_LESS_THAN_100_PAGES)
+                                .withTaskFieldType(TaskFieldType.BRIEF)
+                                .withTargetFausts(List.of("80022222", "80044442")),
+                        new TaskDto()
+                                .withTaskType(TaskType.GROUP_1_LESS_THAN_100_PAGES)
+                                .withTaskFieldType(TaskFieldType.BKM)
+                                .withTargetFausts(List.of("80011112"))
+                ));
+        Response response = postResponse("v1/api/cases", dto);
+        assertThat("status code", response.getStatus(), is(201));
+        PromatCase book = mapper.readValue(response.readEntity(String.class), PromatCase.class);
+
+        // Create a MOVIE case
+        dto = new CaseRequest()
+                .withTitle("Title for 80011113")
+                .withDetails("Details for 80011113")
+                .withPrimaryFaust("80011113")
+                .withRelatedFausts(Arrays.asList("80022223", "80033333"))
+                .withEditor(10)
+                .withSubjects(Arrays.asList(3, 4))
+                .withDeadline("2021-04-01")
+                .withMaterialType(MaterialType.MOVIE)
+                .withTasks(Arrays.asList(
+                        new TaskDto()
+                                .withTaskType(TaskType.MOVIES_GR_1)
+                                .withTaskFieldType(TaskFieldType.BRIEF)
+                                .withTargetFausts(List.of("80011113")),
+                        new TaskDto()
+                                .withTaskType(TaskType.MOVIE_NON_FICTION_GR1)
+                                .withTaskFieldType(TaskFieldType.BKM)
+                                .withTargetFausts(List.of("80011113"))
+                ));
+        response = postResponse("v1/api/cases", dto);
+        assertThat("status code", response.getStatus(), is(201));
+        PromatCase movie = mapper.readValue(response.readEntity(String.class), PromatCase.class);
+
+
+        // Create a MULTIMEDIA case
+        dto = new CaseRequest()
+                .withTitle("Title for 80011114")
+                .withDetails("Details for 80011114")
+                .withPrimaryFaust("80011114")
+                .withRelatedFausts(Arrays.asList("80022224", "80033334"))
+                .withEditor(10)
+                .withSubjects(Arrays.asList(3, 4))
+                .withDeadline("2021-04-01")
+                .withMaterialType(MaterialType.MULTIMEDIA)
+                .withTasks(Arrays.asList(
+                        new TaskDto()
+                                .withTaskType(TaskType.MULTIMEDIA_FEE)
+                                .withTaskFieldType(TaskFieldType.BRIEF)
+                                .withTargetFausts(List.of("80011114")),
+                        new TaskDto()
+                                .withTaskType(TaskType.MULTIMEDIA_FEE)
+                                .withTaskFieldType(TaskFieldType.BKM)
+                                .withTargetFausts(List.of("80011114"))
+                ));
+        response = postResponse("v1/api/cases", dto);
+        assertThat("status code", response.getStatus(), is(201));
+        PromatCase multimedia = mapper.readValue(response.readEntity(String.class), PromatCase.class);
+
+
+        CaseSummaryList cases = promatServiceConnector.listCases(new ListCasesParams().withMaterials("BOOK"));
+        assertThat("At least one book", cases.getNumFound(), greaterThanOrEqualTo(1));
+        assertThat("Only books", cases.getCases().stream().allMatch(promatCase -> promatCase.getMaterialType() == MaterialType.BOOK));
+
+        cases = promatServiceConnector.listCases(new ListCasesParams().withMaterials("BOOK,MOVIE"));
+        assertThat("At least one book and one movie", cases.getNumFound(), greaterThanOrEqualTo(2));
+        assertThat("Not only books!", !cases.getCases().stream().allMatch(promatCase -> promatCase.getMaterialType() == MaterialType.BOOK));
+
+
+        cases = promatServiceConnector.listCases(new ListCasesParams().withMaterials("BOOK,MULTIMEDIA"));
+        assertThat("At least one book and one multimedia", cases.getNumFound(), greaterThanOrEqualTo(2));
+        assertThat("Only books & multimedia", cases.getCases().stream().
+                allMatch(promatCase -> promatCase.getMaterialType() == MaterialType.BOOK ||
+                        promatCase.getMaterialType() == MaterialType.MULTIMEDIA));
+
+        assertThat("At least one multimedia case was found",
+                cases.getCases().stream().anyMatch(promatCase -> promatCase.getMaterialType() == MaterialType.MULTIMEDIA));
+
+        // Delete case, in order not to mess up other tests.
+        // Delete the case so that we dont mess up payments tests
+        response = deleteResponse("v1/api/cases/"+book.getId());
+        assertThat("status code", response.getStatus(), is(200));
+
+        response = deleteResponse("v1/api/cases/"+movie.getId());
+        assertThat("status code", response.getStatus(), is(200));
+
+        response = deleteResponse("v1/api/cases/"+multimedia.getId());
+        assertThat("status code", response.getStatus(), is(200));
+
+
+
+    }
 }

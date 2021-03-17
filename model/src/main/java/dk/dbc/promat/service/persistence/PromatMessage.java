@@ -1,6 +1,7 @@
 package dk.dbc.promat.service.persistence;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Objects;
 import javax.persistence.Column;
 import javax.persistence.Embeddable;
@@ -122,7 +123,7 @@ public class PromatMessage {
     public static final String TABLE_NAME = "promatmessage";
     public static final String GET_MESSAGES_FOR_CASE = "PromatMessage.getMessagesForCase";
     public static final String GET_MESSAGES_FOR_CASE_QUERY =
-            "SELECT promatmessage FROM PromatMessage promatmessage WHERE promatmessage.caseId = :caseId";
+            "SELECT promatmessage FROM PromatMessage promatmessage WHERE promatmessage.caseId = :caseId ORDER BY promatmessage.id DESC";
     public static final String UPDATE_READ_STATE = "PromatMessage.updateReadState";
     public static final String UPDATE_READ_STATE_QUERY =
             "UPDATE PromatMessage promatMessage SET promatMessage.isRead = :isRead " +
@@ -140,7 +141,7 @@ public class PromatMessage {
 
     private String messageText;
 
-    private LocalDate created;
+    private LocalDateTime created;
 
     private Boolean isRead;
 
@@ -163,11 +164,11 @@ public class PromatMessage {
         this.messageText = messageText;
     }
 
-    public LocalDate getCreated() {
+    public LocalDateTime getCreated() {
         return created;
     }
 
-    public void setCreated(LocalDate created) {
+    public void setCreated(LocalDateTime created) {
         this.created = created;
     }
 
@@ -200,7 +201,7 @@ public class PromatMessage {
         return this;
     }
 
-    public PromatMessage withCreated(LocalDate created) {
+    public PromatMessage withCreated(LocalDateTime created) {
         this.created = created;
         return this;
     }

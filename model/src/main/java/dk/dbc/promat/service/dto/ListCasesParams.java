@@ -58,7 +58,11 @@ public class ListCasesParams extends HashMap<String, Object> {
         /**
          * Name of author
          */
-        AUTHOR("author");
+        AUTHOR("author"),
+        /**
+         * Materials (BOOK, MOVIE, MULTIMEDIA)
+         */
+        MATERIALS("materials");
 
         private final String keyName;
 
@@ -192,6 +196,14 @@ public class ListCasesParams extends HashMap<String, Object> {
 
     public String getWeekCode() {
         return getString(Key.WEEKCODE);
+    }
+
+    public ListCasesParams withMaterials(String materials) {
+        return withString(Key.MATERIALS, materials);
+    }
+
+    public String getMaterials() {
+        return getString(Key.MATERIALS);
     }
 
     private void putOrRemoveOnNull(Key param, Object value) {
