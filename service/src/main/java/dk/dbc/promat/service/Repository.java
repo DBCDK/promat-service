@@ -72,7 +72,7 @@ public class Repository {
         return subjects;
     }
 
-    public static PayCategory getPayCategoryForTaskType(TaskType taskType, TaskFieldType taskFieldType) throws ServiceErrorException {
+    public static PayCategory getPayCategoryForTaskFieldTypeOfTaskType(TaskType taskType, TaskFieldType taskFieldType) throws ServiceErrorException {
         switch(taskFieldType) {
             case BRIEF:
                 return PayCategory.BRIEF;
@@ -83,41 +83,45 @@ public class Repository {
             case EXPRESS:
                 return PayCategory.EXPRESS;
             default: {
-                switch(taskType) {
-
-                    case GROUP_1_LESS_THAN_100_PAGES:
-                        return PayCategory.GROUP_1_LESS_THAN_100_PAGES;
-                    case GROUP_2_100_UPTO_199_PAGES:
-                        return PayCategory.GROUP_2_100_UPTO_199_PAGES;
-                    case GROUP_3_200_UPTO_499_PAGES:
-                        return PayCategory.GROUP_3_200_UPTO_499_PAGES;
-                    case GROUP_4_500_OR_MORE_PAGES:
-                        return PayCategory.GROUP_4_500_OR_MORE_PAGES;
-
-                    case MOVIES_GR_1:
-                        return PayCategory.MOVIES_GR_1;
-                    case MOVIES_GR_2:
-                        return PayCategory.MOVIES_GR_2;
-                    case MOVIES_GR_3:
-                        return PayCategory.MOVIES_GR_3;
-
-                    case MULTIMEDIA_FEE:
-                        return PayCategory.MULTIMEDIA_FEE;
-                    case MULTIMEDIA_FEE_GR2:
-                        return PayCategory.MULTIMEDIA_FEE_GR2;
-
-                    case MOVIE_NON_FICTION_GR1:
-                        return PayCategory.MOVIE_NON_FICTION_GR1;
-                    case MOVIE_NON_FICTION_GR2:
-                        return PayCategory.MOVIE_NON_FICTION_GR2;
-                    case MOVIE_NON_FICTION_GR3:
-                        return PayCategory.MOVIE_NON_FICTION_GR3;
-                }
+                return getPayCategoryForTaskType(taskType);
             }
+        }
+    }
+
+    public static PayCategory getPayCategoryForTaskType(TaskType taskType) throws ServiceErrorException {
+        switch(taskType) {
+
+            case GROUP_1_LESS_THAN_100_PAGES:
+                return PayCategory.GROUP_1_LESS_THAN_100_PAGES;
+            case GROUP_2_100_UPTO_199_PAGES:
+                return PayCategory.GROUP_2_100_UPTO_199_PAGES;
+            case GROUP_3_200_UPTO_499_PAGES:
+                return PayCategory.GROUP_3_200_UPTO_499_PAGES;
+            case GROUP_4_500_OR_MORE_PAGES:
+                return PayCategory.GROUP_4_500_OR_MORE_PAGES;
+
+            case MOVIES_GR_1:
+                return PayCategory.MOVIES_GR_1;
+            case MOVIES_GR_2:
+                return PayCategory.MOVIES_GR_2;
+            case MOVIES_GR_3:
+                return PayCategory.MOVIES_GR_3;
+
+            case MULTIMEDIA_FEE:
+                return PayCategory.MULTIMEDIA_FEE;
+            case MULTIMEDIA_FEE_GR2:
+                return PayCategory.MULTIMEDIA_FEE_GR2;
+
+            case MOVIE_NON_FICTION_GR1:
+                return PayCategory.MOVIE_NON_FICTION_GR1;
+            case MOVIE_NON_FICTION_GR2:
+                return PayCategory.MOVIE_NON_FICTION_GR2;
+            case MOVIE_NON_FICTION_GR3:
+                return PayCategory.MOVIE_NON_FICTION_GR3;
         }
 
         throw new ServiceErrorException("Bad PayCategory")
-                .withDetails(String.format("Invalid combination of TaskType %s and TaskFieldType %s when determining paycategory", taskType, taskFieldType))
+                .withDetails(String.format("Invalid TaskType %s when determining paycategory for TaskType", taskType))
                 .withCode(ServiceErrorCode.INVALID_REQUEST)
                 .withHttpStatus(400);
     }

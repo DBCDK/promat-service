@@ -57,11 +57,11 @@ public class PaymentsIT  extends ContainerTest {
         assertThat("number of history lines is", history.size(), is(3));
     }
 
-    // This test needs to run as the second test since it modifies the preloaded
+    // This test needs to run as the third test since it modifies the preloaded
     // cases to remove the invalid case from pending payments
     @Test
     @Order(3)
-    public void TestGetPaymentsShouldThrow() throws PromatServiceConnectorException {
+    public void TestGetPaymentsShouldThrowDueToInvalidCases() throws PromatServiceConnectorException {
         Response response = getResponse("v1/api/payments/preview", Map.of("format","CSV"));
         assertThat("status code", response.getStatus(), is(500));
 
@@ -69,6 +69,15 @@ public class PaymentsIT  extends ContainerTest {
         fetched.setStatus(CaseStatus.CLOSED);
         promatServiceConnector.updateCase(1160, new CaseRequest(fetched));
 
+        // Still has invalid cases (cases with unapproved tasks)
+        response = getResponse("v1/api/payments/preview", Map.of("format","CSV"));
+        assertThat("status code", response.getStatus(), is(500));
+
+        fetched = promatServiceConnector.getCase(1150);
+        fetched.setStatus(CaseStatus.CLOSED);
+        promatServiceConnector.updateCase(1150, new CaseRequest(fetched));
+
+        // Now payments should be able to execute
         response = getResponse("v1/api/payments/preview", Map.of("format","CSV"));
         assertThat("status code", response.getStatus(), is(200));
     }
@@ -81,7 +90,7 @@ public class PaymentsIT  extends ContainerTest {
         assertThat("status code", response.getStatus(), is(200));
 
         String csv = response.readEntity(String.class);
-        assertThat("number of lines", csv.lines().count(), is(25L));  // 1 header + 24 paymentlines
+        assertThat("number of lines", csv.lines().count(), is(30L));  // 1 header + 29 paymentlines
     }
 
     // This test needs to run after test that depends on the state of the preloaded cases
@@ -92,7 +101,7 @@ public class PaymentsIT  extends ContainerTest {
         assertThat("status code", response.getStatus(), is(200));
 
         PaymentList payments = mapper.readValue(response.readEntity(String.class), PaymentList.class);
-        assertThat("number of paymentlines", payments.getPayments().size(), is(24));
+        assertThat("number of paymentlines", payments.getPayments().size(), is(29));
     }
 
     // This test needs to run after test that depends on the state of the preloaded cases
@@ -103,7 +112,7 @@ public class PaymentsIT  extends ContainerTest {
         assertThat("status code", response.getStatus(), is(200));
 
         String csv = response.readEntity(String.class);
-        assertThat("number of lines", csv.lines().count(), is(25L));  // 1 header + 24 paymentlines
+        assertThat("number of lines", csv.lines().count(), is(30L));  // 1 header + 29 paymentlines
 
         verifyPaymentCsv(csv);
     }
@@ -118,7 +127,7 @@ public class PaymentsIT  extends ContainerTest {
         assertThat("status code", response.getStatus(), is(200));
 
         String csv = response.readEntity(String.class);
-        assertThat("number of lines", csv.lines().count(), is(25L));  // 1 header + 24 paymentlines
+        assertThat("number of lines", csv.lines().count(), is(30L));  // 1 header + 29 paymentlines
 
         // Now check that all pending payments has been payed
         response = getResponse("v1/api/payments/preview", Map.of("format","CSV"));
@@ -157,7 +166,7 @@ public class PaymentsIT  extends ContainerTest {
         assertThat("status code", response.getStatus(), is(200));
 
         String csv = response.readEntity(String.class);
-        assertThat("number of lines", csv.lines().count(), is(25L));  // 1 header + 24 paymentlines
+        assertThat("number of lines", csv.lines().count(), is(30L));  // 1 header + 29 paymentlines
 
         verifyPaymentCsv(csv);
     }
@@ -168,30 +177,35 @@ public class PaymentsIT  extends ContainerTest {
         // Make sure that the expected lines is sorted by the pay category (number)
         // ascending - this is how lines is output
         String expected = ("Dato;Lønnr.;Lønart;Antal;Tekst;Anmelder\n" +
-                "mm-dd-åååå;123;1960;1;1001000 Note Case 1;Hans Hansen\n" +
-                "mm-dd-åååå;123;1960;1;1001010 Note Case 2;Hans Hansen\n" +
-                "mm-dd-åååå;123;1960;1;1001020 Note Case 3;Hans Hansen\n" +
-                "mm-dd-åååå;123;1960;1;1001030 Note Case 4;Hans Hansen\n" +
-                "mm-dd-åååå;123;1960;1;1001040 Note Case 5;Hans Hansen\n" +
-                "mm-dd-åååå;123;1960;1;1001050 Note Case 6;Hans Hansen\n" +
+                "mm-dd-åååå;123;1956;1;1001000 Case 1;Hans Hansen\n" +
+                "mm-dd-åååå;123;1956;1;1001010 Case 2;Hans Hansen\n" +
+                "mm-dd-åååå;123;1956;1;1001020 Case 3;Hans Hansen\n" +
+                "mm-dd-åååå;123;1956;1;1001030 Case 4;Hans Hansen\n" +
+                "mm-dd-åååå;123;1956;1;1001040 Case 5;Hans Hansen\n" +
+                "mm-dd-åååå;123;1956;1;1001050 Case 6;Hans Hansen\n" +
+                "mm-dd-åååå;123;1956;1;1001060 Case 7;Hans Hansen\n" +
                 "mm-dd-åååå;123;1962;1;1001060 Bkm Case 7;Hans Hansen\n" +
-                "mm-dd-åååå;123;1960;1;1001070 Note Case 8;Hans Hansen\n" +
+                "mm-dd-åååå;123;1956;1;1001070 Case 8;Hans Hansen\n" +
                 "mm-dd-åååå;123;1962;1;1001070 Bkm Case 8;Hans Hansen\n" +
-                "mm-dd-åååå;123;1960;3;1001080,1001081,1001082,1001083 Note Case 9;Hans Hansen\n" +
-                "mm-dd-åååå;123;1960;3;1001090,1001091,1001092,1001093,1001094 Note Case 10;Hans Hansen\n" +
-                "mm-dd-åååå;123;1960;4;1001100,1001101,1001102,1001103,1001104 Note Case 11;Hans Hansen\n" +
+                "mm-dd-åååå;123;1956;1;1001080,1001081,1001082,1001083 Case 9;Hans Hansen\n" +
+                "mm-dd-åååå;123;1960;2;1001080,1001081,1001082,1001083 Note Case 9;Hans Hansen\n" +
+                "mm-dd-åååå;123;1956;1;1001090,1001091,1001092,1001093,1001094 Case 10;Hans Hansen\n" +
+                "mm-dd-åååå;123;1960;2;1001090,1001091,1001092,1001093,1001094 Note Case 10;Hans Hansen\n" +
+                "mm-dd-åååå;123;1956;1;1001100,1001101,1001102,1001103,1001104 Case 11;Hans Hansen\n" +
+                "mm-dd-åååå;123;1960;3;1001100,1001101,1001102,1001103,1001104 Note Case 11;Hans Hansen\n" +
                 "mm-dd-åååå;123;1956;1;1001110,1001111 Case 12;Hans Hansen\n" +
-                "mm-dd-åååå;123;1960;2;1001110,1001111 Note Case 12;Hans Hansen\n" +
+                "mm-dd-åååå;123;1960;1;1001110,1001111 Note Case 12;Hans Hansen\n" +
                 "mm-dd-åååå;123;1987;2;1001110,1001111 Metadata Case 12;Hans Hansen\n" +
-                "mm-dd-åååå;456;1960;1;1001130,1001131 Note Case 14;Ole Olsen\n" +
                 "mm-dd-åååå;456;1981;1;1001130,1001131 Case 14;Ole Olsen\n" +
                 "mm-dd-åååå;456;1960;1;1001140,1001141,1001142 Note Case 15;Ole Olsen\n" +
-                "mm-dd-åååå;456;1960;1;1001150,1001151,1001152 Note Case 16;Ole Olsen\n" +
                 "mm-dd-åååå;456;1954;1;1001170,1001171,1001172 Case 18;Ole Olsen\n" +
-                "mm-dd-åååå;456;1960;2;1001170,1001171,1001172 Note Case 18;Ole Olsen\n" +
-                "mm-dd-åååå;456;1960;2;1001180,1001181,1001182 Note Case 19;Ole Olsen\n" +
+                "mm-dd-åååå;456;1960;1;1001170,1001171,1001172 Note Case 18;Ole Olsen\n" +
+                "mm-dd-åååå;456;1954;1;1001180,1001181,1001182 Case 19;Ole Olsen\n" +
+                "mm-dd-åååå;456;1960;1;1001180,1001181,1001182 Note Case 19;Ole Olsen\n" +
                 "mm-dd-åååå;123;1956;1;1001190,1001191 Case 20;Hans Hansen\n" +
-                "mm-dd-åååå;123;1960;2;1001190,1001191 Note Case 20;Hans Hansen\n")
+                "mm-dd-åååå;123;1960;1;1001190,1001191 Note Case 20;Hans Hansen\n" +
+                "mm-dd-åååå;123;1956;1;38529668,38529633 Case 20;Hans Hansen\n" +
+                "mm-dd-åååå;123;1960;1;38529668,38529633 Note Case 20;Hans Hansen\n")
                         .replace("mm-dd-åååå", LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd-MM-yyyy")));
         LOGGER.info("Expected CSV output is:\n{}", expected);
 
