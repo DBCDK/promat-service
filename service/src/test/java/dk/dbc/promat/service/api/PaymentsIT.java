@@ -10,6 +10,8 @@ import dk.dbc.promat.service.ContainerTest;
 import dk.dbc.promat.service.connector.PromatServiceConnectorException;
 import dk.dbc.promat.service.dto.CaseRequest;
 import dk.dbc.promat.service.dto.PaymentList;
+import dk.dbc.promat.service.dto.ServiceErrorCode;
+import dk.dbc.promat.service.dto.ServiceErrorDto;
 import dk.dbc.promat.service.persistence.CaseStatus;
 import dk.dbc.promat.service.persistence.PromatCase;
 import org.junit.jupiter.api.MethodOrderer;
@@ -64,18 +66,26 @@ public class PaymentsIT  extends ContainerTest {
     public void TestGetPaymentsShouldThrowDueToInvalidCases() throws PromatServiceConnectorException {
         Response response = getResponse("v1/api/payments/preview", Map.of("format","CSV"));
         assertThat("status code", response.getStatus(), is(500));
+        ServiceErrorDto err = response.readEntity(ServiceErrorDto.class);
+        assertThat("is errorcode", err.getCode(), is(ServiceErrorCode.FAILED));
+        assertThat("status error cause", err.getCause().equals("Case ready for payment has not-approved tasks"));
+        assertThat("status error details", err.getDetails().equals("Case id 1150 task(s) that has not been approved"));
 
-        PromatCase fetched = promatServiceConnector.getCase(1160);
+        PromatCase fetched = promatServiceConnector.getCase(1150);
         fetched.setStatus(CaseStatus.CLOSED);
-        promatServiceConnector.updateCase(1160, new CaseRequest(fetched));
+        promatServiceConnector.updateCase(1150, new CaseRequest(fetched));
 
         // Still has invalid cases (cases with unapproved tasks)
         response = getResponse("v1/api/payments/preview", Map.of("format","CSV"));
         assertThat("status code", response.getStatus(), is(500));
+        err = response.readEntity(ServiceErrorDto.class);
+        assertThat("is errorcode", err.getCode(), is(ServiceErrorCode.FAILED));
+        assertThat("status error cause", err.getCause().equals("Case ready for payment has no reviewer assigned"));
+        assertThat("status error details", err.getDetails().equals("Case id 1160 has reviewer=null"));
 
-        fetched = promatServiceConnector.getCase(1150);
+        fetched = promatServiceConnector.getCase(1160);
         fetched.setStatus(CaseStatus.CLOSED);
-        promatServiceConnector.updateCase(1150, new CaseRequest(fetched));
+        promatServiceConnector.updateCase(1160, new CaseRequest(fetched));
 
         // Now payments should be able to execute
         response = getResponse("v1/api/payments/preview", Map.of("format","CSV"));
