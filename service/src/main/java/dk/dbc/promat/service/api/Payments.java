@@ -247,7 +247,7 @@ public class Payments {
                             casePayCategories.add(task.getPayCategory());
                             break;
                         case EXPRESS:
-                            // This fields should be ignored
+                            // This field should be ignored
                             break;
                         default:
                             // These fields is payed once, disregarding the number of fields
