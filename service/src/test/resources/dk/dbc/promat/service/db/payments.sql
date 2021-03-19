@@ -2,30 +2,35 @@
 --
 -- --------------------------------------------------------------------------------------------------------------------
 -- Dato;Lønnr.;Lønart;Antal;Tekst;Anmelder
--- mm-dd-åååå;123;1960;1;1001000 Note Case 1;Hans Hansen
--- mm-dd-åååå;123;1960;1;1001010 Note Case 2;Hans Hansen
--- mm-dd-åååå;123;1960;1;1001020 Note Case 3;Hans Hansen
--- mm-dd-åååå;123;1960;1;1001030 Note Case 4;Hans Hansen
--- mm-dd-åååå;123;1960;1;1001040 Note Case 5;Hans Hansen
--- mm-dd-åååå;123;1960;1;1001050 Note Case 6;Hans Hansen
+-- mm-dd-åååå;123;1956;1;1001000 Case 1;Hans Hansen
+-- mm-dd-åååå;123;1956;1;1001010 Case 2;Hans Hansen
+-- mm-dd-åååå;123;1956;1;1001020 Case 3;Hans Hansen
+-- mm-dd-åååå;123;1956;1;1001030 Case 4;Hans Hansen
+-- mm-dd-åååå;123;1956;1;1001040 Case 5;Hans Hansen
+-- mm-dd-åååå;123;1956;1;1001050 Case 6;Hans Hansen
+-- mm-dd-åååå;123;1956;1;1001060 Case 7;Hans Hansen
 -- mm-dd-åååå;123;1962;1;1001060 Bkm Case 7;Hans Hansen
--- mm-dd-åååå;123;1960;1;1001070 Note Case 8;Hans Hansen
+-- mm-dd-åååå;123;1956;1;1001070 Case 8;Hans Hansen
 -- mm-dd-åååå;123;1962;1;1001070 Bkm Case 8;Hans Hansen
--- mm-dd-åååå;123;1960;3;1001080,1001081,1001082,1001083 Note Case 9;Hans Hansen
--- mm-dd-åååå;123;1960;3;1001090,1001091,1001092,1001093,1001094 Note Case 10;Hans Hansen
--- mm-dd-åååå;123;1960;4;1001100,1001101,1001102,1001103,1001104 Note Case 11;Hans Hansen
+-- mm-dd-åååå;123;1956;1;1001080,1001081,1001082,1001083 Case 9;Hans Hansen
+-- mm-dd-åååå;123;1960;2;1001080,1001081,1001082,1001083 Note Case 9;Hans Hansen
+-- mm-dd-åååå;123;1956;1;1001090,1001091,1001092,1001093,1001094 Case 10;Hans Hansen
+-- mm-dd-åååå;123;1960;2;1001090,1001091,1001092,1001093,1001094 Note Case 10;Hans Hansen
+-- mm-dd-åååå;123;1956;1;1001100,1001101,1001102,1001103,1001104 Case 11;Hans Hansen
+-- mm-dd-åååå;123;1960;3;1001100,1001101,1001102,1001103,1001104 Note Case 11;Hans Hansen
 -- mm-dd-åååå;123;1956;1;1001110,1001111 Case 12;Hans Hansen
--- mm-dd-åååå;123;1960;2;1001110,1001111 Note Case 12;Hans Hansen
+-- mm-dd-åååå;123;1960;1;1001110,1001111 Note Case 12;Hans Hansen
 -- mm-dd-åååå;123;1987;2;1001110,1001111 Metadata Case 12;Hans Hansen
 -- mm-dd-åååå;456;1981;1;1001130,1001131 Case 14;Ole Olsen
--- mm-dd-åååå;456;1960;1;1001130,1001131 Note Case 14;Ole Olsen
 -- mm-dd-åååå;456;1960;1;1001140,1001141,1001142 Note Case 15;Ole Olsen
--- mm-dd-åååå;456;1960;1;1001140,1001141,1001142 Note Case 16;Ole Olsen
 -- mm-dd-åååå;456;1954;1;1001170,1001171,1001172 Case 18;Ole Olsen
--- mm-dd-åååå;456;1960;2;1001170,1001171,1001172 Note Case 18;Ole Olsen
--- mm-dd-åååå;456;1960;2;1001180,1001181,1001182 Note Case 19;Ole Olsen
+-- mm-dd-åååå;456;1960;1;1001170,1001171,1001172 Note Case 18;Ole Olsen
+-- mm-dd-åååå;456;1954;1;1001180,1001181,1001182 Case 19;Ole Olsen
+-- mm-dd-åååå;456;1960;1;1001180,1001181,1001182 Note Case 19;Ole Olsen
 -- mm-dd-åååå;123;1956;1;1001190,1001191 Case 20;Hans Hansen
--- mm-dd-åååå;123;1960;2;1001190,1001191 Note Case 20;Hans Hansen
+-- mm-dd-åååå;123;1960;1;1001190,1001191 Note Case 20;Hans Hansen
+-- mm-dd-åååå;123;1956;1;38529668,38529633 Case 20;Hans Hansen
+-- mm-dd-åååå;123;1960;1;38529668,38529633 Note Case 20;Hans Hansen
 -- --------------------------------------------------------------------------------------------------------------------
 
 -- ********************************************************************************************************************
@@ -36,7 +41,7 @@
 
 -- Case 1: PAYMENTS EXPECTED
 --
--- mm-dd-åååå;123;1960;1;1001000 Note Case 1;Hans Hansen
+-- mm-dd-åååå;123;1956;1;1001000 Case 1;Hans Hansen
 insert into promatcase(id, title, details, primaryFaust, relatedFausts, reviewer_id, editor_id, created, deadline, assigned, status, materialType)
 values (1000, 'Case 1', 'Details', '1001000', '[]', 1, 10, '2021-01-13', '2021-02-13', '2021-01-13', 'APPROVED', 'BOOK');
 
@@ -48,7 +53,7 @@ values (1000, 1001);
 
 -- Case 2: PAYMENTS EXPECTED
 --
--- mm-dd-åååå;123;1960;1;1001010 Note Case 2;Hans Hansen
+-- mm-dd-åååå;123;1956;1;1001010 Case 2;Hans Hansen
 insert into promatcase(id, title, details, primaryFaust, relatedFausts, reviewer_id, editor_id, created, deadline, assigned, status, materialType)
 values (1010, 'Case 2', 'Details', '1001010', '[]', 1, 10, '2021-01-13', '2021-02-13', '2021-01-13', 'PENDING_MEETING', 'BOOK');
 
@@ -60,7 +65,7 @@ values (1010, 1011);
 
 -- Case 3: PAYMENTS EXPECTED
 --
--- mm-dd-åååå;123;1960;1;1001020 Note Case 3;Hans Hansen
+-- mm-dd-åååå;123;1956;1;1001020 Case 3;Hans Hansen
 insert into promatcase(id, title, details, primaryFaust, relatedFausts, reviewer_id, editor_id, created, deadline, assigned, status, materialType)
 values (1020, 'Case 3', 'Details', '1001020', '[]', 1, 10, '2021-01-13', '2021-02-13', '2021-01-13', 'PENDING_EXPORT', 'BOOK');
 
@@ -72,7 +77,7 @@ values (1020, 1021);
 
 -- Case 4: PAYMENTS EXPECTED
 --
--- mm-dd-åååå;123;1960;1;1001030 Note Case 4;Hans Hansen
+-- mm-dd-åååå;123;1956;1;1001030 Case 4;Hans Hansen
 insert into promatcase(id, title, details, primaryFaust, relatedFausts, reviewer_id, editor_id, created, deadline, assigned, status, materialType)
 values (1030, 'Case 4', 'Details', '1001030', '[]', 1, 10, '2021-01-13', '2021-02-13', '2021-01-13', 'EXPORTED', 'BOOK');
 
@@ -84,7 +89,7 @@ values (1030, 1031);
 
 -- Case 5: PAYMENTS EXPECTED
 --
--- mm-dd-åååå;123;1960;1;1001040 Note Case 5;Hans Hansen
+-- mm-dd-åååå;123;1956;1;1001040 Case 5;Hans Hansen
 insert into promatcase(id, title, details, primaryFaust, relatedFausts, reviewer_id, editor_id, created, deadline, assigned, status, materialType)
 values (1040, 'Case 5', 'Details', '1001040', '[]', 1, 10, '2021-01-13', '2021-02-13', '2021-01-13', 'PENDING_REVERT', 'BOOK');
 
@@ -96,7 +101,7 @@ values (1040, 1041);
 
 -- Case 6: PAYMENTS EXPECTED
 --
--- mm-dd-åååå;123;1960;1;1001050 Note Case 6;Hans Hansen
+-- mm-dd-åååå;123;1956;1;1001050 Case 6;Hans Hansen
 insert into promatcase(id, title, details, primaryFaust, relatedFausts, reviewer_id, editor_id, created, deadline, assigned, status, materialType)
 values (1050, 'Case 6', 'Details', '1001050', '[]', 1, 10, '2021-01-13', '2021-02-13', '2021-01-13', 'REVERTED', 'BOOK');
 
@@ -108,13 +113,14 @@ values (1050, 1051);
 
 -- Case 7: PAYMENTS EXPECTED
 --
+-- mm-dd-åååå;123;1956;1;1001060 Case 7;Hans Hansen
 -- mm-dd-åååå;123;1962;1;1001060 Bkm Case 7;Hans Hansen
 insert into promatcase(id, title, details, primaryFaust, relatedFausts, reviewer_id, editor_id, created, deadline, assigned, status, materialType)
 values (1060, 'Case 7', 'Details', '1001060', '[]', 1, 10, '2021-01-13', '2021-02-13', '2021-01-13', 'PENDING_CLOSE', 'BOOK');
 
 insert into promattask(id, tasktype, taskfieldtype, created, paycategory, approved, payed, data, targetFausts)
-values  (1061, 'GROUP_1_LESS_THAN_100_PAGES', 'BRIEF', '2021-01-13','BRIEF', NULL,        NULL, 'data', '["1001060"]'),
-        (1062, 'GROUP_1_LESS_THAN_100_PAGES', 'BKM',   '2021-01-13', 'BKM', '2021-01-13', NULL, 'data', '["1001060"]');
+values  (1061, 'GROUP_1_LESS_THAN_100_PAGES', 'BRIEF', '2021-01-13','BRIEF', '2021-01-13', NULL, 'data', '["1001060"]'),
+        (1062, 'GROUP_1_LESS_THAN_100_PAGES', 'BKM',   '2021-01-13', 'BKM',  '2021-01-13', NULL, 'data', '["1001060"]');
 
 insert into casetasks(case_id, task_id)
 values (1060, 1061),
@@ -122,7 +128,7 @@ values (1060, 1061),
 
 -- Case 8: PAYMENTS EXPECTED
 --
--- mm-dd-åååå;123;1960;1;1001070 Note Case 8;Hans Hansen
+-- mm-dd-åååå;123;1956;1;1001070 Case 8;Hans Hansen
 -- mm-dd-åååå;123;1962;1;1001070 Bkm Case 8;Hans Hansen
 insert into promatcase(id, title, details, primaryFaust, relatedFausts, reviewer_id, editor_id, created, deadline, assigned, status, materialType)
 values (1070, 'Case 8', 'Details', '1001070', '[]', 1, 10, '2021-01-13', '2021-02-13', '2021-01-13', 'APPROVED', 'BOOK');
@@ -142,7 +148,8 @@ values (1070, 1071),
 
 -- Case 9: PAYMENTS EXPECTED
 --
--- mm-dd-åååå;123;1960;3;1001080,1001081,1001082,1001083 Note Case 9;Hans Hansen
+-- mm-dd-åååå;123;1956;1;1001080,1001081,1001082,1001083 Case 9;Hans Hansen
+-- mm-dd-åååå;123;1960;2;1001080,1001081,1001082,1001083 Note Case 9;Hans Hansen
 insert into promatcase(id, title, details, primaryFaust, relatedFausts, reviewer_id, editor_id, created, deadline, assigned, status, materialType)
 values (1080, 'Case 9', 'Details', '1001080', '[1001081, 1001082, 1001083]', 1, 10, '2021-01-13', '2021-02-13', '2021-01-13', 'APPROVED', 'BOOK');
 
@@ -159,6 +166,7 @@ values (1080, 1081),
 -- Case 10: PAYMENTS EXPECTED
 -- Case has a task with two targetfausts (which is just fine, but still just 1 extra BRIEF task)
 --
+-- mm-dd-åååå;123;1956;1;1001090,1001091,1001092,1001093,1001094 Case 10;Hans Hansen
 -- mm-dd-åååå;123;1960;3;1001090,1001091,1001092,1001093,1001094 Note Case 10;Hans Hansen
 insert into promatcase(id, title, details, primaryFaust, relatedFausts, reviewer_id, editor_id, created, deadline, assigned, status, materialType)
 values (1090, 'Case 10', 'Details', '1001090', '[1001091, 1001092, 1001093, 1001094]', 1, 10, '2021-01-13', '2021-02-13', '2021-01-13', 'APPROVED', 'BOOK');
@@ -174,19 +182,20 @@ values (1090, 1091),
        (1090, 1093);
 
 -- Case 11: PAYMENTS EXPECTED
--- Case has an extra BRIEF task without targetfausts. This is not strictly forbidden, but it is a mess.
+-- Case has an extra repeated BRIEF task. This is not strictly forbidden, but it is a mess.
 -- The extra BRIEF task, allthough having its own data, will never be output to DBCKat and thus never used.
 -- The reviewer gets payed for the extra BRIEF allthough it is wasted!
 --
--- mm-dd-åååå;123;1960;4;1001100,1001101,1001102,1001103,1001104 Note Case 11;Hans Hansen
+-- mm-dd-åååå;123;1956;1;1001100,1001101,1001102,1001103,1001104 Note Case 11;Hans Hansen
+-- mm-dd-åååå;123;1960;3;1001100,1001101,1001102,1001103,1001104 Case 11;Hans Hansen
 insert into promatcase(id, title, details, primaryFaust, relatedFausts, reviewer_id, editor_id, created, deadline, assigned, status, materialType)
 values (1100, 'Case 11', 'Details', '1001100', '[1001101, 1001102, 1001103, 1001104]', 1, 10, '2021-01-13', '2021-02-13', '2021-01-13', 'APPROVED', 'BOOK');
 
 insert into promattask(id, tasktype, taskfieldtype, created, paycategory, approved, payed, data, targetFausts)
 values  (1101, 'GROUP_1_LESS_THAN_100_PAGES', 'BRIEF', '2021-01-13','BRIEF', '2021-01-13', NULL, 'data', '["1001100", "1001104"]'),
-        (1102, 'GROUP_1_LESS_THAN_100_PAGES', 'BRIEF', '2021-01-13','BRIEF', '2021-01-13', NULL, 'data', '["1001100", "1001104"]'),
-        (1103, 'GROUP_1_LESS_THAN_100_PAGES', 'BRIEF', '2021-01-13','BRIEF', '2021-01-13', NULL, 'data', '[1001101]'),
-        (1104, 'GROUP_1_LESS_THAN_100_PAGES', 'BRIEF', '2021-01-13','BRIEF', '2021-01-13', NULL, 'data', '[1001102, 1001103]');
+        (1102, 'GROUP_1_LESS_THAN_100_PAGES', 'BRIEF', '2021-01-13','BRIEF', '2021-01-13', NULL, 'data', '["1001102", "1001103"]'),
+        (1103, 'GROUP_1_LESS_THAN_100_PAGES', 'BRIEF', '2021-01-13','BRIEF', '2021-01-13', NULL, 'data', '["1001101"]'),
+        (1104, 'GROUP_1_LESS_THAN_100_PAGES', 'BRIEF', '2021-01-13','BRIEF', '2021-01-13', NULL, 'data', '["1001102", "1001103"]');
 
 insert into casetasks(case_id, task_id)
 values (1100, 1101),
@@ -201,7 +210,7 @@ values (1100, 1101),
 -- Case 12: PAYMENTS EXPECTED
 --
 -- mm-dd-åååå;123;1956;1;1001110,1001111 Case 12;Hans Hansen
--- mm-dd-åååå;123;1960;2;1001110,1001111 Note Case 12;Hans Hansen
+-- mm-dd-åååå;123;1960;1;1001110,1001111 Note Case 12;Hans Hansen
 -- mm-dd-åååå;123;1987;2;1001110,1001111 Metadata Case 12;Hans Hansen
 insert into promatcase(id, title, details, primaryFaust, relatedFausts, reviewer_id, editor_id, created, deadline, assigned, status, materialType)
 values (1110, 'Case 12', 'Details', '1001110', '[1001111]', 1, 10, '2021-01-13', '2021-02-13', '2021-01-13', 'APPROVED', 'BOOK');
@@ -259,7 +268,6 @@ values (1120, 1121),
 -- Case 14: PAYMENTS EXPECTED
 --
 -- mm-dd-åååå;456;1981;1;1001130,1001131 Case 14;Ole Olsen
--- mm-dd-åååå;456;1960;1;1001130,1001131 Note Case 14;Ole Olsen
 insert into promatcase(id, title, details, primaryFaust, relatedFausts, reviewer_id, editor_id, created, deadline, assigned, status, materialType)
 values (1130, 'Case 14', 'Details', '1001130', '[1001131]', 2, 10, '2021-01-13', '2021-02-13', '2021-01-13', 'PENDING_EXPORT', 'MOVIE');
 
@@ -307,11 +315,8 @@ values (1140, 1141),
        (1140, 1147);
 
 
--- Case 16: PAYMENTS EXPECTED
--- Not all tasks has been approved, but some has - and they should be payed.
--- (this is a somewhat made-up situation, but in theory, this could happen)
---
--- mm-dd-åååå;456;1960;1;1001150,1001151,1001152 Note Case 16;Ole Olsen
+-- Case 16: PAYMENTS NOT EXPECTED
+-- Not all tasks has been approved, Case should not be payed just yet
 insert into promatcase(id, title, details, primaryFaust, relatedFausts, reviewer_id, editor_id, created, deadline, assigned, status, materialType)
 values (1150, 'Case 16', 'Details', '1001150', '[1001151,1001152]', 2, 10, '2021-01-13', '2021-02-13', '2021-01-13', 'APPROVED', 'MOVIE');
 
@@ -362,7 +367,7 @@ values (1160, 1161),
 -- Case is an express case, so an additional payment for express delivery is expected
 --
 -- mm-dd-åååå;456;1954;1;1001170,1001171,1001172 Case 18;Ole Olsen
--- mm-dd-åååå;456;1960;2;1001170,1001171,1001172 Note Case 18;Ole Olsen
+-- mm-dd-åååå;456;1960;1;1001170,1001171,1001172 Note Case 18;Ole Olsen
 insert into promatcase(id, title, details, primaryFaust, relatedFausts, reviewer_id, editor_id, created, deadline, assigned, status, materialType)
 values (1170, 'Case 18', 'Details', '1001170', '[1001171,1001172]', 2, 10, '2021-01-24', '2021-01-26', '2021-01-24', 'APPROVED', 'MULTIMEDIA');
 
@@ -387,9 +392,9 @@ values (1170, 1171),
        (1170, 1178);
 
 -- Case 19: PAYMENTS EXPECTED, but EXPRESS should not be counted separately (should be ignored)
--- Case is an express case, so an additional payment for express delivery is expected
 --
--- mm-dd-åååå;456;1960;2;1001180,1001181,1001182 Note Case 19;Ole Olsen
+-- mm-dd-åååå;456;1954;1;1001180,1001181,1001182 Case 19;Ole Olsen
+-- mm-dd-åååå;456;1960;1;1001180,1001181,1001182 Note Case 19;Ole Olsen
 insert into promatcase(id, title, details, primaryFaust, relatedFausts, reviewer_id, editor_id, created, deadline, assigned, status, materialType)
 values (1180, 'Case 19', 'Details', '1001180', '[1001181,1001182]', 2, 10, '2021-01-24', '2021-01-26', '2021-01-24', 'APPROVED', 'MULTIMEDIA');
 
@@ -406,7 +411,7 @@ values (1180, 1181),
 -- Case 20: PAYMENTS EXPECTED
 --
 -- mm-dd-åååå;123;1956;1;1001190,1001191 Case 20;Hans Hansen
--- mm-dd-åååå;123;1960;2;1001190,1001191 Note Case 20;Hans Hansen
+-- mm-dd-åååå;123;1960;1;1001190,1001191 Note Case 20;Hans Hansen
 insert into promatcase(id, title, details, primaryFaust, relatedFausts, reviewer_id, editor_id, created, deadline, assigned, status, materialType)
 values (1190, 'Case 20', 'Details', '1001190', '[1001191]', 1, 10, '2021-01-13', '2021-02-13', '2021-01-13', 'APPROVED', 'BOOK');
 
@@ -431,3 +436,40 @@ values (1190, 1191),
        (1190, 1197),
        (1190, 1198),
        (1190, 1199);
+
+-- Case 21: PAYMENTS EXPECTED
+-- Example taken from latest (as of today) payment list
+--
+-- """
+-- 1956	1	38529668,38529633, Min lille bog om kroppen	Line Hoffgaard
+-- 1960	1	38529668,38529633, Kort om, +1: Min lille bog om kroppen	Line Hoffgaard
+-- """
+--
+-- mm-dd-åååå;123;1956;1;38529668,38529633 Case 20;Hans Hansen
+-- mm-dd-åååå;123;1960;1;38529668,38529633 Note Case 20;Hans Hansen
+insert into promatcase(id, title, details, primaryFaust, relatedFausts, reviewer_id, editor_id, created, deadline, assigned, status, materialType)
+values (1200, 'Case 20', 'Details', '38529668', '["38529633"]', 1, 10, '2021-02-18', '2021-03-18', '2021-03-18', 'APPROVED', 'BOOK');
+
+insert into promattask(id, tasktype, taskfieldtype, created, paycategory, approved, payed, data, targetFausts)
+values  (1201, 'GROUP_1_LESS_THAN_100_PAGES', 'BRIEF',          '2021-01-13', 'BRIEF',                       '2021-01-13', NULL, 'data', '["38529668"]'),
+        (1202, 'GROUP_1_LESS_THAN_100_PAGES', 'BRIEF',          '2021-01-13', 'BRIEF',                       '2021-01-13', NULL, 'data', '["38529633"]'),
+        (1203, 'GROUP_1_LESS_THAN_100_PAGES', 'DESCRIPTION',    '2021-01-13', 'GROUP_1_LESS_THAN_100_PAGES', '2021-01-13', NULL, 'data', '["38529668", "38529633"]'),
+        (1204, 'GROUP_1_LESS_THAN_100_PAGES', 'EVALUATION',     '2021-01-13', 'GROUP_1_LESS_THAN_100_PAGES', '2021-01-13', NULL, 'data', '["38529668", "38529633"]'),
+        (1205, 'GROUP_1_LESS_THAN_100_PAGES', 'COMPARISON',     '2021-01-13', 'GROUP_1_LESS_THAN_100_PAGES', '2021-01-13', NULL, 'data', '["38529668", "38529633"]'),
+        (1206, 'GROUP_1_LESS_THAN_100_PAGES', 'RECOMMENDATION', '2021-01-13', 'GROUP_1_LESS_THAN_100_PAGES', '2021-01-13', NULL, 'data', '["38529668", "38529633"]'),
+        (1207, 'GROUP_1_LESS_THAN_100_PAGES', 'AGE',            '2021-01-13', 'GROUP_1_LESS_THAN_100_PAGES', '2021-01-13', NULL, 'data', '["38529668", "38529633"]'),
+        (1208, 'GROUP_1_LESS_THAN_100_PAGES', 'TOPICS',         '2021-01-13', 'GROUP_1_LESS_THAN_100_PAGES', '2021-01-13', NULL, 'data', '["38529668"]'),
+        (1209, 'GROUP_1_LESS_THAN_100_PAGES', 'TOPICS',         '2021-01-13', 'GROUP_1_LESS_THAN_100_PAGES', '2021-01-13', NULL, 'data', '["38529633"]');
+
+insert into casetasks(case_id, task_id)
+values (1200, 1201),
+       (1200, 1202),
+       (1200, 1203),
+       (1200, 1204),
+       (1200, 1205),
+       (1200, 1206),
+       (1200, 1207),
+       (1200, 1208),
+       (1200, 1209);
+
+

@@ -671,7 +671,7 @@ public class Cases {
                     .withTaskFieldType(dto.getTaskFieldType())
                     .withData(dto.getData())  // null is allowed here since it is the default value anyway
                     .withCreated(LocalDate.now())
-                    .withPayCategory(Repository.getPayCategoryForTaskType(dto.getTaskType(), dto.getTaskFieldType()))
+                    .withPayCategory(Repository.getPayCategoryForTaskFieldTypeOfTaskType(dto.getTaskType(), dto.getTaskFieldType()))
                     .withTargetFausts(dto.getTargetFausts());
 
             // Add the new task
@@ -850,7 +850,7 @@ public class Cases {
                         .withTaskType(task.getTaskType())
                         .withTaskFieldType(task.getTaskFieldType())
                         .withPayCategory(
-                                Repository.getPayCategoryForTaskType(task.getTaskType(), task.getTaskFieldType()))
+                                Repository.getPayCategoryForTaskFieldTypeOfTaskType(task.getTaskType(), task.getTaskFieldType()))
                         .withCreated(LocalDate.now())
                         .withTargetFausts(task.getTargetFausts() == null ? null : task.getTargetFausts()));
 

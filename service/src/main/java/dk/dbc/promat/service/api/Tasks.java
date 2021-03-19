@@ -82,7 +82,7 @@ public class Tasks {
             }
             if(dto.getTaskType() != null) {
                 existing.setTaskType(dto.getTaskType());
-                existing.setPayCategory(Repository.getPayCategoryForTaskType(dto.getTaskType(), existing.getTaskFieldType()));
+                existing.setPayCategory(Repository.getPayCategoryForTaskFieldTypeOfTaskType(dto.getTaskType(), existing.getTaskFieldType()));
             }
 
             return Response.ok(existing).build();

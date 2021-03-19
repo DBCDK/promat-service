@@ -205,6 +205,15 @@ public class Payments {
                         .withDetails(String.format("Case id %d has reviewer=null", promatCase.getId()));
             }
 
+            // Check that all tasks has been approved before starting payment
+            if (promatCase.getTasks().stream().filter(t -> t.getApproved() == null).count() > 0) {
+                LOGGER.error(String.format("Case id %d has task(s) that has not been approved allthough the case has status APPROVED or better", promatCase.getId()));
+                throw new ServiceErrorException("Case ready for payment has not-approved tasks")
+                        .withHttpStatus(500)
+                        .withCode(ServiceErrorCode.FAILED)
+                        .withDetails(String.format("Case id %d task(s) that has not been approved", promatCase.getId()));
+            }
+
             // Add case payments
             if (promatCase.getTasks() != null) {
 
@@ -221,13 +230,24 @@ public class Payments {
 
                     switch (task.getPayCategory()) {
                         case BRIEF:
+                            // This field is payed by quantity unless it targets the primary faust, then it
+                            // must count as part of the base review
+                            if (task.getTargetFausts().contains(promatCase.getPrimaryFaust())) {
+                                PayCategory payCategory = Repository.getPayCategoryForTaskType(task.getTaskType());
+                                if (!casePayCategories.contains(payCategory)) {
+                                    casePayCategories.add(payCategory);
+                                }
+                            } else {
+                                casePayCategories.add(task.getPayCategory());
+                            }
+                            break;
                         case METAKOMPAS:
                         case BKM:
                             // These fields is payed by quantity
                             casePayCategories.add(task.getPayCategory());
                             break;
                         case EXPRESS:
-                            // These fields should be ignored
+                            // This field should be ignored
                             break;
                         default:
                             // These fields is payed once, disregarding the number of fields
