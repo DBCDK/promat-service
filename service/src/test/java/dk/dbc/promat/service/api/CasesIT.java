@@ -1584,8 +1584,33 @@ public class CasesIT extends ContainerTest {
 
         response = deleteResponse("v1/api/cases/"+multimedia.getId());
         assertThat("status code", response.getStatus(), is(200));
+    }
 
+    @Test
+    public void testRejectAssignment() throws JsonProcessingException, PromatServiceConnectorException {
 
+        // Create a new case
+        CaseRequest dto = new CaseRequest()
+                .withTitle("Title for 18001111")
+                .withDetails("Details for 18001111")
+                .withPrimaryFaust("18001111")
+                .withEditor(10)
+                .withSubjects(Arrays.asList(3, 4))
+                .withDeadline("2021-03-23")
+                .withMaterialType(MaterialType.BOOK);
 
+        Response response = postResponse("v1/api/cases", dto);
+        PromatCase created = mapper.readValue(response.readEntity(String.class), PromatCase.class);
+        assertThat("status code", response.getStatus(), is(201));
+
+        // Update case - should return 200 OK
+        dto = new CaseRequest().withReviewer(1);
+        PromatCase updated = promatServiceConnector.updateCase(created.getId(), dto);
+        assertThat("is assigned", updated.getStatus(), is(CaseStatus.ASSIGNED));
+
+        // Then reject the case
+        dto = new CaseRequest().withStatus(CaseStatus.REJECTED);
+        updated = promatServiceConnector.updateCase(created.getId(), dto);
+        assertThat("is rejected", updated.getStatus(), is(CaseStatus.REJECTED));
     }
 }
