@@ -540,14 +540,6 @@ public class Cases {
                 LOGGER.info("Attempt to set 'assigned' on case {}", id);
                 return ServiceErrorDto.InvalidRequest("Forbidden field", "Setting the value of 'assigned' is not allowed");
             }
-            final Set<CaseStatus> allowedStatuses = Set.of(CaseStatus.CLOSED, CaseStatus.CREATED,
-                    CaseStatus.EXPORTED, CaseStatus.REVERTED, CaseStatus.PENDING_CLOSE, CaseStatus.PENDING_APPROVAL,
-                    CaseStatus.APPROVED, CaseStatus.PENDING_ISSUES, CaseStatus.PENDING_EXPORT);
-            if(dto.getStatus() != null && !allowedStatuses.contains(dto.getStatus())) {
-                LOGGER.info("Attempt to set forbidden status {} on case {}", dto.getStatus(), id);
-                return ServiceErrorDto.InvalidRequest("Forbidden status",
-                        String.format("Setting the value of 'status' to other statuses than %s is not allowed", allowedStatuses));
-            }
 
             // Fetch an existing entity with the given id
             PromatCase existing = entityManager.find(PromatCase.class, id);
@@ -583,7 +575,7 @@ public class Cases {
                     notifyOnReviewerChanged(existing);
                 }
                 if(existing.getStatus() == CaseStatus.CREATED) {
-                    existing.setStatus(CaseStatus.ASSIGNED);
+                    setStatus(existing, CaseStatus.ASSIGNED);
                 }
             }
             if(dto.getEditor() != null) {
@@ -968,6 +960,28 @@ public class Cases {
                     existing.setStatus(CaseStatus.ASSIGNED);
                 } else {
                     existing.setStatus(CaseStatus.CREATED);
+                }
+                break;
+
+            case ASSIGNED:
+                if (existing.getReviewer() != null && existing.getStatus() == CaseStatus.CREATED) {
+                    existing.setStatus(CaseStatus.ASSIGNED);
+                } else {
+                    throw new ServiceErrorException("Not allowed to set status ASSIGNED when case is not in CREATED or nor reviewer is set")
+                            .withDetails("Attempt to set status of case to ASSIGNED when case is not in status CREATED or there is no reviewer set")
+                            .withHttpStatus(400)
+                            .withCode(ServiceErrorCode.INVALID_REQUEST);
+                }
+                break;
+
+            case REJECTED:
+                if (existing.getStatus() == CaseStatus.ASSIGNED) {
+                    existing.setStatus(CaseStatus.REJECTED);
+                } else {
+                    throw new ServiceErrorException("Not allowed to set status REJECTED when case is not in ASSIGNED")
+                            .withDetails("Attempt to set status of case to REJECTED when case is not in status ASSIGNED")
+                            .withHttpStatus(400)
+                            .withCode(ServiceErrorCode.INVALID_REQUEST);
                 }
                 break;
 
