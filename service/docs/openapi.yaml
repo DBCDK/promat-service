@@ -522,6 +522,28 @@ paths:
               schema:
                 $ref: '#/components/schemas/ServiceError'
 
+    delete:
+      tags:
+        - cases
+      summary: Delete the case with the given id
+      operationId: deleteCase
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            description: Case id
+      responses:
+        '200':
+          description: successful operation
+        '404':
+          description: Case could not be found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+
   /cases/{id}/fulltext:
     get:
       tags:
