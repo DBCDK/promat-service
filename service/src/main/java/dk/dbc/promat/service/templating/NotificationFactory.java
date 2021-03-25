@@ -21,6 +21,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 import javax.ejb.Stateless;
 import javax.inject.Inject;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
@@ -69,16 +70,19 @@ public class NotificationFactory {
         PromatCase promatCase = model.getPromatCase();
 
         // Lookup main faust and related fausts titles
+        // For some reason frontend posts a related-faust equal to the primary
+        // one.
         List<String> fausts = new ArrayList<>(List.of(promatCase.getPrimaryFaust()));
         if (promatCase.getRelatedFausts() != null) {
-            fausts.addAll(promatCase.getRelatedFausts());
+            fausts.addAll(promatCase.getRelatedFausts()
+                    .stream()
+                    .filter(f -> !f.equals(promatCase.getPrimaryFaust())).collect(Collectors.toList()));
         }
         String subject = String.format(subjectTemplate,
                 (promatCase.getTasks().stream().anyMatch(c -> c.getTaskFieldType() == TaskFieldType.EXPRESS)
                         ? "EKSPRES!" : ""),
                 Formatting.format(promatCase.getDeadline()),
                 promatCase.getTitle());
-
         return notification
                 .withToAddress(promatCase.getReviewer().getEmail())
                 .withSubject(subject)
