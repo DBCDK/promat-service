@@ -1039,9 +1039,9 @@ public class Cases {
                 break;
 
             case PENDING_EXPORT:
-                if (existing.getStatus() != CaseStatus.EXPORTED && existing.getStatus() != CaseStatus.PENDING_MEETING) {
-                    throw new ServiceErrorException("Not allowed to set status PENDING_EXPORT when case is not in EXPORTED or PENDING_MEETING")
-                            .withDetails("Attempt to set status of case to PENDING_EXPORT when case is not in status EXPORTED or PENDING_MEETING")
+                if (existing.getStatus() != CaseStatus.EXPORTED && existing.getStatus() != CaseStatus.PENDING_MEETING && existing.getStatus() != CaseStatus.APPROVED ) {
+                    throw new ServiceErrorException("Not allowed to set status PENDING_EXPORT when case is not in EXPORTED, PENDING_MEETING or APPROVED")
+                            .withDetails("Attempt to set status of case to PENDING_EXPORT when case is not in status EXPORTED, PENDING_MEETING or APPROVED")
                             .withHttpStatus(400)
                             .withCode(ServiceErrorCode.INVALID_REQUEST);
                 }
