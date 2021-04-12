@@ -15,6 +15,8 @@ import dk.dbc.promat.service.persistence.MaterialType;
 import dk.dbc.promat.service.persistence.Notification;
 import dk.dbc.promat.service.persistence.PromatCase;
 import dk.dbc.promat.service.persistence.PromatMessage;
+import java.util.HashMap;
+import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -56,6 +58,24 @@ public class MessagesIT extends ContainerTest {
         assertThat("author", message.getAuthor().getId(), is(EDITOR_ID));
         assertThat("createDate", message.getCreated(), notNullValue());
         assertThat("not read", message.getRead(), is(Boolean.FALSE));
+
+        response = getResponse(String.format("v1/api/cases/%s", CASE_ID));
+        PromatCase promatCase = mapper.readValue(response.readEntity(String.class), PromatCase.class);
+        assertThat("new messages to reviewer", promatCase.getNewMessagesToReviewer(), is(true));
+        assertThat("no new messages to editor", promatCase.getNewMessagesToEditor(), is(false));
+
+        // Mark message as read
+        response = putResponse(String.format("v1/api/cases/%s/messages/markasread", promatCase.getId()),
+                new MarkAsReadRequest()
+                        .withDirection(PromatMessage.Direction.EDITOR_TO_REVIEWER));
+        assertThat("201 updated", response.getStatus(), is(201));
+
+        // Fetch case again to make sure newMessages pin for reviewer is false.
+        response = getResponse(String.format("v1/api/cases/%s", CASE_ID));
+        promatCase = mapper.readValue(response.readEntity(String.class), PromatCase.class);
+        assertThat("new messages to reviewer", promatCase.getNewMessagesToReviewer(), is(false));
+
+
     }
 
     @Test

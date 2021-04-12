@@ -23,6 +23,10 @@ import javax.persistence.NamedQuery;
         @NamedQuery(
                 name = PromatMessage.UPDATE_READ_STATE,
                 query = PromatMessage.UPDATE_READ_STATE_QUERY
+        ),
+        @NamedQuery(
+                name = PromatMessage.GET_NEWS_FOR_CASE,
+                query = PromatMessage.GET_NEWS_FOR_CASE_QUERY
         )})
 @Entity
 public class PromatMessage {
@@ -129,6 +133,11 @@ public class PromatMessage {
             "UPDATE PromatMessage promatMessage SET promatMessage.isRead = :isRead " +
                     "WHERE promatMessage.caseId = :caseId AND " +
                     "promatMessage.direction = :direction";
+    public static final String GET_NEWS_FOR_CASE = "PromatMessage.getNewsForCase";
+    public static final String GET_NEWS_FOR_CASE_QUERY =
+            "SELECT promatmessage FROM PromatMessage promatmessage " +
+                    "WHERE promatmessage.caseId = :caseId AND promatmessage.direction = :direction " +
+                    "AND NOT promatmessage.isRead";
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
