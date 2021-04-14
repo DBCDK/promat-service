@@ -198,6 +198,12 @@ public class Cases {
                 notifyOnReviewerChanged(entity);
             }
 
+            // Set the "are there new Messages?" pins for reviewer and editor
+            entity.setNewMessagesToEditor(areThereNewMessages(entity.getId(),
+                    PromatMessage.Direction.REVIEWER_TO_EDITOR));
+            entity.setNewMessagesToReviewer(areThereNewMessages(entity.getId(),
+                    PromatMessage.Direction.EDITOR_TO_REVIEWER));
+
             // 201 CREATED
             LOGGER.info("Created new case for primaryFaust {}", entity.getPrimaryFaust());
             return Response.status(201)
@@ -224,6 +230,12 @@ public class Cases {
                 return ServiceErrorDto.NotFound("Case not found",
                         String.format("Requested case %s does not exist", id));
             }
+
+            // Set the "are there new Messages?" pins for reviewer and editor
+            requested.setNewMessagesToEditor(
+                    areThereNewMessages(id, PromatMessage.Direction.REVIEWER_TO_EDITOR));
+            requested.setNewMessagesToReviewer(
+                    areThereNewMessages(id, PromatMessage.Direction.EDITOR_TO_REVIEWER));
 
             return Response.status(200).entity(requested).build();
         } catch(Exception exception) {
@@ -364,6 +376,14 @@ public class Cases {
         // Select and return cases
         try {
             final CaseSummaryList caseList = listCases(listCasesParams);
+
+            // Set the "are there new Messages?" pins for reviewer and editor.
+            caseList.getCases().forEach(promatCase -> {
+                promatCase.setNewMessagesToEditor(
+                        areThereNewMessages(promatCase.getId(), PromatMessage.Direction.REVIEWER_TO_EDITOR));
+                promatCase.setNewMessagesToReviewer(
+                        areThereNewMessages(promatCase.getId(), PromatMessage.Direction.EDITOR_TO_REVIEWER));
+            });
 
             // Return the found cases
             // Note that the http status is set to 404 (NOT FOUND) if no case matched the query
@@ -616,6 +636,9 @@ public class Cases {
                 existing.setFulltextLink(dto.getFulltextLink());
             }
 
+            // Set the "are there new Messages?" pins for reviewer and editor
+            existing.setNewMessagesToReviewer(areThereNewMessages(existing.getId(), PromatMessage.Direction.EDITOR_TO_REVIEWER));
+            existing.setNewMessagesToEditor(areThereNewMessages(existing.getId(), PromatMessage.Direction.REVIEWER_TO_EDITOR));
             return Response.ok(existing).build();
         } catch(ServiceErrorException serviceErrorException) {
             LOGGER.info("Received serviceErrorException while mapping entities: {}", serviceErrorException.getMessage());
@@ -1067,4 +1090,12 @@ public class Cases {
         }
     }
 
+    private Boolean areThereNewMessages(Integer caseId, PromatMessage.Direction direction) {
+        TypedQuery<Integer> query =
+                entityManager.createNamedQuery(PromatMessage.GET_NEWS_FOR_CASE, Integer.class);
+        query.setParameter("direction", direction);
+        query.setParameter("caseId", caseId);
+
+        return query.getResultList().size() > 0;
+    }
 }

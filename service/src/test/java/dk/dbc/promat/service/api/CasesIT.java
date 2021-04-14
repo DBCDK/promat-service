@@ -278,7 +278,7 @@ public class CasesIT extends ContainerTest {
         // Verify that the case matches the created case
         obj = response.readEntity(String.class);
         PromatCase fetched = mapper.readValue(obj, PromatCase.class);
-        assertThat("fetched case is same as created", created.equals(fetched), is(true));
+        assertThat("fetched case is same as created", fetched, is(created));
     }
 
     @Test
@@ -654,7 +654,7 @@ public class CasesIT extends ContainerTest {
         response = getResponse("v1/api/cases/" + created.getId().toString());
         assertThat("status code", response.getStatus(), is(200));
         PromatCase fetched = mapper.readValue(response.readEntity(String.class), PromatCase.class);
-        assertThat("fetched case is same as updated", updated.equals(fetched), is(true));
+        assertThat("fetched case is same as updated", fetched, is(updated));
 
         // Check that the BKM task is not approved
         PromatTask bkmTask = fetched.getTasks().stream()

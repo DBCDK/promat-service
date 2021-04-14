@@ -31,6 +31,7 @@ import javax.persistence.PreUpdate;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Objects;
+import javax.persistence.Transient;
 
 @NamedQueries({
         @NamedQuery(
@@ -190,6 +191,14 @@ public class PromatCase {
 
     @JsonView({CaseView.Export.class, CaseView.Case.class})
     private String fulltextLink;
+
+    @JsonView({CaseView.Case.class, CaseView.Summary.class})
+    @Transient
+    private Boolean newMessagesToEditor = false;
+
+    @JsonView({CaseView.Case.class, CaseView.Summary.class})
+    @Transient
+    private Boolean newMessagesToReviewer = false;
 
     public Integer getId() {
         return id;
@@ -464,6 +473,32 @@ public class PromatCase {
         return this;
     }
 
+    public Boolean getNewMessagesToEditor() {
+        return newMessagesToEditor;
+    }
+
+    public PromatCase withNewMessagesToEditor(Boolean newMessagesToEditor) {
+        this.newMessagesToEditor = newMessagesToEditor;
+        return this;
+    }
+
+    public void setNewMessagesToEditor(Boolean newMessagesToEditor) {
+        this.newMessagesToEditor = newMessagesToEditor;
+    }
+
+    public Boolean getNewMessagesToReviewer() {
+        return newMessagesToReviewer;
+    }
+
+    public void setNewMessagesToReviewer(Boolean newMessagesToReviewer) {
+        this.newMessagesToReviewer = newMessagesToReviewer;
+    }
+
+    public PromatCase withNewMessagesToReviewer(Boolean newMessagesToReviewer) {
+        this.newMessagesToReviewer = newMessagesToReviewer;
+        return this;
+    }
+
     @PrePersist
     @PreUpdate
     private void beforeUpdate() {
@@ -499,14 +534,16 @@ public class PromatCase {
                 Objects.equals(creator, aCase.creator) &&
                 Objects.equals(publisher, aCase.publisher) &&
                 Objects.equals(recordId, aCase.recordId) &&
-                Objects.equals(fulltextLink, aCase.fulltextLink);
+                Objects.equals(fulltextLink, aCase.fulltextLink) &&
+                newMessagesToEditor == aCase.newMessagesToEditor &&
+                newMessagesToReviewer == aCase.newMessagesToReviewer;
     }
 
     @Override
     public int hashCode() {
         return Objects.hash(id, title, details, primaryFaust, relatedFausts, reviewer, editor, subjects, created,
                 deadline, assigned, status, materialType, tasks, weekCode, trimmedWeekCode, author, creator, publisher,
-                recordId, fulltextLink);
+                recordId, fulltextLink, newMessagesToEditor, newMessagesToReviewer);
     }
 
     @Override
@@ -533,6 +570,8 @@ public class PromatCase {
                 ", publisher='" + publisher + '\'' +
                 ", recordId='" + recordId + '\'' +
                 ", fulltextLink='" + fulltextLink + '\'' +
+                ", newMessagesToEditor='" + newMessagesToEditor + '\'' +
+                ", newMessagesToReviewer='" + newMessagesToReviewer + '\'' +
                 '}';
     }
 }
