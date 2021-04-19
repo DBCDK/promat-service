@@ -1587,7 +1587,7 @@ public class CasesIT extends ContainerTest {
     }
 
     @Test
-    public void testRejectAssignment() throws JsonProcessingException, PromatServiceConnectorException {
+    public void testRejectAssignmentAndReassignedToOtherReviewer() throws JsonProcessingException, PromatServiceConnectorException {
 
         // Create a new case
         CaseRequest dto = new CaseRequest()
@@ -1612,6 +1612,17 @@ public class CasesIT extends ContainerTest {
         dto = new CaseRequest().withStatus(CaseStatus.REJECTED);
         updated = promatServiceConnector.updateCase(created.getId(), dto);
         assertThat("is rejected", updated.getStatus(), is(CaseStatus.REJECTED));
+
+        // Then reassign to other reviewer
+        dto.setReviewer(2);
+        dto.setStatus(CaseStatus.ASSIGNED);
+        updated = promatServiceConnector.updateCase(created.getId(), dto);
+        assertThat("is reassigned", updated.getStatus(), is(CaseStatus.ASSIGNED));
+
+        // Delete the case so that we dont mess up payments tests
+        response = deleteResponse("v1/api/cases/"+created.getId());
+        assertThat("deleted", response.getStatus(), is(200));
+
     }
 
     @Test
