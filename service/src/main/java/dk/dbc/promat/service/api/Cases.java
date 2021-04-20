@@ -987,7 +987,7 @@ public class Cases {
                 break;
 
             case ASSIGNED:
-                if (existing.getReviewer() != null && existing.getStatus() == CaseStatus.CREATED) {
+                if (existing.getReviewer() != null && Set.of(CaseStatus.CREATED, CaseStatus.REJECTED).contains(existing.getStatus())) {
                     existing.setStatus(CaseStatus.ASSIGNED);
                 } else {
                     throw new ServiceErrorException("Not allowed to set status ASSIGNED when case is not in CREATED or nor reviewer is set")
