@@ -977,7 +977,7 @@ public class Cases {
         switch(proposedStatus) {
 
             case CLOSED:
-                return (CaseStatus.CLOSED);
+                return CaseStatus.CLOSED;
 
             case EXPORTED:
                 if (existing.getStatus() != CaseStatus.PENDING_EXPORT) {
@@ -986,27 +986,22 @@ public class Cases {
                             .withHttpStatus(400)
                             .withCode(ServiceErrorCode.INVALID_REQUEST);
                 }
-                return (CaseStatus.EXPORTED);
+                return CaseStatus.EXPORTED;
 
             case REVERTED:
-                return (CaseStatus.REVERTED);
+                return CaseStatus.REVERTED;
 
             case CREATED:
                 if (existing.getReviewer() != null) {
-                    return (CaseStatus.ASSIGNED);
+                    return CaseStatus.ASSIGNED;
                 } else {
-                    return (CaseStatus.CREATED);
+                    return CaseStatus.CREATED;
                 }
 
             case ASSIGNED:
-                LOGGER.info("Deep in setStatus. Existing status is:{}", existing.getStatus());
-                LOGGER.info("Reviewer is now: {}", existing.getReviewer());
                 if (existing.getReviewer() != null && Set.of(CaseStatus.CREATED, CaseStatus.REJECTED).contains(existing.getStatus())) {
-                    LOGGER.info("Luckily we succeeded in setting status! We are now returning:{}", CaseStatus.ASSIGNED);
-                    return (CaseStatus.ASSIGNED);
+                    return CaseStatus.ASSIGNED;
                 } else {
-                    LOGGER.info("Case is: {}", existing);
-                    LOGGER.info("new status: {}", proposedStatus);
                     throw new ServiceErrorException("Not allowed to set status ASSIGNED when case is not in CREATED, REJECTED or nor reviewer is set")
                             .withDetails("Attempt to set status of case to ASSIGNED when case is not in status CREATED, REJECTED or there is no reviewer set")
                             .withHttpStatus(400)
@@ -1015,7 +1010,7 @@ public class Cases {
 
             case REJECTED:
                 if (existing.getStatus() == CaseStatus.ASSIGNED) {
-                    return (CaseStatus.REJECTED);
+                    return CaseStatus.REJECTED;
                 } else {
                     throw new ServiceErrorException("Not allowed to set status REJECTED when case is not in ASSIGNED")
                             .withDetails("Attempt to set status of case to REJECTED when case is not in status ASSIGNED")
@@ -1024,7 +1019,7 @@ public class Cases {
                 }
 
             case PENDING_CLOSE:
-                return (CaseStatus.PENDING_CLOSE);
+                return CaseStatus.PENDING_CLOSE;
 
             case APPROVED:
                 if (existing.getStatus() != CaseStatus.PENDING_APPROVAL) {
@@ -1038,9 +1033,9 @@ public class Cases {
                 if (existing.getTasks().stream()
                         .filter(task -> task.getTaskFieldType() == TaskFieldType.METAKOMPAS && task.getApproved() == null)
                         .count() != 0) {
-                    return (CaseStatus.PENDING_EXTERNAL);
+                    return CaseStatus.PENDING_EXTERNAL;
                 } else {
-                    return (CaseStatus.APPROVED);
+                    return CaseStatus.APPROVED;
                 }
 
 
@@ -1051,7 +1046,7 @@ public class Cases {
                             .withHttpStatus(400)
                             .withCode(ServiceErrorCode.INVALID_REQUEST);
                 }
-                return (CaseStatus.PENDING_APPROVAL);
+                return CaseStatus.PENDING_APPROVAL;
 
             case PENDING_ISSUES:
                 if (existing.getStatus() != CaseStatus.PENDING_APPROVAL) {
@@ -1060,7 +1055,7 @@ public class Cases {
                             .withHttpStatus(400)
                             .withCode(ServiceErrorCode.INVALID_REQUEST);
                 }
-                return (CaseStatus.PENDING_ISSUES);
+                return CaseStatus.PENDING_ISSUES;
 
             case PENDING_EXPORT:
                 if (existing.getStatus() != CaseStatus.EXPORTED && existing.getStatus() != CaseStatus.PENDING_MEETING && existing.getStatus() != CaseStatus.APPROVED ) {
@@ -1069,7 +1064,7 @@ public class Cases {
                             .withHttpStatus(400)
                             .withCode(ServiceErrorCode.INVALID_REQUEST);
                 }
-                return (CaseStatus.PENDING_EXPORT);
+                return CaseStatus.PENDING_EXPORT;
 
             case PENDING_MEETING:
                 if (existing.getStatus() != CaseStatus.APPROVED) {
@@ -1078,7 +1073,7 @@ public class Cases {
                             .withHttpStatus(400)
                             .withCode(ServiceErrorCode.INVALID_REQUEST);
                 }
-                return (CaseStatus.PENDING_MEETING);
+                return CaseStatus.PENDING_MEETING;
 
             default:
                 throw new ServiceErrorException("Unknown or forbidden status")
