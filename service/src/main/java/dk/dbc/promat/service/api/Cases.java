@@ -36,6 +36,7 @@ import dk.dbc.promat.service.templating.NotificationFactory;
 import dk.dbc.promat.service.templating.model.AssignReviewer;
 import dk.dbc.promat.service.templating.Renderer;
 import java.time.LocalDateTime;
+import javax.persistence.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -91,6 +92,14 @@ public class Cases {
 
     // Default number of results when getting cases
     private static final int DEFAULT_CASES_LIMIT = 100;
+
+    // Set of allowed states when changing reviewer
+    private static final Set<CaseStatus> REVIEWER_CHANGE_ALLOWED_STATES =
+            Set.of(CaseStatus.CREATED, CaseStatus.REJECTED);
+
+    // Set of allowed states when approving tasks
+    private static final Set<CaseStatus> APPROVE_TASKS_ALLOWED_STATES =
+            Set.of(CaseStatus.PENDING_EXTERNAL, CaseStatus.APPROVED);
 
     @POST
     @Path("cases")
@@ -593,7 +602,7 @@ public class Cases {
             if(dto.getReviewer() != null) {
                 Integer reviewer_id = existing.getReviewer() == null ? null : existing.getReviewer().getId();
                 if (!dto.getReviewer().equals(reviewer_id)) {
-                    if(Set.of(CaseStatus.CREATED, CaseStatus.REJECTED).contains(existing.getStatus())) {
+                    if(REVIEWER_CHANGE_ALLOWED_STATES.contains(existing.getStatus())) {
                         existing.setReviewer(resolveReviewer(dto.getReviewer()));
                         notifyOnReviewerChanged(existing);
                         existing.setStatus(calculateStatus(existing, CaseStatus.ASSIGNED));
@@ -621,7 +630,7 @@ public class Cases {
                 CaseStatus status = calculateStatus(existing, dto.getStatus());
                 if(status == CaseStatus.PENDING_CLOSE) {
                     approveBkmTasks(existing);
-                } else if(Set.of(CaseStatus.PENDING_EXTERNAL, CaseStatus.APPROVED).contains(status)) {
+                } else if(APPROVE_TASKS_ALLOWED_STATES.contains(status)) {
                     approveTasks(existing);
                 }
                 existing.setStatus(status);
@@ -655,10 +664,16 @@ public class Cases {
             return Response.ok(existing).build();
         } catch(ServiceErrorException serviceErrorException) {
             LOGGER.info("Received serviceErrorException while mapping entities: {}", serviceErrorException.getMessage());
+
+            // Some type of illegal update was Detected. All changes must be rolled back.
+            // SO detach case from entitymanager, and thereby in effect do a rollback.
             entityManager.detach(existing);
             return Response.status(serviceErrorException.getHttpStatus()).entity(serviceErrorException.getServiceErrorDto()).build();
         } catch(Exception exception) {
             LOGGER.error("Caught exception: {}", exception.getMessage());
+
+            // Updating the case went wrong for some other reason. All changes must be rolled back.
+            // SO detach case from entitymanager, and thereby in effect do a rollback.
             entityManager.detach(existing);
 
             return ServiceErrorDto.Failed(exception.getMessage());
@@ -958,6 +973,7 @@ public class Cases {
         if (promatCase.getId() == null) {
             entityManager.flush();
         }
+
         Notification notification = notificationFactory
                 .notificationOf(new AssignReviewer().withPromatCase(promatCase));
         PromatMessage message = new PromatMessage()
