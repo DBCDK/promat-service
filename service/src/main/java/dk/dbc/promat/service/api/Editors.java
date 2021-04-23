@@ -6,10 +6,14 @@
 package dk.dbc.promat.service.api;
 
 import dk.dbc.connector.culr.CulrConnectorException;
+import dk.dbc.promat.service.dto.EditorList;
 import dk.dbc.promat.service.dto.EditorRequest;
 import dk.dbc.promat.service.dto.ServiceErrorDto;
 import dk.dbc.promat.service.persistence.Editor;
 import dk.dbc.promat.service.persistence.PromatEntityManager;
+import java.util.List;
+import javax.persistence.TypedQuery;
+import javax.ws.rs.QueryParam;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -111,6 +115,19 @@ public class Editors {
             return Response.status(404).build();
         }
         return Response.ok(editor).build();
+    }
+
+    @GET
+    @Path("editors")
+    @Produces({MediaType.APPLICATION_JSON})
+    public Response getAllEditors() {
+        try {
+            TypedQuery<Editor> q = entityManager.createNamedQuery(Editor.GET_ALL_EDITORS, Editor.class);
+            final List<Editor> editors = q.getResultList();
+            return Response.ok().entity(new EditorList<>().withEditors(editors)).build();
+        } catch (Exception e) {
+            return ServiceErrorDto.Failed(e.getMessage());
+        }
     }
 
     @PUT

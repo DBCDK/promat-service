@@ -7,11 +7,22 @@ package dk.dbc.promat.service.persistence;
 
 import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
+import javax.persistence.NamedQueries;
+import javax.persistence.NamedQuery;
 
+@NamedQueries(
+        @NamedQuery(
+                name = Editor.GET_ALL_EDITORS,
+                query = Editor.GET_ALL_EDITORS_QUERY
+
+        )
+)
 @Entity
 @DiscriminatorValue("EDITOR")
 public class Editor extends PromatUser {
-
+    public static final String GET_ALL_EDITORS = "get.all.editors";
+    public static final String GET_ALL_EDITORS_QUERY =
+            "SELECT editor FROM Editor editor ORDER BY editor.id ASC";
     public Editor withActive(boolean active) {
         this.active = active;
         return this;
