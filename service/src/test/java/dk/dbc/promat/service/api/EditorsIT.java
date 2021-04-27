@@ -7,9 +7,11 @@ package dk.dbc.promat.service.api;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import dk.dbc.promat.service.ContainerTest;
+import dk.dbc.promat.service.dto.EditorList;
 import dk.dbc.promat.service.dto.EditorRequest;
 import dk.dbc.promat.service.persistence.Editor;
 import dk.dbc.promat.service.templating.Formatting;
+import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,6 +34,27 @@ public class EditorsIT extends ContainerTest {
         expectedEditor.setEmail("ed.itor@dbc.dk");
 
         assertThat(get("v1/api/editors/10", Editor.class), is(expectedEditor));
+    }
+
+    @Test
+    void getAllEditors() throws JsonProcessingException, InterruptedException {
+        Response response = getResponse("v1/api/editors");
+
+        EditorList<Editor> editors = mapper.readValue(response.readEntity(String.class), EditorList.class);
+
+        long active = 0;
+        long inActive = 0;
+        for (Editor editor : editors.getEditors()) {
+            if (editor.isActive()) {
+                active += 1;
+            } else {
+                inActive += 1;
+            }
+        }
+        // More than five active editors.
+        // Less than two inactive.
+        assertThat("Active editors", active >= 4);
+        assertThat("Inactive editors", inActive <= 2);
     }
 
     @Test

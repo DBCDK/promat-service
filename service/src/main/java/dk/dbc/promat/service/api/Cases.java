@@ -36,6 +36,7 @@ import dk.dbc.promat.service.templating.NotificationFactory;
 import dk.dbc.promat.service.templating.model.AssignReviewer;
 import dk.dbc.promat.service.templating.Renderer;
 import java.time.LocalDateTime;
+import javax.persistence.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -91,6 +92,14 @@ public class Cases {
 
     // Default number of results when getting cases
     private static final int DEFAULT_CASES_LIMIT = 100;
+
+    // Set of allowed states when changing reviewer
+    private static final Set<CaseStatus> REVIEWER_CHANGE_ALLOWED_STATES =
+            Set.of(CaseStatus.CREATED, CaseStatus.REJECTED);
+
+    // Set of allowed states when approving tasks
+    private static final Set<CaseStatus> APPROVE_TASKS_ALLOWED_STATES =
+            Set.of(CaseStatus.PENDING_EXTERNAL, CaseStatus.APPROVED);
 
     @POST
     @Path("cases")
@@ -548,6 +557,7 @@ public class Cases {
 
         repository.getExclusiveAccessToTable(PromatCase.TABLE_NAME);
         repository.getExclusiveAccessToTable(PromatTask.TABLE_NAME);
+        PromatCase existing = null;
 
         try {
 
@@ -562,7 +572,7 @@ public class Cases {
             }
 
             // Fetch an existing entity with the given id
-            PromatCase existing = entityManager.find(PromatCase.class, id);
+            existing = entityManager.find(PromatCase.class, id);
             if( existing == null ) {
                 LOGGER.info("No such case {}", id);
                 return ServiceErrorDto.NotFound("No such case", String.format("Case with id %d does not exist", id));
@@ -590,12 +600,18 @@ public class Cases {
                 existing.setRelatedFausts(dto.getRelatedFausts());
             }
             if(dto.getReviewer() != null) {
-                if (!dto.getReviewer().equals(existing.getReviewer())) {
-                    existing.setReviewer(resolveReviewer(dto.getReviewer()));
-                    notifyOnReviewerChanged(existing);
-                }
-                if(existing.getStatus() == CaseStatus.CREATED) {
-                    setStatus(existing, CaseStatus.ASSIGNED);
+                Integer reviewer_id = existing.getReviewer() == null ? null : existing.getReviewer().getId();
+                if (!dto.getReviewer().equals(reviewer_id)) {
+                    if(REVIEWER_CHANGE_ALLOWED_STATES.contains(existing.getStatus())) {
+                        existing.setReviewer(resolveReviewer(dto.getReviewer()));
+                        notifyOnReviewerChanged(existing);
+                        existing.setStatus(calculateStatus(existing, CaseStatus.ASSIGNED));
+                    } else {
+                        throw new ServiceErrorException("Not allowed to set status ASSIGNED when case is not in CREATED, REJECTED or nor reviewer is set")
+                                .withDetails("Attempt to set status of case to ASSIGNED when case is not in status CREATED, REJECTED or there is no reviewer set")
+                                .withHttpStatus(400)
+                                .withCode(ServiceErrorCode.INVALID_REQUEST);
+                    }
                 }
             }
             if(dto.getEditor() != null) {
@@ -611,7 +627,13 @@ public class Cases {
                 existing.setMaterialType(dto.getMaterialType());
             }
             if(dto.getStatus() != null) {
-                setStatus(existing, dto.getStatus());
+                CaseStatus status = calculateStatus(existing, dto.getStatus());
+                if(status == CaseStatus.PENDING_CLOSE) {
+                    approveBkmTasks(existing);
+                } else if(APPROVE_TASKS_ALLOWED_STATES.contains(status)) {
+                    approveTasks(existing);
+                }
+                existing.setStatus(status);
             }
             if(dto.getCreator() != null) {
                 if (existing.getCreator() != null && !existing.getCreator().getId().equals(dto.getCreator())) {
@@ -642,9 +664,18 @@ public class Cases {
             return Response.ok(existing).build();
         } catch(ServiceErrorException serviceErrorException) {
             LOGGER.info("Received serviceErrorException while mapping entities: {}", serviceErrorException.getMessage());
+
+            // Some type of illegal update was Detected. All changes must be rolled back.
+            // SO detach case from entitymanager, and thereby in effect do a rollback.
+            entityManager.detach(existing);
             return Response.status(serviceErrorException.getHttpStatus()).entity(serviceErrorException.getServiceErrorDto()).build();
         } catch(Exception exception) {
             LOGGER.error("Caught exception: {}", exception.getMessage());
+
+            // Updating the case went wrong for some other reason. All changes must be rolled back.
+            // SO detach case from entitymanager, and thereby in effect do a rollback.
+            entityManager.detach(existing);
+
             return ServiceErrorDto.Failed(exception.getMessage());
         }
     }
@@ -942,6 +973,7 @@ public class Cases {
         if (promatCase.getId() == null) {
             entityManager.flush();
         }
+
         Notification notification = notificationFactory
                 .notificationOf(new AssignReviewer().withPromatCase(promatCase));
         PromatMessage message = new PromatMessage()
@@ -957,12 +989,11 @@ public class Cases {
         entityManager.persist(message);
     }
 
-    private void setStatus(PromatCase existing, CaseStatus newStatus) throws ServiceErrorException {
-        switch(newStatus) {
+    private CaseStatus calculateStatus(PromatCase existing, CaseStatus proposedStatus) throws ServiceErrorException {
+        switch(proposedStatus) {
 
             case CLOSED:
-                existing.setStatus(CaseStatus.CLOSED);
-                break;
+                return CaseStatus.CLOSED;
 
             case EXPORTED:
                 if (existing.getStatus() != CaseStatus.PENDING_EXPORT) {
@@ -971,51 +1002,40 @@ public class Cases {
                             .withHttpStatus(400)
                             .withCode(ServiceErrorCode.INVALID_REQUEST);
                 }
-                existing.setStatus(CaseStatus.EXPORTED);
-                break;
+                return CaseStatus.EXPORTED;
 
             case REVERTED:
-                existing.setStatus(CaseStatus.REVERTED);
-                break;
+                return CaseStatus.REVERTED;
 
             case CREATED:
                 if (existing.getReviewer() != null) {
-                    existing.setStatus(CaseStatus.ASSIGNED);
+                    return CaseStatus.ASSIGNED;
                 } else {
-                    existing.setStatus(CaseStatus.CREATED);
+                    return CaseStatus.CREATED;
                 }
-                break;
 
             case ASSIGNED:
                 if (existing.getReviewer() != null && Set.of(CaseStatus.CREATED, CaseStatus.REJECTED).contains(existing.getStatus())) {
-                    existing.setStatus(CaseStatus.ASSIGNED);
+                    return CaseStatus.ASSIGNED;
                 } else {
-                    throw new ServiceErrorException("Not allowed to set status ASSIGNED when case is not in CREATED or nor reviewer is set")
-                            .withDetails("Attempt to set status of case to ASSIGNED when case is not in status CREATED or there is no reviewer set")
+                    throw new ServiceErrorException("Not allowed to set status ASSIGNED when case is not in CREATED, REJECTED or nor reviewer is set")
+                            .withDetails("Attempt to set status of case to ASSIGNED when case is not in status CREATED, REJECTED or there is no reviewer set")
                             .withHttpStatus(400)
                             .withCode(ServiceErrorCode.INVALID_REQUEST);
                 }
-                break;
 
             case REJECTED:
                 if (existing.getStatus() == CaseStatus.ASSIGNED) {
-                    existing.setStatus(CaseStatus.REJECTED);
+                    return CaseStatus.REJECTED;
                 } else {
                     throw new ServiceErrorException("Not allowed to set status REJECTED when case is not in ASSIGNED")
                             .withDetails("Attempt to set status of case to REJECTED when case is not in status ASSIGNED")
                             .withHttpStatus(400)
                             .withCode(ServiceErrorCode.INVALID_REQUEST);
                 }
-                break;
 
             case PENDING_CLOSE:
-                existing.setStatus(CaseStatus.PENDING_CLOSE);
-                for(PromatTask task : existing.getTasks()) {
-                    if(task.getTaskFieldType().equals(TaskFieldType.BKM)) {
-                        task.setApproved(LocalDate.now());
-                    }
-                }
-                break;
+                return CaseStatus.PENDING_CLOSE;
 
             case APPROVED:
                 if (existing.getStatus() != CaseStatus.PENDING_APPROVAL) {
@@ -1025,21 +1045,15 @@ public class Cases {
                             .withCode(ServiceErrorCode.INVALID_REQUEST);
                 }
 
-                for (PromatTask task : new ArrayList<>(existing.getTasks())) {
-                    if(task.getTaskFieldType() != TaskFieldType.METAKOMPAS ) {
-                        task.setApproved(LocalDate.now());
-                    }
-                }
 
                 if (existing.getTasks().stream()
                         .filter(task -> task.getTaskFieldType() == TaskFieldType.METAKOMPAS && task.getApproved() == null)
                         .count() != 0) {
-                    existing.setStatus(CaseStatus.PENDING_EXTERNAL);
+                    return CaseStatus.PENDING_EXTERNAL;
                 } else {
-                    existing.setStatus(CaseStatus.APPROVED);
+                    return CaseStatus.APPROVED;
                 }
 
-                break;
 
             case PENDING_APPROVAL:
                 if (existing.getStatus() != CaseStatus.ASSIGNED && existing.getStatus() != CaseStatus.PENDING_ISSUES) {
@@ -1048,8 +1062,7 @@ public class Cases {
                             .withHttpStatus(400)
                             .withCode(ServiceErrorCode.INVALID_REQUEST);
                 }
-                existing.setStatus(CaseStatus.PENDING_APPROVAL);
-                break;
+                return CaseStatus.PENDING_APPROVAL;
 
             case PENDING_ISSUES:
                 if (existing.getStatus() != CaseStatus.PENDING_APPROVAL) {
@@ -1058,8 +1071,7 @@ public class Cases {
                             .withHttpStatus(400)
                             .withCode(ServiceErrorCode.INVALID_REQUEST);
                 }
-                existing.setStatus(CaseStatus.PENDING_ISSUES);
-                break;
+                return CaseStatus.PENDING_ISSUES;
 
             case PENDING_EXPORT:
                 if (existing.getStatus() != CaseStatus.EXPORTED && existing.getStatus() != CaseStatus.PENDING_MEETING && existing.getStatus() != CaseStatus.APPROVED ) {
@@ -1068,8 +1080,7 @@ public class Cases {
                             .withHttpStatus(400)
                             .withCode(ServiceErrorCode.INVALID_REQUEST);
                 }
-                existing.setStatus(CaseStatus.PENDING_EXPORT);
-                break;
+                return CaseStatus.PENDING_EXPORT;
 
             case PENDING_MEETING:
                 if (existing.getStatus() != CaseStatus.APPROVED) {
@@ -1078,15 +1089,30 @@ public class Cases {
                             .withHttpStatus(400)
                             .withCode(ServiceErrorCode.INVALID_REQUEST);
                 }
-                existing.setStatus(CaseStatus.PENDING_MEETING);
-                break;
+                return CaseStatus.PENDING_MEETING;
 
             default:
                 throw new ServiceErrorException("Unknown or forbidden status")
                         .withDetails(String.format("Attempt to set status %s on case %d which is forbidden or impossible",
-                                newStatus.name(), existing.getId()))
+                                proposedStatus.name(), existing.getId()))
                         .withHttpStatus(400)
                         .withCode(ServiceErrorCode.INVALID_REQUEST);
+        }
+    }
+
+    private void approveTasks(PromatCase existing) {
+        for (PromatTask task : new ArrayList<>(existing.getTasks())) {
+            if (task.getTaskFieldType() != TaskFieldType.METAKOMPAS) {
+                task.setApproved(LocalDate.now());
+            }
+        }
+    }
+
+    private void approveBkmTasks(PromatCase existing) {
+        for (PromatTask task : existing.getTasks()) {
+            if (task.getTaskFieldType().equals(TaskFieldType.BKM)) {
+                task.setApproved(LocalDate.now());
+            }
         }
     }
 

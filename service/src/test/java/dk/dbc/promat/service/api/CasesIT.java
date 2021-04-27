@@ -1613,11 +1613,17 @@ public class CasesIT extends ContainerTest {
         updated = promatServiceConnector.updateCase(created.getId(), dto);
         assertThat("is rejected", updated.getStatus(), is(CaseStatus.REJECTED));
 
-        // Then reassign to other reviewer
+        // Then reassign to other reviewer.
         dto.setReviewer(2);
-        dto.setStatus(CaseStatus.ASSIGNED);
+        dto.setStatus(null);
         updated = promatServiceConnector.updateCase(created.getId(), dto);
         assertThat("is reassigned", updated.getStatus(), is(CaseStatus.ASSIGNED));
+
+        // Then reassign to a third, when case is still in ASSIGNED state.
+        // AND expect to be stopped, right there.
+        dto.setReviewer(3);
+        CaseRequest finalDto = dto;
+        assertThrows(PromatServiceConnectorUnexpectedStatusCodeException.class, () -> promatServiceConnector.updateCase(created.getId(), finalDto));
 
         // Delete the case so that we dont mess up payments tests
         response = deleteResponse("v1/api/cases/"+created.getId());
