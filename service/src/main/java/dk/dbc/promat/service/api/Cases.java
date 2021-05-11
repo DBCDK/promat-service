@@ -525,7 +525,7 @@ public class Cases {
         // If a starting id has been given, add this
         final Integer from = params.getFrom();
         if (from != null) {
-            allPredicates.add(builder.gt(root.get("id"), builder.literal(from)));
+            allPredicates.add(builder.lt(root.get("id"), builder.literal(from)));
         }
 
         // Combine all where clauses together with AND and add them to the query
@@ -535,7 +535,7 @@ public class Cases {
         }
 
         // Complete the query by adding limits and ordering
-        criteriaQuery.orderBy(builder.asc(root.get("id")));
+        criteriaQuery.orderBy(builder.desc(root.get("id")));
         final TypedQuery<PromatCase> query = entityManager.createQuery(criteriaQuery);
         query.setMaxResults(params.getLimit() == null ? DEFAULT_CASES_LIMIT : params.getLimit());
 
