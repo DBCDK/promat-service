@@ -47,4 +47,13 @@ public class AssignReviewer {
     public void setTitleSections(List<BibliographicInformation> titleSections) {
         this.titleSections = titleSections;
     }
+
+    @Override
+    public String toString() {
+        return "AssignReviewer{" +
+                "promatCase=" + promatCase +
+                ", note='" + note + '\'' +
+                ", titleSections=" + titleSections +
+                '}';
+    }
 }

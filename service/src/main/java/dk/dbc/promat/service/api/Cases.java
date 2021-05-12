@@ -36,7 +36,6 @@ import dk.dbc.promat.service.templating.NotificationFactory;
 import dk.dbc.promat.service.templating.model.AssignReviewer;
 import dk.dbc.promat.service.templating.Renderer;
 import java.time.LocalDateTime;
-import javax.persistence.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -166,7 +165,7 @@ public class Cases {
 
         // Handle possible change of case status due to assigning an editor.
         //
-        // If an reviewer has been assigned, then set or modify the status of the case and the assigned field.
+        // If a reviewer has been assigned, then set or modify the status of the case and the assigned field.
         // If no reviwer is given, check that the status is not ASSIGNED - that would be a mess
         LocalDate assigned = dto.getAssigned() == null ? null : LocalDate.parse(dto.getAssigned());
         CaseStatus status = dto.getStatus() == null ? CaseStatus.CREATED : dto.getStatus();
@@ -200,7 +199,8 @@ public class Cases {
             .withCreator(creator)
             .withPublisher(dto.getPublisher())
             .withWeekCode(dto.getWeekCode())
-            .withFulltextLink(dto.getFulltextLink());
+            .withFulltextLink(dto.getFulltextLink())
+            .withNote(dto.getNote());
 
             entityManager.persist(entity);
             if (entity.getStatus() == CaseStatus.ASSIGNED) {
@@ -599,6 +599,9 @@ public class Cases {
                 }
                 existing.setRelatedFausts(dto.getRelatedFausts());
             }
+            if(dto.getNote() != null) {
+                existing.setNote(dto.getNote());
+            }
             if(dto.getReviewer() != null) {
                 Integer reviewer_id = existing.getReviewer() == null ? null : existing.getReviewer().getId();
                 if (!dto.getReviewer().equals(reviewer_id)) {
@@ -970,12 +973,13 @@ public class Cases {
 
     private void notifyOnReviewerChanged(PromatCase promatCase)
             throws NotificationFactory.ValidateException, OpenFormatConnectorException {
+
         if (promatCase.getId() == null) {
             entityManager.flush();
         }
 
         Notification notification = notificationFactory
-                .notificationOf(new AssignReviewer().withPromatCase(promatCase));
+                .notificationOf(new AssignReviewer().withPromatCase(promatCase).withNote(promatCase.getNote()));
         PromatMessage message = new PromatMessage()
                 .withCaseId(promatCase.getId())
                 .withMessageText(notification.getBodyText())
