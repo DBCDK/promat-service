@@ -73,7 +73,7 @@ public class RendererTest {
 
     @Test
     public void testReviewCollection() throws NotificationFactory.ValidateException, OpenFormatConnectorException, IOException {
-        String NOTE = "Du bedes udarbejde en samlet anmeldelse af materialerne. " +
+        String NOTE = "Du bedes udarbejde en samlet anmeldelse af materialerne.<br/> " +
                 "Bøgerne er kandidater til inddatering i Metabuggi. " +
                 "Du bedes afgøre om de er relevante for Buggi og i positiv fald tildele dem metadata.";
 
