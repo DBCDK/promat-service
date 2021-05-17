@@ -73,14 +73,15 @@ public class RendererTest {
 
     @Test
     public void testReviewCollection() throws NotificationFactory.ValidateException, OpenFormatConnectorException, IOException {
+        String NOTE = "Du bedes udarbejde en samlet anmeldelse af materialerne. " +
+                "Bøgerne er kandidater til inddatering i Metabuggi. " +
+                "Du bedes afgøre om de er relevante for Buggi og i positiv fald tildele dem metadata.";
 
         Notification notification = notificationFactory.notificationOf(new AssignReviewer()
                 .withPromatCase(aCase.withRelatedFausts(List.of("47672201", "38582801", "51785347"))
                                 .withTasks(List.of(new PromatTask()
                                 .withTaskFieldType(TaskFieldType.METAKOMPAS))))
-                .withNote("Du bedes udarbejde en samlet anmeldelse af materialerne. " +
-                        "Bøgerne er kandidater til inddatering i Metabuggi. " +
-                        "Du bedes afgøre om de er relevante for Buggi og i positiv fald tildele dem metadata."));
+                .withNote(NOTE));
         String expected = stripTrailingAndLeading(
                 Files.readString(
                         Path.of(RendererTest.class.getResource("/mailBodys/collectionReview.html").getPath())));
@@ -90,6 +91,7 @@ public class RendererTest {
         assertThat("Mailtext", actual, is(expected));
 
         assertThat("Mail address", notification.getToAddress(), is("hans@hansen.dk"));
+        assertThat( "Note", notification.getBodyText().contains(NOTE));
     }
 
     @Test

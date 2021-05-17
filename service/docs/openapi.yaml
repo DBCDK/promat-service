@@ -1624,6 +1624,10 @@ components:
           type: string
           nullable: true
           description: FAUST number assigned to the MARC record generated for the case during export
+        note:
+          type: string
+          nullable: true
+          description: Note to be relayed to reviewer, when case is created or reviewer changed. Not persisted.
 
     CaseStatus:
       type: string

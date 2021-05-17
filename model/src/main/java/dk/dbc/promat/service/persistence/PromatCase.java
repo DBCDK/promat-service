@@ -200,6 +200,10 @@ public class PromatCase {
     @Transient
     private Boolean newMessagesToReviewer = false;
 
+    @JsonView({CaseView.Case.class, CaseView.Summary.class})
+    @Transient
+    private String note;
+
     public Integer getId() {
         return id;
     }
@@ -499,6 +503,19 @@ public class PromatCase {
         return this;
     }
 
+    public String getNote() {
+        return note;
+    }
+
+    public void setNote(String note) {
+        this.note = note;
+    }
+
+    public PromatCase withNote(String note) {
+        this.note = note;
+        return this;
+    }
+
     @PrePersist
     @PreUpdate
     private void beforeUpdate() {
@@ -572,6 +589,7 @@ public class PromatCase {
                 ", fulltextLink='" + fulltextLink + '\'' +
                 ", newMessagesToEditor='" + newMessagesToEditor + '\'' +
                 ", newMessagesToReviewer='" + newMessagesToReviewer + '\'' +
+                ", note='" + note + '\'' +
                 '}';
     }
 }
