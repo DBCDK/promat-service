@@ -120,7 +120,7 @@ public class Reviewers {
             entityManager.persist(entity);
             entityManager.flush();
 
-            LOGGER.info("Created new reviewer with ID {} for request {}", entity.getId(), reviewerRequest);
+            LOGGER.info("Created new reviewer with ID {}", entity.getId());
             return Response.status(201)
                     .entity(entity)
                     .build();
