@@ -10,7 +10,7 @@
 <p>@tag.title_section_tag(bibliographicInformationList = model.getTitleSections())</p>
 <p>Anmeldelsen bedes udarbejdet senest: ${Formatting.format(promatCase.getDeadline())}</p>
 @if(note != null)
-    <p>Note: ${note}</p>
+    <p>Note: $unsafe{note}</p>
 @endif
 
 <p>@tag.metakompas_section_tag(promatCase = promatCase)</p>
