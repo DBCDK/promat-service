@@ -28,6 +28,10 @@ public class ListCasesParams extends HashMap<String, Object> {
          */
         FROM("from"),
         /**
+         * Return cases with an id less than this number
+         */
+        TO("to"),
+        /**
          * Maximum number of cases returned
          */
         LIMIT("limit"),
@@ -62,7 +66,11 @@ public class ListCasesParams extends HashMap<String, Object> {
         /**
          * Materials (BOOK, MOVIE, MULTIMEDIA)
          */
-        MATERIALS("materials");
+        MATERIALS("materials"),
+        /**
+         * How to order search results (ascending/descending)
+         */
+        ORDER("order");
 
         private final String keyName;
 
@@ -77,6 +85,10 @@ public class ListCasesParams extends HashMap<String, Object> {
 
     public enum Format {
         EXPORT, SUMMARY;
+    }
+
+    public enum Order {
+        ASCENDING, DESCENDING;
     }
 
     public ListCasesParams withEditor(Integer id) {
@@ -114,6 +126,14 @@ public class ListCasesParams extends HashMap<String, Object> {
 
     public Integer getFrom() {
         return getInteger(Key.FROM);
+    }
+
+    public ListCasesParams withTo(Integer to) {
+        return withInteger(Key.TO, to);
+    }
+
+    public Integer getTo() {
+        return getInteger(Key.TO);
     }
 
     public ListCasesParams withLimit(Integer limit) {
@@ -204,6 +224,19 @@ public class ListCasesParams extends HashMap<String, Object> {
 
     public String getMaterials() {
         return getString(Key.MATERIALS);
+    }
+
+    public ListCasesParams withOrder(Order order) {
+        putOrRemoveOnNull(Key.ORDER, order);
+        return this;
+    }
+
+    public Order getOrder() {
+        final Object value = this.get(Key.ORDER);
+        if (value != null) {
+            return (Order) value;
+        }
+        return null;
     }
 
     private void putOrRemoveOnNull(Key param, Object value) {

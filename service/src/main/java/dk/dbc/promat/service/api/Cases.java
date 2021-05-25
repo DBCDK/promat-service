@@ -363,7 +363,9 @@ public class Cases {
                               @QueryParam("weekCode") final String weekCode,
                               @QueryParam("limit") final Integer limit,
                               @QueryParam("from") final Integer from,
-                              @QueryParam("materials") final String materials) {
+                              @QueryParam("to") final Integer to,
+                              @QueryParam("materials") final String materials,
+                              @QueryParam("order") final ListCasesParams.Order order) {
 
         final ListCasesParams listCasesParams = new ListCasesParams()
                 .withFaust(faust)
@@ -378,7 +380,9 @@ public class Cases {
                 .withFormat(ListCasesParams.Format.valueOf(format.toString()))
                 .withLimit(limit)
                 .withFrom(from)
-                .withMaterials(materials);
+                .withTo(to)
+                .withMaterials(materials)
+                .withOrder(order);
 
         LOGGER.info("GET cases/ {}", listCasesParams);
 
@@ -525,7 +529,13 @@ public class Cases {
         // If a starting id has been given, add this
         final Integer from = params.getFrom();
         if (from != null) {
-            allPredicates.add(builder.lt(root.get("id"), builder.literal(from)));
+            allPredicates.add(builder.gt(root.get("id"), builder.literal(from)));
+        }
+
+        // If an ending id has been given, add this
+        final Integer to = params.getTo();
+        if (to != null) {
+            allPredicates.add(builder.lt(root.get("id"), builder.literal(to)));
         }
 
         // Combine all where clauses together with AND and add them to the query
@@ -534,8 +544,15 @@ public class Cases {
             criteriaQuery.where(finalPredicate);
         }
 
-        // Complete the query by adding limits and ordering
-        criteriaQuery.orderBy(builder.desc(root.get("id")));
+        // Add ordering
+        ListCasesParams.Order order = params.getOrder();
+        if( order == ListCasesParams.Order.DESCENDING ) {
+            criteriaQuery.orderBy(builder.desc(root.get("id")));
+        } else {
+            criteriaQuery.orderBy(builder.asc(root.get("id")));
+        }
+
+        // Add limits
         final TypedQuery<PromatCase> query = entityManager.createQuery(criteriaQuery);
         query.setMaxResults(params.getLimit() == null ? DEFAULT_CASES_LIMIT : params.getLimit());
 
