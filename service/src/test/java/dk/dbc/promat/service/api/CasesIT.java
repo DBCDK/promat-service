@@ -361,8 +361,7 @@ public class CasesIT extends ContainerTest {
         // Get 4 cases with status CREATED - there is 8 or more in the database
         final CaseSummaryList fetched = promatServiceConnector.listCases(new ListCasesParams()
                 .withStatus(CaseStatus.CREATED)
-                .withLimit(4)
-                .withFrom(99999));
+                .withLimit(4));
 
         assertThat("Number of cases with status CREATED", fetched.getNumFound(), is(4));
 
@@ -396,25 +395,26 @@ public class CasesIT extends ContainerTest {
     @Test
     public void testGetCasesWithLimitAndFrom() throws PromatServiceConnectorException {
 
-        // Get 4 cases with status CREATED from id 1
+        // Get 4 cases with status CREATED from id 1 (first id after 'from' should be 1)
         CaseSummaryList fetched = promatServiceConnector.listCases(new ListCasesParams()
                 .withStatus(CaseStatus.CREATED)
                 .withLimit(4)
-                .withFrom(5));
+                .withFrom(0));
 
-        assertThat("Number of cases with status CREATED", fetched.getNumFound(), is(3));
+        assertThat("Number of cases with status CREATED", fetched.getNumFound(), is(4));
 
 
         // Check id ordering
-        assertThat(fetched.getCases().get(0).getId(), is(3));
+        assertThat(fetched.getCases().get(0).getId(), is(1));
         assertThat(fetched.getCases().get(1).getId(), is(2));
-        assertThat(fetched.getCases().get(2).getId(), is(1));
+        assertThat(fetched.getCases().get(2).getId(), is(3));
 
         // Get 4 cases with status CREATED from id 7 and backwards
         fetched = promatServiceConnector.listCases(new ListCasesParams()
                 .withStatus(CaseStatus.CREATED)
                 .withLimit(4)
-                .withFrom(8));
+                .withTo(8)
+                .withOrder(ListCasesParams.Order.DESCENDING));
         assertThat("Number of cases with status CREATED", fetched.getNumFound(), is(4));
 
         // Check id ordering
@@ -422,6 +422,7 @@ public class CasesIT extends ContainerTest {
         assertThat(fetched.getCases().get(1).getId(), is(5));
         assertThat(fetched.getCases().get(2).getId(), is(3));
         assertThat(fetched.getCases().get(3).getId(), is(2));
+
         // Get All cases with status created, then get the last few of them
         fetched = promatServiceConnector.listCases(new ListCasesParams()
                 .withStatus(CaseStatus.CREATED));
@@ -431,7 +432,7 @@ public class CasesIT extends ContainerTest {
         fetched = promatServiceConnector.listCases(new ListCasesParams()
                 .withStatus(CaseStatus.CREATED)
                 .withLimit(4)
-                .withFrom(lastId + 1));
+                .withFrom(lastId - 1));
         assertThat("Number of cases with status CREATED", fetched.getNumFound(), is(1));
         assertThat(fetched.getCases().get(0).getId(), is(lastId));
     }
@@ -493,7 +494,7 @@ public class CasesIT extends ContainerTest {
                 .withEditor(11)
                 .withStatus(CaseStatus.CREATED));
         assertThat("Number of cases with editor 11 and status CREATED", fetched.getNumFound(), is(3));
-        assertThat("case id", fetched.getCases().get(0).getId(), is(13));
+        assertThat("case id", fetched.getCases().get(0).getId(), is(10));
     }
 
     @Test
@@ -534,8 +535,8 @@ public class CasesIT extends ContainerTest {
                 .withTrimmedWeekcodeOperator(CriteriaOperator.LESS_THAN_OR_EQUAL_TO)
                 .withTrimmedWeekcode("202101"));
         assertThat("Number of cases with weekcode less than '202101'", fetched.getNumFound(), is(2));
-        assertThat("1st case with weekcode less than '202101'", fetched.getCases().get(0).getId(), is(2));
-        assertThat("2nd case with weekcode less than '202101'", fetched.getCases().get(1).getId(), is(1));
+        assertThat("1st case with weekcode less than '202101'", fetched.getCases().get(0).getId(), is(1));
+        assertThat("2nd case with weekcode less than '202101'", fetched.getCases().get(1).getId(), is(2));
     }
 
     @Test
