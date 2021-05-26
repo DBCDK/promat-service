@@ -32,6 +32,7 @@ import java.util.List;
 import java.util.Map;
 
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 @TestMethodOrder(OrderAnnotation.class)
@@ -389,5 +390,27 @@ public class ReviewersIT extends ContainerTest {
                 .withLastName("Hansen");
         actual = Formatting.format(reviewer);
         assertThat("name is correct formatted", actual.equals("Hans Hansen"));
+    }
+
+    @Test
+    public void testUpdateReviewerWithNullAddress() throws JsonProcessingException {
+
+        final ReviewerRequest reviewerRequest = new ReviewerRequest()
+                .withCprNumber("2407776666")
+                .withPaycode(6666)
+                .withFirstName("Bo")
+                .withLastName("Boe")
+                .withEmail("bo@boe.com");
+
+        Response response = postResponse("v1/api/reviewers", reviewerRequest);
+        assertThat("response status", response.getStatus(), is(201));
+
+        final Reviewer reviewer = mapper.readValue(response.readEntity(String.class), Reviewer.class);
+        assertThat("address", reviewer.getAddress(), is(nullValue()));
+
+        final ReviewerRequest reviewerUpdateRequest = new ReviewerRequest()
+            .withAddress(new Address().withAddress1("Boesvej 1"));
+        response = putResponse("v1/api/reviewers/" + reviewer.getId(), reviewerUpdateRequest);
+        assertThat("response status", response.getStatus(), is(200));
     }
 }

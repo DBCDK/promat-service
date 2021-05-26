@@ -1,6 +1,7 @@
 package dk.dbc.promat.service.templating;
 
 import dk.dbc.promat.service.dto.ReviewerRequest;
+import dk.dbc.promat.service.persistence.Address;
 import dk.dbc.promat.service.persistence.Reviewer;
 import dk.dbc.promat.service.templating.model.ChangedValue;
 import java.lang.reflect.Field;
@@ -50,7 +51,8 @@ public class ReviewerDiffer {
     public Map<String, ChangedValue> getChangedValueMap(Reviewer reviewer, ReviewerRequest reviewerRequest) throws IllegalAccessException {
         Map<String, ChangedValue> valueMap = getChangedValueMap(reviewer, reviewerRequest, changeableFields);
         if (reviewerRequest.getAddress() != null) {
-            valueMap.putAll(getChangedValueMap(reviewer.getAddress(), reviewerRequest.getAddress(), changeableAddressFields));
+            valueMap.putAll(getChangedValueMap(reviewer.getAddress() == null ? new Address() : reviewer.getAddress(),
+                    reviewerRequest.getAddress(), changeableAddressFields));
         }
         return valueMap;
     }
