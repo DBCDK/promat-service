@@ -3,15 +3,17 @@ insert into promatuser(id, role, active, culrid, firstname, lastname, email, add
 values (1, 'REVIEWER', true, '41', 'Hans', 'Hansen', 'hans@hansen.dk', 'Lillegade 1', '9999', 'Lilleved', 'Hans Hansens Bix', 123, '2020-10-28', '2020-11-01', '["MULTIMEDIA", "PS4", "PS5"]', 'note1', 1),
        (2, 'REVIEWER', true, '42', 'Ole', 'Olsen', 'ole@olsen.dk', 'Storegade 99', '1111', 'Storeved', 'Ole Olsens Goodies', 456, '2020-11-28', '2020-12-01', '["MULTIMEDIA", "PS4", "PS5"]', 'note2', 2);
 
--- This reviewer is used for update tests. Please do not rely on the value of this reviewer in other tests
+-- These reviewers is used for update tests. Please do not rely on the value of these reviewers in other tests
 insert into promatuser(id, role, active, culrid, firstname, lastname, email, address1, zip, city, institution, paycode, hiatus_begin, hiatus_end, accepts, note, phone)
 values (3, 'REVIEWER', true, '43', 'Peter', 'Petersen', 'peter@petersen.dk', 'Mellemgade 50', '5555', 'Mellemved', 'Peter Petersens pedaler', 22, null, null, '["BOOK"]', 'note3', '12345678'),
+       (5, 'REVIEWER', true, '44', 'Boe', 'Boesen', 'boe@boesen.dk', null, null, null, 'Boe Boesens Bøjler', 23, null, null, '["BOOK"]', 'note4', '9123456789'),
 -- This reviewer is used for message testing. Hands off.
        (4, 'REVIEWER', true, '55', 'Kirsten', 'Kirstensen', 'kirsten@kirstensen.dk', 'Overgade 50', '5432', 'Overlev', 'Kirstens Bix', 0, '2021-01-11', '2021-01-12', '["BOOK"]', 'note5', '123456789010');
 insert into reviewersubjects(subject_id, reviewer_id) values(5,1);
 insert into reviewersubjects(subject_id, reviewer_id) values(3,1);
 insert into reviewersubjects(subject_id, reviewer_id) values(5,2);
 insert into reviewersubjects(subject_id, reviewer_id) values(5,3);
+insert into reviewersubjects(subject_id, reviewer_id) values(5,5);
 insert into reviewersubjects(subject_id, reviewer_id) values(5,4);
 
 -- editors (IDs 10-19)

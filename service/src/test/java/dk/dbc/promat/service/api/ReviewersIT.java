@@ -142,16 +142,18 @@ public class ReviewersIT extends ContainerTest {
         final Reviewer reviewer4 = new Reviewer();
         loadReviewer4(reviewer4);
 
+        final Reviewer reviewer5 = new Reviewer();
+        loadReviewer5(reviewer5);
 
         final ReviewerList<Reviewer> expected = new ReviewerList<>()
-                .withReviewers(List.of(reviewer1, reviewer2, reviewer3, reviewer4));
+                .withReviewers(List.of(reviewer1, reviewer2, reviewer3, reviewer4, reviewer5));
 
         final Response response = getResponse("v1/api/reviewers");
 
         final ReviewerList<Reviewer> actual = mapper.readValue(
                 response.readEntity(String.class), new TypeReference<>() {});
 
-        assertThat("List of reviewers is just 'Hans Hansen', 'Ole Olsen' and 'Peter Petersen'",
+        assertThat("List of reviewers is just 'Hans Hansen', 'Ole Olsen', 'Peter Petersen' and 'Boe Boesen'",
                 actual, is(expected));
     }
 
@@ -182,8 +184,14 @@ public class ReviewersIT extends ContainerTest {
                 .withWeekAfterWorkload(0);
         loadReviewer4(reviewer4);
 
+        final ReviewerWithWorkloads reviewer5 = new ReviewerWithWorkloads()
+                .withWeekWorkload(0)
+                .withWeekBeforeWorkload(0)
+                .withWeekAfterWorkload(0);
+        loadReviewer5(reviewer5);
+
         final ReviewerList<ReviewerWithWorkloads> expected = new ReviewerList<ReviewerWithWorkloads>()
-                .withReviewers(List.of(reviewer1, reviewer2, reviewer3, reviewer4));
+                .withReviewers(List.of(reviewer1, reviewer2, reviewer3, reviewer4, reviewer5));
 
         final Response response = getResponse("v1/api/reviewers",
                 Map.of("deadline", "2020-12-01"));
@@ -191,7 +199,7 @@ public class ReviewersIT extends ContainerTest {
         final ReviewerList<ReviewerWithWorkloads> actual = mapper.readValue(
                 response.readEntity(String.class), new TypeReference<>() {});
 
-        assertThat("List of reviewers is just 'Hans Hansen', 'Ole Olsen' and 'Peter Petersen' and 'kirsten kirstensen'",
+        assertThat("List of reviewers is just 'Hans Hansen', 'Ole Olsen', 'Peter Petersen', 'kirsten kirstensen' and 'Boe Boesen'",
                 actual, is(expected));
     }
 
@@ -334,6 +342,28 @@ public class ReviewersIT extends ContainerTest {
         reviewer.setPhone("123456789010");
     }
 
+    private void loadReviewer5(Reviewer reviewer) {
+        reviewer.setId(5);
+        reviewer.setActive(true);
+        reviewer.setCulrId("44");
+        reviewer.setFirstName("Boe");
+        reviewer.setLastName("Boesen");
+        reviewer.setEmail("boe@boesen.dk");
+        reviewer.setInstitution("Boe Boesens Bøjler");
+        reviewer.setPaycode(23);
+        reviewer.setSubjects(
+                List.of(
+                        new Subject()
+                                .withId(5)
+                                .withName("Multimedie")));
+        reviewer.setHiatusBegin(null);
+        reviewer.setHiatusEnd(null);
+        reviewer.setAccepts(List.of(
+                Reviewer.Accepts.BOOK));
+        reviewer.setNote("note4");
+        reviewer.setPhone("9123456789");
+    }
+
     private void loadUpdatedReviewer3(Reviewer reviewer) {
         reviewer.setId(3);
         reviewer.setActive(false);
@@ -395,15 +425,8 @@ public class ReviewersIT extends ContainerTest {
     @Test
     public void testUpdateReviewerWithNullAddress() throws JsonProcessingException {
 
-        final ReviewerRequest reviewerRequest = new ReviewerRequest()
-                .withCprNumber("2407776666")
-                .withPaycode(6666)
-                .withFirstName("Bo")
-                .withLastName("Boe")
-                .withEmail("bo@boe.com");
-
-        Response response = postResponse("v1/api/reviewers", reviewerRequest);
-        assertThat("response status", response.getStatus(), is(201));
+        Response response = getResponse("v1/api/reviewers/5");
+        assertThat("response status", response.getStatus(), is(200));
 
         final Reviewer reviewer = mapper.readValue(response.readEntity(String.class), Reviewer.class);
         assertThat("address", reviewer.getAddress(), is(nullValue()));
