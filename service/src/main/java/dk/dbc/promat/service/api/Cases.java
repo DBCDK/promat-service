@@ -1026,6 +1026,12 @@ public class Cases {
                 return CaseStatus.EXPORTED;
 
             case REVERTED:
+                if (existing.getStatus() != CaseStatus.PENDING_REVERT) {
+                    throw new ServiceErrorException("Not allowed to set status REVERTED when case is not in pending revert")
+                            .withDetails("Attempt to set status of case to REVERTED when case is not in status PENDING_REVERT")
+                            .withHttpStatus(400)
+                            .withCode(ServiceErrorCode.INVALID_REQUEST);
+                }
                 return CaseStatus.REVERTED;
 
             case CREATED:
@@ -1111,6 +1117,15 @@ public class Cases {
                             .withCode(ServiceErrorCode.INVALID_REQUEST);
                 }
                 return CaseStatus.PENDING_MEETING;
+
+            case PENDING_REVERT:
+                if (existing.getStatus() != CaseStatus.EXPORTED) {
+                    throw new ServiceErrorException("Not allowed to set status PENDING_REVERT when case is not exported")
+                            .withDetails("Attempt to set status of case to PENDING_REVERT when case is not in status EXPORTED")
+                            .withHttpStatus(400)
+                            .withCode(ServiceErrorCode.INVALID_REQUEST);
+                }
+                return CaseStatus.PENDING_REVERT;
 
             default:
                 throw new ServiceErrorException("Unknown or forbidden status")
