@@ -26,6 +26,7 @@ public class ReviewerRequest implements Dto {
     private String institution;
     private Integer paycode;
     private Address address;
+    private String note;
 
     private List<Integer> subjects;
     private List<Reviewer.Accepts> accepts;
@@ -219,6 +220,19 @@ public class ReviewerRequest implements Dto {
         return this;
     }
 
+    public String getNote() {
+        return note;
+    }
+
+    public void setNote(String note) {
+        this.note = note;
+    }
+
+    public ReviewerRequest withNote(String note) {
+        this.note = note;
+        return this;
+    }
+
     @Override
     public boolean equals(Object o) {
         if(this == o) return true;
@@ -233,16 +247,18 @@ public class ReviewerRequest implements Dto {
                 Objects.equals(institution, that.institution) &&
                 Objects.equals(paycode, that.paycode) &&
                 Objects.equals(address, that.address) &&
-                Objects.equals(hiatusBegin, that.hiatusBegin) &&
-                Objects.equals(hiatusEnd, that.hiatusEnd) &&
+                Objects.equals(note, that.note) &&
                 Objects.equals(subjects, that.subjects) &&
                 Objects.equals(accepts, that.accepts) &&
-                Objects.equals(capacity, that.capacity);
+                Objects.equals(capacity, that.capacity) &&
+                Objects.equals(hiatusBegin, that.hiatusBegin) &&
+                Objects.equals(hiatusEnd, that.hiatusEnd);
     }
 
     @Override
     public int hashCode() {
         int result = (active ? 1 : 0);
+
         result = 31 * result + (firstName != null ? firstName.hashCode() : 0);
         result = 31 * result + (lastName != null ? lastName.hashCode() : 0);
         result = 31 * result + (email != null ? email.hashCode() : 0);
@@ -252,6 +268,7 @@ public class ReviewerRequest implements Dto {
         result = 31 * result + (address != null ? address.hashCode() : 0);
         result = 31 * result + (hiatusBegin != null ? hiatusBegin.hashCode() : 0);
         result = 31 * result + (hiatusEnd != null ? hiatusEnd.hashCode() : 0);
+        result = 31 * result + (capacity != null ? note.hashCode() : 0);
         result = 31 * result + (subjects != null ? subjects.hashCode() : 0);
         result = 31 * result + (accepts != null ? accepts.hashCode() : 0);
         result = 31 * result + (capacity != null ? capacity.hashCode() : 0);
@@ -270,11 +287,12 @@ public class ReviewerRequest implements Dto {
                 ", institution='" + institution + '\'' +
                 ", paycode=" + paycode +
                 ", address=" + address +
-                ", hiatusBegin='" + hiatusBegin + '\'' +
-                ", hiatusEnd='" + hiatusEnd + '\'' +
+                ", note='" + note + '\'' +
                 ", subjects=" + subjects +
                 ", accepts=" + accepts +
-                ", capacity=" +capacity +
+                ", capacity=" + capacity +
+                ", hiatusBegin=" + hiatusBegin +
+                ", hiatusEnd=" + hiatusEnd +
                 '}';
     }
 }

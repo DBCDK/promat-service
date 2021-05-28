@@ -314,6 +314,7 @@ public class ReviewersIT extends ContainerTest {
                 Reviewer.Accepts.BOOK));
         reviewer.setNote("note3");
         reviewer.setPhone("12345678");
+        reviewer.setCapacity(2);
     }
 
     private void loadReviewer4(Reviewer reviewer) {
@@ -338,8 +339,9 @@ public class ReviewersIT extends ContainerTest {
                 new Subject()
                         .withId(5)
                         .withName("Multimedie")));
-        reviewer.setNote("note5");
+        reviewer.setNote("note4");
         reviewer.setPhone("123456789010");
+        reviewer.setCapacity(2);
     }
 
     private void loadReviewer5(Reviewer reviewer) {
@@ -360,8 +362,9 @@ public class ReviewersIT extends ContainerTest {
         reviewer.setHiatusEnd(null);
         reviewer.setAccepts(List.of(
                 Reviewer.Accepts.BOOK));
-        reviewer.setNote("note4");
+        reviewer.setNote("note5");
         reviewer.setPhone("9123456789");
+        reviewer.setCapacity(2);
     }
 
     private void loadUpdatedReviewer3(Reviewer reviewer) {
@@ -390,6 +393,7 @@ public class ReviewersIT extends ContainerTest {
         reviewer.setAccepts(List.of(
                 Reviewer.Accepts.BOOK, Reviewer.Accepts.MULTIMEDIA));
         reviewer.setNote("note3");
+        reviewer.setCapacity(2);
         reviewer.setPhone("87654321");
     }
 
@@ -435,5 +439,29 @@ public class ReviewersIT extends ContainerTest {
             .withAddress(new Address().withAddress1("Boesvej 1"));
         response = putResponse("v1/api/reviewers/" + reviewer.getId(), reviewerUpdateRequest);
         assertThat("response status", response.getStatus(), is(200));
+    }
+
+    @Test
+    public void testUpdateReviewerWithCapacity() throws JsonProcessingException {
+
+        final ReviewerRequest reviewerUpdateRequest = new ReviewerRequest()
+                .withCapacity(5);
+        Response response = putResponse("v1/api/reviewers/5", reviewerUpdateRequest);
+        assertThat("response status", response.getStatus(), is(200));
+
+        final Reviewer reviewer = mapper.readValue(response.readEntity(String.class), Reviewer.class);
+        assertThat("capacity", reviewer.getCapacity(), is(5));
+    }
+
+    @Test
+    public void testUpdateReviewerWithNote() throws JsonProcessingException {
+
+        final ReviewerRequest reviewerUpdateRequest = new ReviewerRequest()
+                .withNote("newnote");
+        Response response = putResponse("v1/api/reviewers/5", reviewerUpdateRequest);
+        assertThat("response status", response.getStatus(), is(200));
+
+        final Reviewer reviewer = mapper.readValue(response.readEntity(String.class), Reviewer.class);
+        assertThat("note", reviewer.getNote(), is("newnote"));
     }
 }

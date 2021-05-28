@@ -186,7 +186,6 @@ public class Reviewers {
                     .withReviewer(reviewer)
             );
 
-
             // Update by patching
             if(reviewerRequest.isActive() != null) {
                 reviewer.setActive(reviewerRequest.isActive());
@@ -223,6 +222,12 @@ public class Reviewers {
             }
             if(reviewerRequest.getSubjects() != null) {
                 reviewer.setSubjects(repository.resolveSubjects(reviewerRequest.getSubjects()));
+            }
+            if(reviewerRequest.getCapacity() != null) {
+                reviewer.setCapacity(reviewerRequest.getCapacity());
+            }
+            if(reviewerRequest.getNote() != null) {
+                reviewer.setNote(reviewerRequest.getNote());
             }
 
             // Should exceptions here always be caught?
