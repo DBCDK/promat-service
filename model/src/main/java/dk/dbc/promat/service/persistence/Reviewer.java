@@ -9,6 +9,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonView;
 import dk.dbc.promat.service.dto.ReviewerWithWorkloads;
 
+import javax.persistence.AttributeOverride;
+import javax.persistence.AttributeOverrides;
 import javax.persistence.Column;
 import javax.persistence.ColumnResult;
 import javax.persistence.Convert;
@@ -78,6 +80,16 @@ public class Reviewer extends PromatUser {
     @Embedded
     @JsonView({CaseView.Case.class})
     protected Address address;
+
+    @AttributeOverrides({
+        @AttributeOverride(name="address1",column=@Column(name="privateAddress1")),
+        @AttributeOverride(name="address2",column=@Column(name="privateAddress2")),
+        @AttributeOverride(name="zip",column=@Column(name="privateZip")),
+        @AttributeOverride(name="city",column=@Column(name="privateCity")),
+    })
+    @Embedded
+    @JsonView({CaseView.Case.class})
+    protected Address privateAddress;
 
     @JsonView({CaseView.Case.class})
     protected String institution;
