@@ -110,7 +110,7 @@ public class Reviewers {
                     .withInstitution(reviewerRequest.getInstitution())
                     .withPaycode(reviewerRequest.getPaycode())
                     .withAddress(reviewerRequest.getAddress())
-                    .withPrivateAddress(reviewerRequest.getAddress())
+                    .withPrivateAddress(reviewerRequest.getPrivateAddress())
                     .withHiatus_begin(reviewerRequest.getHiatusBegin())
                     .withHiatus_end(reviewerRequest.getHiatusEnd())
                     .withSubjects(repository.resolveSubjects(reviewerRequest.getSubjects()))

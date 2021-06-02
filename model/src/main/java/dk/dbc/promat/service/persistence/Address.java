@@ -6,6 +6,7 @@
 package dk.dbc.promat.service.persistence;
 
 import javax.persistence.Embeddable;
+import java.util.Objects;
 
 @Embeddable
 public class Address {
@@ -13,6 +14,7 @@ public class Address {
     private String address2;
     private String zip;
     private String city;
+    private Boolean selected = null;
 
     public String getAddress1() {
         return address1;
@@ -30,6 +32,10 @@ public class Address {
         return city;
     }
 
+    public boolean getSelected() {
+        return selected != null && selected == true ? true : false;
+    }
+
     public void setAddress1(String address1) {
         this.address1 = address1;
     }
@@ -44,6 +50,10 @@ public class Address {
 
     public void setCity(String city) {
         this.city = city;
+    }
+
+    public void setSelected(Boolean selected) {
+        this.selected = selected;
     }
 
     public Address withAddress1(String address1) {
@@ -66,26 +76,22 @@ public class Address {
         return this;
     }
 
+    public Address withSelected(Boolean selected) {
+        this.selected = selected;
+        return this;
+    }
+
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
+        if(this == o) return true;
+        if(o == null || getClass() != o.getClass()) return false;
         Address address = (Address) o;
-
-        if (!address1.equals(address.address1)) return false;
-        if (address2 != null ? !address2.equals(address.address2) : address.address2 != null) return false;
-        if (!zip.equals(address.zip)) return false;
-        return city.equals(address.city);
+        return Objects.equals(address1, address.address1) && Objects.equals(address2, address.address2) && Objects.equals(zip, address.zip) && Objects.equals(city, address.city) && Objects.equals(selected, address.selected);
     }
 
     @Override
     public int hashCode() {
-        int result = address1.hashCode();
-        result = 31 * result + (address2 != null ? address2.hashCode() : 0);
-        result = 31 * result + zip.hashCode();
-        result = 31 * result + city.hashCode();
-        return result;
+        return Objects.hash(address1, address2, zip, city, selected);
     }
 
     @Override
@@ -93,8 +99,9 @@ public class Address {
         return "Address{" +
                 "address1='" + address1 + '\'' +
                 ", address2='" + address2 + '\'' +
-                ", zip=" + zip +
+                ", zip='" + zip + '\'' +
                 ", city='" + city + '\'' +
+                ", selected=" + selected +
                 '}';
     }
 }

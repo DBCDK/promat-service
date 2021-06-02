@@ -24,6 +24,8 @@ import javax.persistence.JoinTable;
 import javax.persistence.NamedNativeQuery;
 import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
+import javax.persistence.PrePersist;
+import javax.persistence.PreUpdate;
 import javax.persistence.SqlResultSetMapping;
 import java.time.LocalDate;
 import java.util.Collection;
@@ -77,6 +79,18 @@ public class Reviewer extends PromatUser {
         BIWEEKLY_ONLY
     }
 
+    @PrePersist
+    @PreUpdate
+    private void beforeUpdate() {
+        if( address != null && privateAddress != null ) {
+            if( address.getSelected() == true && privateAddress.getSelected() == true ) {
+                privateAddress.setSelected(false);
+            } else if( address.getSelected() == false && privateAddress.getSelected() == false ) {
+                address.setSelected(true);
+            }
+        }
+    }
+
     @Embedded
     @JsonView({CaseView.Case.class})
     protected Address address;
@@ -86,6 +100,7 @@ public class Reviewer extends PromatUser {
         @AttributeOverride(name="address2",column=@Column(name="privateAddress2")),
         @AttributeOverride(name="zip",column=@Column(name="privateZip")),
         @AttributeOverride(name="city",column=@Column(name="privateCity")),
+        @AttributeOverride(name="selected",column=@Column(name="privateSelected")),
     })
     @Embedded
     @JsonView({CaseView.Case.class})
