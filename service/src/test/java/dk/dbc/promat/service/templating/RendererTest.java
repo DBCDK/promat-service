@@ -171,7 +171,7 @@ public class RendererTest {
                         .withToValue("true"),
                 "address1",
                 new ChangedValue()
-                        .withFromValue("")
+                        .withFromValue(null)
                         .withToValue("Snevej 1"));
         assertThat("change detected", actual.size(), is(expected.size()));
         for(String changed : expected.keySet()) {

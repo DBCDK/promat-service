@@ -130,6 +130,14 @@ public class Reviewer extends PromatUser {
         this.address = address;
     }
 
+    public Address getPrivateAddress() {
+        return privateAddress;
+    }
+
+    public void setPrivateAddress(Address address) {
+        this.privateAddress = address;
+    }
+
     public String getInstitution() {
         return institution;
     }
@@ -217,6 +225,11 @@ public class Reviewer extends PromatUser {
         return this;
     }
 
+    public Reviewer withPrivateAddress(Address address) {
+        this.privateAddress = address;
+        return this;
+    }
+
     public Reviewer withInstitution(String institution) {
         this.institution = institution;
         return this;
@@ -300,6 +313,9 @@ public class Reviewer extends PromatUser {
         if (address != null ? !address.equals(reviewer.address) : reviewer.address != null) {
             return false;
         }
+        if (privateAddress != null ? !privateAddress.equals(reviewer.privateAddress) : reviewer.privateAddress != null) {
+            return false;
+        }
         if (institution != null ? !institution.equals(reviewer.institution) : reviewer.institution != null) {
             return false;
         }
@@ -334,6 +350,7 @@ public class Reviewer extends PromatUser {
         result = 31 * result + (email != null ? email.hashCode() : 0);
         result = 31 * result + (phone != null ? phone.hashCode() : 0);
         result = 31 * result + address.hashCode();
+        result = 31 * result + privateAddress.hashCode();
         result = 31 * result + institution.hashCode();
         result = 31 * result + paycode.hashCode();
         result = 31 * result + (hiatusBegin != null ? hiatusBegin.hashCode() : 0);
@@ -356,6 +373,7 @@ public class Reviewer extends PromatUser {
                 ", email='" + email + '\'' +
                 ", phone='" + phone + '\'' +
                 ", address=" + address +
+                ", privateAddress=" + privateAddress +
                 ", institution='" + institution + '\'' +
                 ", paycode=" + paycode +
                 ", hiatus_begin=" + hiatusBegin +
@@ -376,6 +394,7 @@ public class Reviewer extends PromatUser {
         reviewerWithWorkloads.setLastName(lastName);
         reviewerWithWorkloads.setEmail(email);
         reviewerWithWorkloads.setAddress(address);
+        reviewerWithWorkloads.setPrivateAddress(privateAddress);
         reviewerWithWorkloads.setInstitution(institution);
         reviewerWithWorkloads.setPaycode(paycode);
         reviewerWithWorkloads.setSubjects(subjects);

@@ -108,6 +108,7 @@ public class Reviewers {
                     .withInstitution(reviewerRequest.getInstitution())
                     .withPaycode(reviewerRequest.getPaycode())
                     .withAddress(reviewerRequest.getAddress())
+                    .withPrivateAddress(reviewerRequest.getAddress())
                     .withHiatus_begin(reviewerRequest.getHiatusBegin())
                     .withHiatus_end(reviewerRequest.getHiatusEnd())
                     .withSubjects(repository.resolveSubjects(reviewerRequest.getSubjects()))
@@ -195,6 +196,9 @@ public class Reviewers {
             }
             if(reviewerRequest.getAddress() != null) {
                 reviewer.setAddress(reviewerRequest.getAddress());
+            }
+            if(reviewerRequest.getPrivateAddress() != null) {
+                reviewer.setPrivateAddress(reviewerRequest.getPrivateAddress());
             }
             if(reviewerRequest.getEmail() != null) {
                 reviewer.setEmail(reviewerRequest.getEmail());

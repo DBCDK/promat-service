@@ -210,6 +210,7 @@ public class ReviewersIT extends ContainerTest {
                 .withActive(false)
                 .withAccepts(Arrays.asList(Reviewer.Accepts.BOOK, Reviewer.Accepts.MULTIMEDIA))
                 .withAddress(new Address().withAddress1("Mellemgade 51").withAddress2("Øvre Mellem").withCity("Mellemtved").withZip("6666"))
+                .withPrivateAddress(new Address().withAddress1("Hjemmegade 51").withAddress2("Hjemme").withCity("Hjemmeby").withZip("1236"))
                 .withEmail("peder@pedersen.dk")
                 .withFirstName("Peder")
                 .withLastName("Pedersen")
@@ -228,7 +229,8 @@ public class ReviewersIT extends ContainerTest {
         final Reviewer expected = new Reviewer();
         loadUpdatedReviewer3(expected);
 
-        assertThat("Reviewer has been updated", updated.equals(expected));
+        assertThat("Reviewer has been updated", updated, is(expected));
+        assertThat("Equals", updated.equals(expected));
     }
 
     private void loadReviewer1(Reviewer reviewer) {
@@ -380,6 +382,12 @@ public class ReviewersIT extends ContainerTest {
                         .withZip("6666")
                         .withCity("Mellemtved")
                         .withAddress2("Øvre Mellem"));
+        reviewer.setPrivateAddress(
+                new Address()
+                        .withAddress1("Hjemmegade 51")
+                        .withZip("1236")
+                        .withCity("Hjemmeby")
+                        .withAddress2("Hjemme"));
         reviewer.setInstitution("Peder Pedersens pedaler");
         reviewer.setPaycode(7777);
         reviewer.setSubjects(

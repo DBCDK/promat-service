@@ -27,6 +27,7 @@ public class ReviewerRequest implements Dto {
     private Integer paycode;
     private Address address;
     private String note;
+    private Address privateAddress;
 
     private List<Integer> subjects;
     private List<Reviewer.Accepts> accepts;
@@ -155,6 +156,19 @@ public class ReviewerRequest implements Dto {
         return this;
     }
 
+    public Address getPrivateAddress() {
+        return privateAddress;
+    }
+
+    public void setPrivateAddress(Address address) {
+        this.privateAddress = address;
+    }
+
+    public ReviewerRequest withPrivateAddress(Address address) {
+        this.privateAddress = address;
+        return this;
+    }
+
     public LocalDate getHiatusBegin() {
         return hiatusBegin;
     }
@@ -247,6 +261,7 @@ public class ReviewerRequest implements Dto {
                 Objects.equals(institution, that.institution) &&
                 Objects.equals(paycode, that.paycode) &&
                 Objects.equals(address, that.address) &&
+                Objects.equals(privateAddress, that.privateAddress) &&
                 Objects.equals(note, that.note) &&
                 Objects.equals(subjects, that.subjects) &&
                 Objects.equals(accepts, that.accepts) &&
@@ -266,6 +281,7 @@ public class ReviewerRequest implements Dto {
         result = 31 * result + (institution != null ? institution.hashCode() : 0);
         result = 31 * result + (paycode != null ? paycode.hashCode() : 0);
         result = 31 * result + (address != null ? address.hashCode() : 0);
+        result = 31 * result + (privateAddress != null ? address.hashCode() : 0);
         result = 31 * result + (hiatusBegin != null ? hiatusBegin.hashCode() : 0);
         result = 31 * result + (hiatusEnd != null ? hiatusEnd.hashCode() : 0);
         result = 31 * result + (capacity != null ? note.hashCode() : 0);
@@ -287,6 +303,7 @@ public class ReviewerRequest implements Dto {
                 ", institution='" + institution + '\'' +
                 ", paycode=" + paycode +
                 ", address=" + address +
+                ", address=" + privateAddress +
                 ", note='" + note + '\'' +
                 ", subjects=" + subjects +
                 ", accepts=" + accepts +
