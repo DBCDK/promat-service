@@ -5,6 +5,7 @@
 
 package dk.dbc.promat.service.persistence;
 
+import com.fasterxml.jackson.annotation.JsonView;
 import dk.dbc.commons.jpa.converter.StringListToJsonArrayConverter;
 
 import javax.persistence.Column;
@@ -59,6 +60,9 @@ public class PromatTask {
     @Column(columnDefinition = "jsonb")
     @Convert(converter = StringListToJsonArrayConverter.class)
     private List<String> targetFausts;
+
+    @JsonView({CaseView.Export.class, CaseView.Case.class})
+    private String recordId;
 
     public int getId() {
         return id;

@@ -1,0 +1,1 @@
+ALTER TABLE promattask ADD COLUMN recordId TEXT DEFAULT NULL;
