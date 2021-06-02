@@ -212,6 +212,7 @@ public class ReviewersIT extends ContainerTest {
                 .withAddress(new Address().withAddress1("Mellemgade 51").withAddress2("Øvre Mellem").withCity("Mellemtved").withZip("6666"))
                 .withPrivateAddress(new Address().withAddress1("Hjemmegade 51").withAddress2("Hjemme").withCity("Hjemmeby").withZip("1236"))
                 .withEmail("peder@pedersen.dk")
+                .withPrivateEmail("peder-pedersen@hjemme.dk")
                 .withFirstName("Peder")
                 .withLastName("Pedersen")
                 .withHiatusBegin(LocalDate.parse("2020-12-22"))
@@ -219,6 +220,7 @@ public class ReviewersIT extends ContainerTest {
                 .withInstitution("Peder Pedersens pedaler")
                 .withPaycode(7777)
                 .withPhone("87654321")
+                .withPrivatePhone("12345678")
                 .withSubjects(List.of(3))
                 .withCprNumber("123456-7890");  // Should not be used and not cause any conflict
 
@@ -376,6 +378,7 @@ public class ReviewersIT extends ContainerTest {
         reviewer.setFirstName("Peder");
         reviewer.setLastName("Pedersen");
         reviewer.setEmail("peder@pedersen.dk");
+        reviewer.setPrivateEmail("peder-pedersen@hjemme.dk");
         reviewer.setAddress(
                 new Address()
                         .withAddress1("Mellemgade 51")
@@ -403,6 +406,7 @@ public class ReviewersIT extends ContainerTest {
         reviewer.setNote("note3");
         reviewer.setCapacity(2);
         reviewer.setPhone("87654321");
+        reviewer.setPrivatePhone("12345678");
     }
 
     @Test

@@ -23,6 +23,8 @@ public class ReviewerRequest implements Dto {
     private String lastName;
     private String email;
     private String phone;
+    private String privateEmail;
+    private String privatePhone;
     private String institution;
     private Integer paycode;
     private Address address;
@@ -114,6 +116,32 @@ public class ReviewerRequest implements Dto {
 
     public ReviewerRequest withPhone(String phone) {
         this.phone = phone;
+        return this;
+    }
+
+    public String getPrivateEmail() {
+        return privateEmail;
+    }
+
+    public void setPrivateEmail(String email) {
+        this.privateEmail = email;
+    }
+
+    public ReviewerRequest withPrivateEmail(String email) {
+        this.privateEmail = email;
+        return this;
+    }
+
+    public String getPrivatePhone() {
+        return privatePhone;
+    }
+
+    public void setPrivatePhone(String phone) {
+        this.privatePhone = phone;
+    }
+
+    public ReviewerRequest withPrivatePhone(String phone) {
+        this.privatePhone = phone;
         return this;
     }
 

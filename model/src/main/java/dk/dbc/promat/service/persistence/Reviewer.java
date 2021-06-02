@@ -122,6 +122,12 @@ public class Reviewer extends PromatUser {
     @JsonView({CaseView.Case.class})
     protected List<Accepts> accepts;
 
+    @JsonView({CaseView.Case.class})
+    protected String privateEmail;
+
+    @JsonView({CaseView.Case.class})
+    protected String privatePhone;
+
     public Address getAddress() {
         return address;
     }
@@ -190,6 +196,22 @@ public class Reviewer extends PromatUser {
 
     public void setNote(String note) { this.note = note; }
 
+    public String getPrivateEmail() {
+        return privateEmail;
+    }
+
+    public void setPrivateEmail(String email) {
+        this.privateEmail = email;
+    }
+
+    public String getPrivatePhone() {
+        return privatePhone;
+    }
+
+    public void setPrivatePhone(String phone) {
+        this.privatePhone = phone;
+    }
+
     public Reviewer withId(Integer id) {
         this.id = id;
         return this;
@@ -217,6 +239,16 @@ public class Reviewer extends PromatUser {
 
     public Reviewer withPhone(String phone) {
         this.phone = phone;
+        return this;
+    }
+
+    public Reviewer withPrivateEmail(String email) {
+        this.privateEmail = email;
+        return this;
+    }
+
+    public Reviewer withPrivatePhone(String phone) {
+        this.privatePhone = phone;
         return this;
     }
 
@@ -310,6 +342,12 @@ public class Reviewer extends PromatUser {
         if (phone != null ? !phone.equals(reviewer.phone) : reviewer.phone != null) {
             return false;
         }
+        if (privateEmail != null ? !privateEmail.equals(reviewer.privateEmail) : reviewer.privateEmail != null) {
+            return false;
+        }
+        if (privatePhone != null ? !privatePhone.equals(reviewer.privatePhone) : reviewer.privatePhone != null) {
+            return false;
+        }
         if (address != null ? !address.equals(reviewer.address) : reviewer.address != null) {
             return false;
         }
@@ -349,6 +387,8 @@ public class Reviewer extends PromatUser {
         result = 31 * result + (lastName != null ? lastName.hashCode() : 0);
         result = 31 * result + (email != null ? email.hashCode() : 0);
         result = 31 * result + (phone != null ? phone.hashCode() : 0);
+        result = 31 * result + (privateEmail != null ? privateEmail.hashCode() : 0);
+        result = 31 * result + (privatePhone != null ? privatePhone.hashCode() : 0);
         result = 31 * result + address.hashCode();
         result = 31 * result + privateAddress.hashCode();
         result = 31 * result + institution.hashCode();
@@ -372,6 +412,8 @@ public class Reviewer extends PromatUser {
                 ", lastName='" + lastName + '\'' +
                 ", email='" + email + '\'' +
                 ", phone='" + phone + '\'' +
+                ", privateEmail='" + privateEmail + '\'' +
+                ", privatePhone='" + privatePhone + '\'' +
                 ", address=" + address +
                 ", privateAddress=" + privateAddress +
                 ", institution='" + institution + '\'' +
@@ -393,6 +435,7 @@ public class Reviewer extends PromatUser {
         reviewerWithWorkloads.setFirstName(firstName);
         reviewerWithWorkloads.setLastName(lastName);
         reviewerWithWorkloads.setEmail(email);
+        reviewerWithWorkloads.setPrivateEmail(privateEmail);
         reviewerWithWorkloads.setAddress(address);
         reviewerWithWorkloads.setPrivateAddress(privateAddress);
         reviewerWithWorkloads.setInstitution(institution);
@@ -404,6 +447,7 @@ public class Reviewer extends PromatUser {
         reviewerWithWorkloads.setNote(note);
         reviewerWithWorkloads.setCapacity(capacity);
         reviewerWithWorkloads.setPhone(phone);
+        reviewerWithWorkloads.setPrivatePhone(privatePhone);
         return reviewerWithWorkloads;
     }
 }

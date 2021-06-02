@@ -105,6 +105,8 @@ public class Reviewers {
                     .withLastName(reviewerRequest.getLastName())
                     .withEmail(reviewerRequest.getEmail())
                     .withPhone(reviewerRequest.getPhone())
+                    .withPrivateEmail(reviewerRequest.getPrivateEmail())
+                    .withPrivatePhone(reviewerRequest.getPrivatePhone())
                     .withInstitution(reviewerRequest.getInstitution())
                     .withPaycode(reviewerRequest.getPaycode())
                     .withAddress(reviewerRequest.getAddress())
@@ -203,6 +205,9 @@ public class Reviewers {
             if(reviewerRequest.getEmail() != null) {
                 reviewer.setEmail(reviewerRequest.getEmail());
             }
+            if(reviewerRequest.getPrivateEmail() != null) {
+                reviewer.setPrivateEmail(reviewerRequest.getPrivateEmail());
+            }
             if(reviewerRequest.getFirstName() != null) {
                 reviewer.setFirstName(reviewerRequest.getFirstName());
             }
@@ -223,6 +228,9 @@ public class Reviewers {
             }
             if(reviewerRequest.getPhone() != null) {
                 reviewer.setPhone(reviewerRequest.getPhone());
+            }
+            if(reviewerRequest.getPrivatePhone() != null) {
+                reviewer.setPrivatePhone(reviewerRequest.getPrivatePhone());
             }
             if(reviewerRequest.getSubjects() != null) {
                 reviewer.setSubjects(repository.resolveSubjects(reviewerRequest.getSubjects()));
