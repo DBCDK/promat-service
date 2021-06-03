@@ -61,7 +61,6 @@ public class PromatTask {
     @Convert(converter = StringListToJsonArrayConverter.class)
     private List<String> targetFausts;
 
-    @JsonView({CaseView.Export.class, CaseView.Case.class})
     private String recordId;
 
     public int getId() {
