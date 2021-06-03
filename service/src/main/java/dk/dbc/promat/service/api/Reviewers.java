@@ -105,9 +105,12 @@ public class Reviewers {
                     .withLastName(reviewerRequest.getLastName())
                     .withEmail(reviewerRequest.getEmail())
                     .withPhone(reviewerRequest.getPhone())
+                    .withPrivateEmail(reviewerRequest.getPrivateEmail())
+                    .withPrivatePhone(reviewerRequest.getPrivatePhone())
                     .withInstitution(reviewerRequest.getInstitution())
                     .withPaycode(reviewerRequest.getPaycode())
                     .withAddress(reviewerRequest.getAddress())
+                    .withPrivateAddress(reviewerRequest.getPrivateAddress())
                     .withHiatus_begin(reviewerRequest.getHiatusBegin())
                     .withHiatus_end(reviewerRequest.getHiatusEnd())
                     .withSubjects(repository.resolveSubjects(reviewerRequest.getSubjects()))
@@ -196,8 +199,14 @@ public class Reviewers {
             if(reviewerRequest.getAddress() != null) {
                 reviewer.setAddress(reviewerRequest.getAddress());
             }
+            if(reviewerRequest.getPrivateAddress() != null) {
+                reviewer.setPrivateAddress(reviewerRequest.getPrivateAddress());
+            }
             if(reviewerRequest.getEmail() != null) {
                 reviewer.setEmail(reviewerRequest.getEmail());
+            }
+            if(reviewerRequest.getPrivateEmail() != null) {
+                reviewer.setPrivateEmail(reviewerRequest.getPrivateEmail());
             }
             if(reviewerRequest.getFirstName() != null) {
                 reviewer.setFirstName(reviewerRequest.getFirstName());
@@ -219,6 +228,9 @@ public class Reviewers {
             }
             if(reviewerRequest.getPhone() != null) {
                 reviewer.setPhone(reviewerRequest.getPhone());
+            }
+            if(reviewerRequest.getPrivatePhone() != null) {
+                reviewer.setPrivatePhone(reviewerRequest.getPrivatePhone());
             }
             if(reviewerRequest.getSubjects() != null) {
                 reviewer.setSubjects(repository.resolveSubjects(reviewerRequest.getSubjects()));

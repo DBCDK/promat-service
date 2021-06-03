@@ -209,8 +209,10 @@ public class ReviewersIT extends ContainerTest {
         final ReviewerRequest reviewerRequest = new ReviewerRequest()
                 .withActive(false)
                 .withAccepts(Arrays.asList(Reviewer.Accepts.BOOK, Reviewer.Accepts.MULTIMEDIA))
-                .withAddress(new Address().withAddress1("Mellemgade 51").withAddress2("Øvre Mellem").withCity("Mellemtved").withZip("6666"))
+                .withAddress(new Address().withAddress1("Mellemgade 51").withAddress2("Øvre Mellem").withCity("Mellemtved").withZip("6666").withSelected(true))
+                .withPrivateAddress(new Address().withAddress1("Hjemmegade 51").withAddress2("Hjemme").withCity("Hjemmeby").withZip("1236").withSelected(false))
                 .withEmail("peder@pedersen.dk")
+                .withPrivateEmail("peder-pedersen@hjemme.dk")
                 .withFirstName("Peder")
                 .withLastName("Pedersen")
                 .withHiatusBegin(LocalDate.parse("2020-12-22"))
@@ -218,6 +220,7 @@ public class ReviewersIT extends ContainerTest {
                 .withInstitution("Peder Pedersens pedaler")
                 .withPaycode(7777)
                 .withPhone("87654321")
+                .withPrivatePhone("12345678")
                 .withSubjects(List.of(3))
                 .withCprNumber("123456-7890");  // Should not be used and not cause any conflict
 
@@ -228,7 +231,92 @@ public class ReviewersIT extends ContainerTest {
         final Reviewer expected = new Reviewer();
         loadUpdatedReviewer3(expected);
 
-        assertThat("Reviewer has been updated", updated.equals(expected));
+        assertThat("Reviewer has been updated", updated, is(expected));
+        assertThat("Equals", updated.equals(expected));
+    }
+
+    @Test
+    void updateSelectedAddress() throws JsonProcessingException {
+
+        final ReviewerRequest reviewerRequest = new ReviewerRequest()
+                .withActive(false)
+                .withAccepts(Arrays.asList(Reviewer.Accepts.BOOK, Reviewer.Accepts.MULTIMEDIA))
+                .withAddress(new Address().withAddress1("Mellemgade 51").withAddress2("Øvre Mellem").withCity("Mellemtved").withZip("6666").withSelected(null))
+                .withPrivateAddress(new Address().withAddress1("Hjemmegade 51").withAddress2("Hjemme").withCity("Hjemmeby").withZip("1236").withSelected(null))
+                .withEmail("peder@pedersen.dk")
+                .withPrivateEmail("peder-pedersen@hjemme.dk")
+                .withFirstName("Peder")
+                .withLastName("Pedersen")
+                .withHiatusBegin(LocalDate.parse("2020-12-22"))
+                .withHiatusEnd(LocalDate.parse("2021-01-03"))
+                .withInstitution("Peder Pedersens pedaler")
+                .withPaycode(7777)
+                .withPhone("87654321")
+                .withPrivatePhone("12345678")
+                .withSubjects(List.of(3))
+                .withCprNumber("123456-7890");  // Should not be used and not cause any conflict
+
+        Response response = putResponse("v1/api/reviewers/3", reviewerRequest);
+        assertThat("response status", response.getStatus(), is(200));
+        Reviewer updated = mapper.readValue(response.readEntity(String.class), Reviewer.class);
+        assertThat("work address is not selected", updated.getAddress().getSelected(), is(true));
+        assertThat("private address is not selected", updated.getPrivateAddress().getSelected(), is(false));
+
+        reviewerRequest.getAddress().setSelected(false);
+        reviewerRequest.getPrivateAddress().setSelected(false);
+        response = putResponse("v1/api/reviewers/3", reviewerRequest);
+        assertThat("response status", response.getStatus(), is(200));
+        updated = mapper.readValue(response.readEntity(String.class), Reviewer.class);
+        assertThat("work address is selected", updated.getAddress().getSelected(), is(false));
+        assertThat("private address is not selected", updated.getPrivateAddress().getSelected(), is(false));
+
+        reviewerRequest.getAddress().setSelected(true);
+        reviewerRequest.getPrivateAddress().setSelected(null);
+        response = putResponse("v1/api/reviewers/3", reviewerRequest);
+        assertThat("response status", response.getStatus(), is(200));
+        updated = mapper.readValue(response.readEntity(String.class), Reviewer.class);
+        assertThat("work address is selected", updated.getAddress().getSelected(), is(true));
+        assertThat("private address is not selected", updated.getPrivateAddress().getSelected(), is(false));
+
+        reviewerRequest.getAddress().setSelected(true);
+        reviewerRequest.getPrivateAddress().setSelected(false);
+        response = putResponse("v1/api/reviewers/3", reviewerRequest);
+        assertThat("response status", response.getStatus(), is(200));
+        updated = mapper.readValue(response.readEntity(String.class), Reviewer.class);
+        assertThat("work address is selected", updated.getAddress().getSelected(), is(true));
+        assertThat("private address is not selected", updated.getPrivateAddress().getSelected(), is(false));
+
+        reviewerRequest.getAddress().setSelected(true);
+        reviewerRequest.getPrivateAddress().setSelected(true);
+        response = putResponse("v1/api/reviewers/3", reviewerRequest);
+        assertThat("response status", response.getStatus(), is(200));
+        updated = mapper.readValue(response.readEntity(String.class), Reviewer.class);
+        assertThat("work address selected is prioritized above private address selected", updated.getAddress().getSelected(), is(true));
+        assertThat("private address selected is not prioritized above work address selected", updated.getPrivateAddress().getSelected(), is(false));
+
+        reviewerRequest.getAddress().setSelected(false);
+        reviewerRequest.getPrivateAddress().setSelected(true);
+        response = putResponse("v1/api/reviewers/3", reviewerRequest);
+        assertThat("response status", response.getStatus(), is(200));
+        updated = mapper.readValue(response.readEntity(String.class), Reviewer.class);
+        assertThat("work address is not selected", updated.getAddress().getSelected(), is(false));
+        assertThat("Private address is selected", updated.getPrivateAddress().getSelected(), is(true));
+
+        reviewerRequest.getAddress().setSelected(null);
+        reviewerRequest.getPrivateAddress().setSelected(true);
+        response = putResponse("v1/api/reviewers/3", reviewerRequest);
+        assertThat("response status", response.getStatus(), is(200));
+        updated = mapper.readValue(response.readEntity(String.class), Reviewer.class);
+        assertThat("work address is not selected", updated.getAddress().getSelected(), is(false));
+        assertThat("Private address is selected", updated.getPrivateAddress().getSelected(), is(true));
+
+        reviewerRequest.getAddress().setSelected(null);
+        reviewerRequest.getPrivateAddress().setSelected(false);
+        response = putResponse("v1/api/reviewers/3", reviewerRequest);
+        assertThat("response status", response.getStatus(), is(200));
+        updated = mapper.readValue(response.readEntity(String.class), Reviewer.class);
+        assertThat("work address is selected", updated.getAddress().getSelected(), is(true));
+        assertThat("Private address is not selected", updated.getPrivateAddress().getSelected(), is(false));
     }
 
     private void loadReviewer1(Reviewer reviewer) {
@@ -242,7 +330,8 @@ public class ReviewersIT extends ContainerTest {
                 new Address()
                         .withAddress1("Lillegade 1")
                         .withZip("9999")
-                        .withCity("Lilleved"));
+                        .withCity("Lilleved")
+                        .withSelected(true));
         reviewer.setInstitution("Hans Hansens Bix");
         reviewer.setPaycode(123);
         reviewer.setSubjects(
@@ -273,7 +362,8 @@ public class ReviewersIT extends ContainerTest {
                 new Address()
                         .withAddress1("Storegade 99")
                         .withZip("1111")
-                        .withCity("Storeved"));
+                        .withCity("Storeved")
+                        .withSelected(true));
         reviewer.setInstitution("Ole Olsens Goodies");
         reviewer.setPaycode(456);
         reviewer.setSubjects(
@@ -300,7 +390,8 @@ public class ReviewersIT extends ContainerTest {
                 new Address()
                         .withAddress1("Mellemgade 50")
                         .withZip("5555")
-                        .withCity("Mellemved"));
+                        .withCity("Mellemved")
+                        .withSelected(true));
         reviewer.setInstitution("Peter Petersens pedaler");
         reviewer.setPaycode(22);
         reviewer.setSubjects(
@@ -328,7 +419,8 @@ public class ReviewersIT extends ContainerTest {
                 new Address()
                         .withAddress1("Overgade 50")
                         .withZip("5432")
-                        .withCity("Overlev"));
+                        .withCity("Overlev")
+                        .withSelected(true));
         reviewer.setInstitution("Kirstens Bix");
         reviewer.setPaycode(0);
         reviewer.setHiatusBegin(LocalDate.parse("2021-01-11"));
@@ -374,12 +466,21 @@ public class ReviewersIT extends ContainerTest {
         reviewer.setFirstName("Peder");
         reviewer.setLastName("Pedersen");
         reviewer.setEmail("peder@pedersen.dk");
+        reviewer.setPrivateEmail("peder-pedersen@hjemme.dk");
         reviewer.setAddress(
                 new Address()
                         .withAddress1("Mellemgade 51")
                         .withZip("6666")
                         .withCity("Mellemtved")
-                        .withAddress2("Øvre Mellem"));
+                        .withAddress2("Øvre Mellem")
+                        .withSelected(true));
+        reviewer.setPrivateAddress(
+                new Address()
+                        .withAddress1("Hjemmegade 51")
+                        .withZip("1236")
+                        .withCity("Hjemmeby")
+                        .withAddress2("Hjemme")
+                        .withSelected(false));
         reviewer.setInstitution("Peder Pedersens pedaler");
         reviewer.setPaycode(7777);
         reviewer.setSubjects(
@@ -395,6 +496,7 @@ public class ReviewersIT extends ContainerTest {
         reviewer.setNote("note3");
         reviewer.setCapacity(2);
         reviewer.setPhone("87654321");
+        reviewer.setPrivatePhone("12345678");
     }
 
     @Test

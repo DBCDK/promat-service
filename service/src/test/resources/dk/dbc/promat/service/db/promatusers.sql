@@ -4,11 +4,11 @@ values (1, 'REVIEWER', true, '41', 'Hans', 'Hansen', 'hans@hansen.dk', 'Lillegad
        (2, 'REVIEWER', true, '42', 'Ole', 'Olsen', 'ole@olsen.dk', 'Storegade 99', '1111', 'Storeved', 'Ole Olsens Goodies', 456, '2020-11-28', '2020-12-01', '["MULTIMEDIA", "PS4", "PS5"]', 'note2', 2);
 
 -- These reviewers is used for update tests. Please do not rely on the value of these reviewers in other tests
-insert into promatuser(id, role, active, culrid, firstname, lastname, email, address1, zip, city, institution, paycode, hiatus_begin, hiatus_end, accepts, note, phone, capacity)
-values (3, 'REVIEWER', true, '43', 'Peter', 'Petersen', 'peter@petersen.dk', 'Mellemgade 50', '5555', 'Mellemved', 'Peter Petersens pedaler', 22, null, null, '["BOOK"]', 'note3', '12345678', 2),
-       (5, 'REVIEWER', true, '44', 'Boe', 'Boesen', 'boe@boesen.dk', null, null, null, 'Boe Boesens Bøjler', 23, null, null, '["BOOK"]', 'note5', '9123456789', 2),
+insert into promatuser(id, role, active, culrid, firstname, lastname, email, address1, zip, city, institution, paycode, hiatus_begin, hiatus_end, accepts, note, phone, capacity, selected, privateSelected)
+values (3, 'REVIEWER', true, '43', 'Peter', 'Petersen', 'peter@petersen.dk', 'Mellemgade 50', '5555', 'Mellemved', 'Peter Petersens pedaler', 22, null, null, '["BOOK"]', 'note3', '12345678', 2, true, null),
+       (5, 'REVIEWER', true, '44', 'Boe', 'Boesen', 'boe@boesen.dk', null, null, null, 'Boe Boesens Bøjler', 23, null, null, '["BOOK"]', 'note5', '9123456789', 2, null, null),
 -- This reviewer is used for message testing. Hands off.
-       (4, 'REVIEWER', true, '55', 'Kirsten', 'Kirstensen', 'kirsten@kirstensen.dk', 'Overgade 50', '5432', 'Overlev', 'Kirstens Bix', 0, '2021-01-11', '2021-01-12', '["BOOK"]', 'note4', '123456789010', 2);
+       (4, 'REVIEWER', true, '55', 'Kirsten', 'Kirstensen', 'kirsten@kirstensen.dk', 'Overgade 50', '5432', 'Overlev', 'Kirstens Bix', 0, '2021-01-11', '2021-01-12', '["BOOK"]', 'note4', '123456789010', 2, true, null);
 insert into reviewersubjects(subject_id, reviewer_id) values(5,1);
 insert into reviewersubjects(subject_id, reviewer_id) values(3,1);
 insert into reviewersubjects(subject_id, reviewer_id) values(5,2);

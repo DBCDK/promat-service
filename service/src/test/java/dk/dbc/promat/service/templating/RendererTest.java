@@ -148,33 +148,36 @@ public class RendererTest {
                 .withAddress(new Address().withAddress1("Snevej 1"));
         Map<String, ChangedValue> actual =
                 new ReviewerDiffer().getChangedValueMap(reviewer, reviewerRequest);
-        assertThat("Change detected",
-                actual,
-                is(Map.of("firstName",
-                        new ChangedValue()
-                                .withFromValue("hans")
-                                .withToValue("Hans"),
-                        "hiatusBegin",
-                        new ChangedValue()
-                                .withFromValue(null)
-                                .withToValue(Formatting.format(somedaysahead)),
-                        "hiatusEnd",
-                        new ChangedValue()
-                                .withFromValue(null)
-                                .withToValue(Formatting.format(alittlelater)),
-                        "paycode",
-                        new ChangedValue()
-                                .withFromValue(null)
-                                .withToValue("123456"),
-                        "active",
-                        new ChangedValue()
-                                .withFromValue("false")
-                                .withToValue("true"),
-                        "address1",
-                        new ChangedValue()
-                                .withFromValue(null)
-                                .withToValue("Snevej 1"))));
-
+        Map<String, ChangedValue> expected = Map.of(
+                "firstName",
+                new ChangedValue()
+                        .withFromValue("hans")
+                        .withToValue("Hans"),
+                "hiatusBegin",
+                new ChangedValue()
+                        .withFromValue(null)
+                        .withToValue(Formatting.format(somedaysahead)),
+                "hiatusEnd",
+                new ChangedValue()
+                        .withFromValue(null)
+                        .withToValue(Formatting.format(alittlelater)),
+                "paycode",
+                new ChangedValue()
+                        .withFromValue(null)
+                        .withToValue("123456"),
+                "active",
+                new ChangedValue()
+                        .withFromValue("false")
+                        .withToValue("true"),
+                "address1",
+                new ChangedValue()
+                        .withFromValue(null)
+                        .withToValue("Snevej 1"));
+        assertThat("change detected", actual.size(), is(expected.size()));
+        for(String changed : expected.keySet()) {
+            assertThat(changed, actual.containsKey(changed));
+            assertThat("value", actual.get(changed), is(expected.get(changed)));
+        }
     }
 
     @Test

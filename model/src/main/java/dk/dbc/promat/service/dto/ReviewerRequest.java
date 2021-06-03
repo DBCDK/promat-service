@@ -23,10 +23,13 @@ public class ReviewerRequest implements Dto {
     private String lastName;
     private String email;
     private String phone;
+    private String privateEmail;
+    private String privatePhone;
     private String institution;
     private Integer paycode;
     private Address address;
     private String note;
+    private Address privateAddress;
 
     private List<Integer> subjects;
     private List<Reviewer.Accepts> accepts;
@@ -116,6 +119,32 @@ public class ReviewerRequest implements Dto {
         return this;
     }
 
+    public String getPrivateEmail() {
+        return privateEmail;
+    }
+
+    public void setPrivateEmail(String email) {
+        this.privateEmail = email;
+    }
+
+    public ReviewerRequest withPrivateEmail(String email) {
+        this.privateEmail = email;
+        return this;
+    }
+
+    public String getPrivatePhone() {
+        return privatePhone;
+    }
+
+    public void setPrivatePhone(String phone) {
+        this.privatePhone = phone;
+    }
+
+    public ReviewerRequest withPrivatePhone(String phone) {
+        this.privatePhone = phone;
+        return this;
+    }
+
     public String getInstitution() {
         return institution;
     }
@@ -152,6 +181,19 @@ public class ReviewerRequest implements Dto {
 
     public ReviewerRequest withAddress(Address address) {
         this.address = address;
+        return this;
+    }
+
+    public Address getPrivateAddress() {
+        return privateAddress;
+    }
+
+    public void setPrivateAddress(Address address) {
+        this.privateAddress = address;
+    }
+
+    public ReviewerRequest withPrivateAddress(Address address) {
+        this.privateAddress = address;
         return this;
     }
 
@@ -244,9 +286,12 @@ public class ReviewerRequest implements Dto {
                 Objects.equals(lastName, that.lastName) &&
                 Objects.equals(email, that.email) &&
                 Objects.equals(phone, that.phone) &&
+                Objects.equals(privateEmail, that.privateEmail) &&
+                Objects.equals(privatePhone, that.privatePhone) &&
                 Objects.equals(institution, that.institution) &&
                 Objects.equals(paycode, that.paycode) &&
                 Objects.equals(address, that.address) &&
+                Objects.equals(privateAddress, that.privateAddress) &&
                 Objects.equals(note, that.note) &&
                 Objects.equals(subjects, that.subjects) &&
                 Objects.equals(accepts, that.accepts) &&
@@ -263,9 +308,12 @@ public class ReviewerRequest implements Dto {
         result = 31 * result + (lastName != null ? lastName.hashCode() : 0);
         result = 31 * result + (email != null ? email.hashCode() : 0);
         result = 31 * result + (phone != null ? phone.hashCode() : 0);
+        result = 31 * result + (privateEmail != null ? privateEmail.hashCode() : 0);
+        result = 31 * result + (privatePhone != null ? privatePhone.hashCode() : 0);
         result = 31 * result + (institution != null ? institution.hashCode() : 0);
         result = 31 * result + (paycode != null ? paycode.hashCode() : 0);
         result = 31 * result + (address != null ? address.hashCode() : 0);
+        result = 31 * result + (privateAddress != null ? address.hashCode() : 0);
         result = 31 * result + (hiatusBegin != null ? hiatusBegin.hashCode() : 0);
         result = 31 * result + (hiatusEnd != null ? hiatusEnd.hashCode() : 0);
         result = 31 * result + (capacity != null ? note.hashCode() : 0);
@@ -284,9 +332,12 @@ public class ReviewerRequest implements Dto {
                 ", lastName='" + lastName + '\'' +
                 ", email='" + email + '\'' +
                 ", phone='" + phone + '\'' +
+                ", privateEmail='" + privateEmail + '\'' +
+                ", privatePhone='" + privatePhone + '\'' +
                 ", institution='" + institution + '\'' +
                 ", paycode=" + paycode +
                 ", address=" + address +
+                ", address=" + privateAddress +
                 ", note='" + note + '\'' +
                 ", subjects=" + subjects +
                 ", accepts=" + accepts +

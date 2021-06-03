@@ -9,6 +9,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonView;
 import dk.dbc.promat.service.dto.ReviewerWithWorkloads;
 
+import javax.persistence.AttributeOverride;
+import javax.persistence.AttributeOverrides;
 import javax.persistence.Column;
 import javax.persistence.ColumnResult;
 import javax.persistence.Convert;
@@ -22,6 +24,8 @@ import javax.persistence.JoinTable;
 import javax.persistence.NamedNativeQuery;
 import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
+import javax.persistence.PrePersist;
+import javax.persistence.PreUpdate;
 import javax.persistence.SqlResultSetMapping;
 import java.time.LocalDate;
 import java.util.Collection;
@@ -75,9 +79,32 @@ public class Reviewer extends PromatUser {
         BIWEEKLY_ONLY
     }
 
+    @PrePersist
+    @PreUpdate
+    private void beforeUpdate() {
+        if( address != null && privateAddress != null ) {
+            if( address.getSelected() == true && privateAddress.getSelected() == true ) {
+                privateAddress.setSelected(false);
+            } else if( address.getSelected() == false && privateAddress.getSelected() == false ) {
+                address.setSelected(true);
+            }
+        }
+    }
+
     @Embedded
     @JsonView({CaseView.Case.class})
     protected Address address;
+
+    @AttributeOverrides({
+        @AttributeOverride(name="address1",column=@Column(name="privateAddress1")),
+        @AttributeOverride(name="address2",column=@Column(name="privateAddress2")),
+        @AttributeOverride(name="zip",column=@Column(name="privateZip")),
+        @AttributeOverride(name="city",column=@Column(name="privateCity")),
+        @AttributeOverride(name="selected",column=@Column(name="privateSelected")),
+    })
+    @Embedded
+    @JsonView({CaseView.Case.class})
+    protected Address privateAddress;
 
     @JsonView({CaseView.Case.class})
     protected String institution;
@@ -110,12 +137,26 @@ public class Reviewer extends PromatUser {
     @JsonView({CaseView.Case.class})
     protected List<Accepts> accepts;
 
+    @JsonView({CaseView.Case.class})
+    protected String privateEmail;
+
+    @JsonView({CaseView.Case.class})
+    protected String privatePhone;
+
     public Address getAddress() {
         return address;
     }
 
     public void setAddress(Address address) {
         this.address = address;
+    }
+
+    public Address getPrivateAddress() {
+        return privateAddress;
+    }
+
+    public void setPrivateAddress(Address address) {
+        this.privateAddress = address;
     }
 
     public String getInstitution() {
@@ -170,6 +211,22 @@ public class Reviewer extends PromatUser {
 
     public void setNote(String note) { this.note = note; }
 
+    public String getPrivateEmail() {
+        return privateEmail;
+    }
+
+    public void setPrivateEmail(String email) {
+        this.privateEmail = email;
+    }
+
+    public String getPrivatePhone() {
+        return privatePhone;
+    }
+
+    public void setPrivatePhone(String phone) {
+        this.privatePhone = phone;
+    }
+
     public Reviewer withId(Integer id) {
         this.id = id;
         return this;
@@ -200,8 +257,23 @@ public class Reviewer extends PromatUser {
         return this;
     }
 
+    public Reviewer withPrivateEmail(String email) {
+        this.privateEmail = email;
+        return this;
+    }
+
+    public Reviewer withPrivatePhone(String phone) {
+        this.privatePhone = phone;
+        return this;
+    }
+
     public Reviewer withAddress(Address address) {
         this.address = address;
+        return this;
+    }
+
+    public Reviewer withPrivateAddress(Address address) {
+        this.privateAddress = address;
         return this;
     }
 
@@ -285,7 +357,16 @@ public class Reviewer extends PromatUser {
         if (phone != null ? !phone.equals(reviewer.phone) : reviewer.phone != null) {
             return false;
         }
+        if (privateEmail != null ? !privateEmail.equals(reviewer.privateEmail) : reviewer.privateEmail != null) {
+            return false;
+        }
+        if (privatePhone != null ? !privatePhone.equals(reviewer.privatePhone) : reviewer.privatePhone != null) {
+            return false;
+        }
         if (address != null ? !address.equals(reviewer.address) : reviewer.address != null) {
+            return false;
+        }
+        if (privateAddress != null ? !privateAddress.equals(reviewer.privateAddress) : reviewer.privateAddress != null) {
             return false;
         }
         if (institution != null ? !institution.equals(reviewer.institution) : reviewer.institution != null) {
@@ -321,7 +402,10 @@ public class Reviewer extends PromatUser {
         result = 31 * result + (lastName != null ? lastName.hashCode() : 0);
         result = 31 * result + (email != null ? email.hashCode() : 0);
         result = 31 * result + (phone != null ? phone.hashCode() : 0);
+        result = 31 * result + (privateEmail != null ? privateEmail.hashCode() : 0);
+        result = 31 * result + (privatePhone != null ? privatePhone.hashCode() : 0);
         result = 31 * result + address.hashCode();
+        result = 31 * result + privateAddress.hashCode();
         result = 31 * result + institution.hashCode();
         result = 31 * result + paycode.hashCode();
         result = 31 * result + (hiatusBegin != null ? hiatusBegin.hashCode() : 0);
@@ -343,7 +427,10 @@ public class Reviewer extends PromatUser {
                 ", lastName='" + lastName + '\'' +
                 ", email='" + email + '\'' +
                 ", phone='" + phone + '\'' +
+                ", privateEmail='" + privateEmail + '\'' +
+                ", privatePhone='" + privatePhone + '\'' +
                 ", address=" + address +
+                ", privateAddress=" + privateAddress +
                 ", institution='" + institution + '\'' +
                 ", paycode=" + paycode +
                 ", hiatus_begin=" + hiatusBegin +
@@ -363,7 +450,9 @@ public class Reviewer extends PromatUser {
         reviewerWithWorkloads.setFirstName(firstName);
         reviewerWithWorkloads.setLastName(lastName);
         reviewerWithWorkloads.setEmail(email);
+        reviewerWithWorkloads.setPrivateEmail(privateEmail);
         reviewerWithWorkloads.setAddress(address);
+        reviewerWithWorkloads.setPrivateAddress(privateAddress);
         reviewerWithWorkloads.setInstitution(institution);
         reviewerWithWorkloads.setPaycode(paycode);
         reviewerWithWorkloads.setSubjects(subjects);
@@ -373,6 +462,7 @@ public class Reviewer extends PromatUser {
         reviewerWithWorkloads.setNote(note);
         reviewerWithWorkloads.setCapacity(capacity);
         reviewerWithWorkloads.setPhone(phone);
+        reviewerWithWorkloads.setPrivatePhone(privatePhone);
         return reviewerWithWorkloads;
     }
 }
