@@ -8,6 +8,8 @@ package dk.dbc.promat.service.api;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dk.dbc.connector.openformat.OpenFormatConnectorException;
+import dk.dbc.opennumberroll.OpennumberRollConnector;
+import dk.dbc.opennumberroll.OpennumberRollConnectorException;
 import dk.dbc.promat.service.Repository;
 import dk.dbc.promat.service.dto.CaseRequest;
 import dk.dbc.promat.service.dto.CaseSummaryList;
@@ -36,6 +38,8 @@ import dk.dbc.promat.service.templating.NotificationFactory;
 import dk.dbc.promat.service.templating.model.AssignReviewer;
 import dk.dbc.promat.service.templating.Renderer;
 import java.time.LocalDateTime;
+
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -88,6 +92,13 @@ public class Cases {
 
     @EJB
     Records records;
+
+    @Inject
+    private OpennumberRollConnector opennumberRollConnector;
+
+    @Inject
+    @ConfigProperty(name = "OPENNUMBERROLL_NUMBERROLLNAME")
+    String openNumberrollRollName;
 
     // Default number of results when getting cases
     private static final int DEFAULT_CASES_LIMIT = 100;
@@ -654,6 +665,11 @@ public class Cases {
                     approveTasks(existing);
                 }
                 existing.setStatus(status);
+
+                // If status changed to PENDING_EXPORT, the case must be enriched with a new faustnumber
+                if( status == CaseStatus.PENDING_EXPORT ) {
+                    assignFaustnumber(existing);
+                }
             }
             if(dto.getCreator() != null) {
                 if (existing.getCreator() != null && !existing.getCreator().getId().equals(dto.getCreator())) {
@@ -1156,5 +1172,18 @@ public class Cases {
         query.setParameter("caseId", caseId);
 
         return query.getResultList().size() > 0;
+    }
+
+    private void assignFaustnumber(PromatCase existing) throws OpennumberRollConnectorException {
+        for(PromatTask task : existing.getTasks().stream()
+                .filter(task -> task.getTaskFieldType() == TaskFieldType.BRIEF)
+                .collect(Collectors.toList())) {
+            if( task.getRecordId() == null || task.getRecordId().isEmpty() ) {
+                OpennumberRollConnector.Params params = new OpennumberRollConnector.Params();
+                params.withRollName(openNumberrollRollName);
+                task.setRecordId(opennumberRollConnector.getId(params));
+                LOGGER.info("Assigned new faustnumber {} to task with id {} on case with id {}", task.getRecordId(), task.getRecordId(), existing.getId());
+            }
+        }
     }
 }
