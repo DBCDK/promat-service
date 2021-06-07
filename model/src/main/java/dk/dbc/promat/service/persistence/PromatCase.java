@@ -187,9 +187,6 @@ public class PromatCase {
     private String publisher;
 
     @JsonView({CaseView.Export.class, CaseView.Case.class})
-    private String recordId;
-
-    @JsonView({CaseView.Export.class, CaseView.Case.class})
     private String fulltextLink;
 
     @JsonView({CaseView.Case.class, CaseView.Summary.class})
@@ -438,19 +435,6 @@ public class PromatCase {
         return this;
     }
 
-    public String getRecordId() {
-        return recordId;
-    }
-
-    public void setRecordId(String recordId) {
-        this.recordId = recordId;
-    }
-
-    public PromatCase withRecordId(String recordId) {
-        setRecordId(recordId);
-        return this;
-    }
-
     public String getTrimmedWeekCode() {
         return trimmedWeekCode;
     }
@@ -550,7 +534,6 @@ public class PromatCase {
                 Objects.equals(author, aCase.author) &&
                 Objects.equals(creator, aCase.creator) &&
                 Objects.equals(publisher, aCase.publisher) &&
-                Objects.equals(recordId, aCase.recordId) &&
                 Objects.equals(fulltextLink, aCase.fulltextLink) &&
                 newMessagesToEditor == aCase.newMessagesToEditor &&
                 newMessagesToReviewer == aCase.newMessagesToReviewer;
@@ -560,7 +543,7 @@ public class PromatCase {
     public int hashCode() {
         return Objects.hash(id, title, details, primaryFaust, relatedFausts, reviewer, editor, subjects, created,
                 deadline, assigned, status, materialType, tasks, weekCode, trimmedWeekCode, author, creator, publisher,
-                recordId, fulltextLink, newMessagesToEditor, newMessagesToReviewer);
+                fulltextLink, newMessagesToEditor, newMessagesToReviewer);
     }
 
     @Override
@@ -585,7 +568,6 @@ public class PromatCase {
                 ", author='" + author + '\'' +
                 ", creator=" + creator +
                 ", publisher='" + publisher + '\'' +
-                ", recordId='" + recordId + '\'' +
                 ", fulltextLink='" + fulltextLink + '\'' +
                 ", newMessagesToEditor='" + newMessagesToEditor + '\'' +
                 ", newMessagesToReviewer='" + newMessagesToReviewer + '\'' +
