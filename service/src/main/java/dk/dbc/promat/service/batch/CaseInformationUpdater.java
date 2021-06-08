@@ -28,9 +28,11 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.inject.Inject;
 import java.time.Duration;
+import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 
 @Stateless
@@ -96,6 +98,12 @@ public class CaseInformationUpdater {
             if( useSameOrUpdateValue(promatCase.getWeekCode(), newCode, true)) {
                 LOGGER.info("Updating weekcode: '{}' ==> '{}' of case with id {}", promatCase.getWeekCode(), newCode, promatCase.getId());
                 promatCase.setWeekCode(newCode);
+            }
+
+            // Check if the case has status 'APPROVED' and we have reached the week specified by the weekcode
+            if( CaseStatus.APPROVED == promatCase.getStatus() && weekcodeMatchOrBefore(promatCase) ) {
+                LOGGER.info("Changing status on case {} since weekcode {} is actual or previous week", promatCase.getId(), promatCase.getWeekCode());
+                promatCase.setStatus(CaseStatus.PENDING_MEETING);
             }
 
             //
@@ -187,5 +195,18 @@ public class CaseInformationUpdater {
                 .sorted(Comparator.comparing(code -> code.substring(3)))
                 .findFirst();
         return newCode.isPresent() ? newCode.get() : "";
+    }
+
+    private Boolean weekcodeMatchOrBefore(PromatCase promatCase) {
+        LocalDate date = LocalDate.now();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyw", new Locale("da", "DK"));
+        String todaysWeekcode = date.format(formatter);
+        Integer today = Integer.parseInt(todaysWeekcode);
+
+        // Do not use trimmedWeekcode, it is set by the db on update, and the entity
+        // might not have been commited before we get to this line
+        Integer caseWeekcode = Integer.parseInt(promatCase.getWeekCode().substring(3));
+
+        return caseWeekcode <= today;
     }
 }
