@@ -105,7 +105,7 @@ public class Cases {
 
     // Set of allowed states when changing reviewer
     private static final Set<CaseStatus> REVIEWER_CHANGE_ALLOWED_STATES =
-            Set.of(CaseStatus.CREATED, CaseStatus.REJECTED);
+            Set.of(CaseStatus.CREATED, CaseStatus.REJECTED, CaseStatus.ASSIGNED, CaseStatus.PENDING_ISSUES);
 
     // Set of allowed states when approving tasks
     private static final Set<CaseStatus> APPROVE_TASKS_ALLOWED_STATES =
@@ -642,7 +642,7 @@ public class Cases {
                         notifyOnReviewerChanged(existing);
                         existing.setStatus(calculateStatus(existing, CaseStatus.ASSIGNED));
                     } else {
-                        throw new ServiceErrorException("Not allowed to set status ASSIGNED when case is not in CREATED, REJECTED or nor reviewer is set")
+                        throw new ServiceErrorException("Not allowed to set status ASSIGNED when case is not in CREATED, REJECTED or no reviewer is set")
                                 .withDetails("Attempt to set status of case to ASSIGNED when case is not in status CREATED, REJECTED or there is no reviewer set")
                                 .withHttpStatus(400)
                                 .withCode(ServiceErrorCode.INVALID_REQUEST);
@@ -1059,7 +1059,7 @@ public class Cases {
                 }
 
             case ASSIGNED:
-                if (existing.getReviewer() != null && Set.of(CaseStatus.CREATED, CaseStatus.REJECTED).contains(existing.getStatus())) {
+                if (existing.getReviewer() != null && Set.of(CaseStatus.CREATED, CaseStatus.REJECTED, CaseStatus.ASSIGNED, CaseStatus.PENDING_ISSUES).contains(existing.getStatus())) {
                     return CaseStatus.ASSIGNED;
                 } else {
                     throw new ServiceErrorException("Not allowed to set status ASSIGNED when case is not in CREATED, REJECTED or nor reviewer is set")
