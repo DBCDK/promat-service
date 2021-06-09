@@ -297,9 +297,10 @@ public class Cases {
 
     @GET
     @Path("cases/{format}/{faust}")
-    @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_HTML, MediaType.TEXT_HTML})
-    public Response getView(@PathParam("format") @DefaultValue("HTML") final ClassviewFormat format, @PathParam("faust") final String faust) {
-        LOGGER.info("cases/{}/{}", faust, format);
+    @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_HTML, MediaType.TEXT_XML})
+    public Response getView(@PathParam("format") @DefaultValue("HTML") final ClassviewFormat format, @PathParam("faust") final String faust,
+                            @QueryParam("override") @DefaultValue("false") final boolean override) {
+        LOGGER.info("cases/{}/{}?override={}", faust, format, override);
 
         try {
             TypedQuery query = entityManager.createNamedQuery(PromatCase.GET_CASE_BY_FAUST_NAME, PromatCase.class);
@@ -320,11 +321,14 @@ public class Cases {
                         String.format("Case with primary- or relatedfaust %s has no tasks", faust));
             }
 
-            // Case must have a status that ensures that there is valid data
-            if (!Arrays.asList(CaseStatus.PENDING_EXTERNAL, CaseStatus.APPROVED, CaseStatus.PENDING_MEETING,
-                    CaseStatus.PENDING_EXPORT, CaseStatus.EXPORTED).contains(cases.get(0).getStatus())) {
-                return ServiceErrorDto.NotFound("Not found or not in valid state",
-                        String.format("No case with faust %s or a status that guarantees valid data is found", faust));
+            // Case must have a status that ensures that there is valid data.
+            // This check can be ignored if the query parameter 'override' is set to true
+            if (!override) {
+                if(!Arrays.asList(CaseStatus.PENDING_EXTERNAL, CaseStatus.APPROVED, CaseStatus.PENDING_MEETING,
+                        CaseStatus.PENDING_EXPORT, CaseStatus.EXPORTED).contains(cases.get(0).getStatus())) {
+                    return ServiceErrorDto.NotFound("Not found or not in valid state",
+                            String.format("No case with faust %s or a status that guarantees valid data is found", faust));
+                }
             }
 
             var relatedFausts = new ArrayList<>(cases.get(0).getRelatedFausts());

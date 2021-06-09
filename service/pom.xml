@@ -29,13 +29,13 @@
     <dependency>
       <groupId>dk.dbc</groupId>
       <artifactId>promat-connector</artifactId>
-      <version>${project.version}</version>
+      <version>1.2-SNAPSHOT</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>dk.dbc</groupId>
       <artifactId>promat-model</artifactId>
-      <version>${project.version}</version>
+      <version>1.0-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>org.flywaydb</groupId>

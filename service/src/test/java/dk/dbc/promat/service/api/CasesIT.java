@@ -1479,6 +1479,25 @@ public class CasesIT extends ContainerTest {
     }
 
     @Test
+    public void testDbckatHtmlViewOfPrimaryFaustNotApproved() throws IOException, PromatServiceConnectorException {
+
+        // Casewith not available for dbckat users and reviewers
+        assertThrows(PromatServiceConnectorUnexpectedStatusCodeException.class, () -> {
+            try {
+                promatServiceConnector.getCaseview("100006", "HTML");
+            } catch (PromatServiceConnectorUnexpectedStatusCodeException e) {
+                assertThat("exception is 404 NOT FOUND", e.getStatusCode(), is(404));
+                throw e;
+            } catch (Exception e) {
+                throw e;
+            }
+        });
+
+        // Casewith available for editors
+        promatServiceConnector.getCaseviewWithOverride("100006", "HTML");
+    }
+
+    @Test
     public void testMaterialsFilterQuery() throws PromatServiceConnectorException, JsonProcessingException {
         // Create a BOOK case
         CaseRequest dto = new CaseRequest()
