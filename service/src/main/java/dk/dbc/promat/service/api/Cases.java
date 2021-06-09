@@ -1105,9 +1105,9 @@ public class Cases {
                 return CaseStatus.PENDING_APPROVAL;
 
             case PENDING_ISSUES:
-                if (existing.getStatus() != CaseStatus.PENDING_APPROVAL) {
-                    throw new ServiceErrorException("Not allowed to set status PENDING_ISSUES when case is not in PENDING_APPROVAL")
-                            .withDetails("Attempt to set status of case to PENDING_ISSUES when case is not in status PENDING_APPROVAL")
+                if (existing.getStatus() != CaseStatus.PENDING_APPROVAL && existing.getStatus() != CaseStatus.APPROVED && existing.getStatus() != CaseStatus.PENDING_MEETING ) {
+                    throw new ServiceErrorException("Not allowed to set status PENDING_ISSUES when case is not in PENDING_APPROVAL, APPROVED or PENDING_MEETING")
+                            .withDetails("Attempt to set status of case to PENDING_ISSUES when case is not in status PENDING_APPROVAL, APPROVED or PENDING_MEETING")
                             .withHttpStatus(400)
                             .withCode(ServiceErrorCode.INVALID_REQUEST);
                 }
