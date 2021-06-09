@@ -76,10 +76,6 @@ public class CaseRequest implements Dto {
 
     private String publisher;
 
-    // Todo: 2021-06-07: Record id is relocated to promattask. property is no longer in use or persisted
-    @Deprecated()
-    private String recordId;
-
     private String note;
 
     private String fulltextLink;
@@ -303,25 +299,6 @@ public class CaseRequest implements Dto {
 
     public CaseRequest withNote(String note) {
         this.note = note;
-        return this;
-    }
-
-    // Todo: 2021-07-06: Property is no longer in use
-    @Deprecated
-    public String getRecordId() {
-        return recordId;
-    }
-
-    // Todo: 2021-07-06: Property is no longer in use
-    @Deprecated
-    public void setRecordId(String recordId) {
-        this.recordId = recordId;
-    }
-
-    // Todo: 2021-07-06: Property is no longer in use
-    @Deprecated
-    public CaseRequest withRecordId(String recordId) {
-        setRecordId(recordId);
         return this;
     }
 
