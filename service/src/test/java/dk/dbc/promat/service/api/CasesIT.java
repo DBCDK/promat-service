@@ -1772,4 +1772,58 @@ public class CasesIT extends ContainerTest {
         response = deleteResponse("v1/api/cases/" + created.getId());
         assertThat("status code", response.getStatus(), is(200));
     }
+
+    @Test
+    public void testAssignFaustnumberWhenChangeToPendingExport() throws JsonProcessingException {
+
+        // Create a new case
+        CaseRequest dto = new CaseRequest()
+                .withTitle("Title for 24001111")
+                .withDetails("Details for 24001111")
+                .withPrimaryFaust("24001111")
+                .withEditor(10)
+                .withReviewer(1)
+                .withSubjects(Arrays.asList(3, 4))
+                .withDeadline("2021-03-30")
+                .withMaterialType(MaterialType.BOOK)
+                .withTasks(Arrays.asList(new TaskDto()
+                    .withTaskType(TaskType.GROUP_1_LESS_THAN_100_PAGES)
+                    .withTaskFieldType(TaskFieldType.BRIEF)
+                    .withTargetFausts(Arrays.asList("24001111"))
+                ));
+
+        Response response = postResponse("v1/api/cases", dto);
+        PromatCase created = mapper.readValue(response.readEntity(String.class), PromatCase.class);
+        assertThat("status code", response.getStatus(), is(201));
+
+        // Send case to approval
+        CaseRequest requestDto = new CaseRequest().withStatus(CaseStatus.PENDING_APPROVAL);
+        response = postResponse("v1/api/cases/" + created.getId(), requestDto);
+        assertThat("status code", response.getStatus(), is(200));
+
+        // Approve the case
+        requestDto = new CaseRequest().withStatus(CaseStatus.APPROVED);
+        response = postResponse("v1/api/cases/" + created.getId(), requestDto);
+        assertThat("status code", response.getStatus(), is(200));
+
+        // Move to PENDING_MEETING
+        requestDto = new CaseRequest().withStatus(CaseStatus.PENDING_MEETING);
+        response = postResponse("v1/api/cases/" + created.getId(), requestDto);
+        assertThat("status code", response.getStatus(), is(200));
+
+        PromatCase updated = mapper.readValue(response.readEntity(String.class), PromatCase.class);
+        assertThat("faust", updated.getTasks().get(0).getRecordId(), is(nullValue()));
+
+        // Move to PENDING_EXPORT
+        requestDto = new CaseRequest().withStatus(CaseStatus.PENDING_EXPORT);
+        response = postResponse("v1/api/cases/" + created.getId(), requestDto);
+        assertThat("status code", response.getStatus(), is(200));
+
+        updated = mapper.readValue(response.readEntity(String.class), PromatCase.class);
+        assertThat("faust", updated.getTasks().get(0).getRecordId(), is("131990219"));
+
+        // Delete the case
+        response = deleteResponse("v1/api/cases/" + created.getId());
+        assertThat("status code", response.getStatus(), is(200));
+    }
 }

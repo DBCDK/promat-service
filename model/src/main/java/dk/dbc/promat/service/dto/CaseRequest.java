@@ -31,7 +31,6 @@ public class CaseRequest implements Dto {
         this.materialType = promatCase.getMaterialType();
         this.primaryFaust = promatCase.getPrimaryFaust();
         this.publisher = promatCase.getPublisher();
-        this.recordId = promatCase.getRecordId();
         this.relatedFausts = promatCase.getRelatedFausts();
         if (promatCase.getReviewer() != null) {
             this.reviewer = promatCase.getReviewer().getId();
@@ -77,6 +76,8 @@ public class CaseRequest implements Dto {
 
     private String publisher;
 
+    // Todo: 2021-06-07: Record id is relocated to promattask. property is no longer in use or persisted
+    @Deprecated()
     private String recordId;
 
     private String note;
@@ -304,14 +305,21 @@ public class CaseRequest implements Dto {
         this.note = note;
         return this;
     }
+
+    // Todo: 2021-07-06: Property is no longer in use
+    @Deprecated
     public String getRecordId() {
         return recordId;
     }
 
+    // Todo: 2021-07-06: Property is no longer in use
+    @Deprecated
     public void setRecordId(String recordId) {
         this.recordId = recordId;
     }
 
+    // Todo: 2021-07-06: Property is no longer in use
+    @Deprecated
     public CaseRequest withRecordId(String recordId) {
         setRecordId(recordId);
         return this;
@@ -349,7 +357,6 @@ public class CaseRequest implements Dto {
                 ", author='" + author + '\'' +
                 ", creator=" + creator +
                 ", publisher='" + publisher + '\'' +
-                ", recordId='" + recordId + '\'' +
                 ", note='" + note + '\'' +
                 ", fulltextLink='" + fulltextLink + '\'' +
                 '}';
@@ -414,9 +421,6 @@ public class CaseRequest implements Dto {
         if (publisher != null ? !publisher.equals(that.publisher) : that.publisher != null) {
             return false;
         }
-        if (recordId != null ? !recordId.equals(that.recordId) : that.recordId != null) {
-            return false;
-        }
         if (note != null ? !note.equals(that.note) : that.note != null) {
             return false;
         }
@@ -441,7 +445,6 @@ public class CaseRequest implements Dto {
         result = 31 * result + (author != null ? author.hashCode() : 0);
         result = 31 * result + (creator != null ? creator.hashCode() : 0);
         result = 31 * result + (publisher != null ? publisher.hashCode() : 0);
-        result = 31 * result + (recordId != null ? recordId.hashCode() : 0);
         result = 31 * result + (note != null ? note.hashCode() : 0);
         result = 31 * result + (fulltextLink != null ? fulltextLink.hashCode() : 0);
         return result;

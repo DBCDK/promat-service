@@ -89,8 +89,10 @@ public abstract class ContainerTest extends IntegrationTest {
                 .withEnv("MAIL_HOST", "mailhost")
                 .withEnv("MAIL_USER", "mail.user")
                 .withEnv("MAIL_FROM", "some@address.dk")
-                .withEnv("OPENFORMAT_SERVICE_URL", "http://host.testcontainers.internal:" + wireMockServer.port()+"/")
+                .withEnv("OPENFORMAT_SERVICE_URL", "http://host.testcontainers.internal:" + wireMockServer.port() + "/")
                 .withEnv("LU_MAILADDRESS", "TEST@dbc.dk")
+                .withEnv("OPENNUMBERROLL_SERVICE_URL", "http://host.testcontainers.internal:" + wireMockServer.port() + "/")
+                .withEnv("OPENNUMBERROLL_NUMBERROLLNAME", "faust")
                 .withExposedPorts(8080)
                 .waitingFor(Wait.forHttp("/openapi"))
                 .withStartupTimeout(Duration.ofMinutes(2));

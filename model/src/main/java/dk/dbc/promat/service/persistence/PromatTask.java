@@ -181,6 +181,19 @@ public class PromatTask {
         return this;
     }
 
+    public String getRecordId() {
+        return recordId;
+    }
+
+    public void setRecordId(String recordId) {
+        this.recordId = recordId;
+    }
+
+    public PromatTask withRecordId(String recordId) {
+        this.recordId = recordId;
+        return this;
+    }
+
     @Override
     public boolean equals(Object o) {
         if(this == o) return true;
@@ -194,11 +207,12 @@ public class PromatTask {
                 Objects.equals(approved, task.approved) &&
                 Objects.equals(payed, task.payed) &&
                 Objects.equals(data, task.data) &&
+                Objects.equals(recordId, task.recordId) &&
                 Objects.equals(targetFausts, task.targetFausts);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, taskType, taskFieldType, created, payCategory, approved, payed, data, targetFausts);
+        return Objects.hash(id, taskType, taskFieldType, created, payCategory, approved, payed, data, targetFausts, recordId);
     }
 }
