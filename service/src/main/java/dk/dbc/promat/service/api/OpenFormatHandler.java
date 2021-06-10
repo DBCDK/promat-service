@@ -61,7 +61,10 @@ public class OpenFormatHandler {
                 ? elements.getCreator().stream().map(c -> c.getValue())
                         .collect(Collectors.joining(", "))
                 : "")
-        .withDk5(elements.getDk5().getValue())
+        .withDk5(elements.getDk5() != null && elements.getDk5().size() > 0
+                ? elements.getDk5().stream().map(dk5 -> dk5.getValue())
+                .collect(Collectors.toList())
+                : new ArrayList<>())
         .withIsbn(elements.getIsbn() != null && elements.getIsbn().size() > 0
                 ? elements.getIsbn().stream().map(isbn -> isbn.getValue())
                         .collect(Collectors.toList())
