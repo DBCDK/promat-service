@@ -28,6 +28,7 @@ docker run --rm --name promat-service -d \
     -e MP_OPENAPI_SERVERS=http://localhost:${promat_service_port}/v1/api \
     -e OPENAPI_UI_CONTEXTROOT=http://localhost:${promat_service_port} \
     -e OPENNUMBERROLL_SERVICE_URL=${OPENNUMBERROLL_SERVICE_URL} \
+    -e OPENNUMBERROLL_NUMBERROLLNAME=${OPENNUMBERROLL_NUMBERROLLNAME} \
     -p ${promat_service_port}:8080 \
     $@ \
     docker-io.dbc.dk/promat-service:devel
