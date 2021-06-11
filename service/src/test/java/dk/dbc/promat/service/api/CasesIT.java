@@ -2013,4 +2013,38 @@ public class CasesIT extends ContainerTest {
         response = deleteResponse("v1/api/cases/" + created.getId());
         assertThat("status code", response.getStatus(), is(200));
     }
+
+    @Test
+    public void testStatusFlowToPendingCloseFromPendingApproval() throws JsonProcessingException {
+
+        // Create a new case
+        CaseRequest dto = new CaseRequest()
+                .withTitle("Title for 27001111")
+                .withDetails("Details for 27001111")
+                .withPrimaryFaust("27001111")
+                .withEditor(10)
+                .withReviewer(1)
+                .withSubjects(Arrays.asList(3, 4))
+                .withDeadline("2021-03-30")
+                .withMaterialType(MaterialType.BOOK);
+
+        Response response = postResponse("v1/api/cases", dto);
+        PromatCase created = mapper.readValue(response.readEntity(String.class), PromatCase.class);
+        assertThat("status code", response.getStatus(), is(201));
+
+        // Send case to approval
+        CaseRequest requestDto = new CaseRequest().withStatus(CaseStatus.PENDING_APPROVAL);
+        response = postResponse("v1/api/cases/" + created.getId(), requestDto);
+        assertThat("status code", response.getStatus(), is(200));
+
+        // CLose the case while including it in the next payroll
+        requestDto = new CaseRequest().withStatus(CaseStatus.PENDING_CLOSE);
+        response = postResponse("v1/api/cases/" + created.getId(), requestDto);
+        assertThat("status code", response.getStatus(), is(200));
+
+        // Delete the case
+        response = deleteResponse("v1/api/cases/" + created.getId());
+        assertThat("status code", response.getStatus(), is(200));
+    }
+
 }

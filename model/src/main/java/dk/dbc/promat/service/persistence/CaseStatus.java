@@ -140,7 +140,7 @@ public enum CaseStatus {
         BMK assessment resulted in the review not being library relevant. Case must be closed
         but only after the BMK assessment task has been payed
 
-        Transition from:    REJECTED
+        Transition from:    PENDING_APPROVAL
         Transition to:      CLOSED
         Payable:            Yes (only BKM tasks)
         Visible in DBCKat   No
