@@ -1481,7 +1481,7 @@ public class CasesIT extends ContainerTest {
     @Test
     public void testDbckatHtmlViewOfPrimaryFaustNotApproved() throws IOException, PromatServiceConnectorException {
 
-        // Casewith not available for dbckat users and reviewers
+        // Casewiew not available for dbckat users and reviewers
         assertThrows(PromatServiceConnectorUnexpectedStatusCodeException.class, () -> {
             try {
                 promatServiceConnector.getCaseview("100006", "HTML");
@@ -1493,8 +1493,9 @@ public class CasesIT extends ContainerTest {
             }
         });
 
-        // Casewith available for editors
-        promatServiceConnector.getCaseviewWithOverride("100006", "HTML");
+        // Casewiew available for editors with override
+        promatServiceConnector.getCaseviewWithOverride("100006", "HTML"); // Uses query parameter ?override=true
+        assertThat("status", getResponse("v1/api/cases/HTML/override/100006").getStatus(), is(200)); // uses path ../override/..
     }
 
     @Test

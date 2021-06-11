@@ -293,7 +293,13 @@ public class Cases {
         }
     }
 
-
+    @GET
+    @Path("cases/{format}/override/{faust}")
+    @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_HTML, MediaType.TEXT_XML})
+    public Response getViewWithOverride(@PathParam("format") @DefaultValue("HTML") final ClassviewFormat format, @PathParam("faust") final String faust) {
+        LOGGER.info("cases/{}/override/{}", faust, format);
+        return getView(format, faust, true);
+    }
 
     @GET
     @Path("cases/{format}/{faust}")
