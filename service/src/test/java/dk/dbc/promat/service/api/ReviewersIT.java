@@ -16,6 +16,7 @@ import dk.dbc.promat.service.dto.ServiceErrorDto;
 import dk.dbc.promat.service.persistence.Address;
 import dk.dbc.promat.service.persistence.Reviewer;
 import dk.dbc.promat.service.persistence.Subject;
+import dk.dbc.promat.service.persistence.SubjectNote;
 import dk.dbc.promat.service.templating.Formatting;
 import org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
 import org.junit.jupiter.api.Order;
@@ -145,8 +146,12 @@ public class ReviewersIT extends ContainerTest {
         final Reviewer reviewer5 = new Reviewer();
         loadReviewer5(reviewer5);
 
+        final Reviewer reviewer6 = new Reviewer();
+        loadReviewer6(reviewer6);
+
+
         final ReviewerList<Reviewer> expected = new ReviewerList<>()
-                .withReviewers(List.of(reviewer1, reviewer2, reviewer3, reviewer4, reviewer5));
+                .withReviewers(List.of(reviewer1, reviewer2, reviewer3, reviewer4, reviewer5, reviewer6));
 
         final Response response = getResponse("v1/api/reviewers");
 
@@ -190,8 +195,14 @@ public class ReviewersIT extends ContainerTest {
                 .withWeekAfterWorkload(0);
         loadReviewer5(reviewer5);
 
+        final ReviewerWithWorkloads reviewer6 = new ReviewerWithWorkloads()
+                .withWeekWorkload(0)
+                .withWeekBeforeWorkload(0)
+                .withWeekAfterWorkload(0);
+        loadReviewer6(reviewer6);
+
         final ReviewerList<ReviewerWithWorkloads> expected = new ReviewerList<ReviewerWithWorkloads>()
-                .withReviewers(List.of(reviewer1, reviewer2, reviewer3, reviewer4, reviewer5));
+                .withReviewers(List.of(reviewer1, reviewer2, reviewer3, reviewer4, reviewer5, reviewer6));
 
         final Response response = getResponse("v1/api/reviewers",
                 Map.of("deadline", "2020-12-01"));
@@ -349,6 +360,7 @@ public class ReviewersIT extends ContainerTest {
                 Reviewer.Accepts.MULTIMEDIA, Reviewer.Accepts.PS4, Reviewer.Accepts.PS5));
         reviewer.setNote("note1");
         reviewer.setCapacity(1);
+        reviewer.setSubjectNotes(List.of());
     }
 
     private void loadReviewer2(Reviewer reviewer) {
@@ -377,6 +389,7 @@ public class ReviewersIT extends ContainerTest {
                 Reviewer.Accepts.MULTIMEDIA, Reviewer.Accepts.PS4, Reviewer.Accepts.PS5));
         reviewer.setNote("note2");
         reviewer.setCapacity(2);
+        reviewer.setSubjectNotes(List.of());
     }
 
     private void loadReviewer3(Reviewer reviewer) {
@@ -406,6 +419,7 @@ public class ReviewersIT extends ContainerTest {
         reviewer.setNote("note3");
         reviewer.setPhone("12345678");
         reviewer.setCapacity(2);
+        reviewer.setSubjectNotes(List.of());
     }
 
     private void loadReviewer4(Reviewer reviewer) {
@@ -434,6 +448,7 @@ public class ReviewersIT extends ContainerTest {
         reviewer.setNote("note4");
         reviewer.setPhone("123456789010");
         reviewer.setCapacity(2);
+        reviewer.setSubjectNotes(List.of());
     }
 
     private void loadReviewer5(Reviewer reviewer) {
@@ -457,6 +472,7 @@ public class ReviewersIT extends ContainerTest {
         reviewer.setNote("note5");
         reviewer.setPhone("9123456789");
         reviewer.setCapacity(2);
+        reviewer.setSubjectNotes(List.of());
     }
 
     private void loadUpdatedReviewer3(Reviewer reviewer) {
@@ -497,6 +513,37 @@ public class ReviewersIT extends ContainerTest {
         reviewer.setCapacity(2);
         reviewer.setPhone("87654321");
         reviewer.setPrivatePhone("12345678");
+        reviewer.setSubjectNotes(List.of());
+    }
+
+    private void loadReviewer6(Reviewer reviewer) {
+        reviewer.setId(6);
+        reviewer.setActive(true);
+        reviewer.setCulrId("56434241");
+        reviewer.setFirstName("Michael");
+        reviewer.setLastName("Michelsen");
+        reviewer.setEmail("mich@mich.dk");
+        reviewer.setInstitution("Michs Mechanics");
+        reviewer.setAddress(new Address().withSelected(true));
+        reviewer.setPaycode(232221);
+        reviewer.setSubjects(
+                List.of(
+                        new Subject()
+                                .withId(5)
+                                .withName("Multimedie"),
+                        new Subject()
+                                .withId(6).withParentId(5).withName("(Et Mulitmedie underemne)")));
+        reviewer.setHiatusBegin(null);
+        reviewer.setHiatusEnd(null);
+        reviewer.setAccepts(List.of(
+                Reviewer.Accepts.MULTIMEDIA));
+        reviewer.setNote("note6");
+        reviewer.setPhone("912345678901");
+        reviewer.setCapacity(2);
+        reviewer.setSubjectNotes(List.of(
+                new SubjectNote().withNote("Anmelder det meste").withId(1).withSubjectId(5),
+                new SubjectNote().withNote("(Hvis et eller andet underemne, så kommentar)").withId(2).withSubjectId(6)
+        ));
     }
 
     @Test
@@ -566,4 +613,57 @@ public class ReviewersIT extends ContainerTest {
         final Reviewer reviewer = mapper.readValue(response.readEntity(String.class), Reviewer.class);
         assertThat("note", reviewer.getNote(), is("newnote"));
     }
+
+    @Test
+    public void testUpdateSubjectNotes() throws JsonProcessingException {
+        final ReviewerRequest reviewerUpdateRequest = new ReviewerRequest();
+        Response response = getResponse("v1/api/reviewers/6");
+        assertThat("response status", response.getStatus(), is(200));
+        Reviewer fetched = mapper.readValue(response.readEntity(String.class), Reviewer.class);
+        Reviewer reviewer6 = new Reviewer();
+        loadReviewer6(reviewer6);
+        assertThat(fetched, is(reviewer6));
+
+        // Check that notes can be changed.
+        List<Subject> subjects = List.of(
+          new Subject().withId(1).withName("Voksen"),
+          new Subject().withId(2).withName("Roman").withParentId(1));
+        List<Integer> subjectIds = List.of(1, 2);
+        List<SubjectNote> notes = List.of(
+                new SubjectNote().withSubjectId(1).withNote("Some note to subject 1: ('Voksen')"),
+                new SubjectNote().withSubjectId(2).withNote("Some other note to subject 2: ('Roman')"));
+
+        reviewerUpdateRequest.withSubjects(subjectIds).setSubjectNotes(notes);
+        response = putResponse("v1/api/reviewers/6", reviewerUpdateRequest);
+        assertThat("response status", response.getStatus(), is(200));
+        fetched = mapper.readValue(response.readEntity(String.class), Reviewer.class);
+        reviewer6.withSubjects(subjects).withSubjectNotes(notes);
+        assertThat(fetched, is(reviewer6));
+
+        // Check that there is no way that a note can be made to a subject not
+        // associated with this reviewer.
+        reviewerUpdateRequest.withSubjectNotes(
+                List.of(new SubjectNote().withSubjectId(4).withNote("Some note")));
+        response = putResponse("v1/api/reviewers/6", reviewerUpdateRequest);
+        assertThat("response status", response.getStatus(), is(400));
+
+        // Check that a subject cannot be removed, without first removing any related notes.
+        reviewerUpdateRequest.withSubjectNotes(null).withSubjects(List.of());
+        response = putResponse("v1/api/reviewers/6", reviewerUpdateRequest);
+        assertThat("response status", response.getStatus(), is(400));
+
+        // Put back initial subjects and subjectNotes, as to not wreck later tests.
+        reviewerUpdateRequest
+                .withSubjects(List.of(5, 6))
+                .withSubjectNotes(
+                        List.of(
+                            new SubjectNote().withSubjectId(5).withNote("Anmelder det meste"),
+                            new SubjectNote().withSubjectId(6).withNote("(Hvis et eller andet underemne, så kommentar)")));
+        response = putResponse("v1/api/reviewers/6", reviewerUpdateRequest);
+        assertThat("response status", response.getStatus(), is(200));
+        fetched = mapper.readValue(response.readEntity(String.class), Reviewer.class);
+        loadReviewer6(reviewer6);
+        assertThat(fetched, is(reviewer6));
+    }
+
 }

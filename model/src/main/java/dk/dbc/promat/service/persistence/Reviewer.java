@@ -11,6 +11,7 @@ import dk.dbc.promat.service.dto.ReviewerWithWorkloads;
 
 import javax.persistence.AttributeOverride;
 import javax.persistence.AttributeOverrides;
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.ColumnResult;
 import javax.persistence.Convert;
@@ -133,6 +134,15 @@ public class Reviewer extends PromatUser {
     @JsonView({CaseView.Case.class})
     protected Collection<Subject> subjects;
 
+    @OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @JoinTable (
+            name = "ReviewerSubjectNotes",
+            joinColumns = @JoinColumn(name = "reviewer_id"),
+            inverseJoinColumns = @JoinColumn(name = "subjectnote_id")
+    )
+    @JsonView({CaseView.Case.class})
+    protected Collection<SubjectNote> subjectNotes;
+
     @Convert(converter = AcceptsListToJsonArrayConverter.class)
     @JsonView({CaseView.Case.class})
     protected List<Accepts> accepts;
@@ -225,6 +235,14 @@ public class Reviewer extends PromatUser {
 
     public void setPrivatePhone(String phone) {
         this.privatePhone = phone;
+    }
+
+    public Collection<SubjectNote> getSubjectNotes() {
+        return subjectNotes;
+    }
+
+    public void setSubjectNotes(Collection<SubjectNote> subjectNotes) {
+        this.subjectNotes = subjectNotes;
     }
 
     public Reviewer withId(Integer id) {
@@ -325,6 +343,11 @@ public class Reviewer extends PromatUser {
         return this;
     }
 
+    public Reviewer withSubjectNotes(List<SubjectNote> subjectNotes) {
+        this.subjectNotes = subjectNotes;
+        return this;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) {
@@ -390,7 +413,10 @@ public class Reviewer extends PromatUser {
         if (subjects != null ? !subjects.equals(reviewer.subjects) : reviewer.subjects != null) {
             return false;
         }
-        return accepts != null ? accepts.equals(reviewer.accepts) : reviewer.accepts == null;
+        if (accepts != null ? !accepts.equals(reviewer.accepts) : reviewer.accepts != null) {
+            return false;
+        }
+        return subjectNotes != null ? subjectNotes.equals(reviewer.subjectNotes) : reviewer.subjectNotes == null;
     }
 
     @Override
@@ -414,6 +440,7 @@ public class Reviewer extends PromatUser {
         result = 31 * result + (capacity != null ? capacity.hashCode() : 0);
         result = 31 * result + (subjects != null ? subjects.hashCode() : 0);
         result = 31 * result + (accepts != null ? accepts.hashCode() : 0);
+        result = 31 * result + (subjectNotes != null ? subjectNotes.hashCode() : 0);
         return result;
     }
 
@@ -439,6 +466,7 @@ public class Reviewer extends PromatUser {
                 ", accepts=" + accepts +
                 ", note='" + note + '\'' +
                 ", capacity=" + capacity +
+                ", subjectNotes=" + subjectNotes +
                 '}';
     }
 
@@ -463,6 +491,7 @@ public class Reviewer extends PromatUser {
         reviewerWithWorkloads.setCapacity(capacity);
         reviewerWithWorkloads.setPhone(phone);
         reviewerWithWorkloads.setPrivatePhone(privatePhone);
+        reviewerWithWorkloads.setSubjectNotes(subjectNotes);
         return reviewerWithWorkloads;
     }
 }

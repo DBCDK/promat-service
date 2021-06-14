@@ -11,10 +11,13 @@ import dk.dbc.promat.service.batch.NotificationSender;
 import dk.dbc.promat.service.dto.ReviewerList;
 import dk.dbc.promat.service.dto.ReviewerRequest;
 import dk.dbc.promat.service.dto.ReviewerWithWorkloads;
+import dk.dbc.promat.service.dto.ServiceErrorCode;
 import dk.dbc.promat.service.dto.ServiceErrorDto;
 import dk.dbc.promat.service.persistence.Notification;
 import dk.dbc.promat.service.persistence.PromatEntityManager;
 import dk.dbc.promat.service.persistence.Reviewer;
+import dk.dbc.promat.service.persistence.Subject;
+import dk.dbc.promat.service.persistence.SubjectNote;
 import dk.dbc.promat.service.templating.NotificationFactory;
 import dk.dbc.promat.service.templating.model.ReviewerDataChanged;
 import org.slf4j.Logger;
@@ -115,7 +118,8 @@ public class Reviewers {
                     .withHiatus_end(reviewerRequest.getHiatusEnd())
                     .withSubjects(repository.resolveSubjects(reviewerRequest.getSubjects()))
                     .withAccepts(reviewerRequest.getAccepts())
-                    .withCapacity(reviewerRequest.getCapacity());
+                    .withCapacity(reviewerRequest.getCapacity())
+                    .withSubjectNotes(repository.checkSubjectNotes(reviewerRequest.getSubjectNotes(), reviewerRequest.getSubjects()));
 
 
             entity.setCulrId(culrId);
@@ -235,6 +239,24 @@ public class Reviewers {
             if(reviewerRequest.getSubjects() != null) {
                 reviewer.setSubjects(repository.resolveSubjects(reviewerRequest.getSubjects()));
             }
+            if(reviewerRequest.getSubjectNotes() != null) {
+                reviewer.setSubjectNotes(repository.checkSubjectNotes(reviewerRequest.getSubjectNotes(),
+                        reviewer.getSubjects().stream().map(Subject::getId).collect(Collectors.toList())));
+            }
+
+            // If some subjects were removed, check that some subjectNotes were not left "dangling"
+            if (reviewerRequest.getSubjects() != null) {
+                if (!reviewerRequest.getSubjects().containsAll(
+                        reviewer.getSubjectNotes().stream().map(SubjectNote::getSubjectId).collect(Collectors.toList())
+                )) {
+                    throw new ServiceErrorException("Attempt to remove some subjects, when subjectNodes to them still exist.")
+                            .withHttpStatus(400)
+                            .withCode(ServiceErrorCode.INVALID_REQUEST)
+                            .withCause("Delete not allowed")
+                            .withDetails(String.format("Not all 'subjectNotes' were removed before setting (ids) %s", reviewerRequest.getSubjects()));
+                }
+            }
+
             if(reviewerRequest.getCapacity() != null) {
                 reviewer.setCapacity(reviewerRequest.getCapacity());
             }

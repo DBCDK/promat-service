@@ -11,6 +11,7 @@ import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateSerializer;
 import dk.dbc.promat.service.persistence.Address;
 import dk.dbc.promat.service.persistence.Reviewer;
 
+import dk.dbc.promat.service.persistence.SubjectNote;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Objects;
@@ -32,6 +33,7 @@ public class ReviewerRequest implements Dto {
     private Address privateAddress;
 
     private List<Integer> subjects;
+    private List<SubjectNote> subjectNotes;
     private List<Reviewer.Accepts> accepts;
     private Integer capacity;
 
@@ -272,6 +274,19 @@ public class ReviewerRequest implements Dto {
 
     public ReviewerRequest withNote(String note) {
         this.note = note;
+        return this;
+    }
+
+    public List<SubjectNote> getSubjectNotes() {
+        return subjectNotes;
+    }
+
+    public void setSubjectNotes(List<SubjectNote> subjectNotes) {
+        this.subjectNotes = subjectNotes;
+    }
+
+    public ReviewerRequest withSubjectNotes(List<SubjectNote> subjectNotes) {
+        this.subjectNotes = subjectNotes;
         return this;
     }
 

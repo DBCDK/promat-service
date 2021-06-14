@@ -5,6 +5,7 @@
 
 package dk.dbc.promat.service.api;
 
+import dk.dbc.promat.service.persistence.SubjectNote;
 import org.glassfish.jersey.jackson.JacksonFeature;
 import org.microprofileext.openapi.swaggerui.OpenApiUiService;
 
@@ -17,7 +18,7 @@ public class PromatApplication extends Application {
     private static final Set<Class<?>> classes = Set.of(
             Cases.class, Editors.class, JacksonFeature.class, Records.class, Reviewers.class, Subjects.class,
             Users.class, Tasks.class, PersistenceExceptionMapper.class, Messages.class, Payments.class,
-            OpenApiUiService.class);
+            OpenApiUiService.class, SubjectNote.class);
 
     private static final Set<Object> singletons = Set.of(new JsonMapperProvider(), new LocalDateConverterProvider());
 
