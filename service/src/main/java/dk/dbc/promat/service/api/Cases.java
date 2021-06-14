@@ -105,7 +105,7 @@ public class Cases {
 
     // Set of allowed states when changing reviewer
     private static final Set<CaseStatus> REVIEWER_CHANGE_ALLOWED_STATES =
-            Set.of(CaseStatus.CREATED, CaseStatus.REJECTED);
+            Set.of(CaseStatus.CREATED, CaseStatus.REJECTED, CaseStatus.ASSIGNED, CaseStatus.PENDING_ISSUES);
 
     // Set of allowed states when approving tasks
     private static final Set<CaseStatus> APPROVE_TASKS_ALLOWED_STATES =
@@ -293,13 +293,20 @@ public class Cases {
         }
     }
 
-
+    @GET
+    @Path("cases/{format}/override/{faust}")
+    @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_HTML, MediaType.TEXT_XML})
+    public Response getViewWithOverride(@PathParam("format") @DefaultValue("HTML") final ClassviewFormat format, @PathParam("faust") final String faust) {
+        LOGGER.info("cases/{}/override/{}", faust, format);
+        return getView(format, faust, true);
+    }
 
     @GET
     @Path("cases/{format}/{faust}")
-    @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_HTML, MediaType.TEXT_HTML})
-    public Response getView(@PathParam("format") @DefaultValue("HTML") final ClassviewFormat format, @PathParam("faust") final String faust) {
-        LOGGER.info("cases/{}/{}", faust, format);
+    @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_HTML, MediaType.TEXT_XML})
+    public Response getView(@PathParam("format") @DefaultValue("HTML") final ClassviewFormat format, @PathParam("faust") final String faust,
+                            @QueryParam("override") @DefaultValue("false") final boolean override) {
+        LOGGER.info("cases/{}/{}?override={}", faust, format, override);
 
         try {
             TypedQuery query = entityManager.createNamedQuery(PromatCase.GET_CASE_BY_FAUST_NAME, PromatCase.class);
@@ -320,11 +327,14 @@ public class Cases {
                         String.format("Case with primary- or relatedfaust %s has no tasks", faust));
             }
 
-            // Case must have a status that ensures that there is valid data
-            if (!Arrays.asList(CaseStatus.PENDING_EXTERNAL, CaseStatus.APPROVED, CaseStatus.PENDING_MEETING,
-                    CaseStatus.PENDING_EXPORT, CaseStatus.EXPORTED).contains(cases.get(0).getStatus())) {
-                return ServiceErrorDto.NotFound("Not found or not in valid state",
-                        String.format("No case with faust %s or a status that guarantees valid data is found", faust));
+            // Case must have a status that ensures that there is valid data.
+            // This check can be ignored if the query parameter 'override' is set to true
+            if (!override) {
+                if(!Arrays.asList(CaseStatus.PENDING_EXTERNAL, CaseStatus.APPROVED, CaseStatus.PENDING_MEETING,
+                        CaseStatus.PENDING_EXPORT, CaseStatus.EXPORTED).contains(cases.get(0).getStatus())) {
+                    return ServiceErrorDto.NotFound("Not found or not in valid state",
+                            String.format("No case with faust %s or a status that guarantees valid data is found", faust));
+                }
             }
 
             var relatedFausts = new ArrayList<>(cases.get(0).getRelatedFausts());
@@ -638,7 +648,7 @@ public class Cases {
                         notifyOnReviewerChanged(existing);
                         existing.setStatus(calculateStatus(existing, CaseStatus.ASSIGNED));
                     } else {
-                        throw new ServiceErrorException("Not allowed to set status ASSIGNED when case is not in CREATED, REJECTED or nor reviewer is set")
+                        throw new ServiceErrorException("Not allowed to set status ASSIGNED when case is not in CREATED, REJECTED or no reviewer is set")
                                 .withDetails("Attempt to set status of case to ASSIGNED when case is not in status CREATED, REJECTED or there is no reviewer set")
                                 .withHttpStatus(400)
                                 .withCode(ServiceErrorCode.INVALID_REQUEST);
@@ -1055,7 +1065,7 @@ public class Cases {
                 }
 
             case ASSIGNED:
-                if (existing.getReviewer() != null && Set.of(CaseStatus.CREATED, CaseStatus.REJECTED).contains(existing.getStatus())) {
+                if (existing.getReviewer() != null && Set.of(CaseStatus.CREATED, CaseStatus.REJECTED, CaseStatus.ASSIGNED, CaseStatus.PENDING_ISSUES).contains(existing.getStatus())) {
                     return CaseStatus.ASSIGNED;
                 } else {
                     throw new ServiceErrorException("Not allowed to set status ASSIGNED when case is not in CREATED, REJECTED or nor reviewer is set")
@@ -1105,9 +1115,9 @@ public class Cases {
                 return CaseStatus.PENDING_APPROVAL;
 
             case PENDING_ISSUES:
-                if (existing.getStatus() != CaseStatus.PENDING_APPROVAL) {
-                    throw new ServiceErrorException("Not allowed to set status PENDING_ISSUES when case is not in PENDING_APPROVAL")
-                            .withDetails("Attempt to set status of case to PENDING_ISSUES when case is not in status PENDING_APPROVAL")
+                if (existing.getStatus() != CaseStatus.PENDING_APPROVAL && existing.getStatus() != CaseStatus.APPROVED && existing.getStatus() != CaseStatus.PENDING_MEETING ) {
+                    throw new ServiceErrorException("Not allowed to set status PENDING_ISSUES when case is not in PENDING_APPROVAL, APPROVED or PENDING_MEETING")
+                            .withDetails("Attempt to set status of case to PENDING_ISSUES when case is not in status PENDING_APPROVAL, APPROVED or PENDING_MEETING")
                             .withHttpStatus(400)
                             .withCode(ServiceErrorCode.INVALID_REQUEST);
                 }

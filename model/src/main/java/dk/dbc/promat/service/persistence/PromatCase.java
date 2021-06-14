@@ -101,8 +101,11 @@ public class PromatCase {
             "PromatCase.get.case.by.faust";
     public static final String GET_CASE_BY_FAUST_QUERY = "select c" +
             "                                               from PromatCase c" +
-            "                                              where c.primaryFaust = :faust" +
-            "                                                 or function('JsonbContainsFromString', c.relatedFausts, :faust)";
+            "                                              where (c.primaryFaust = :faust" +
+            "                                                 or function('JsonbContainsFromString', c.relatedFausts, :faust))" +
+            "                                                and c.status not in (dk.dbc.promat.service.persistence.CaseStatus.PENDING_CLOSE," +
+            "                                                                    dk.dbc.promat.service.persistence.CaseStatus.CLOSED," +
+            "                                                                    dk.dbc.promat.service.persistence.CaseStatus.DELETED)";
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

@@ -1479,6 +1479,26 @@ public class CasesIT extends ContainerTest {
     }
 
     @Test
+    public void testDbckatHtmlViewOfPrimaryFaustNotApproved() throws IOException, PromatServiceConnectorException {
+
+        // Casewiew not available for dbckat users and reviewers
+        assertThrows(PromatServiceConnectorUnexpectedStatusCodeException.class, () -> {
+            try {
+                promatServiceConnector.getCaseview("100006", "HTML");
+            } catch (PromatServiceConnectorUnexpectedStatusCodeException e) {
+                assertThat("exception is 404 NOT FOUND", e.getStatusCode(), is(404));
+                throw e;
+            } catch (Exception e) {
+                throw e;
+            }
+        });
+
+        // Casewiew available for editors with override
+        promatServiceConnector.getCaseviewWithOverride("100006", "HTML"); // Uses query parameter ?override=true
+        assertThat("status", getResponse("v1/api/cases/HTML/override/100006").getStatus(), is(200)); // uses path ../override/..
+    }
+
+    @Test
     public void testMaterialsFilterQuery() throws PromatServiceConnectorException, JsonProcessingException {
         // Create a BOOK case
         CaseRequest dto = new CaseRequest()
@@ -1616,12 +1636,6 @@ public class CasesIT extends ContainerTest {
         dto.setStatus(null);
         updated = promatServiceConnector.updateCase(created.getId(), dto);
         assertThat("is reassigned", updated.getStatus(), is(CaseStatus.ASSIGNED));
-
-        // Then reassign to a third, when case is still in ASSIGNED state.
-        // AND expect to be stopped, right there.
-        dto.setReviewer(3);
-        CaseRequest finalDto = dto;
-        assertThrows(PromatServiceConnectorUnexpectedStatusCodeException.class, () -> promatServiceConnector.updateCase(created.getId(), finalDto));
 
         // Delete the case so that we dont mess up payments tests
         response = deleteResponse("v1/api/cases/"+created.getId());
@@ -1826,4 +1840,212 @@ public class CasesIT extends ContainerTest {
         response = deleteResponse("v1/api/cases/" + created.getId());
         assertThat("status code", response.getStatus(), is(200));
     }
+
+    @Test
+    public void testStatusFlowToPendingIssuesFromApproved() throws JsonProcessingException {
+
+        // Create a new case
+        CaseRequest dto = new CaseRequest()
+                .withTitle("Title for 22001111")
+                .withDetails("Details for 22001111")
+                .withPrimaryFaust("22001111")
+                .withEditor(10)
+                .withReviewer(1)
+                .withSubjects(Arrays.asList(3, 4))
+                .withDeadline("2021-03-30")
+                .withMaterialType(MaterialType.BOOK);
+
+        Response response = postResponse("v1/api/cases", dto);
+        PromatCase created = mapper.readValue(response.readEntity(String.class), PromatCase.class);
+        assertThat("status code", response.getStatus(), is(201));
+
+        // Send case to approval
+        CaseRequest requestDto = new CaseRequest().withStatus(CaseStatus.PENDING_APPROVAL);
+        response = postResponse("v1/api/cases/" + created.getId(), requestDto);
+        assertThat("status code", response.getStatus(), is(200));
+
+        // Approve the case
+        requestDto = new CaseRequest().withStatus(CaseStatus.APPROVED);
+        response = postResponse("v1/api/cases/" + created.getId(), requestDto);
+        assertThat("status code", response.getStatus(), is(200));
+
+        // Move to PENDING_ISSUES
+        requestDto = new CaseRequest().withStatus(CaseStatus.PENDING_ISSUES);
+        response = postResponse("v1/api/cases/" + created.getId(), requestDto);
+        assertThat("status code", response.getStatus(), is(200));
+
+        // Delete the case
+        response = deleteResponse("v1/api/cases/" + created.getId());
+        assertThat("status code", response.getStatus(), is(200));
+    }
+
+    @Test
+    public void testStatusFlowToPendingIssuesFromPendingMeeting() throws JsonProcessingException {
+
+        // Create a new case
+        CaseRequest dto = new CaseRequest()
+                .withTitle("Title for 23001111")
+                .withDetails("Details for 23001111")
+                .withPrimaryFaust("23001111")
+                .withEditor(10)
+                .withReviewer(1)
+                .withSubjects(Arrays.asList(3, 4))
+                .withDeadline("2021-03-30")
+                .withMaterialType(MaterialType.BOOK);
+
+        Response response = postResponse("v1/api/cases", dto);
+        PromatCase created = mapper.readValue(response.readEntity(String.class), PromatCase.class);
+        assertThat("status code", response.getStatus(), is(201));
+
+        // Send case to approval
+        CaseRequest requestDto = new CaseRequest().withStatus(CaseStatus.PENDING_APPROVAL);
+        response = postResponse("v1/api/cases/" + created.getId(), requestDto);
+        assertThat("status code", response.getStatus(), is(200));
+
+        // Approve the case
+        requestDto = new CaseRequest().withStatus(CaseStatus.APPROVED);
+        response = postResponse("v1/api/cases/" + created.getId(), requestDto);
+        assertThat("status code", response.getStatus(), is(200));
+
+        // Move to PENDING_MEETING
+        requestDto = new CaseRequest().withStatus(CaseStatus.PENDING_MEETING);
+        response = postResponse("v1/api/cases/" + created.getId(), requestDto);
+        assertThat("status code", response.getStatus(), is(200));
+
+        // Move to PENDING_ISSUES
+        requestDto = new CaseRequest().withStatus(CaseStatus.PENDING_ISSUES);
+        response = postResponse("v1/api/cases/" + created.getId(), requestDto);
+        assertThat("status code", response.getStatus(), is(200));
+
+        // Delete the case
+        response = deleteResponse("v1/api/cases/" + created.getId());
+        assertThat("status code", response.getStatus(), is(200));
+    }
+
+    @Test
+    public void testReassignCase() throws JsonProcessingException {
+
+        // Create a new case
+        CaseRequest dto = new CaseRequest()
+                .withTitle("Title for 25001111")
+                .withDetails("Details for 25001111")
+                .withPrimaryFaust("25001111")
+                .withEditor(10)
+                .withReviewer(1)
+                .withSubjects(Arrays.asList(3, 4))
+                .withDeadline("2021-03-30")
+                .withMaterialType(MaterialType.BOOK);
+
+        Response response = postResponse("v1/api/cases", dto);
+        PromatCase created = mapper.readValue(response.readEntity(String.class), PromatCase.class);
+        assertThat("status code", response.getStatus(), is(201));
+        assertThat("assigned", created.getStatus(), is(CaseStatus.ASSIGNED));
+
+        // Reassign case without specifying a new status
+        CaseRequest requestDto = new CaseRequest()
+                .withReviewer(2);
+        response = postResponse("v1/api/cases/" + created.getId(), requestDto);
+        assertThat("status code", response.getStatus(), is(200));
+
+        // Reassign case and specify status ASSIGNED
+        requestDto = new CaseRequest()
+                .withReviewer(1)
+                .withStatus(CaseStatus.ASSIGNED);
+        response = postResponse("v1/api/cases/" + created.getId(), requestDto);
+        assertThat("status code", response.getStatus(), is(200));
+
+        // Delete the case
+        response = deleteResponse("v1/api/cases/" + created.getId());
+        assertThat("status code", response.getStatus(), is(200));
+    }
+
+    @Test
+    public void testReassignCaseWithPendingIssues() throws JsonProcessingException {
+
+        // Create a new case
+        CaseRequest dto = new CaseRequest()
+                .withTitle("Title for 26001111")
+                .withDetails("Details for 26001111")
+                .withPrimaryFaust("26001111")
+                .withEditor(10)
+                .withReviewer(1)
+                .withSubjects(Arrays.asList(3, 4))
+                .withDeadline("2021-03-30")
+                .withMaterialType(MaterialType.BOOK);
+
+        Response response = postResponse("v1/api/cases", dto);
+        PromatCase created = mapper.readValue(response.readEntity(String.class), PromatCase.class);
+        assertThat("status code", response.getStatus(), is(201));
+
+        // Send case to approval
+        CaseRequest requestDto = new CaseRequest().withStatus(CaseStatus.PENDING_APPROVAL);
+        response = postResponse("v1/api/cases/" + created.getId(), requestDto);
+        assertThat("status code", response.getStatus(), is(200));
+
+        // Case has issues
+        requestDto = new CaseRequest().withStatus(CaseStatus.PENDING_ISSUES);
+        response = postResponse("v1/api/cases/" + created.getId(), requestDto);
+        assertThat("status code", response.getStatus(), is(200));
+
+        // Reassign case without specifying a new status
+        requestDto = new CaseRequest()
+                .withReviewer(2);
+        response = postResponse("v1/api/cases/" + created.getId(), requestDto);
+        assertThat("status code", response.getStatus(), is(200));
+
+        // Send case to approval
+        requestDto = new CaseRequest().withStatus(CaseStatus.PENDING_APPROVAL);
+        response = postResponse("v1/api/cases/" + created.getId(), requestDto);
+        assertThat("status code", response.getStatus(), is(200));
+
+        // Case has issues
+        requestDto = new CaseRequest().withStatus(CaseStatus.PENDING_ISSUES);
+        response = postResponse("v1/api/cases/" + created.getId(), requestDto);
+        assertThat("status code", response.getStatus(), is(200));
+
+        // Reassign case and specify status ASSIGNED
+        requestDto = new CaseRequest()
+                .withReviewer(1)
+                .withStatus(CaseStatus.ASSIGNED);
+        response = postResponse("v1/api/cases/" + created.getId(), requestDto);
+        assertThat("status code", response.getStatus(), is(200));
+
+        // Delete the case
+        response = deleteResponse("v1/api/cases/" + created.getId());
+        assertThat("status code", response.getStatus(), is(200));
+    }
+
+    @Test
+    public void testStatusFlowToPendingCloseFromPendingApproval() throws JsonProcessingException {
+
+        // Create a new case
+        CaseRequest dto = new CaseRequest()
+                .withTitle("Title for 27001111")
+                .withDetails("Details for 27001111")
+                .withPrimaryFaust("27001111")
+                .withEditor(10)
+                .withReviewer(1)
+                .withSubjects(Arrays.asList(3, 4))
+                .withDeadline("2021-03-30")
+                .withMaterialType(MaterialType.BOOK);
+
+        Response response = postResponse("v1/api/cases", dto);
+        PromatCase created = mapper.readValue(response.readEntity(String.class), PromatCase.class);
+        assertThat("status code", response.getStatus(), is(201));
+
+        // Send case to approval
+        CaseRequest requestDto = new CaseRequest().withStatus(CaseStatus.PENDING_APPROVAL);
+        response = postResponse("v1/api/cases/" + created.getId(), requestDto);
+        assertThat("status code", response.getStatus(), is(200));
+
+        // CLose the case while including it in the next payroll
+        requestDto = new CaseRequest().withStatus(CaseStatus.PENDING_CLOSE);
+        response = postResponse("v1/api/cases/" + created.getId(), requestDto);
+        assertThat("status code", response.getStatus(), is(200));
+
+        // Delete the case
+        response = deleteResponse("v1/api/cases/" + created.getId());
+        assertThat("status code", response.getStatus(), is(200));
+    }
+
 }

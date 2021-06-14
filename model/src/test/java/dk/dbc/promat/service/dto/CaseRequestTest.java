@@ -13,8 +13,10 @@ import static org.hamcrest.MatcherAssert.assertThat;
 class CaseRequestTest {
     @Test
     void equals() {
-        final CaseRequest caseRequestDto1 = new CaseRequest().withRecordId("42424242");
-        final CaseRequest caseRequestDto2 = new CaseRequest().withRecordId("42424242");
+        // Note: This test makes little sense right now, but properties may be added again
+        // later on which needs testing, so we let the test stay as a placeholder
+        final CaseRequest caseRequestDto1 = new CaseRequest();
+        final CaseRequest caseRequestDto2 = new CaseRequest();
         assertThat(caseRequestDto1, is(caseRequestDto2));
     }
 }

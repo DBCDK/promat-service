@@ -22,7 +22,8 @@ values (1, 'Title for 001111', 'Details for 001111', '001111', '["002222","00333
        (20, 'Title for 100000', 'Details for 100000', '100000', '["100001", "100002"]', 1, 10,   '2021-01-09', '2021-02-09', '2021-01-10', 'EXPORTED', 'BOOK', 'BKM202104', '202104', 13, 'Author for 100000', 'Publisher for 100000'),
        (21, 'Title for 100003', 'Details for 100003', '100003', '[]',                   1, NULL, '2021-01-09', '2021-02-09', '2021-01-10', 'EXPORTED', 'BOOK', NULL,        '202104', 13, NULL,                 NULL),
        (22, 'Title for 100004', 'Details for 100004', '100004', '[]',                   1, NULL, '2021-01-09', '2021-02-09', '2021-01-10', 'EXPORTED', 'BOOK', NULL,        '202104', 13, NULL,                 NULL),
-       (23, 'Title for 100005', 'Details for 100005', '48959938', '["48959911", "48959954"]', 1, 10, '2021-03-08', '2021-04-08', '2021-03-08', 'PENDING_EXTERNAL', 'BOOK', '202108', null, 1, null, null);
+       (23, 'Title for 100005', 'Details for 100005', '48959938', '["48959911", "48959954"]', 1, 10, '2021-03-08', '2021-04-08', '2021-03-08', 'PENDING_EXTERNAL', 'BOOK', '202108', null, 1, null, null),
+       (24, 'Title for 100006', 'Details for 100006', '100006', '[]', 1, 10,   '2021-01-09', '2021-02-09', '2021-01-10', 'ASSIGNED', 'BOOK', 'BKM202104', '202104', 13, 'Author for 100000', 'Publisher for 100006');
 
 insert into promattask(id, tasktype, taskfieldtype, created, paycategory, approved, payed, data, targetFausts)
 values  (1,  'GROUP_1_LESS_THAN_100_PAGES', 'DESCRIPTION',    '202-12-10', 'GROUP_1_LESS_THAN_100_PAGES', '2020-12-10',  NULL,         NULL,                        '["001111", "002222", "003333"]'),
@@ -63,7 +64,16 @@ values  (1,  'GROUP_1_LESS_THAN_100_PAGES', 'DESCRIPTION',    '202-12-10', 'GROU
         (36, 'GROUP_1_LESS_THAN_100_PAGES', 'RECOMMENDATION', '2021-01-27', 'GROUP_1_LESS_THAN_100_PAGES', '2021-02-08', '2021-02-09', NULL,                        '["100004"]'),
         (37, 'GROUP_1_LESS_THAN_100_PAGES', 'EVALUATION',     '2021-01-27', 'GROUP_1_LESS_THAN_100_PAGES', '2021-02-08', '2021-02-09', NULL,                        '["100004"]'),
         (38, 'GROUP_1_LESS_THAN_100_PAGES', 'METAKOMPAS',     '2021-03-08', 'GROUP_1_LESS_THAN_100_PAGES', NULL,         '2021-02-09', NULL,                        '["48959911", "48959954"]'),
-        (39, 'GROUP_1_LESS_THAN_100_PAGES', 'METAKOMPAS',     '2021-03-08', 'GROUP_1_LESS_THAN_100_PAGES', NULL,         '2021-02-09', NULL,                        '["48959938"]');
+        (39, 'GROUP_1_LESS_THAN_100_PAGES', 'METAKOMPAS',     '2021-03-08', 'GROUP_1_LESS_THAN_100_PAGES', NULL,         '2021-02-09', NULL,                        '["48959938"]'),
+        (40, 'GROUP_1_LESS_THAN_100_PAGES', 'BRIEF',          '2021-01-27', 'BRIEF',                       '2021-02-08', '2021-02-09', 'BRIEF TEXT FOR 100000 ÆØÅ', '["100006"]'),
+        (41, 'GROUP_1_LESS_THAN_100_PAGES', 'BKM',            '2021-01-27', 'BKM',                         '2021-02-08', '2021-02-09', 'Bogen findes relevant for biblioteker på Christiansø', '["100006"]'),
+        (42, 'GROUP_1_LESS_THAN_100_PAGES', 'DESCRIPTION',    '2021-01-27', 'GROUP_1_LESS_THAN_100_PAGES', '2021-02-08', '2021-02-09', 'DESCRIPTION TEXT',          '["100006"]'),
+        (43, 'GROUP_1_LESS_THAN_100_PAGES', 'EVALUATION',     '2021-01-27', 'GROUP_1_LESS_THAN_100_PAGES', '2021-02-08', '2021-02-09', 'EVALUATION TEXT',           '["100006"]'),
+        (44, 'GROUP_1_LESS_THAN_100_PAGES', 'COMPARISON',     '2021-01-27', 'GROUP_1_LESS_THAN_100_PAGES', '2021-02-08', '2021-02-09', 'TEXT BEFORE <t>48611435 Jeg tæller mine skridt</t> TEXT BETWEEN <t>48611435 Hest horse Pferd cheval love</t> TEXT AFTER', '["100006"]'),
+        (45, 'GROUP_1_LESS_THAN_100_PAGES', 'RECOMMENDATION', '2021-01-27', 'GROUP_1_LESS_THAN_100_PAGES', '2021-02-08', '2021-02-09', 'RECOMMENDATION TEXT',       '["100006"]'),
+        (46, 'GROUP_1_LESS_THAN_100_PAGES', 'TOPICS',         '2021-01-27', 'GROUP_1_LESS_THAN_100_PAGES', '2021-02-08', '2021-02-09', 'TOPIC_1, TOPIC_2, TOPIC_3', '["100006"]'),
+        (47, 'GROUP_1_LESS_THAN_100_PAGES', 'AGE',            '2021-01-27', 'GROUP_1_LESS_THAN_100_PAGES', '2021-02-08', '2021-02-09', 'AGE TEXT',                  '["100006"]'),
+        (48, 'GROUP_1_LESS_THAN_100_PAGES', 'MATLEVEL',       '2021-01-27', 'GROUP_1_LESS_THAN_100_PAGES', '2021-02-08', '2021-02-09', 'MATLEVEL TEXT',             '["100006"]');
 
 insert into casetasks(case_id, task_id)
 values (1, 1),
@@ -104,4 +114,13 @@ values (1, 1),
        (22, 36),
        (22, 37),
        (23, 38),
-       (23, 39);
+       (23, 39),
+       (24, 40),
+       (24, 41),
+       (24, 42),
+       (24, 43),
+       (24, 44),
+       (24, 45),
+       (24, 46),
+       (24, 47),
+       (24, 48);

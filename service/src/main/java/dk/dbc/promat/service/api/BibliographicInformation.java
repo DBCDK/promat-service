@@ -12,7 +12,7 @@ public class BibliographicInformation {
 
     private String faust = "";
     private String creator = "";
-    private String dk5 = "";
+    private List<String> dk5 = new ArrayList<>();
     private List<String> isbn = new ArrayList<>();
     private List<String> materialtypes = new ArrayList<>();
     private String extent = "";
@@ -31,7 +31,7 @@ public class BibliographicInformation {
         return creator;
     }
 
-    public String getDk5() {
+    public List<String> getDk5() {
         return dk5;
     }
 
@@ -83,7 +83,7 @@ public class BibliographicInformation {
         this.creator = creator;
     }
 
-    public void setDk5(String dk5) {
+    public void setDk5(List<String> dk5) {
         this.dk5 = dk5;
     }
 
@@ -133,7 +133,7 @@ public class BibliographicInformation {
         return this;
     }
 
-    public BibliographicInformation withDk5(String dk5) {
+    public BibliographicInformation withDk5(List<String> dk5) {
         this.dk5 = dk5;
         return this;
     }

@@ -122,7 +122,20 @@ public class PromatServiceConnector {
      * @throws PromatServiceConnectorException on unexpected failure for get operation
      */
     public String getCaseview(String faust, String format) throws PromatServiceConnectorException {
-        return getCaseview(faust, format, StandardCharsets.UTF_8);
+        return getCaseview(faust, format, false, StandardCharsets.UTF_8);
+    }
+
+    /**
+     * Gets an existing case as a html view by overriding the status check so than any
+     * case can be viewed no matter which status it is in
+     * Document is expected to be in UTF-8
+     * @param faust Faust number
+     * @param format Document format (HTML|XML)
+     * @return caseview
+     * @throws PromatServiceConnectorException on unexpected failure for get operation
+     */
+    public String getCaseviewWithOverride(String faust, String format) throws PromatServiceConnectorException {
+        return getCaseview(faust, format, true, StandardCharsets.UTF_8);
     }
 
     /**
@@ -134,9 +147,23 @@ public class PromatServiceConnector {
      * @throws PromatServiceConnectorException on unexpected failure for get operation
      */
     public String getCaseview(String faust, String format, Charset charset) throws PromatServiceConnectorException {
+        return getCaseview(faust, format, false, charset);
+    }
+
+    /**
+     * Gets an existing case as a html view, suitable for embedded display in DBCKat a.o.
+     * @param faust Faust number
+     * @param format Document format (HTML|XML)
+     * @param override Override status check (allow fetching view of case not in status APPROVED or better)
+     * @param charset Document charset
+     * @return caseview
+     * @throws PromatServiceConnectorException on unexpected failure for get operation
+     */
+    public String getCaseview(String faust, String format, boolean override, Charset charset) throws PromatServiceConnectorException {
         final HttpGet httpGet = new HttpGet(failSafeHttpClient)
                 .withBaseUrl(baseUrl)
-                .withPathElements("cases", format, faust);
+                .withPathElements("cases", format, faust)
+                .withQueryParameter("override", override);
         final Response response = httpGet.execute();
         assertResponseStatus(response, Response.Status.OK);
         byte[] view = readResponseEntity(response, byte[].class);

@@ -588,8 +588,52 @@ paths:
     get:
       tags:
         - cases
-      summary: Returns view of the case with the given faustnumber. Used by DBCKat
+      summary: Returns view of the case with the given faustnumber. Used by promat
       operationId: getView
+      parameters:
+        - in: path
+          name: faust
+          required: true
+          schema:
+            type: string
+            description: Faustnumber (primary or related)
+        - in: path
+          name: format
+          required: true
+          schema:
+            $ref: '#/components/schemas/CaseviewFormat'
+            description: Format of the returned view
+        - in: query
+          name: override
+          required: false
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '200':
+          description: successful operation. The case view for the case is returned
+          content:
+            text/html:
+              schema:
+                type: string
+                format: binary
+            text/xml:
+              schema:
+                type: string
+                format: binary
+        '404':
+          description: Case with this faustnumber could not be found or case do not have an acceptable state
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+
+  /cases/{format}/override/{faust}:
+    get:
+      tags:
+        - cases
+      summary: Returns view of the case with the given faustnumber disregarding case status. Used by DBCKat
+      operationId: getViewWithOverride
       parameters:
         - in: path
           name: faust
