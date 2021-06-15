@@ -10,6 +10,7 @@ import dk.dbc.promat.service.dto.ServiceErrorCode;
 import dk.dbc.promat.service.persistence.PayCategory;
 import dk.dbc.promat.service.persistence.PromatEntityManager;
 import dk.dbc.promat.service.persistence.Subject;
+import dk.dbc.promat.service.persistence.SubjectNote;
 import dk.dbc.promat.service.persistence.TaskFieldType;
 import dk.dbc.promat.service.persistence.TaskType;
 
@@ -70,6 +71,23 @@ public class Repository {
             subjects.add(subject);
         }
         return subjects;
+    }
+
+    public List<SubjectNote> checkSubjectNotes(List<SubjectNote> subjectNotes, List<Integer> reviewerSubjectIds) throws ServiceErrorException {
+        if (subjectNotes == null || subjectNotes.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        for (SubjectNote subjectNote : subjectNotes) {
+            if (!reviewerSubjectIds.contains(subjectNote.getSubjectId())) {
+                throw new ServiceErrorException("Attempt to resolve subjectNote in reviewers subjects failed")
+                        .withHttpStatus(400)
+                        .withCode(ServiceErrorCode.INVALID_REQUEST)
+                        .withCause("No such subject")
+                        .withDetails(String.format("Field 'subjects' values '%s' has no subject %s", reviewerSubjectIds, subjectNote.getSubjectId()));
+            }
+        }
+        return subjectNotes;
     }
 
     public static PayCategory getPayCategoryForTaskFieldTypeOfTaskType(TaskType taskType, TaskFieldType taskFieldType) throws ServiceErrorException {

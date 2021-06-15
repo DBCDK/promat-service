@@ -23,6 +23,7 @@
     <class>dk.dbc.promat.service.persistence.RoleConverter</class>
     <class>dk.dbc.promat.service.persistence.Subject</class>
     <class>dk.dbc.promat.service.persistence.PromatMessage</class>
+    <class>dk.dbc.promat.service.persistence.SubjectNote</class>
     <shared-cache-mode>DISABLE_SELECTIVE</shared-cache-mode>
     <properties>
       <property name="javax.persistence.schema-generation.database.action" value="none"/>
@@ -43,6 +44,7 @@
     <class>dk.dbc.commons.jpa.converter.StringListToJsonArrayConverter</class>
     <class>dk.dbc.promat.service.persistence.AcceptsListToJsonArrayConverter</class>
     <class>dk.dbc.promat.service.persistence.RoleConverter</class>
+    <class>dk.dbc.promat.service.persistence.SubjectNote</class>
     <properties>
       <property name="javax.persistence.schema-generation.database.action" value="none"/>
     </properties>

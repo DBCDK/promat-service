@@ -34,7 +34,8 @@ public class SubjectsIT extends ContainerTest {
                         new Subject().withId(2).withName("Roman").withParentId(1),
                         new Subject().withId(3).withName("Eventyr, fantasy").withParentId(2),
                         new Subject().withId(4).withName("Digte").withParentId(1),
-                        new Subject().withId(5).withName("Multimedie")
+                        new Subject().withId(5).withName("Multimedie"),
+                        new Subject().withId(6).withName("(Et Mulitmedie underemne)").withParentId(5)
                 ));
 
         SubjectList actual = jsonbContext
