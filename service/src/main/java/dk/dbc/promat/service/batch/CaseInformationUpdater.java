@@ -13,6 +13,8 @@ import dk.dbc.promat.service.persistence.PromatCase;
 import dk.dbc.promat.service.persistence.PromatTask;
 import dk.dbc.promat.service.persistence.TaskFieldType;
 import dk.dbc.promat.service.util.PromatTaskUtils;
+
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import org.eclipse.microprofile.metrics.ConcurrentGauge;
 import org.eclipse.microprofile.metrics.Metadata;
@@ -204,14 +206,23 @@ public class CaseInformationUpdater {
     }
 
     private Boolean weekcodeMatchOrBefore(PromatCase promatCase) {
-        LocalDate date = LocalDate.now();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyw", new Locale("da", "DK"));
+
+        LocalDate date = LocalDate.now();
+        LOGGER.info("Today is {} weekcode {}", date, date.format(formatter));
+
+        // We want to promote cases with next weeks weekcode (effectively current weekcode by friday = shiftday)
+        date = date.plusWeeks(1);
+        LOGGER.info("Next week is {} weekcode {}", date, date.format(formatter));
+
+        // Get todays weekcode
         String todaysWeekcode = date.format(formatter);
         Integer today = Integer.parseInt(todaysWeekcode);
 
         // Do not use trimmedWeekcode, it is set by the db on update, and the entity
         // might not have been commited before we get to this line
         Integer caseWeekcode = Integer.parseInt(promatCase.getWeekCode().substring(3));
+        LOGGER.info("caseWeekcode = {}, today (shifted) = {}", caseWeekcode, today);
 
         return caseWeekcode <= today;
     }

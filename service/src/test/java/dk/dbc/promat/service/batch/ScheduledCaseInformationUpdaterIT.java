@@ -536,7 +536,7 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
         OpenFormatHandler mockedHandler = mock(OpenFormatHandler.class);
         upd.caseInformationUpdater.openFormatHandler = mockedHandler;
 
-        LocalDate date = LocalDate.now();
+        LocalDate date = LocalDate.now().plusWeeks(1);
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyw", new Locale("da", "DK"));
 
         created.setStatus(CaseStatus.APPROVED);
@@ -580,7 +580,7 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
         OpenFormatHandler mockedHandler = mock(OpenFormatHandler.class);
         upd.caseInformationUpdater.openFormatHandler = mockedHandler;
 
-        LocalDate date = LocalDate.now().plusWeeks(1);
+        LocalDate date = LocalDate.now().plusWeeks(2);
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyw", new Locale("da", "DK"));
 
         created.setStatus(CaseStatus.APPROVED);
