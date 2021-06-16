@@ -24,14 +24,21 @@ delete from promatcase
 delete from promatcase
     where id in (1000, 1010, 1020, 1030, 1040, 1050, 1060, 1070, 1080, 1090, 1100, 1110, 1120, 1130, 1140, 1150, 1160, 1170, 1180);
 --
-delete from promatuser
-where id in (4900, 4901, 4950, 4951, 4952, 4953, 4954);
---
 delete from notification
     where id in (1, 2, 3);
 --
+delete from reviewersubjectnotes
+where reviewer_id in (4900, 4901);
+---
+delete from subjectnote
+    where id in (1, 2, 3);
+--
 delete from subject
-    where id in (4901, 4902, 4903, 4904, 4905);
+where id in (4901, 4902, 4903, 4904, 4905);
+--
+delete from promatuser
+where id in (4900, 4901, 4950, 4951, 4952, 4953, 4954);
+--
 
 -- Reviewers
 -- Last migrated reviewer has id 3441, sequence restarts at 5000 = put reviewers in range 4900-4949
@@ -69,6 +76,17 @@ values(4905,4900),
       (4905,4901),
       (4904,4901),
       (4904,4900);
+
+-- Subjectnotes
+insert into subjectnote(id, subject_id, note)
+values(1, 4905, 'Note for 4900 on 4905'),
+      (2, 4903, 'Note for 4900 on 4903'),
+      (3, 4904, 'Note for 4901 on 4904');
+
+insert into reviewersubjectnotes(subjectnote_id, reviewer_id)
+values(1, 4900),
+      (2, 4900),
+      (3, 4901) ;
 
 -- Cases and tasks.
 -- First migrated case has at 130214, sequence starts at 500000 = put cases at id 1-10.000
@@ -464,11 +482,11 @@ insert into promatcase(id, title, details, primaryFaust, relatedFausts, reviewer
 values (1140, 'Case 15', 'Details', '1001140', '["1001141", "1001142"]', 4901, 4950, '2021-01-13', '2021-02-13', '2021-01-13', 'EXPORTED', 'MOVIE');
 
 insert into promattask(id, tasktype, taskfieldtype, created, paycategory, approved, payed, data, targetFausts)
-values  (401141, 'MOVIES_GR_2', 'BRIEF',          '2021-01-13', 'BRIEF',       '2020-12-13', '2020-12-21 12:13:14.567', 'data', NULL),
-        (401142, 'MOVIES_GR_2', 'DESCRIPTION',    '2021-01-13', 'MOVIES_GR_2', '2020-12-13', '2020-12-21 12:13:14.567', 'data', NULL),
-        (401143, 'MOVIES_GR_2', 'EVALUATION',     '2021-01-13', 'MOVIES_GR_2', '2020-12-13', '2020-12-21 12:13:14.567', 'data', NULL),
-        (401144, 'MOVIES_GR_2', 'COMPARISON',     '2021-01-13', 'MOVIES_GR_2', '2020-12-13', '2020-12-21 12:13:14.567', 'data', NULL),
-        (401145, 'MOVIES_GR_2', 'RECOMMENDATION', '2021-01-13', 'MOVIES_GR_2', '2020-12-13', '2020-12-21 12:13:14.567', 'data', NULL),
+values  (401141, 'MOVIES_GR_2', 'BRIEF',          '2021-01-13', 'BRIEF',       '2020-12-13', '2020-12-21 12:13:14.567', 'data', '[1001140]'),
+        (401142, 'MOVIES_GR_2', 'DESCRIPTION',    '2021-01-13', 'MOVIES_GR_2', '2020-12-13', '2020-12-21 12:13:14.567', 'data', '[1001140]'),
+        (401143, 'MOVIES_GR_2', 'EVALUATION',     '2021-01-13', 'MOVIES_GR_2', '2020-12-13', '2020-12-21 12:13:14.567', 'data', '[1001140]'),
+        (401144, 'MOVIES_GR_2', 'COMPARISON',     '2021-01-13', 'MOVIES_GR_2', '2020-12-13', '2020-12-21 12:13:14.567', 'data', '[1001140]'),
+        (401145, 'MOVIES_GR_2', 'RECOMMENDATION', '2021-01-13', 'MOVIES_GR_2', '2020-12-13', '2020-12-21 12:13:14.567', 'data', '[1001140]'),
         (401147, 'MOVIES_GR_2', 'BRIEF',          '2021-01-13', 'BRIEF',       '2021-01-13', NULL,                      'data', '[1001142]');
 
 insert into casetasks(case_id, task_id)
