@@ -15,6 +15,7 @@ import dk.dbc.promat.service.persistence.PromatCase;
 import dk.dbc.promat.service.persistence.Reviewer;
 import dk.dbc.promat.service.persistence.TaskFieldType;
 import dk.dbc.promat.service.templating.model.AssignReviewer;
+import dk.dbc.promat.service.templating.model.MailToReviewerOnNewMessage;
 import dk.dbc.promat.service.templating.model.ReviewerDataChanged;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -54,12 +55,15 @@ public class NotificationFactory {
     private final Renderer renderer = new Renderer();
     private static String subjectTemplate;
     private static String subjectTemplateReviewerChanged;
+    private static String subjectTemplateNewMessageFromEditor;
     static {
         try {
             subjectTemplate = Files.readString(
                     Path.of(Notification.class.getResource("/mail/subject.template").getPath()));
             subjectTemplateReviewerChanged = Files.readString(
                     Path.of(Notification.class.getResource("/mail/subject.reviewer.change.template").getPath()));
+            subjectTemplateNewMessageFromEditor = Files.readString(
+                    Path.of(Notification.class.getResource("/mail/subject.reviewer.new.message.template").getPath()));
         } catch (IOException ioException) {
             throw new RuntimeException(ioException);
         }
@@ -109,6 +113,20 @@ public class NotificationFactory {
             throw new ValidateException(e);
         }
     }
+
+    public Notification notificationOf(MailToReviewerOnNewMessage model) throws ValidateException {
+        Notification notification = new Notification();
+
+        Reviewer reviewer = model.getPromatCase().getReviewer();
+        String subject = String.format(subjectTemplateNewMessageFromEditor, model.getPromatCase().getTitle());
+        String mailAddress = reviewer.getAddress().getSelected() ? reviewer.getEmail() : reviewer.getPrivateEmail();
+        return notification
+                .withToAddress(mailAddress)
+                .withSubject(subject)
+                .withBodyText(renderer.render("new_message_to_reviewer_mail.jte", model)).withStatus(NotificationStatus.PENDING);
+
+    }
+
 
 
     private List<BibliographicInformation> getTitleSections(List<String> fausts) throws OpenFormatConnectorException {
