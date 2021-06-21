@@ -7,11 +7,14 @@ import dk.dbc.promat.service.dto.MessageRequestDto;
 import dk.dbc.promat.service.dto.PromatMessagesList;
 import dk.dbc.promat.service.dto.ServiceErrorDto;
 import dk.dbc.promat.service.persistence.Editor;
+import dk.dbc.promat.service.persistence.Notification;
 import dk.dbc.promat.service.persistence.PromatCase;
 import dk.dbc.promat.service.persistence.PromatEntityManager;
 import dk.dbc.promat.service.persistence.PromatMessage;
 import dk.dbc.promat.service.persistence.PromatUser;
 import dk.dbc.promat.service.persistence.Reviewer;
+import dk.dbc.promat.service.templating.NotificationFactory;
+import dk.dbc.promat.service.templating.model.MailToReviewerOnNewMessage;
 import java.time.LocalDateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,7 +33,6 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.time.LocalDate;
 import java.util.List;
 
 @Stateless
@@ -45,6 +47,9 @@ public class Messages {
 
     @EJB
     Repository repository;
+
+    @EJB
+    NotificationFactory notificationFactory;
 
     @POST
     @Path("cases/{caseId}/messages/{userId}")
@@ -79,7 +84,13 @@ public class Messages {
                     .withCreated(LocalDateTime.now())
                     .withIsRead(Boolean.FALSE);
 
-            // Todo: Should we also send a mail when EDITOR_TO_REVIEWER?
+            // Send a mail when EDITOR_TO_REVIEWER
+            if (promatMessage.getDirection() == PromatMessage.Direction.EDITOR_TO_REVIEWER) {
+                Notification notification = notificationFactory.notificationOf(
+                        new MailToReviewerOnNewMessage().withMessage(promatMessage).withPromatCase(promatCase)
+                );
+                entityManager.persist(notification);
+            }
 
             entityManager.persist(promatMessage);
             entityManager.flush();

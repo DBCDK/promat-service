@@ -15,8 +15,14 @@ import dk.dbc.promat.service.persistence.MaterialType;
 import dk.dbc.promat.service.persistence.Notification;
 import dk.dbc.promat.service.persistence.PromatCase;
 import dk.dbc.promat.service.persistence.PromatMessage;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.Collectors;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -79,7 +85,7 @@ public class MessagesIT extends ContainerTest {
     }
 
     @Test
-    public void createACaseAndSendSomeMessages() throws JsonProcessingException {
+    public void createACaseAndSendSomeMessages() throws IOException {
         final int REVIEWER_ID = 4;
         final int EDITOR_ID = 10;
         final int ANOTHER_EDITOR_ID = 11;
@@ -106,14 +112,16 @@ public class MessagesIT extends ContainerTest {
 
         assertThat("status code", response.getStatus(), is(201));
 
-        // Editor comments on that
+        // Editor comments on that (reviewer will also receivce a mail)
         response = postMessage(aCase.getId(), "Hi Kirsten\n Good to hear!",
                 EDITOR_ID, PromatMessage.Direction.EDITOR_TO_REVIEWER);
         assertThat("status code", response.getStatus(), is(201));
 
-        // Another editor interferes.
+        // Another editor interferes (reviewer will also receivce a mail).
         response = postMessage(aCase.getId(),
-                "Hi Kirsten\n Since E is on vacation, for the next week, I will (...)",
+                "Hi Kirsten\n Since E is on vacation, for the next week, I will probably" +
+                        " be handling the case from now on.\n I myself will be on vacation for the next " +
+                        "14 years though.\n Trying to beat the record!\n Yours Sincerely\nEdit.",
                 ANOTHER_EDITOR_ID, PromatMessage.Direction.EDITOR_TO_REVIEWER);
         assertThat("status code", response.getStatus(), is(201));
 
@@ -160,11 +168,18 @@ public class MessagesIT extends ContainerTest {
                 size(getMessageList(aCase), PromatMessage.Direction.REVIEWER_TO_EDITOR),
                 is(1L));
 
-        // Make sure that ONLY the assignment-mail is sent to reviewer
-        assertThat( "Only one mail is sent to reviewer",
+        // Make sure that three mails are sent to reviewer:
+        // 1) The assignment mail /* todo: Should the message part be left out? So this is simply a mail?
+        // 2) The follow up message/mail from main editor
+        // 3) The vacation stand-in editor informs
+        assertThat( "Three mails are sent to the reviewer",
                 size(getNotifications(), "kirsten@kirstensen.dk"),
-                is(1L)
+                is(3L)
         );
+
+        assertThat("Two out of the three informs of messages from editor (not assignment)",
+                size(getNotifications("Ny besked fra redaktøren på ProMat anmeldelse", null), "kirsten@kirstensen.dk"),
+                is(2L));
 
         // Make sure that no mails were sent to editor
         assertThat( "No mails are sent to editor",
@@ -172,7 +187,12 @@ public class MessagesIT extends ContainerTest {
                 is(0L)
         );
 
-        // Todo: Rework this when all messages sent to reviewer also results in mails.
+        String expectedBodyText =
+                Files.readString(Path.of("src/test/resources/mailBodys/messageFromTheEditor.html"));
+        assertThat("Mails sent about new messages from the editor are formattet ok",
+                getNotifications("Ny besked fra redaktøren på ProMat anmeldelse",
+                        "Since E is on vacation, for the next week").get(0).getBodyText(),
+                is(expectedBodyText));
 
     }
 
@@ -200,13 +220,29 @@ public class MessagesIT extends ContainerTest {
         return mapper.readValue(response.readEntity(String.class), PromatMessagesList.class);
     }
 
-    private List<Notification> getNotifications() {
+    private List<Notification> getNotifications(String subjectWildcard, String bodyTextWildcard) {
         TypedQuery<Notification> query = entityManager
                 .createQuery("SELECT notification " +
                         "FROM Notification notification ORDER BY notification.id", Notification.class);
-        List<Notification> notifications = query.getResultList();
+        List<Notification> allNotifications = query.getResultList();
+        List<Notification> notifications = new ArrayList<>();
+        if (subjectWildcard != null) {
+            notifications = allNotifications.stream().filter(notification ->
+                    notification.getSubject().contains(subjectWildcard)).collect(Collectors.toList());
+        } else {
+            notifications = new ArrayList<>(allNotifications);
+        }
+        if (bodyTextWildcard != null) {
+            notifications = notifications.stream().filter(notification ->
+                    notification.getBodyText().contains(bodyTextWildcard)).collect(Collectors.toList());
+        }
         return notifications;
     }
+
+    private List<Notification> getNotifications() {
+        return getNotifications(null, null);
+    }
+
 
     private long size(List<Notification> notifications, String mailAddress) {
         return notifications.stream().filter(notification -> notification.getToAddress().equals(mailAddress)).count();
