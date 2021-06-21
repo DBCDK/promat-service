@@ -119,11 +119,15 @@ public class CaseInformationUpdater {
                         PromatTaskUtils.getTaskForMainFaust(promatCase, TaskFieldType.METAKOMPAS);
                 if (METAKOMPASDATA_PRESENT.equals(bibliographicInformation.getMetakompassubject()) &&
                         metakompasTaskMainFaust.isPresent()) {
+                    PromatTask task = metakompasTaskMainFaust.get();
                     if (!METAKOMPASDATA_PRESENT.equals(metakompasTaskMainFaust.get().getData())) {
                         LOGGER.info("Updating metakompas for main faust: '{}' ==> '{}' of case with id {}",
                                 promatCase.getPrimaryFaust(), METAKOMPASDATA_PRESENT, promatCase.getId());
-                        PromatTask task = metakompasTaskMainFaust.get();
                         task.setData(METAKOMPASDATA_PRESENT);
+                    }
+                    // Case might have taken additional rounds, in which 'approved' might have been removed.
+                    // But it is possible METAKOMPAS pin remains unchanged.
+                    if (task.getApproved() == null) {
                         task.setApproved(LocalDate.now());
                     }
                 }
