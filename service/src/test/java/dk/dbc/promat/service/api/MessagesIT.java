@@ -189,7 +189,7 @@ public class MessagesIT extends ContainerTest {
 
         String expectedBodyText =
                 Files.readString(Path.of("src/test/resources/mailBodys/messageFromTheEditor.html"));
-        assertThat("Mails sent about new messages from the editor are formattet ok",
+        assertThat("Mails sent about new messages from the editor are formatted ok",
                 getNotifications("Ny besked fra redaktøren på ProMat anmeldelse",
                         "Since E is on vacation, for the next week").get(0).getBodyText(),
                 is(expectedBodyText));
