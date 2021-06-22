@@ -117,7 +117,7 @@ public class CaseInformationUpdater {
                 // Main faust
                 Optional<PromatTask> metakompasTaskMainFaust =
                         PromatTaskUtils.getTaskForMainFaust(promatCase, TaskFieldType.METAKOMPAS);
-                if (METAKOMPASDATA_PRESENT.equals(bibliographicInformation.getMetakompassubject()) &&
+                if (METAKOMPASDATA_PRESENT.equals(bibliographicInformation.getMetakompassubject().strip()) &&
                         metakompasTaskMainFaust.isPresent()) {
                     PromatTask task = metakompasTaskMainFaust.get();
                     if (!METAKOMPASDATA_PRESENT.equals(metakompasTaskMainFaust.get().getData())) {
@@ -128,6 +128,8 @@ public class CaseInformationUpdater {
                     // Case might have taken additional rounds, in which 'approved' might have been removed.
                     // But it is possible METAKOMPAS pin remains unchanged.
                     if (task.getApproved() == null) {
+                        LOGGER.info("Approving task metakompas for main faust: '{}' of case: {}",
+                                promatCase.getPrimaryFaust(), promatCase.getId());
                         task.setApproved(LocalDate.now());
                     }
                 }
