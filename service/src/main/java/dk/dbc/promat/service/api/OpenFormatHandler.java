@@ -7,6 +7,7 @@ package dk.dbc.promat.service.api;
 
 import dk.dbc.connector.openformat.OpenFormatConnector;
 import dk.dbc.connector.openformat.OpenFormatConnectorException;
+import dk.dbc.connector.openformat.model.OpenFormatValue;
 import dk.dbc.connector.openformat.model.formats.Promat.PromatElements;
 import dk.dbc.connector.openformat.model.formats.Promat.PromatEntity;
 import org.slf4j.Logger;
@@ -80,7 +81,9 @@ public class OpenFormatHandler {
                         .collect(Collectors.toList())
                 : new ArrayList<>())
         .withTitle(elements.getTitle().getValue())
-        .withTargetgroup(elements.getTargetgroup().getValue())
+        .withTargetgroup(elements.getTargetgroup() != null ?
+                elements.getTargetgroup().stream().map(OpenFormatValue::getValue).collect(Collectors.toList())
+                : new ArrayList<>())
         .withMetakompassubject(elements.getMetakompassubject().getValue());
     }
 }

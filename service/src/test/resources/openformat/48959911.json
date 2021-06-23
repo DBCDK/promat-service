@@ -14,7 +14,7 @@
     "BKM202047"
   ],
   "title": "Farlige forbindelser",
-  "targetgroup": "v",
+  "targetgroup": ["v"],
   "metakompassubject": "true"
 }
 

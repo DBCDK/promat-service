@@ -117,13 +117,19 @@ public class CaseInformationUpdater {
                 // Main faust
                 Optional<PromatTask> metakompasTaskMainFaust =
                         PromatTaskUtils.getTaskForMainFaust(promatCase, TaskFieldType.METAKOMPAS);
-                if (METAKOMPASDATA_PRESENT.equals(bibliographicInformation.getMetakompassubject()) &&
+                if (METAKOMPASDATA_PRESENT.equals(bibliographicInformation.getMetakompassubject().strip()) &&
                         metakompasTaskMainFaust.isPresent()) {
+                    PromatTask task = metakompasTaskMainFaust.get();
                     if (!METAKOMPASDATA_PRESENT.equals(metakompasTaskMainFaust.get().getData())) {
                         LOGGER.info("Updating metakompas for main faust: '{}' ==> '{}' of case with id {}",
                                 promatCase.getPrimaryFaust(), METAKOMPASDATA_PRESENT, promatCase.getId());
-                        PromatTask task = metakompasTaskMainFaust.get();
                         task.setData(METAKOMPASDATA_PRESENT);
+                    }
+                    // Case might have taken additional rounds, in which 'approved' might have been removed.
+                    // But it is possible METAKOMPAS pin remains unchanged.
+                    if (task.getApproved() == null) {
+                        LOGGER.info("Approving task metakompas for main faust: '{}' of case: {}",
+                                promatCase.getPrimaryFaust(), promatCase.getId());
                         task.setApproved(LocalDate.now());
                     }
                 }
@@ -138,7 +144,7 @@ public class CaseInformationUpdater {
                     boolean allIsPresent = task.getTargetFausts()
                             .stream().allMatch(s -> {
                                 try {
-                                    String present = openFormatHandler.format(s).getMetakompassubject();
+                                    String present = openFormatHandler.format(s).getMetakompassubject().strip();
                                     return METAKOMPASDATA_PRESENT.equals(present);
                                 } catch (OpenFormatConnectorException e) {
                                     LOGGER.error("Unable to look up faust {}, {}", s, e);

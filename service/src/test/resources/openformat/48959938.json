@@ -14,6 +14,6 @@
     "BKM202047"
   ],
   "title": "Patent på mord",
-  "targetgroup": "v",
+  "targetgroup": ["v"],
   "metakompassubject": "true"
 }
