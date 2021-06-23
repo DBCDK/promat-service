@@ -144,7 +144,7 @@ public class CaseInformationUpdater {
                     boolean allIsPresent = task.getTargetFausts()
                             .stream().allMatch(s -> {
                                 try {
-                                    String present = openFormatHandler.format(s).getMetakompassubject();
+                                    String present = openFormatHandler.format(s).getMetakompassubject().strip();
                                     return METAKOMPASDATA_PRESENT.equals(present);
                                 } catch (OpenFormatConnectorException e) {
                                     LOGGER.error("Unable to look up faust {}, {}", s, e);
