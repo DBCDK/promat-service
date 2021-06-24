@@ -65,7 +65,7 @@ public enum CaseStatus {
         an external system
 
         Transition from:    PENDING_APPROVAL
-        Transition to:      APPROVED
+        Transition to:      APPROVED, PENDING_ISSUES
         Payable:            No
         Visible in DBCKat   No
     */
@@ -75,7 +75,7 @@ public enum CaseStatus {
         Editor has approved the review and/or all external checks has resolved into 'done'
 
         Transition from:    PENDING_APPROVAL, PENDING_EXTERNAL
-        Transition to:      PENDING_MEETING
+        Transition to:      PENDING_MEETING, PENDING_ISSUES
         Payable:            Yes
         Visible in DBCKat   Yes
     */
@@ -86,7 +86,7 @@ public enum CaseStatus {
         matches the current (or earlier) week. Review is now a candidate for export
 
         Transition from:    APPROVED
-        Transition to:      PENDING_EXPORT
+        Transition to:      PENDING_EXPORT, PENDING_ISSUES
         Payable:            Yes
         Visible in DBCKat   Yes
     */
@@ -96,7 +96,7 @@ public enum CaseStatus {
         Review has been selected for export by the editors
 
         Transition from:    PENDING_MEETING, EXPORTED
-        Transition to:      EXPORTED
+        Transition to:      EXPORTED, PENDING_ISSUES
         Payable:            Yes
         Visible in DBCKat   Yes
     */
