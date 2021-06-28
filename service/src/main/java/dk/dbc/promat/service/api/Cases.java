@@ -685,8 +685,16 @@ public class Cases {
                 if(status == CaseStatus.PENDING_CLOSE) {
                     approveBkmTasks(existing);
                 } else if(APPROVE_TASKS_ALLOWED_STATES.contains(status)) {
-                    approveTasks(existing);
+                    approveTasks(existing, false);
                 }
+
+                // If status is changing from PENDING_EXTERNAL to APPROVED, any metakompas tasks
+                // should also be approved
+                if( existing.getStatus() == CaseStatus.PENDING_EXTERNAL && status == CaseStatus.APPROVED ) {
+                    LOGGER.info("Promoting metakompas task on case {} to APPROVED prematurely by user request");
+                    approveTasks(existing, true);
+                }
+
                 existing.setStatus(status);
 
                 // If status changed to PENDING_EXPORT, the case must be enriched with a new faustnumber
@@ -1101,14 +1109,19 @@ public class Cases {
                 return CaseStatus.PENDING_CLOSE;
 
             case APPROVED:
-                if (existing.getStatus() != CaseStatus.PENDING_APPROVAL) {
-                    throw new ServiceErrorException("Not allowed to set status APPROVED when case is not in PENDING_APPROVAL")
-                            .withDetails("Attempt to set status of case to APPROVED when case is not in status PENDING_APPROVAL")
+                if (existing.getStatus() != CaseStatus.PENDING_APPROVAL && existing.getStatus() != CaseStatus.PENDING_EXTERNAL) {
+                    throw new ServiceErrorException("Not allowed to set status APPROVED when case is not in PENDING_APPROVAL or PENDING_EXTERNAL")
+                            .withDetails("Attempt to set status of case to APPROVED when case is not in status PENDING_APPROVAL or PENDING_EXTERNAL")
                             .withHttpStatus(400)
                             .withCode(ServiceErrorCode.INVALID_REQUEST);
                 }
 
+                // If case is already PENDING_EXTERNAL, move to approved, otherwise check if we need to wait for metakompas topics
+                if( existing.getStatus() == CaseStatus.PENDING_EXTERNAL ) {
+                    return CaseStatus.APPROVED;
+                }
 
+                // Check if the case should go to PENDING_EXTERNAL to wait for metakompas topics, or can be approved now
                 if (existing.getTasks().stream()
                         .filter(task -> task.getTaskFieldType() == TaskFieldType.METAKOMPAS && task.getApproved() == null)
                         .count() != 0) {
@@ -1172,9 +1185,9 @@ public class Cases {
         }
     }
 
-    private void approveTasks(PromatCase existing) {
+    private void approveTasks(PromatCase existing, boolean allTasks) {
         for (PromatTask task : new ArrayList<>(existing.getTasks())) {
-            if (task.getTaskFieldType() != TaskFieldType.METAKOMPAS) {
+            if (task.getTaskFieldType() != TaskFieldType.METAKOMPAS || allTasks) {
                 task.setApproved(LocalDate.now());
             }
         }

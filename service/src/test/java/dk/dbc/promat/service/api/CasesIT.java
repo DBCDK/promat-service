@@ -2048,4 +2048,69 @@ public class CasesIT extends ContainerTest {
         assertThat("status code", response.getStatus(), is(200));
     }
 
+    @Test
+    public void testStatusFlowToApprovedFromPendingExternal() throws JsonProcessingException {
+
+        // Create a new case
+        CaseRequest dto = new CaseRequest()
+                .withTitle("Title for 28001111")
+                .withDetails("Details for 28001111")
+                .withPrimaryFaust("28001111")
+                .withEditor(10)
+                .withReviewer(1)
+                .withSubjects(Arrays.asList(3, 4))
+                .withDeadline("2021-03-30")
+                .withMaterialType(MaterialType.BOOK)
+                .withTasks(Arrays.asList(
+                        new TaskDto()
+                                .withTaskType(TaskType.GROUP_1_LESS_THAN_100_PAGES)
+                                .withTaskFieldType(TaskFieldType.BRIEF)
+                                .withTargetFausts(Arrays.asList("28001111")),
+                        new TaskDto()
+                                .withTaskType(TaskType.GROUP_1_LESS_THAN_100_PAGES)
+                                .withTaskFieldType(TaskFieldType.METAKOMPAS)
+                                .withTargetFausts(Arrays.asList(new String[] {"28001111"}))
+                ));
+
+        Response response = postResponse("v1/api/cases", dto);
+        PromatCase created = mapper.readValue(response.readEntity(String.class), PromatCase.class);
+        assertThat("status code", response.getStatus(), is(201));
+
+        // Send case to approval
+        CaseRequest requestDto = new CaseRequest().withStatus(CaseStatus.PENDING_APPROVAL);
+        response = postResponse("v1/api/cases/" + created.getId(), requestDto);
+        assertThat("status code", response.getStatus(), is(200));
+
+        // Approve the case
+        requestDto = new CaseRequest().withStatus(CaseStatus.APPROVED);
+        response = postResponse("v1/api/cases/" + created.getId(), requestDto);
+        assertThat("status code", response.getStatus(), is(200));
+
+        // Case should now be in PENDING_EXTERNAL and NOT be approved
+        PromatCase updated = mapper.readValue(response.readEntity(String.class), PromatCase.class);
+        assertThat("case status", updated.getStatus(), is(CaseStatus.PENDING_EXTERNAL));
+        assertThat("approved", updated.getTasks().stream()
+                .filter(t -> t.getTaskFieldType() == TaskFieldType.METAKOMPAS)
+                .findFirst().get()
+                .getApproved(), is(nullValue()));
+
+        // Move case to APPROVED from PENDING_EXTERNAL to bypass waiting for metakompas topics to be added
+        // (mostly express cases)
+        requestDto = new CaseRequest().withStatus(CaseStatus.APPROVED);
+        response = postResponse("v1/api/cases/" + created.getId(), requestDto);
+        assertThat("status code", response.getStatus(), is(200));
+
+        // Case should now be in APPROVED and be approved
+        updated = mapper.readValue(response.readEntity(String.class), PromatCase.class);
+        assertThat("case status", updated.getStatus(), is(CaseStatus.APPROVED));
+        assertThat("approved", updated.getTasks().stream()
+                .filter(t -> t.getTaskFieldType() == TaskFieldType.METAKOMPAS)
+                .findFirst().get()
+                .getApproved(), is(notNullValue()));
+
+        // Delete the case
+        response = deleteResponse("v1/api/cases/" + created.getId());
+        assertThat("status code", response.getStatus(), is(200));
+    }
+
 }
