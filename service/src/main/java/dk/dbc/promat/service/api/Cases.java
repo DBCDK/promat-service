@@ -105,11 +105,24 @@ public class Cases {
 
     // Set of allowed states when changing reviewer
     private static final Set<CaseStatus> REVIEWER_CHANGE_ALLOWED_STATES =
-            Set.of(CaseStatus.CREATED, CaseStatus.REJECTED, CaseStatus.ASSIGNED, CaseStatus.PENDING_ISSUES);
+            Set.of(
+                    CaseStatus.CREATED,
+                    CaseStatus.REJECTED,
+                    CaseStatus.ASSIGNED,
+                    CaseStatus.PENDING_ISSUES);
 
     // Set of allowed states when approving tasks
     private static final Set<CaseStatus> APPROVE_TASKS_ALLOWED_STATES =
             Set.of(CaseStatus.PENDING_EXTERNAL, CaseStatus.APPROVED);
+
+    // Set of allowed states when returning a case back to the reviewer for corrections.
+    private static final Set<CaseStatus> PENDING_ISSUES_CHANGE_ALLOWED_STATES =
+            Set.of(
+                    CaseStatus.PENDING_EXTERNAL,
+                    CaseStatus.APPROVED,
+                    CaseStatus.PENDING_EXPORT,
+                    CaseStatus.PENDING_APPROVAL,
+                    CaseStatus.PENDING_MEETING);
 
     @POST
     @Path("cases")
@@ -1065,7 +1078,7 @@ public class Cases {
                 }
 
             case ASSIGNED:
-                if (existing.getReviewer() != null && Set.of(CaseStatus.CREATED, CaseStatus.REJECTED, CaseStatus.ASSIGNED, CaseStatus.PENDING_ISSUES).contains(existing.getStatus())) {
+                if (existing.getReviewer() != null && REVIEWER_CHANGE_ALLOWED_STATES.contains(existing.getStatus())) {
                     return CaseStatus.ASSIGNED;
                 } else {
                     throw new ServiceErrorException("Not allowed to set status ASSIGNED when case is not in CREATED, REJECTED or nor reviewer is set")
@@ -1115,7 +1128,7 @@ public class Cases {
                 return CaseStatus.PENDING_APPROVAL;
 
             case PENDING_ISSUES:
-                if (existing.getStatus() != CaseStatus.PENDING_APPROVAL && existing.getStatus() != CaseStatus.APPROVED && existing.getStatus() != CaseStatus.PENDING_MEETING ) {
+                if (!PENDING_ISSUES_CHANGE_ALLOWED_STATES.contains(existing.getStatus())) {
                     throw new ServiceErrorException("Not allowed to set status PENDING_ISSUES when case is not in PENDING_APPROVAL, APPROVED or PENDING_MEETING")
                             .withDetails("Attempt to set status of case to PENDING_ISSUES when case is not in status PENDING_APPROVAL, APPROVED or PENDING_MEETING")
                             .withHttpStatus(400)
