@@ -6,21 +6,26 @@
 package dk.dbc.promat.service.batch;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import dk.dbc.commons.persistence.TransactionScopedPersistenceContext;
 import dk.dbc.connector.openformat.OpenFormatConnectorException;
 import dk.dbc.connector.openformat.OpenFormatConnectorFactory;
+import dk.dbc.opennumberroll.OpennumberRollConnectorException;
 import dk.dbc.promat.service.ContainerTest;
+import dk.dbc.promat.service.Repository;
 import dk.dbc.promat.service.api.BibliographicInformation;
 import dk.dbc.promat.service.api.OpenFormatHandler;
 import dk.dbc.promat.service.cluster.ServerRole;
+
 import dk.dbc.promat.service.dto.CaseRequest;
+import dk.dbc.promat.service.dto.TaskDto;
+
 import dk.dbc.promat.service.persistence.CaseStatus;
 import dk.dbc.promat.service.persistence.MaterialType;
 import dk.dbc.promat.service.persistence.PromatCase;
 import dk.dbc.promat.service.persistence.PromatTask;
 import dk.dbc.promat.service.persistence.TaskFieldType;
+import dk.dbc.promat.service.persistence.TaskType;
 import dk.dbc.promat.service.util.PromatTaskUtils;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -56,6 +61,7 @@ import static org.mockito.AdditionalMatchers.not;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -468,7 +474,7 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
     }
 
     @Test
-    public void testUpdateCaseWithPendingExportForPrehistoricWeekcode() throws OpenFormatConnectorException, JsonProcessingException {
+    public void testUpdateCaseWithPendingExportForPrehistoricWeekcode() throws OpenFormatConnectorException, JsonProcessingException, OpennumberRollConnectorException {
 
         // Create a case
         CaseRequest dto = new CaseRequest()
@@ -481,7 +487,11 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
                 .withDeadline("2024-02-29")
                 .withCreator(10)
                 .withEditor(10)
-                .withReviewer(1);
+                .withReviewer(1).withTasks(Arrays.asList(new TaskDto()
+                        .withTaskType(TaskType.GROUP_1_LESS_THAN_100_PAGES)
+                        .withTaskFieldType(TaskFieldType.BRIEF)
+                        .withTargetFausts(Arrays.asList("24699773"))
+                ));
 
         Response response = postResponse("v1/api/cases", dto);
         assertThat("status code", response.getStatus(), is(201));
@@ -494,14 +504,22 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
         upd.serverRole = ServerRole.PRIMARY;
         OpenFormatHandler mockedHandler = mock(OpenFormatHandler.class);
         upd.caseInformationUpdater.openFormatHandler = mockedHandler;
+        Repository mockedRepository = mock(Repository.class);
+        upd.caseInformationUpdater.repository = mockedRepository;
+
+        created.setStatus(CaseStatus.APPROVED);
         when(mockedHandler.format(anyString()))
                 .thenReturn(new BibliographicInformation()
                         .withCatalogcodes(Arrays.asList("BKM202001")));
+        doAnswer(answer -> {
+            PromatCase existing = ((PromatCase) answer.getArgument(0));
+            existing.getTasks().stream().forEach(t -> t.setRecordId("123456789"));
+            return null;
+        }).when(mockedRepository).assignFaustnumber(any(PromatCase.class));
 
-        created.setStatus(CaseStatus.APPROVED);
         persistenceContext.run(() -> upd.caseInformationUpdater.updateCaseInformation(created));
-
         assertThat("status", created.getStatus(), is(CaseStatus.PENDING_EXPORT));
+        created.getTasks().stream().forEach(t -> assertThat("recordId", t.getRecordId(), is("123456789")));
 
         // Delete the case so that we dont mess up payments and dataio-export tests
         response = deleteResponse("v1/api/cases/" + created.getId());
@@ -509,7 +527,7 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
     }
 
     @Test
-    public void testUpdateCaseWithPendingExportForCurrentWeekcode() throws OpenFormatConnectorException, JsonProcessingException {
+    public void testUpdateCaseWithPendingExportForCurrentWeekcode() throws OpenFormatConnectorException, JsonProcessingException, OpennumberRollConnectorException {
 
         // Create a case
         CaseRequest dto = new CaseRequest()
@@ -522,7 +540,12 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
                 .withDeadline("2024-02-29")
                 .withCreator(10)
                 .withEditor(10)
-                .withReviewer(1);
+                .withReviewer(1)
+                .withTasks(Arrays.asList(new TaskDto()
+                        .withTaskType(TaskType.GROUP_1_LESS_THAN_100_PAGES)
+                        .withTaskFieldType(TaskFieldType.BRIEF)
+                        .withTargetFausts(Arrays.asList("24699773"))
+                ));
 
         Response response = postResponse("v1/api/cases", dto);
         assertThat("status code", response.getStatus(), is(201));
@@ -535,6 +558,8 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
         upd.serverRole = ServerRole.PRIMARY;
         OpenFormatHandler mockedHandler = mock(OpenFormatHandler.class);
         upd.caseInformationUpdater.openFormatHandler = mockedHandler;
+        Repository mockedRepository = mock(Repository.class);
+        upd.caseInformationUpdater.repository = mockedRepository;
 
         LocalDate date = LocalDate.now().plusWeeks(1);
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyw", new Locale("da", "DK"));
@@ -543,9 +568,15 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
         when(mockedHandler.format(anyString()))
                 .thenReturn(new BibliographicInformation()
                         .withCatalogcodes(Arrays.asList("BKM" + date.format(formatter))));
+        doAnswer(answer -> {
+            PromatCase existing = ((PromatCase) answer.getArgument(0));
+            existing.getTasks().stream().forEach(t -> t.setRecordId("123456789"));
+            return null;
+        }).when(mockedRepository).assignFaustnumber(any(PromatCase.class));
+
         persistenceContext.run(() -> upd.caseInformationUpdater.updateCaseInformation(created));
         assertThat("status", created.getStatus(), is(CaseStatus.PENDING_EXPORT));
-
+        created.getTasks().stream().forEach(t -> assertThat("recordId", t.getRecordId(), is("123456789")));
 
         // Delete the case so that we dont mess up payments and dataio-export tests
         response = deleteResponse("v1/api/cases/" + created.getId());
@@ -553,7 +584,7 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
     }
 
     @Test
-    public void testUpdateCaseWithPendingExportForNextWeeksWeekcode() throws OpenFormatConnectorException, JsonProcessingException {
+    public void testUpdateCaseWithPendingExportForNextWeeksWeekcode() throws OpenFormatConnectorException, JsonProcessingException, OpennumberRollConnectorException {
 
         // Create a case
         CaseRequest dto = new CaseRequest()
@@ -566,7 +597,11 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
                 .withDeadline("2024-02-29")
                 .withCreator(10)
                 .withEditor(10)
-                .withReviewer(1);
+                .withReviewer(1).withTasks(Arrays.asList(new TaskDto()
+                        .withTaskType(TaskType.GROUP_1_LESS_THAN_100_PAGES)
+                        .withTaskFieldType(TaskFieldType.BRIEF)
+                        .withTargetFausts(Arrays.asList("24699773"))
+                ));
 
         Response response = postResponse("v1/api/cases", dto);
         assertThat("status code", response.getStatus(), is(201));
@@ -579,6 +614,8 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
         upd.serverRole = ServerRole.PRIMARY;
         OpenFormatHandler mockedHandler = mock(OpenFormatHandler.class);
         upd.caseInformationUpdater.openFormatHandler = mockedHandler;
+        Repository mockedRepository = mock(Repository.class);
+        upd.caseInformationUpdater.repository = mockedRepository;
 
         LocalDate date = LocalDate.now().plusWeeks(2);
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyw", new Locale("da", "DK"));
@@ -587,9 +624,15 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
         when(mockedHandler.format(anyString()))
                 .thenReturn(new BibliographicInformation()
                         .withCatalogcodes(Arrays.asList("BKM" + date.format(formatter))));
+        doAnswer(answer -> {
+            PromatCase existing = ((PromatCase) answer.getArgument(0));
+            existing.getTasks().stream().forEach(t -> t.setRecordId("123456789"));
+            return null;
+        }).when(mockedRepository).assignFaustnumber(any(PromatCase.class));
+
         persistenceContext.run(() -> upd.caseInformationUpdater.updateCaseInformation(created));
         assertThat("status", created.getStatus(), is(CaseStatus.APPROVED));
-
+        created.getTasks().stream().forEach(t -> assertThat("recordId", t.getRecordId(), is(nullValue())));
 
         // Delete the case so that we dont mess up payments and dataio-export tests
         response = deleteResponse("v1/api/cases/" + created.getId());
