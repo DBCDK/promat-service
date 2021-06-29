@@ -104,8 +104,8 @@ public class CaseInformationUpdater {
 
             // Check if the case has status 'APPROVED' and we have reached the week specified by the weekcode
             if( CaseStatus.APPROVED == promatCase.getStatus() && weekcodeMatchOrBefore(promatCase) ) {
-                LOGGER.info("Changing status on case {} since weekcode {} is actual or previous week", promatCase.getId(), promatCase.getWeekCode());
-                promatCase.setStatus(CaseStatus.PENDING_MEETING);
+                LOGGER.info("Changing status on case {} to PENDING_EXPORT since weekcode {} is actual or previous week", promatCase.getId(), promatCase.getWeekCode());
+                promatCase.setStatus(CaseStatus.PENDING_EXPORT);
             }
 
             //

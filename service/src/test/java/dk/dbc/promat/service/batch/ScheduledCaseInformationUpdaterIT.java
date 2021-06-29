@@ -468,7 +468,7 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
     }
 
     @Test
-    public void testUpdateCaseWithPendingMeetingForPrehistoricWeekcode() throws OpenFormatConnectorException, JsonProcessingException {
+    public void testUpdateCaseWithPendingExportForPrehistoricWeekcode() throws OpenFormatConnectorException, JsonProcessingException {
 
         // Create a case
         CaseRequest dto = new CaseRequest()
@@ -501,7 +501,7 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
         created.setStatus(CaseStatus.APPROVED);
         persistenceContext.run(() -> upd.caseInformationUpdater.updateCaseInformation(created));
 
-        assertThat("status", created.getStatus(), is(CaseStatus.PENDING_MEETING));
+        assertThat("status", created.getStatus(), is(CaseStatus.PENDING_EXPORT));
 
         // Delete the case so that we dont mess up payments and dataio-export tests
         response = deleteResponse("v1/api/cases/" + created.getId());
@@ -509,7 +509,7 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
     }
 
     @Test
-    public void testUpdateCaseWithPendingMeetingForCurrentWeekcode() throws OpenFormatConnectorException, JsonProcessingException {
+    public void testUpdateCaseWithPendingExportForCurrentWeekcode() throws OpenFormatConnectorException, JsonProcessingException {
 
         // Create a case
         CaseRequest dto = new CaseRequest()
@@ -544,7 +544,7 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
                 .thenReturn(new BibliographicInformation()
                         .withCatalogcodes(Arrays.asList("BKM" + date.format(formatter))));
         persistenceContext.run(() -> upd.caseInformationUpdater.updateCaseInformation(created));
-        assertThat("status", created.getStatus(), is(CaseStatus.PENDING_MEETING));
+        assertThat("status", created.getStatus(), is(CaseStatus.PENDING_EXPORT));
 
 
         // Delete the case so that we dont mess up payments and dataio-export tests
@@ -553,7 +553,7 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
     }
 
     @Test
-    public void testUpdateCaseWithPendingMeetingForNextWeeksWeekcode() throws OpenFormatConnectorException, JsonProcessingException {
+    public void testUpdateCaseWithPendingExportForNextWeeksWeekcode() throws OpenFormatConnectorException, JsonProcessingException {
 
         // Create a case
         CaseRequest dto = new CaseRequest()
