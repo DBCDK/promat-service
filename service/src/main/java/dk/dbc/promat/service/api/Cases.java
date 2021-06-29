@@ -594,6 +594,27 @@ public class Cases {
         // TODO: 12/01/2021 Rename CaseSummaryList to CaseList
         final CaseSummaryList caseList = new CaseSummaryList();
         caseList.getCases().addAll(query.getResultList());
+
+        // If requested format is EXPORT, then it is not allowed to return cases without a faustnumber.
+        // We cannot check for this in the query directly, so instead remove offending results
+        if( params.getFormat() == ListCasesParams.Format.EXPORT ) {
+            LOGGER.info("Export format requested, removing cases without faustnumber from {} total cases",
+                    caseList.getCases().size());
+             ArrayList<Integer> casesToRemove = new ArrayList<>();
+            for( PromatCase c : caseList.getCases() ) {
+                if( c.getTasks().stream().anyMatch(t -> t.getRecordId() == null || t.getRecordId().isEmpty())) {
+                    LOGGER.info("Removing case {} since it has no faustnumber", c.getId());
+                    casesToRemove.add(c.getId());
+                }
+            }
+
+            LOGGER.info("Has {} cases to remove from the list of {} cases", casesToRemove.size(),
+                    caseList.getCases().size());
+            caseList.getCases().removeIf(c -> casesToRemove.contains(c.getId()));
+            LOGGER.info("Caselist now has {} cases", caseList.getCases().size());
+        }
+
+        // Set final number of cases and return the list
         caseList.setNumFound(caseList.getCases().size());
         return caseList;
     }

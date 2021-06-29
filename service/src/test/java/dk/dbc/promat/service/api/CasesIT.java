@@ -24,7 +24,7 @@ import dk.dbc.promat.service.persistence.TaskFieldType;
 import dk.dbc.promat.service.persistence.TaskType;
 import org.hamcrest.core.IsNull;
 import org.jsoup.Jsoup;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.io.TempDir;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -60,6 +60,7 @@ import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThrows;
 
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class CasesIT extends ContainerTest {
     private static final Logger LOGGER = LoggerFactory.getLogger(CasesIT.class);
 
@@ -2111,6 +2112,16 @@ public class CasesIT extends ContainerTest {
         // Delete the case
         response = deleteResponse("v1/api/cases/" + created.getId());
         assertThat("status code", response.getStatus(), is(200));
+    }
+
+    @Test
+    @Order(1)
+    public void testGetOnlyCasesWithFaustForExport() throws PromatServiceConnectorException {
+        CaseSummaryList fetched = promatServiceConnector.listCases(new ListCasesParams()
+                .withStatus(CaseStatus.PENDING_EXPORT)
+                .withFormat(ListCasesParams.Format.EXPORT));
+        assertThat("Number of cases to export", fetched.getNumFound(), is(1));
+        assertThat("numFound", fetched.getNumFound(), is(1));
     }
 
 }

@@ -23,7 +23,8 @@ values (1, 'Title for 001111', 'Details for 001111', '001111', '["002222","00333
        (21, 'Title for 100003', 'Details for 100003', '100003', '[]',                   1, NULL, '2021-01-09', '2021-02-09', '2021-01-10', 'EXPORTED', 'BOOK', NULL,        '202104', 13, NULL,                 NULL),
        (22, 'Title for 100004', 'Details for 100004', '100004', '[]',                   1, NULL, '2021-01-09', '2021-02-09', '2021-01-10', 'EXPORTED', 'BOOK', NULL,        '202104', 13, NULL,                 NULL),
        (23, 'Title for 100005', 'Details for 100005', '48959938', '["48959911", "48959954"]', 1, 10, '2021-03-08', '2021-04-08', '2021-03-08', 'PENDING_EXTERNAL', 'BOOK', '202108', null, 1, null, null),
-       (24, 'Title for 100006', 'Details for 100006', '100006', '[]', 1, 10,   '2021-01-09', '2021-02-09', '2021-01-10', 'ASSIGNED', 'BOOK', 'BKM202104', '202104', 13, 'Author for 100000', 'Publisher for 100006');
+       (24, 'Title for 100006', 'Details for 100006', '100006', '[]', 1, 10,   '2021-01-09', '2021-02-09', '2021-01-10', 'ASSIGNED', 'BOOK', 'BKM202104', '202104', 13, 'Author for 100000', 'Publisher for 100006'),
+       (25, 'Title for 100007', 'Details for 100007', '100007', '[]', 1, 10, '2021-01-27', '2021-02-27', '2021-01-27', 'PENDING_EXPORT', 'BOOK', null, null, 13, '', '');
 
 insert into promattask(id, tasktype, taskfieldtype, created, paycategory, approved, payed, data, targetFausts)
 values  (1,  'GROUP_1_LESS_THAN_100_PAGES', 'DESCRIPTION',    '202-12-10', 'GROUP_1_LESS_THAN_100_PAGES', '2020-12-10',  NULL,         NULL,                        '["001111", "002222", "003333"]'),
@@ -75,6 +76,10 @@ values  (1,  'GROUP_1_LESS_THAN_100_PAGES', 'DESCRIPTION',    '202-12-10', 'GROU
         (47, 'GROUP_1_LESS_THAN_100_PAGES', 'AGE',            '2021-01-27', 'GROUP_1_LESS_THAN_100_PAGES', '2021-02-08', '2021-02-09', 'AGE TEXT',                  '["100006"]'),
         (48, 'GROUP_1_LESS_THAN_100_PAGES', 'MATLEVEL',       '2021-01-27', 'GROUP_1_LESS_THAN_100_PAGES', '2021-02-08', '2021-02-09', 'MATLEVEL TEXT',             '["100006"]');
 
+insert into promattask(id, tasktype, taskfieldtype, created, paycategory, approved, payed, data, targetFausts, recordId)
+values  (49, 'GROUP_1_LESS_THAN_100_PAGES', 'BRIEF',          '2021-01-27', 'BRIEF',                       '2021-02-08', '2021-02-09', 'Ready to export, no faust', '["019997"]', NULL),
+        (50, 'GROUP_1_LESS_THAN_100_PAGES', 'BRIEF',          '2021-01-27', 'BRIEF',                       '2021-02-08', '2021-02-09', 'Ready to export, with faust', '["100007"]', '123456789');
+
 insert into casetasks(case_id, task_id)
 values (1, 1),
        (1, 2),
@@ -123,4 +128,6 @@ values (1, 1),
        (24, 45),
        (24, 46),
        (24, 47),
-       (24, 48);
+       (24, 48),
+       (18, 49),
+       (25, 50);
