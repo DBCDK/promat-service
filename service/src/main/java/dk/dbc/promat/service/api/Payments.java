@@ -31,6 +31,7 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -88,9 +89,9 @@ public class Payments {
             if(format == PaymentsFormat.CSV) {
                 return Response.status(200)
                         .header("Pragma", "no-cache")
-                        .header("Content-Type", "application/csv")
+                        .header("Content-Type", "application/csv; charset=ISO-8859-1")
                         .header("Content-Disposition", "attachment; filename=" + getPaymentsCsvFilename("promat_payments_PREVIEW.csv"))
-                        .entity(convertPaymentListToCsv(paymentList))
+                        .entity(convertPaymentListToCsv(paymentList).getBytes(StandardCharsets.ISO_8859_1))
                         .build();
             } else if(format == PaymentsFormat.PAYMENT_LIST) {
                 return Response.status(200)
