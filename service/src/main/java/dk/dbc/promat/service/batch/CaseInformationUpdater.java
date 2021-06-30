@@ -226,9 +226,14 @@ public class CaseInformationUpdater {
 
         // Do not use trimmedWeekcode, it is set by the db on update, and the entity
         // might not have been commited before we get to this line
-        Integer caseWeekcode = Integer.parseInt(promatCase.getWeekCode().substring(3));
-        LOGGER.info("caseWeekcode = {}, today (shifted) = {}", caseWeekcode, today);
+        if( promatCase.getWeekCode() != null && !promatCase.getWeekCode().isEmpty() ) {
+            LOGGER.info("Case has weekcode {}", promatCase.getWeekCode());
+            Integer caseWeekcode = Integer.parseInt(promatCase.getWeekCode().substring(3));
+            LOGGER.info("caseWeekcode = {}, today (shifted) = {}", caseWeekcode, today);
+            return caseWeekcode <= today;
+        }
 
-        return caseWeekcode <= today;
+        LOGGER.info("Case has no weekcode yet, so no weekcode match");
+        return false;
     }
 }
