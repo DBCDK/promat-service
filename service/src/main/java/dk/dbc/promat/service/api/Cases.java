@@ -72,6 +72,7 @@ import java.util.HashSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -595,8 +596,26 @@ public class Cases {
                     caseList.getCases().size());
              ArrayList<Integer> casesToRemove = new ArrayList<>();
             for( PromatCase c : caseList.getCases() ) {
-                if( c.getTasks().stream().anyMatch(t -> t.getRecordId() == null || t.getRecordId().isEmpty())) {
-                    LOGGER.info("Removing case {} since it has no faustnumber", c.getId());
+
+                // There must be tasks on the case for the export to be valid
+                if( c.getTasks() == null || c.getTasks().size() == 0 ) {
+                    LOGGER.info("Removing case {} since it has no tasks", c.getId());
+                    casesToRemove.add(c.getId());
+                    continue;
+                }
+
+                // There must be a BRIEF task for the export to be valid
+                if( c.getTasks().stream().noneMatch(t -> t.getTaskFieldType() == TaskFieldType.BRIEF)) {
+                    LOGGER.info("Removing case {} since it has no BRIEF task", c.getId());
+                    casesToRemove.add(c.getId());
+                    continue;
+                }
+
+                // All BRIEF tasks must have a faustnumber
+                if( !c.getTasks().stream()
+                        .filter(t -> t.getTaskFieldType() == TaskFieldType.BRIEF)
+                        .allMatch(t -> t.getRecordId() != null && !t.getRecordId().isEmpty()) ) {
+                    LOGGER.info("Removing case {} since it has no faustnumber on one or more BRIEF tasks", c.getId());
                     casesToRemove.add(c.getId());
                 }
             }
