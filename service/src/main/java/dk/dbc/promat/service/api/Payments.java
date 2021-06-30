@@ -206,8 +206,10 @@ public class Payments {
                         .withDetails(String.format("Case id %d has reviewer=null", promatCase.getId()));
             }
 
-            // Check that all tasks has been approved before starting payment
-            if (promatCase.getTasks().stream().filter(t -> t.getApproved() == null).count() > 0) {
+            // Check that all tasks has been approved before starting payment, unless the case
+            // has status PENDING_CLOSE where it is expected that only the BKM task has been approved
+            if ( promatCase.getStatus() != CaseStatus.PENDING_CLOSE &&
+                    promatCase.getTasks().stream().filter(t -> t.getApproved() == null).count() > 0) {
                 LOGGER.error(String.format("Case id %d has task(s) that has not been approved allthough the case has status APPROVED or better", promatCase.getId()));
                 throw new ServiceErrorException("Case ready for payment has not-approved tasks")
                         .withHttpStatus(500)

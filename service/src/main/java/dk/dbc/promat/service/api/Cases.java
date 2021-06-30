@@ -93,13 +93,6 @@ public class Cases {
     @EJB
     Records records;
 
-    @Inject
-    private OpennumberRollConnector opennumberRollConnector;
-
-    @Inject
-    @ConfigProperty(name = "OPENNUMBERROLL_NUMBERROLLNAME")
-    String openNumberrollRollName;
-
     // Default number of results when getting cases
     private static final int DEFAULT_CASES_LIMIT = 100;
 
@@ -594,6 +587,27 @@ public class Cases {
         // TODO: 12/01/2021 Rename CaseSummaryList to CaseList
         final CaseSummaryList caseList = new CaseSummaryList();
         caseList.getCases().addAll(query.getResultList());
+
+        // If requested format is EXPORT, then it is not allowed to return cases without a faustnumber.
+        // We cannot check for this in the query directly, so instead remove offending results
+        if( params.getFormat() == ListCasesParams.Format.EXPORT ) {
+            LOGGER.info("Export format requested, removing cases without faustnumber from {} total cases",
+                    caseList.getCases().size());
+             ArrayList<Integer> casesToRemove = new ArrayList<>();
+            for( PromatCase c : caseList.getCases() ) {
+                if( c.getTasks().stream().anyMatch(t -> t.getRecordId() == null || t.getRecordId().isEmpty())) {
+                    LOGGER.info("Removing case {} since it has no faustnumber", c.getId());
+                    casesToRemove.add(c.getId());
+                }
+            }
+
+            LOGGER.info("Has {} cases to remove from the list of {} cases", casesToRemove.size(),
+                    caseList.getCases().size());
+            caseList.getCases().removeIf(c -> casesToRemove.contains(c.getId()));
+            LOGGER.info("Caselist now has {} cases", caseList.getCases().size());
+        }
+
+        // Set final number of cases and return the list
         caseList.setNumFound(caseList.getCases().size());
         return caseList;
     }
@@ -699,7 +713,7 @@ public class Cases {
 
                 // If status changed to PENDING_EXPORT, the case must be enriched with a new faustnumber
                 if( status == CaseStatus.PENDING_EXPORT ) {
-                    assignFaustnumber(existing);
+                    repository.assignFaustnumber(existing);
                 }
             }
             if(dto.getCreator() != null) {
@@ -1210,16 +1224,4 @@ public class Cases {
         return query.getResultList().size() > 0;
     }
 
-    private void assignFaustnumber(PromatCase existing) throws OpennumberRollConnectorException {
-        for(PromatTask task : existing.getTasks().stream()
-                .filter(task -> task.getTaskFieldType() == TaskFieldType.BRIEF)
-                .collect(Collectors.toList())) {
-            if( task.getRecordId() == null || task.getRecordId().isEmpty() ) {
-                OpennumberRollConnector.Params params = new OpennumberRollConnector.Params();
-                params.withRollName(openNumberrollRollName);
-                task.setRecordId(opennumberRollConnector.getId(params));
-                LOGGER.info("Assigned new faustnumber {} to task with id {} on case with id {}", task.getRecordId(), task.getRecordId(), existing.getId());
-            }
-        }
-    }
 }
