@@ -82,7 +82,7 @@ insert into promattask(id, tasktype, taskfieldtype, created, paycategory, approv
 values  (49, 'GROUP_1_LESS_THAN_100_PAGES', 'BRIEF',          '2021-01-27', 'BRIEF',                       '2021-02-08', NULL, 'Ready to export, no faust', '["019997"]', NULL),
         (50, 'GROUP_1_LESS_THAN_100_PAGES', 'BRIEF',          '2021-01-27', 'BRIEF',                       '2021-02-08', NULL, 'Ready to export, with faust', '["100007"]', '123456789'),
         (51, 'GROUP_1_LESS_THAN_100_PAGES', 'DESCRIPTION',    '2021-01-27', 'GROUP_1_LESS_THAN_100_PAGES', '2021-02-08', NULL, 'Ready to export, no faust, not BRIEF', '["100008"]', NULL),
-        (52, 'GROUP_1_LESS_THAN_100_PAGES', 'DESCRIPTION',    '2021-01-27', 'GROUP_1_LESS_THAN_100_PAGES', '2021-02-08', NULL, 'Ready to export, with faust, not BRIEF', '["10009"]', '987654321');
+        (52, 'GROUP_1_LESS_THAN_100_PAGES', 'DESCRIPTION',    '2021-01-27', 'GROUP_1_LESS_THAN_100_PAGES', '2021-02-08', NULL, 'Ready to export, with faust, not BRIEF', '["100009"]', '987654321');
 
 insert into casetasks(case_id, task_id)
 values (1, 1),
