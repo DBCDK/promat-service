@@ -370,10 +370,14 @@ public class Payments {
     private String getFaustList(PromatCase promatCase) {
         List<String> fausts = new ArrayList<>();
         fausts.add(promatCase.getPrimaryFaust());
-        if (promatCase.getRelatedFausts().size() > 0) {
-            fausts.addAll(promatCase.getRelatedFausts());
+
+        for( PromatTask task : promatCase.getTasks() ) {
+            fausts.addAll(task.getTargetFausts());
         }
 
-        return fausts.stream().collect(Collectors.joining(","));
+        return fausts.stream()
+                .distinct()
+                .sorted()
+                .collect(Collectors.joining(","));
     }
 }

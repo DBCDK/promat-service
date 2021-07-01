@@ -218,8 +218,8 @@ public class PaymentsIT  extends ContainerTest {
                 "mm-dd-åååå;456;1960;1;1001180,1001181,1001182 Kort om, +1 Case 19;Ole Olsen\n" +
                 "mm-dd-åååå;123;1956;1;1001190,1001191 Case 20;Hans Hansen\n" +
                 "mm-dd-åååå;123;1960;1;1001190,1001191 Kort om, +1 Case 20;Hans Hansen\n" +
-                "mm-dd-åååå;123;1956;1;38529668,38529633 Case 20;Hans Hansen\n" +
-                "mm-dd-åååå;123;1960;1;38529668,38529633 Kort om, +1 Case 20;Hans Hansen\n")
+                "mm-dd-åååå;123;1956;1;38529633,38529668 Case 20;Hans Hansen\n" +
+                "mm-dd-åååå;123;1960;1;38529633,38529668 Kort om, +1 Case 20;Hans Hansen\n")
                         .replace("mm-dd-åååå", LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd-MM-yyyy")));
         LOGGER.info("Expected CSV output is:\n{}", expected);
 
