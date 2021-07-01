@@ -202,24 +202,24 @@ public class PaymentsIT  extends ContainerTest {
                 "mm-dd-åååå;123;1956;1;1001070 Case 8;Hans Hansen\n" +
                 "mm-dd-åååå;123;1962;1;1001070 Bkm Case 8;Hans Hansen\n" +
                 "mm-dd-åååå;123;1956;1;1001080,1001081,1001082,1001083 Case 9;Hans Hansen\n" +
-                "mm-dd-åååå;123;1960;2;1001080,1001081,1001082,1001083 Note Case 9;Hans Hansen\n" +
+                "mm-dd-åååå;123;1960;2;1001080,1001081,1001082,1001083 Kort om, +2 Case 9;Hans Hansen\n" +
                 "mm-dd-åååå;123;1956;1;1001090,1001091,1001092,1001093,1001094 Case 10;Hans Hansen\n" +
-                "mm-dd-åååå;123;1960;2;1001090,1001091,1001092,1001093,1001094 Note Case 10;Hans Hansen\n" +
+                "mm-dd-åååå;123;1960;2;1001090,1001091,1001092,1001093,1001094 Kort om, +2 Case 10;Hans Hansen\n" +
                 "mm-dd-åååå;123;1956;1;1001100,1001101,1001102,1001103,1001104 Case 11;Hans Hansen\n" +
-                "mm-dd-åååå;123;1960;3;1001100,1001101,1001102,1001103,1001104 Note Case 11;Hans Hansen\n" +
+                "mm-dd-åååå;123;1960;3;1001100,1001101,1001102,1001103,1001104 Kort om, +3 Case 11;Hans Hansen\n" +
                 "mm-dd-åååå;123;1956;1;1001110,1001111 Case 12;Hans Hansen\n" +
-                "mm-dd-åååå;123;1960;1;1001110,1001111 Note Case 12;Hans Hansen\n" +
+                "mm-dd-åååå;123;1960;1;1001110,1001111 Kort om, +1 Case 12;Hans Hansen\n" +
                 "mm-dd-åååå;123;1987;2;1001110,1001111 Metadata Case 12;Hans Hansen\n" +
                 "mm-dd-åååå;456;1981;1;1001130,1001131 Case 14;Ole Olsen\n" +
-                "mm-dd-åååå;456;1960;1;1001140,1001141,1001142 Note Case 15;Ole Olsen\n" +
+                "mm-dd-åååå;456;1960;1;1001140,1001141,1001142 Kort om, +1 Case 15;Ole Olsen\n" +
                 "mm-dd-åååå;456;1954;1;1001170,1001171,1001172 Case 18;Ole Olsen\n" +
-                "mm-dd-åååå;456;1960;1;1001170,1001171,1001172 Note Case 18;Ole Olsen\n" +
+                "mm-dd-åååå;456;1960;1;1001170,1001171,1001172 Kort om, +1 Case 18;Ole Olsen\n" +
                 "mm-dd-åååå;456;1954;1;1001180,1001181,1001182 Case 19;Ole Olsen\n" +
-                "mm-dd-åååå;456;1960;1;1001180,1001181,1001182 Note Case 19;Ole Olsen\n" +
+                "mm-dd-åååå;456;1960;1;1001180,1001181,1001182 Kort om, +1 Case 19;Ole Olsen\n" +
                 "mm-dd-åååå;123;1956;1;1001190,1001191 Case 20;Hans Hansen\n" +
-                "mm-dd-åååå;123;1960;1;1001190,1001191 Note Case 20;Hans Hansen\n" +
+                "mm-dd-åååå;123;1960;1;1001190,1001191 Kort om, +1 Case 20;Hans Hansen\n" +
                 "mm-dd-åååå;123;1956;1;38529668,38529633 Case 20;Hans Hansen\n" +
-                "mm-dd-åååå;123;1960;1;38529668,38529633 Note Case 20;Hans Hansen\n")
+                "mm-dd-åååå;123;1960;1;38529668,38529633 Kort om, +1 Case 20;Hans Hansen\n")
                         .replace("mm-dd-åååå", LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd-MM-yyyy")));
         LOGGER.info("Expected CSV output is:\n{}", expected);
 

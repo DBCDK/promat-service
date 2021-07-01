@@ -292,7 +292,9 @@ public class Payments {
                             .withPayCode(promatCase.getReviewer().getPaycode().toString())
                             .withPayCategory(payCategory)
                             .withCount(groupedPayCategories.get(payCategory).size())
-                            .withText(String.format("%s%s %s", getFaustList(promatCase), getTextCategory(payCategory), promatCase.getTitle()))
+                            .withText(String.format("%s%s %s", getFaustList(promatCase),
+                                    getTextCategory(payCategory,groupedPayCategories.get(payCategory).size()),
+                                    promatCase.getTitle()))
                             .withReviewer(promatCase.getReviewer())
                             .withPrimaryFaust(promatCase.getPrimaryFaust())
                             .withRelatedFausts(promatCase.getRelatedFausts().stream().collect(Collectors.joining(",")))
@@ -353,10 +355,10 @@ public class Payments {
         return true;
     }
 
-    private String getTextCategory(PayCategory category) {
+    private String getTextCategory(PayCategory category, int count) {
         switch (category) {
             case BRIEF:
-                return " Note";
+                return " Kort om, +" + count;
             case METAKOMPAS:
                 return " Metadata";
             case BKM:
