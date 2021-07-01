@@ -32,6 +32,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.Locale;
 import java.util.Map;
 import org.eclipse.microprofile.metrics.ConcurrentGauge;
@@ -54,6 +55,8 @@ import javax.persistence.TypedQuery;
 import javax.ws.rs.core.Response;
 
 import java.util.Arrays;
+import java.util.concurrent.atomic.AtomicInteger;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -638,4 +641,66 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
         response = deleteResponse("v1/api/cases/" + created.getId());
         assertThat("status code", response.getStatus(), is(200));
     }
+
+    @Test
+    public void testUpdateCaseWithNoWeekcode() throws OpenFormatConnectorException, JsonProcessingException, OpennumberRollConnectorException {
+
+        // Create a case
+        CaseRequest dto = new CaseRequest()
+                .withPrimaryFaust("24699773")
+                .withTitle("Title for 24699773")
+                .withWeekCode("")
+                .withDetails("Details for 24699773")
+                .withMaterialType(MaterialType.BOOK)
+                .withAssigned("2021-01-28")
+                .withDeadline("2024-02-29")
+                .withCreator(10)
+                .withEditor(10)
+                .withReviewer(1)
+                .withTasks(Arrays.asList(new TaskDto()
+                        .withTaskType(TaskType.GROUP_1_LESS_THAN_100_PAGES)
+                        .withTaskFieldType(TaskFieldType.BRIEF)
+                        .withTargetFausts(Arrays.asList("24699773"))
+                ));
+
+        Response response = postResponse("v1/api/cases", dto);
+        assertThat("status code", response.getStatus(), is(201));
+        PromatCase created = mapper.readValue(response.readEntity(String.class), PromatCase.class);
+
+        ScheduledCaseInformationUpdater upd = new ScheduledCaseInformationUpdater();
+        upd.caseInformationUpdater = new CaseInformationUpdater();
+        upd.caseInformationUpdater.metricRegistry = metricRegistry;
+        upd.entityManager = entityManager;
+        upd.serverRole = ServerRole.PRIMARY;
+        OpenFormatHandler mockedHandler = mock(OpenFormatHandler.class);
+        upd.caseInformationUpdater.openFormatHandler = mockedHandler;
+        Repository mockedRepository = mock(Repository.class);
+        upd.caseInformationUpdater.repository = mockedRepository;
+
+        created.setStatus(CaseStatus.APPROVED);
+
+        when(mockedHandler.format(anyString()))
+                .thenReturn(new BibliographicInformation()
+                        .withCatalogcodes(new ArrayList<>()));
+
+        ConcurrentGauge mockedGauge = mock(ConcurrentGauge.class);
+        doAnswer(answer -> {
+            return mockedGauge;
+        }).when(metricRegistry).concurrentGauge(any(Metadata.class));
+
+        AtomicInteger errors = new AtomicInteger(0);
+        doAnswer(answer -> {
+            errors.getAndIncrement();
+            return null;
+        }).when(mockedGauge).inc();
+
+        persistenceContext.run(() -> upd.caseInformationUpdater.updateCaseInformation(created));
+
+        assertThat("no errors", errors.get(), is(0));
+
+        // Delete the case so that we dont mess up payments and dataio-export tests
+        response = deleteResponse("v1/api/cases/" + created.getId());
+        assertThat("status code", response.getStatus(), is(200));
+    }
+
 }
