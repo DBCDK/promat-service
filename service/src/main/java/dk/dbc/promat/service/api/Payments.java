@@ -137,10 +137,10 @@ public class Payments {
 
         return Response.status(200)
                 .header("Pragma", "no-cache")
-                .header("Content-Type", "application/csv")
+                .header("Content-Type", "application/csv; charset=ISO-8859-1")
                 .header("Content-Disposition", "attachment; filename=" +
                         getPaymentsCsvFilename(String.format("promat_payments_%s.csv", paymentList.getStamp())))
-                .entity(convertPaymentListToCsv(paymentList))
+                .entity(convertPaymentListToCsv(paymentList).getBytes(StandardCharsets.ISO_8859_1))
                 .build();
     }
 
