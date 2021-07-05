@@ -3,7 +3,8 @@
 @import java.util.List
 @param ReviewerDataChanged reviewerDataChanged
 !{ List<String> fieldNames = List.of("firstName", "lastName", "email", "phone",
- "institution","address1", "address2", "zip", "city", "hiatus_begin", "hiatus_end", "capacity");
+ "institution","address1", "address2", "zip", "city", "hiatus_begin", "hiatus_end", "selected",
+ "capacity", "privateAddress1", "privateAddress2", "privateZip", "privateCity", "privateSelected", "privateEmail");
  Reviewer reviewer = reviewerDataChanged.getReviewer(); }
 
 <p>Anmelderprofilen '${reviewer.getId()}' (${reviewer.getFirstName()} ${reviewer.getLastName()}) er ændret,
@@ -17,6 +18,32 @@
                 <td>[${field}]</td>
             </tr>
             @if(field.equals("email"))
+                <tr>
+                    <td><table>
+                            <tr>
+                                <td>
+                                    Fra:
+                                </td>
+                                <td>
+                                    <a href="mailto:${reviewerDataChanged.getDiffMap().get(field).getFromValue()}">
+                                        ${reviewerDataChanged.getDiffMap().get(field).getFromValue()}
+                                    </a>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    Til:
+                                </td>
+                                <td>
+                                    <a href="mailto:${reviewerDataChanged.getDiffMap().get(field).getToValue()}">
+                                        ${reviewerDataChanged.getDiffMap().get(field).getToValue()}
+                                    </a>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+            @elseif(field.equals("privateEmail"))
                 <tr>
                     <td><table>
                             <tr>

@@ -135,12 +135,19 @@ public abstract class ContainerTest extends IntegrationTest {
         return httpClient.execute(httpPost);
     }
 
-    public <T> Response putResponse(String path, T body) {
+    public <T> Response putResponse(String path, T body, Map<String, Object> queryParameter) {
         HttpPut httpPut = new HttpPut(httpClient)
                 .withBaseUrl(promatServiceBaseUrl)
                 .withPathElements(path)
                 .withData(body, "application/json");
+        if (queryParameter != null) {
+            httpPut.getQueryParameters().putAll(queryParameter);
+        }
         return httpClient.execute(httpPut);
+    }
+
+    public <T> Response putResponse(String path, T body) {
+        return putResponse(path, body, null);
     }
 
     public <T> Response deleteResponse(String path) {

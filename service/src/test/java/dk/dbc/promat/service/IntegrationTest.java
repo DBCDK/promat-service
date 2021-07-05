@@ -10,8 +10,13 @@ import dk.dbc.commons.jdbc.util.JDBCUtil;
 import dk.dbc.httpclient.HttpClient;
 import dk.dbc.httpclient.HttpGet;
 import dk.dbc.promat.service.db.DatabaseMigrator;
+import dk.dbc.promat.service.persistence.Notification;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+import javax.persistence.TypedQuery;
 import org.junit.jupiter.api.BeforeAll;
 import org.postgresql.ds.PGSimpleDataSource;
 import org.slf4j.Logger;
@@ -40,7 +45,7 @@ import static org.eclipse.persistence.config.PersistenceUnitProperties.JDBC_URL;
 import static org.eclipse.persistence.config.PersistenceUnitProperties.JDBC_USER;
 
 public class IntegrationTest {
-    private static final Logger LOGGER = LoggerFactory.getLogger(ContainerTest.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(IntegrationTest.class);
     static final EmbeddedPostgres pg = pgStart();
     protected static final HttpClient httpClient;
     protected static EntityManager entityManager;
@@ -137,4 +142,28 @@ public class IntegrationTest {
         DatabaseMigrator databaseMigrator = new DatabaseMigrator(dataSource);
         databaseMigrator.migrate();
     }
+
+    public List<Notification> getNotifications(String subjectWildcard, String bodyTextWildcard) {
+        TypedQuery<Notification> query = entityManager
+                .createQuery("SELECT notification " +
+                        "FROM Notification notification ORDER BY notification.id", Notification.class);
+        List<Notification> allNotifications = query.getResultList();
+        List<Notification> notifications = new ArrayList<>();
+        if (subjectWildcard != null) {
+            notifications = allNotifications.stream().filter(notification ->
+                    notification.getSubject().contains(subjectWildcard)).collect(Collectors.toList());
+        } else {
+            notifications = new ArrayList<>(allNotifications);
+        }
+        if (bodyTextWildcard != null) {
+            notifications = notifications.stream().filter(notification ->
+                    notification.getBodyText().contains(bodyTextWildcard)).collect(Collectors.toList());
+        }
+        return notifications;
+    }
+
+    public List<Notification> getNotifications() {
+        return getNotifications(null, null);
+    }
+
 }
