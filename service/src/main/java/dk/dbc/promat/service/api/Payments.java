@@ -31,6 +31,7 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -88,9 +89,9 @@ public class Payments {
             if(format == PaymentsFormat.CSV) {
                 return Response.status(200)
                         .header("Pragma", "no-cache")
-                        .header("Content-Type", "application/csv")
+                        .header("Content-Type", "application/csv; charset=ISO-8859-1")
                         .header("Content-Disposition", "attachment; filename=" + getPaymentsCsvFilename("promat_payments_PREVIEW.csv"))
-                        .entity(convertPaymentListToCsv(paymentList))
+                        .entity(convertPaymentListToCsv(paymentList).getBytes(StandardCharsets.ISO_8859_1))
                         .build();
             } else if(format == PaymentsFormat.PAYMENT_LIST) {
                 return Response.status(200)
@@ -136,10 +137,10 @@ public class Payments {
 
         return Response.status(200)
                 .header("Pragma", "no-cache")
-                .header("Content-Type", "application/csv")
+                .header("Content-Type", "application/csv; charset=ISO-8859-1")
                 .header("Content-Disposition", "attachment; filename=" +
                         getPaymentsCsvFilename(String.format("promat_payments_%s.csv", paymentList.getStamp())))
-                .entity(convertPaymentListToCsv(paymentList))
+                .entity(convertPaymentListToCsv(paymentList).getBytes(StandardCharsets.ISO_8859_1))
                 .build();
     }
 
@@ -205,8 +206,10 @@ public class Payments {
                         .withDetails(String.format("Case id %d has reviewer=null", promatCase.getId()));
             }
 
-            // Check that all tasks has been approved before starting payment
-            if (promatCase.getTasks().stream().filter(t -> t.getApproved() == null).count() > 0) {
+            // Check that all tasks has been approved before starting payment, unless the case
+            // has status PENDING_CLOSE where it is expected that only the BKM task has been approved
+            if ( promatCase.getStatus() != CaseStatus.PENDING_CLOSE && promatCase.getStatus() != CaseStatus.CLOSED &&
+                    promatCase.getTasks().stream().filter(t -> t.getApproved() == null).count() > 0) {
                 LOGGER.error(String.format("Case id %d has task(s) that has not been approved allthough the case has status APPROVED or better", promatCase.getId()));
                 throw new ServiceErrorException("Case ready for payment has not-approved tasks")
                         .withHttpStatus(500)
@@ -289,7 +292,9 @@ public class Payments {
                             .withPayCode(promatCase.getReviewer().getPaycode().toString())
                             .withPayCategory(payCategory)
                             .withCount(groupedPayCategories.get(payCategory).size())
-                            .withText(String.format("%s%s %s", getFaustList(promatCase), getTextCategory(payCategory), promatCase.getTitle()))
+                            .withText(String.format("%s%s %s", getFaustList(promatCase),
+                                    getTextCategory(payCategory,groupedPayCategories.get(payCategory).size()),
+                                    promatCase.getTitle()))
                             .withReviewer(promatCase.getReviewer())
                             .withPrimaryFaust(promatCase.getPrimaryFaust())
                             .withRelatedFausts(promatCase.getRelatedFausts().stream().collect(Collectors.joining(",")))
@@ -350,10 +355,10 @@ public class Payments {
         return true;
     }
 
-    private String getTextCategory(PayCategory category) {
+    private String getTextCategory(PayCategory category, int count) {
         switch (category) {
             case BRIEF:
-                return " Note";
+                return " Kort om, +" + count;
             case METAKOMPAS:
                 return " Metadata";
             case BKM:
@@ -365,10 +370,14 @@ public class Payments {
     private String getFaustList(PromatCase promatCase) {
         List<String> fausts = new ArrayList<>();
         fausts.add(promatCase.getPrimaryFaust());
-        if (promatCase.getRelatedFausts().size() > 0) {
-            fausts.addAll(promatCase.getRelatedFausts());
+
+        for( PromatTask task : promatCase.getTasks() ) {
+            fausts.addAll(task.getTargetFausts());
         }
 
-        return fausts.stream().collect(Collectors.joining(","));
+        return fausts.stream()
+                .distinct()
+                .sorted()
+                .collect(Collectors.joining(","));
     }
 }

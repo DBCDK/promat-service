@@ -72,6 +72,7 @@ import java.util.HashSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -92,13 +93,6 @@ public class Cases {
 
     @EJB
     Records records;
-
-    @Inject
-    private OpennumberRollConnector opennumberRollConnector;
-
-    @Inject
-    @ConfigProperty(name = "OPENNUMBERROLL_NUMBERROLLNAME")
-    String openNumberrollRollName;
 
     // Default number of results when getting cases
     private static final int DEFAULT_CASES_LIMIT = 100;
@@ -594,6 +588,45 @@ public class Cases {
         // TODO: 12/01/2021 Rename CaseSummaryList to CaseList
         final CaseSummaryList caseList = new CaseSummaryList();
         caseList.getCases().addAll(query.getResultList());
+
+        // If requested format is EXPORT, then it is not allowed to return cases without a faustnumber.
+        // We cannot check for this in the query directly, so instead remove offending results
+        if( params.getFormat() == ListCasesParams.Format.EXPORT ) {
+            LOGGER.info("Export format requested, removing cases without faustnumber from {} total cases",
+                    caseList.getCases().size());
+             ArrayList<Integer> casesToRemove = new ArrayList<>();
+            for( PromatCase c : caseList.getCases() ) {
+
+                // There must be tasks on the case for the export to be valid
+                if( c.getTasks() == null || c.getTasks().size() == 0 ) {
+                    LOGGER.info("Removing case {} since it has no tasks", c.getId());
+                    casesToRemove.add(c.getId());
+                    continue;
+                }
+
+                // There must be a BRIEF task for the export to be valid
+                if( c.getTasks().stream().noneMatch(t -> t.getTaskFieldType() == TaskFieldType.BRIEF)) {
+                    LOGGER.info("Removing case {} since it has no BRIEF task", c.getId());
+                    casesToRemove.add(c.getId());
+                    continue;
+                }
+
+                // All BRIEF tasks must have a faustnumber
+                if( !c.getTasks().stream()
+                        .filter(t -> t.getTaskFieldType() == TaskFieldType.BRIEF)
+                        .allMatch(t -> t.getRecordId() != null && !t.getRecordId().isEmpty()) ) {
+                    LOGGER.info("Removing case {} since it has no faustnumber on one or more BRIEF tasks", c.getId());
+                    casesToRemove.add(c.getId());
+                }
+            }
+
+            LOGGER.info("Has {} cases to remove from the list of {} cases", casesToRemove.size(),
+                    caseList.getCases().size());
+            caseList.getCases().removeIf(c -> casesToRemove.contains(c.getId()));
+            LOGGER.info("Caselist now has {} cases", caseList.getCases().size());
+        }
+
+        // Set final number of cases and return the list
         caseList.setNumFound(caseList.getCases().size());
         return caseList;
     }
@@ -685,13 +718,21 @@ public class Cases {
                 if(status == CaseStatus.PENDING_CLOSE) {
                     approveBkmTasks(existing);
                 } else if(APPROVE_TASKS_ALLOWED_STATES.contains(status)) {
-                    approveTasks(existing);
+                    approveTasks(existing, false);
                 }
+
+                // If status is changing from PENDING_EXTERNAL to APPROVED, any metakompas tasks
+                // should also be approved
+                if( existing.getStatus() == CaseStatus.PENDING_EXTERNAL && status == CaseStatus.APPROVED ) {
+                    LOGGER.info("Promoting metakompas task on case {} to APPROVED prematurely by user request");
+                    approveTasks(existing, true);
+                }
+
                 existing.setStatus(status);
 
                 // If status changed to PENDING_EXPORT, the case must be enriched with a new faustnumber
                 if( status == CaseStatus.PENDING_EXPORT ) {
-                    assignFaustnumber(existing);
+                    repository.assignFaustnumber(existing);
                 }
             }
             if(dto.getCreator() != null) {
@@ -1101,14 +1142,19 @@ public class Cases {
                 return CaseStatus.PENDING_CLOSE;
 
             case APPROVED:
-                if (existing.getStatus() != CaseStatus.PENDING_APPROVAL) {
-                    throw new ServiceErrorException("Not allowed to set status APPROVED when case is not in PENDING_APPROVAL")
-                            .withDetails("Attempt to set status of case to APPROVED when case is not in status PENDING_APPROVAL")
+                if (existing.getStatus() != CaseStatus.PENDING_APPROVAL && existing.getStatus() != CaseStatus.PENDING_EXTERNAL) {
+                    throw new ServiceErrorException("Not allowed to set status APPROVED when case is not in PENDING_APPROVAL or PENDING_EXTERNAL")
+                            .withDetails("Attempt to set status of case to APPROVED when case is not in status PENDING_APPROVAL or PENDING_EXTERNAL")
                             .withHttpStatus(400)
                             .withCode(ServiceErrorCode.INVALID_REQUEST);
                 }
 
+                // If case is already PENDING_EXTERNAL, move to approved, otherwise check if we need to wait for metakompas topics
+                if( existing.getStatus() == CaseStatus.PENDING_EXTERNAL ) {
+                    return CaseStatus.APPROVED;
+                }
 
+                // Check if the case should go to PENDING_EXTERNAL to wait for metakompas topics, or can be approved now
                 if (existing.getTasks().stream()
                         .filter(task -> task.getTaskFieldType() == TaskFieldType.METAKOMPAS && task.getApproved() == null)
                         .count() != 0) {
@@ -1172,9 +1218,9 @@ public class Cases {
         }
     }
 
-    private void approveTasks(PromatCase existing) {
+    private void approveTasks(PromatCase existing, boolean allTasks) {
         for (PromatTask task : new ArrayList<>(existing.getTasks())) {
-            if (task.getTaskFieldType() != TaskFieldType.METAKOMPAS) {
+            if (task.getTaskFieldType() != TaskFieldType.METAKOMPAS || allTasks) {
                 task.setApproved(LocalDate.now());
             }
         }
@@ -1197,16 +1243,4 @@ public class Cases {
         return query.getResultList().size() > 0;
     }
 
-    private void assignFaustnumber(PromatCase existing) throws OpennumberRollConnectorException {
-        for(PromatTask task : existing.getTasks().stream()
-                .filter(task -> task.getTaskFieldType() == TaskFieldType.BRIEF)
-                .collect(Collectors.toList())) {
-            if( task.getRecordId() == null || task.getRecordId().isEmpty() ) {
-                OpennumberRollConnector.Params params = new OpennumberRollConnector.Params();
-                params.withRollName(openNumberrollRollName);
-                task.setRecordId(opennumberRollConnector.getId(params));
-                LOGGER.info("Assigned new faustnumber {} to task with id {} on case with id {}", task.getRecordId(), task.getRecordId(), existing.getId());
-            }
-        }
-    }
 }

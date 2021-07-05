@@ -7,12 +7,6 @@ package dk.dbc.promat.service;
 
 import dk.dbc.promat.service.api.ServiceErrorException;
 import dk.dbc.promat.service.dto.ServiceErrorCode;
-import dk.dbc.promat.service.persistence.PayCategory;
-import dk.dbc.promat.service.persistence.PromatEntityManager;
-import dk.dbc.promat.service.persistence.Subject;
-import dk.dbc.promat.service.persistence.SubjectNote;
-import dk.dbc.promat.service.persistence.TaskFieldType;
-import dk.dbc.promat.service.persistence.TaskType;
 
 import javax.ejb.Stateless;
 import javax.inject.Inject;
@@ -22,12 +16,36 @@ import javax.persistence.Query;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
+
+import dk.dbc.opennumberroll.OpennumberRollConnector;
+import dk.dbc.opennumberroll.OpennumberRollConnectorException;
+import dk.dbc.promat.service.persistence.PayCategory;
+import dk.dbc.promat.service.persistence.PromatCase;
+import dk.dbc.promat.service.persistence.PromatEntityManager;
+import dk.dbc.promat.service.persistence.PromatTask;
+import dk.dbc.promat.service.persistence.Subject;
+import dk.dbc.promat.service.persistence.SubjectNote;
+import dk.dbc.promat.service.persistence.TaskFieldType;
+import dk.dbc.promat.service.persistence.TaskType;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Stateless
 public class Repository {
+    private static final Logger LOGGER = LoggerFactory.getLogger(Repository.class);
+
     @Inject
     @PromatEntityManager
     EntityManager entityManager;
+
+    @Inject
+    OpennumberRollConnector opennumberRollConnector;
+
+    @Inject
+    @ConfigProperty(name = "OPENNUMBERROLL_NUMBERROLLNAME")
+    String openNumberrollRollName;
 
     /**
      * Locks a single entity for exclusive access.
@@ -142,5 +160,18 @@ public class Repository {
                 .withDetails(String.format("Invalid TaskType %s when determining paycategory for TaskType", taskType))
                 .withCode(ServiceErrorCode.INVALID_REQUEST)
                 .withHttpStatus(400);
+    }
+
+    public void assignFaustnumber(PromatCase existing) throws OpennumberRollConnectorException {
+        for(PromatTask task : existing.getTasks().stream()
+                .filter(task -> task.getTaskFieldType() == TaskFieldType.BRIEF)
+                .collect(Collectors.toList())) {
+            if( task.getRecordId() == null || task.getRecordId().isEmpty() ) {
+                OpennumberRollConnector.Params params = new OpennumberRollConnector.Params();
+                params.withRollName(openNumberrollRollName);
+                task.setRecordId(opennumberRollConnector.getId(params));
+                LOGGER.info("Assigned new faustnumber {} to task with id {} on case with id {}", task.getRecordId(), task.getRecordId(), existing.getId());
+            }
+        }
     }
 }

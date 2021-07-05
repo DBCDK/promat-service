@@ -13,8 +13,8 @@ import dk.dbc.promat.service.persistence.PromatCase;
 import dk.dbc.promat.service.persistence.PromatTask;
 import dk.dbc.promat.service.persistence.TaskFieldType;
 import dk.dbc.promat.service.util.PromatTaskUtils;
+import dk.dbc.promat.service.Repository;
 
-import java.time.DayOfWeek;
 import java.time.LocalDate;
 import org.eclipse.microprofile.metrics.ConcurrentGauge;
 import org.eclipse.microprofile.metrics.Metadata;
@@ -25,6 +25,7 @@ import org.eclipse.microprofile.metrics.annotation.RegistryType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
@@ -48,6 +49,9 @@ public class CaseInformationUpdater {
 
     @Inject
     OpenFormatHandler openFormatHandler;
+
+    @EJB
+    Repository repository;
 
     static final Metadata openformatTimerMetadata = Metadata.builder()
             .withName("promat_service_caseinformationupdater_openformat_timer")
@@ -104,8 +108,9 @@ public class CaseInformationUpdater {
 
             // Check if the case has status 'APPROVED' and we have reached the week specified by the weekcode
             if( CaseStatus.APPROVED == promatCase.getStatus() && weekcodeMatchOrBefore(promatCase) ) {
-                LOGGER.info("Changing status on case {} since weekcode {} is actual or previous week", promatCase.getId(), promatCase.getWeekCode());
-                promatCase.setStatus(CaseStatus.PENDING_MEETING);
+                LOGGER.info("Changing status on case {} to PENDING_EXPORT since weekcode {} is actual or previous week", promatCase.getId(), promatCase.getWeekCode());
+                repository.assignFaustnumber(promatCase);
+                promatCase.setStatus(CaseStatus.PENDING_EXPORT);
             }
 
             //
@@ -221,9 +226,14 @@ public class CaseInformationUpdater {
 
         // Do not use trimmedWeekcode, it is set by the db on update, and the entity
         // might not have been commited before we get to this line
-        Integer caseWeekcode = Integer.parseInt(promatCase.getWeekCode().substring(3));
-        LOGGER.info("caseWeekcode = {}, today (shifted) = {}", caseWeekcode, today);
+        if( promatCase.getWeekCode() != null && !promatCase.getWeekCode().isEmpty() ) {
+            LOGGER.info("Case has weekcode {}", promatCase.getWeekCode());
+            Integer caseWeekcode = Integer.parseInt(promatCase.getWeekCode().substring(3));
+            LOGGER.info("caseWeekcode = {}, today (shifted) = {}", caseWeekcode, today);
+            return caseWeekcode <= today;
+        }
 
-        return caseWeekcode <= today;
+        LOGGER.info("Case has no weekcode yet, so no weekcode match");
+        return false;
     }
 }
