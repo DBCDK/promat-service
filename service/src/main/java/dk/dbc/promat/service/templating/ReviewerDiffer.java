@@ -75,7 +75,7 @@ public class ReviewerDiffer {
 
     private final Set<String> changeableFields = Set.of(
             "active", "firstName", "lastName", "email", "phone", "institution", "paycode",
-            "hiatusBegin", "hiatusEnd", "capacity", "privateEmail");
+            "hiatusBegin", "hiatusEnd", "capacity", "privateEmail", "privatePhone");
 
     private final Set<String> changeableAddressFields = Set.of(
             "address1", "address2", "zip", "city", "selected");

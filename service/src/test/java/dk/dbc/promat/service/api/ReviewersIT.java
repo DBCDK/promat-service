@@ -707,9 +707,7 @@ public class ReviewersIT extends ContainerTest {
         Response response = putResponse("v1/api/reviewers/7", reviewerRequest, Map.of("notify", true));
         assertThat("response status", response.getStatus(), is(200));
         List<Notification> notifications = getNotifications(null, "Hellig Helges Vej");
-        for (Notification n : notifications) {
-            LOGGER.info("NOti:{}", n);
-        }
+
         assertThat("There is only one mail containing info with this address change",
                 notifications.size(), is(1));
         assertThat("This is a mail to the LU mailaddress", notifications.get(0).getToAddress(), is("TEST@dbc.dk"));
@@ -727,6 +725,54 @@ public class ReviewersIT extends ContainerTest {
         assertThat("response status", response.getStatus(), is(200));
         notifications = getNotifications(null, "Thors Torden");
         assertThat("There are no mails to this change", notifications.size(), is(0));
+
+        // Change various stuff: Phone, private address, and "selected" on addresses.
+        reviewerRequest = new ReviewerRequest()
+                .withPhone("123456112233445566")
+                .withPrivatePhone("987654321112233445566")
+                .withPrivateAddress(new Address().withAddress1("Classensgade 12").withSelected(true))
+                .withAddress(new Address().withSelected(false));
+        response = putResponse("v1/api/reviewers/7", reviewerRequest, Map.of("notify", true));
+        assertThat("response status", response.getStatus(), is(200));
+        notifications = getNotifications(null, "123456112233445566");
+        assertThat("There are one mail matching this change", notifications.size(), is(1));
+        Notification notification = notifications.get(0);
+
+        assertThat("Address change is present", notification.getBodyText()
+                .contains("Classensgade 12"));
+
+        assertThat("Private phone change is present", notification.getBodyText()
+                .contains("987654321112233445566"));
+
+        assertThat("Phone change is present", notification.getBodyText()
+                .contains("123456112233445566"));
+
+        assertThat("Private address is selected", notification.getBodyText()
+                .contains("<tr>\n" +
+                        "                <td>[privateSelected]</td>\n" +
+                        "            </tr>\n" +
+                        "            \n" +
+                        "                <tr>\n" +
+                        "                    <td><table>\n" +
+                        "                            <tr>\n" +
+                        "                                <td>\n" +
+                        "                                    Fra:\n" +
+                        "                                </td>\n" +
+                        "                                <td>\n" +
+                        "                                    false\n" +
+                        "                                </td>\n" +
+                        "                            </tr>\n" +
+                        "                            <tr>\n" +
+                        "                                <td>\n" +
+                        "                                    Til:\n" +
+                        "                                </td>\n" +
+                        "                                <td>\n" +
+                        "                                    true\n" +
+                        "                                </td>\n" +
+                        "                            </tr>\n" +
+                        "                        </table>"));
+
+
     }
 
 }

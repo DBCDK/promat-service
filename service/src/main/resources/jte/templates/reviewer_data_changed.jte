@@ -3,8 +3,8 @@
 @import java.util.List
 @param ReviewerDataChanged reviewerDataChanged
 !{ List<String> fieldNames = List.of("firstName", "lastName", "email", "phone",
- "institution","address1", "address2", "zip", "city", "hiatus_begin", "hiatus_end", "selected",
- "capacity", "privateAddress1", "privateAddress2", "privateZip", "privateCity", "privateSelected", "privateEmail");
+ "institution","address1", "address2", "zip", "city", "hiatusBegin", "hiatusEnd", "selected",
+ "capacity", "privateAddress1", "privateAddress2", "privateZip", "privateCity", "privateSelected", "privateEmail", "privatePhone");
  Reviewer reviewer = reviewerDataChanged.getReviewer(); }
 
 <p>Anmelderprofilen '${reviewer.getId()}' (${reviewer.getFirstName()} ${reviewer.getLastName()}) er ændret,
