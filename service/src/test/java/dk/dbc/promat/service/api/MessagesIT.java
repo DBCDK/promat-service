@@ -220,28 +220,6 @@ public class MessagesIT extends ContainerTest {
         return mapper.readValue(response.readEntity(String.class), PromatMessagesList.class);
     }
 
-    private List<Notification> getNotifications(String subjectWildcard, String bodyTextWildcard) {
-        TypedQuery<Notification> query = entityManager
-                .createQuery("SELECT notification " +
-                        "FROM Notification notification ORDER BY notification.id", Notification.class);
-        List<Notification> allNotifications = query.getResultList();
-        List<Notification> notifications = new ArrayList<>();
-        if (subjectWildcard != null) {
-            notifications = allNotifications.stream().filter(notification ->
-                    notification.getSubject().contains(subjectWildcard)).collect(Collectors.toList());
-        } else {
-            notifications = new ArrayList<>(allNotifications);
-        }
-        if (bodyTextWildcard != null) {
-            notifications = notifications.stream().filter(notification ->
-                    notification.getBodyText().contains(bodyTextWildcard)).collect(Collectors.toList());
-        }
-        return notifications;
-    }
-
-    private List<Notification> getNotifications() {
-        return getNotifications(null, null);
-    }
 
 
     private long size(List<Notification> notifications, String mailAddress) {

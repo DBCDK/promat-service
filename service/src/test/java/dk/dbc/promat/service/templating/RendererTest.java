@@ -8,6 +8,7 @@ package dk.dbc.promat.service.templating;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import dk.dbc.connector.openformat.OpenFormatConnectorException;
 import dk.dbc.connector.openformat.OpenFormatConnectorFactory;
+import dk.dbc.promat.service.ContainerTest;
 import dk.dbc.promat.service.api.OpenFormatHandler;
 import dk.dbc.promat.service.dto.ReviewerRequest;
 import dk.dbc.promat.service.persistence.Address;
@@ -31,13 +32,17 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 
 
+
 public class RendererTest {
+    private static final Logger LOGGER = LoggerFactory.getLogger(RendererTest.class);
     private static final NotificationFactory notificationFactory = new NotificationFactory();
     private static WireMockServer wireMockServer;
     private final PromatCase aCase = new PromatCase()
@@ -135,7 +140,8 @@ public class RendererTest {
         Reviewer reviewer = new Reviewer()
                 .withFirstName("hans")
                 .withLastName("Hansen")
-                .withAddress(new Address());
+                .withPrivateAddress(new Address().withAddress2("Snerrebunden 44").withZip("7777"))
+                .withPrivateEmail("hans@hansen.dk");
         LocalDate somedaysahead = LocalDate.now().plusDays(3);
         LocalDate alittlelater = LocalDate.now().plusDays(5);
         ReviewerRequest reviewerRequest = new ReviewerRequest()
@@ -145,7 +151,9 @@ public class RendererTest {
                 .withHiatusEnd(alittlelater)
                 .withPaycode(123456)
                 .withActive(true)
-                .withAddress(new Address().withAddress1("Snevej 1"));
+                .withAddress(new Address().withAddress1("Snevej 1").withSelected(true))
+                .withPrivateAddress(new Address().withAddress2("Snurretoppen 88"))
+                .withPrivateEmail("hans@ny.hansen.dk");
         Map<String, ChangedValue> actual =
                 new ReviewerDiffer().getChangedValueMap(reviewer, reviewerRequest);
         Map<String, ChangedValue> expected = Map.of(
@@ -172,7 +180,19 @@ public class RendererTest {
                 "address1",
                 new ChangedValue()
                         .withFromValue(null)
-                        .withToValue("Snevej 1"));
+                        .withToValue("Snevej 1"),
+                "privateAddress2",
+                new ChangedValue()
+                        .withFromValue("Snerrebunden 44")
+                        .withToValue("Snurretoppen 88"),
+                "selected",
+                new ChangedValue()
+                        .withFromValue(null)
+                        .withToValue(true+""),
+                "privateEmail",
+                new ChangedValue()
+                        .withFromValue("hans@hansen.dk")
+                        .withToValue("hans@ny.hansen.dk"));
         assertThat("change detected", actual.size(), is(expected.size()));
         for(String changed : expected.keySet()) {
             assertThat(changed, actual.containsKey(changed));
@@ -189,13 +209,25 @@ public class RendererTest {
                 .withAddress(new Address()
                         .withAddress1("Fælledvej 393, 8.th")
                         .withZip("2200")
-                        .withCity("København N"));
+                        .withCity("København N"))
+                .withPrivateAddress(
+                        new Address()
+                                .withAddress1("Rådhuspladsen 1")
+                                .withZip("1550"))
+                .withPrivateEmail("m-privat@olsen.dk");
         ReviewerRequest reviewerRequest = new ReviewerRequest()
                 .withAddress(new Address()
                         .withAddress1("Frederiksgårds Allé").withAddress2("166 B, 19.mf")
                         .withZip("2720")
                         .withCity("Vanløse"))
-                .withEmail("mikeller@olsen.dk");
+                .withEmail("mikeller@olsen.dk")
+                .withPrivateEmail("mulle-privat@olsen.dk")
+                .withPrivateAddress(
+                        new Address()
+                                .withAddress1("Rungsted Kystvej 199")
+                                .withAddress2("Postbox 40")
+                                .withCity("Rungsted")
+                                .withZip("2930"));
         Notification notification = notificationFactory.notificationOf(
                 new ReviewerDataChanged()
                 .withReviewer(reviewer)

@@ -20,6 +20,7 @@ import dk.dbc.promat.service.persistence.Subject;
 import dk.dbc.promat.service.persistence.SubjectNote;
 import dk.dbc.promat.service.templating.NotificationFactory;
 import dk.dbc.promat.service.templating.model.ReviewerDataChanged;
+import javax.ws.rs.DefaultValue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -175,8 +176,11 @@ public class Reviewers {
     @PUT
     @Path("reviewers/{id}")
     @Produces({MediaType.APPLICATION_JSON})
-    public Response updateReviewer(@PathParam("id") final Integer id, ReviewerRequest reviewerRequest) {
-        LOGGER.info("reviewers/{} (PUT)", id);
+    public Response updateReviewer(@PathParam("id") final Integer id, ReviewerRequest reviewerRequest,
+                                   @QueryParam("notify") @DefaultValue("false") final Boolean notify) {
+        Notification notification = null;
+
+        LOGGER.info("reviewers/{} (PUT), notify:{}", id, notify);
 
         try {
 
@@ -187,11 +191,13 @@ public class Reviewers {
                 return Response.status(404).build();
             }
 
-            // Create the notification now, before we fill in the changed fields in reviewer.
-            Notification notification = notificationFactory.notificationOf(new ReviewerDataChanged()
-                    .withReviewerRequest(reviewerRequest)
-                    .withReviewer(reviewer)
-            );
+            if(notify) {
+                // Create the notification now, before we fill in the changed fields in reviewer.
+                 notification = notificationFactory.notificationOf(new ReviewerDataChanged()
+                        .withReviewerRequest(reviewerRequest)
+                        .withReviewer(reviewer)
+                );
+            }
 
             // Update by patching
             if(reviewerRequest.isActive() != null) {
@@ -264,10 +270,9 @@ public class Reviewers {
                 reviewer.setNote(reviewerRequest.getNote());
             }
 
-            // Should exceptions here always be caught?
-            //   (One could argue that reviewers changes in data should be withheld just because an
-            //    confirmation mail could not be sent)
-            notificationSender.notifyMailRecipient(notification);
+            if (notify && notification != null) {
+                entityManager.persist(notification);
+            }
 
             return Response.status(200)
                     .entity(reviewer)

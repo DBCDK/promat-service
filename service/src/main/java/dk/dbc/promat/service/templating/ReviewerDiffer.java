@@ -15,12 +15,73 @@ import javax.enterprise.context.ApplicationScoped;
 
 @ApplicationScoped
 public class ReviewerDiffer {
+    private static class PrivateAddress {
+        private String privateAddress1;
+        private String privateAddress2;
+        private String privateZip;
+        private String privateCity;
+        private Boolean privateSelected;
+
+        public PrivateAddress(Address address) {
+            if (address != null) {
+                this.privateAddress1 = address.getAddress1();
+                this.privateAddress2 = address.getAddress2();
+                this.privateCity = address.getCity();
+                this.privateZip = address.getZip();
+                this.privateSelected = address.getSelected();
+            }
+        }
+
+        public String getPrivateAddress1() {
+            return privateAddress1;
+        }
+
+        public void setPrivateAddress1(String privateAddress1) {
+            this.privateAddress1 = privateAddress1;
+        }
+
+        public String getPrivateAddress2() {
+            return privateAddress2;
+        }
+
+        public void setPrivateAddress2(String privateAddress2) {
+            this.privateAddress2 = privateAddress2;
+        }
+
+        public String getPrivateZip() {
+            return privateZip;
+        }
+
+        public void setPrivateZip(String privateZip) {
+            this.privateZip = privateZip;
+        }
+
+        public String getPrivateCity() {
+            return privateCity;
+        }
+
+        public void setPrivateCity(String privateCity) {
+            this.privateCity = privateCity;
+        }
+
+        public Boolean getPrivateSelected() {
+            return privateSelected;
+        }
+
+        public void setPrivateSelected(Boolean privateSelected) {
+            this.privateSelected = privateSelected;
+        }
+    }
+
     private final Set<String> changeableFields = Set.of(
             "active", "firstName", "lastName", "email", "phone", "institution", "paycode",
-            "hiatusBegin", "hiatusEnd", "capacity");
+            "hiatusBegin", "hiatusEnd", "capacity", "privateEmail");
 
     private final Set<String> changeableAddressFields = Set.of(
-            "address1", "address2", "zip", "city");
+            "address1", "address2", "zip", "city", "selected");
+
+    private final Set<String> changeablePrivateAddressFields = Set.of(
+            "privateAddress1", "privateAddress2", "privateCity", "privateZip", "privateSelected");
 
     private <T, T1> Map<String, ChangedValue> getChangedValueMap(T1 fromObject, T toObject, Set<String> fieldsTocheck )
             throws IllegalAccessException {
@@ -51,8 +112,19 @@ public class ReviewerDiffer {
     public Map<String, ChangedValue> getChangedValueMap(Reviewer reviewer, ReviewerRequest reviewerRequest) throws IllegalAccessException {
         Map<String, ChangedValue> valueMap = getChangedValueMap(reviewer, reviewerRequest, changeableFields);
         if (reviewerRequest.getAddress() != null) {
-            valueMap.putAll(getChangedValueMap(reviewer.getAddress() == null ? new Address() : reviewer.getAddress(),
-                    reviewerRequest.getAddress(), changeableAddressFields));
+            valueMap.putAll(getChangedValueMap(
+                    reviewer.getAddress() == null ? new Address() : reviewer.getAddress(),
+                    reviewerRequest.getAddress(),
+                    changeableAddressFields));
+        }
+        if (reviewerRequest.getPrivateAddress() != null) {
+            PrivateAddress privateAddressRequest = new PrivateAddress(reviewerRequest.getPrivateAddress());
+            PrivateAddress privateAddress = new PrivateAddress(reviewer.getPrivateAddress());
+            valueMap.putAll(getChangedValueMap(
+                    privateAddress,
+                    privateAddressRequest,
+                    changeablePrivateAddressFields
+                    ));
         }
         return valueMap;
     }

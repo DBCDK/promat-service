@@ -14,6 +14,10 @@ values (3, 'REVIEWER', true, '43', 'Peter', 'Petersen', 'peter@petersen.dk', 'Me
 insert into promatuser(id, role, active, culrid, firstname, lastname, email, institution, paycode, hiatus_begin, hiatus_end, accepts, note, phone, capacity, privateSelected)
 values (6, 'REVIEWER', true, '56434241', 'Michael', 'Michelsen', 'mich@mich.dk', 'Michs Mechanics', 232221, null, null, '["MULTIMEDIA"]', 'note6', '912345678901', 2, null);
 
+-- This reviewer is used for notification testing. Hands off.
+insert into promatuser(id, role, active, culrid, firstname, lastname, email, institution, paycode, hiatus_begin, hiatus_end, accepts, note, phone, capacity, privateSelected, privateEmail)
+values (7, 'REVIEWER', false, '56434242', 'Holger', 'Holgersen', 'holg@holg.dk', 'Holgers Holdings', 232222, null, null, '["MULTIMEDIA"]', 'note7', '912345678902', 2, null, 'holger.privat@holg.dk');
+
 insert into reviewersubjects(subject_id, reviewer_id) values(5,1);
 insert into reviewersubjects(subject_id, reviewer_id) values(3,1);
 insert into reviewersubjects(subject_id, reviewer_id) values(5,2);

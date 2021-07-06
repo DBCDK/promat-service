@@ -14,6 +14,7 @@ import dk.dbc.promat.service.dto.ReviewerWithWorkloads;
 import dk.dbc.promat.service.dto.ServiceErrorCode;
 import dk.dbc.promat.service.dto.ServiceErrorDto;
 import dk.dbc.promat.service.persistence.Address;
+import dk.dbc.promat.service.persistence.Notification;
 import dk.dbc.promat.service.persistence.Reviewer;
 import dk.dbc.promat.service.persistence.Subject;
 import dk.dbc.promat.service.persistence.SubjectNote;
@@ -149,9 +150,11 @@ public class ReviewersIT extends ContainerTest {
         final Reviewer reviewer6 = new Reviewer();
         loadReviewer6(reviewer6);
 
+        final Reviewer reviewer7 = new Reviewer();
+        loadReviewer7(reviewer7);
 
         final ReviewerList<Reviewer> expected = new ReviewerList<>()
-                .withReviewers(List.of(reviewer1, reviewer2, reviewer3, reviewer4, reviewer5, reviewer6));
+                .withReviewers(List.of(reviewer1, reviewer2, reviewer3, reviewer4, reviewer5, reviewer6, reviewer7));
 
         final Response response = getResponse("v1/api/reviewers");
 
@@ -201,8 +204,14 @@ public class ReviewersIT extends ContainerTest {
                 .withWeekAfterWorkload(0);
         loadReviewer6(reviewer6);
 
+        final ReviewerWithWorkloads reviewer7 = new ReviewerWithWorkloads()
+                .withWeekWorkload(0)
+                .withWeekBeforeWorkload(0)
+                .withWeekAfterWorkload(0);
+        loadReviewer7(reviewer7);
+
         final ReviewerList<ReviewerWithWorkloads> expected = new ReviewerList<ReviewerWithWorkloads>()
-                .withReviewers(List.of(reviewer1, reviewer2, reviewer3, reviewer4, reviewer5, reviewer6));
+                .withReviewers(List.of(reviewer1, reviewer2, reviewer3, reviewer4, reviewer5, reviewer6, reviewer7));
 
         final Response response = getResponse("v1/api/reviewers",
                 Map.of("deadline", "2020-12-01"));
@@ -546,6 +555,28 @@ public class ReviewersIT extends ContainerTest {
         ));
     }
 
+    private void loadReviewer7(Reviewer reviewer) {
+        reviewer.setId(7);
+        reviewer.setActive(false);
+        reviewer.setCulrId("56434242");
+        reviewer.setFirstName("Holger");
+        reviewer.setLastName("Holgersen");
+        reviewer.setEmail("holg@holg.dk");
+        reviewer.setInstitution("Holgers Holdings");
+        reviewer.setPaycode(232222);
+        reviewer.setHiatusBegin(null);
+        reviewer.setHiatusEnd(null);
+        reviewer.setAccepts(List.of(
+                Reviewer.Accepts.MULTIMEDIA));
+        reviewer.setNote("note7");
+        reviewer.setPhone("912345678902");
+        reviewer.setCapacity(2);
+        reviewer.setPrivateEmail("holger.privat@holg.dk");
+        reviewer.setSubjects(List.of());
+        reviewer.setSubjectNotes(List.of());
+        reviewer.setAddress(new Address().withSelected(true));
+    }
+
     @Test
     public void testReviewerFormat() {
         Reviewer reviewer = new Reviewer();
@@ -664,6 +695,38 @@ public class ReviewersIT extends ContainerTest {
         fetched = mapper.readValue(response.readEntity(String.class), Reviewer.class);
         loadReviewer6(reviewer6);
         assertThat(fetched, is(reviewer6));
+    }
+
+    @Test
+    public void testThatMailsAreOnlySentOnRealChangesAndWhenNotifyQueryParmIsTrue() {
+
+        // Add private address, And check that a mail is added to the mailqueue with the changes.
+        ReviewerRequest reviewerRequest =
+                new ReviewerRequest()
+                        .withPrivateAddress(new Address().withAddress1("Hellig Helges Vej"));
+        Response response = putResponse("v1/api/reviewers/7", reviewerRequest, Map.of("notify", true));
+        assertThat("response status", response.getStatus(), is(200));
+        List<Notification> notifications = getNotifications(null, "Hellig Helges Vej");
+        for (Notification n : notifications) {
+            LOGGER.info("NOti:{}", n);
+        }
+        assertThat("There is only one mail containing info with this address change",
+                notifications.size(), is(1));
+        assertThat("This is a mail to the LU mailaddress", notifications.get(0).getToAddress(), is("TEST@dbc.dk"));
+
+
+        // Change the private address. Now with no notify parm. Expect nothing further in mail queue.
+        reviewerRequest.getPrivateAddress().setAddress1("Thors Torden gade 11");
+        response = putResponse("v1/api/reviewers/7", reviewerRequest);
+        assertThat("response status", response.getStatus(), is(200));
+        notifications = getNotifications(null, "Thors Torden");
+        assertThat("There are no mails to this change", notifications.size(), is(0));
+
+        // Now submit the same address, but now with notify. Expect no mail.
+        response = putResponse("v1/api/reviewers/7", reviewerRequest, Map.of("notify", true));
+        assertThat("response status", response.getStatus(), is(200));
+        notifications = getNotifications(null, "Thors Torden");
+        assertThat("There are no mails to this change", notifications.size(), is(0));
     }
 
 }

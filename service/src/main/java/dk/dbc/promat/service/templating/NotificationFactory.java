@@ -15,6 +15,7 @@ import dk.dbc.promat.service.persistence.PromatCase;
 import dk.dbc.promat.service.persistence.Reviewer;
 import dk.dbc.promat.service.persistence.TaskFieldType;
 import dk.dbc.promat.service.templating.model.AssignReviewer;
+import dk.dbc.promat.service.templating.model.ChangedValue;
 import dk.dbc.promat.service.templating.model.MailToReviewerOnNewMessage;
 import dk.dbc.promat.service.templating.model.ReviewerDataChanged;
 import java.io.IOException;
@@ -22,6 +23,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import javax.ejb.Stateless;
 import javax.inject.Inject;
@@ -102,12 +104,18 @@ public class NotificationFactory {
         ReviewerRequest reviewerRequest = model.getReviewerRequest();
         String subject = String.format(subjectTemplateReviewerChanged, reviewer.getId());
         try {
-            model.withDiff(reviewerDiffer.getChangedValueMap(reviewer, reviewerRequest));
+            Map<String, ChangedValue> diffMap = reviewerDiffer.getChangedValueMap(reviewer, reviewerRequest);
+            if (diffMap.isEmpty()) {
+                LOGGER.info("Diff: No diff detected.");
+                return null;
+            }
+            model.withDiff(diffMap);
             LOGGER.info("Diff: {}", model);
             return notification
                     .withToAddress(LU_MAILADDRESS)
                     .withSubject(subject)
-                    .withBodyText(renderer.render("reviewer_data_changed.jte", model));
+                    .withBodyText(renderer.render("reviewer_data_changed.jte", model))
+                    .withStatus(NotificationStatus.PENDING);
 
         } catch (IllegalAccessException e) {
             throw new ValidateException(e);
