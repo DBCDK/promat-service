@@ -16,18 +16,12 @@ import dk.dbc.promat.service.persistence.Notification;
 import dk.dbc.promat.service.persistence.PromatCase;
 import dk.dbc.promat.service.persistence.PromatMessage;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.stream.Collectors;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.persistence.TypedQuery;
 import javax.ws.rs.core.Response;
 import java.util.Arrays;
 import java.util.List;
@@ -125,6 +119,12 @@ public class MessagesIT extends ContainerTest {
                 ANOTHER_EDITOR_ID, PromatMessage.Direction.EDITOR_TO_REVIEWER);
         assertThat("status code", response.getStatus(), is(201));
 
+        // Make sure that reviewer also receives mails on the two messages posted to her.
+        List<Notification> notifications =
+                getNotifications(String.format("Ny besked fra redaktøren på ProMat anmeldelse: %s",
+                        "Title for 3002111"),
+                        null);
+        assertThat("There are two messages from editor", notifications.size(), is(2));
 
         // Make sure none is read yet
         assertThat("Editor to reviewer messages are not read",
@@ -149,7 +149,7 @@ public class MessagesIT extends ContainerTest {
         // Make sure all messages to reviewer are now status "read"
         assertThat("Editor to reviewer messages are read",
                 size(getMessageList(aCase), PromatMessage.Direction.EDITOR_TO_REVIEWER),
-                is(3L));
+                is(2L));
 
         // And in the opposite direction: No changes
         assertThat("Reviewer to editor messages are not read",
@@ -169,7 +169,7 @@ public class MessagesIT extends ContainerTest {
                 is(1L));
 
         // Make sure that three mails are sent to reviewer:
-        // 1) The assignment mail /* todo: Should the message part be left out? So this is simply a mail?
+        // 1) The assignment mail
         // 2) The follow up message/mail from main editor
         // 3) The vacation stand-in editor informs
         assertThat( "Three mails are sent to the reviewer",

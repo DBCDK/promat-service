@@ -1074,17 +1074,8 @@ public class Cases {
 
         Notification notification = notificationFactory
                 .notificationOf(new AssignReviewer().withPromatCase(promatCase).withNote(promatCase.getNote()));
-        PromatMessage message = new PromatMessage()
-                .withCaseId(promatCase.getId())
-                .withMessageText(notification.getBodyText())
-                .withDirection(PromatMessage.Direction.EDITOR_TO_REVIEWER)
-                .withAuthor(
-                        PromatMessage.Author.fromPromatUser(promatCase.getEditor())
-                )
-                .withCreated(LocalDateTime.now())
-                .withIsRead(Boolean.FALSE);
+
         entityManager.persist(notification);
-        entityManager.persist(message);
     }
 
     private CaseStatus calculateStatus(PromatCase existing, CaseStatus proposedStatus) throws ServiceErrorException {
