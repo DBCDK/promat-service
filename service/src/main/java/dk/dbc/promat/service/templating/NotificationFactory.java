@@ -16,6 +16,8 @@ import dk.dbc.promat.service.persistence.Reviewer;
 import dk.dbc.promat.service.persistence.TaskFieldType;
 import dk.dbc.promat.service.templating.model.AssignReviewer;
 import dk.dbc.promat.service.templating.model.ChangedValue;
+import dk.dbc.promat.service.templating.model.DeadlinePassedMail;
+import dk.dbc.promat.service.templating.model.EarlyReminderMail;
 import dk.dbc.promat.service.templating.model.MailToReviewerOnNewMessage;
 import dk.dbc.promat.service.templating.model.ReviewerDataChanged;
 import java.io.IOException;
@@ -55,9 +57,12 @@ public class NotificationFactory {
     String LU_MAILADDRESS;
 
     private final Renderer renderer = new Renderer();
-    private static String subjectTemplate;
-    private static String subjectTemplateReviewerChanged;
-    private static String subjectTemplateNewMessageFromEditor;
+    private static final String subjectTemplate;
+    private static final String subjectTemplateReviewerChanged;
+    private static final String subjectTemplateNewMessageFromEditor;
+    private static final String subjectReminderCloseToDeadline;
+    private static final String subjectDeadlinePassed;
+
     static {
         try {
             subjectTemplate = Files.readString(
@@ -66,6 +71,11 @@ public class NotificationFactory {
                     Path.of(Notification.class.getResource("/mail/subject.reviewer.change.template").getPath()));
             subjectTemplateNewMessageFromEditor = Files.readString(
                     Path.of(Notification.class.getResource("/mail/subject.reviewer.new.message.template").getPath()));
+            subjectReminderCloseToDeadline = Files.readString(
+                    Path.of(Notification.class.getResource("/mail/subject.reminder.closetodeadline.template").getPath()));
+            subjectDeadlinePassed = Files.readString(
+                    Path.of(Notification.class.getResource( "/mail/subject.reminder.deadlinepassed.template").getPath()));
+
         } catch (IOException ioException) {
             throw new RuntimeException(ioException);
         }
@@ -78,12 +88,7 @@ public class NotificationFactory {
         // Lookup main faust and related fausts titles
         // For some reason frontend posts a related-faust equal to the primary
         // one.
-        List<String> fausts = new ArrayList<>(List.of(promatCase.getPrimaryFaust()));
-        if (promatCase.getRelatedFausts() != null) {
-            fausts.addAll(promatCase.getRelatedFausts()
-                    .stream()
-                    .filter(f -> !f.equals(promatCase.getPrimaryFaust())).collect(Collectors.toList()));
-        }
+        List<String> fausts = collectFausts(promatCase);
         String subject = String.format(subjectTemplate,
                 (promatCase.getTasks().stream().anyMatch(c -> c.getTaskFieldType() == TaskFieldType.EXPRESS)
                         ? "EKSPRES!" : ""),
@@ -131,11 +136,35 @@ public class NotificationFactory {
         return notification
                 .withToAddress(mailAddress)
                 .withSubject(subject)
-                .withBodyText(renderer.render("new_message_to_reviewer_mail.jte", model)).withStatus(NotificationStatus.PENDING);
-
+                .withBodyText(renderer.render("new_message_to_reviewer_mail.jte", model))
+                .withStatus(NotificationStatus.PENDING);
     }
 
+    public Notification notificationOf(EarlyReminderMail model) throws OpenFormatConnectorException {
+        Notification notification = new Notification();
+        List<String> fausts = collectFausts(model.getPromatCase());
+        Reviewer reviewer = model.getPromatCase().getReviewer();
+        String mailAddress = reviewer.getAddress().getSelected() ? reviewer.getEmail() : reviewer.getPrivateEmail();
+        return notification
+                .withToAddress(mailAddress)
+                .withSubject(subjectReminderCloseToDeadline)
+                .withBodyText(renderer.render("promatcase_near_deadline.jte",
+                        model.withTitleSections(getTitleSections(fausts))))
+                .withStatus(NotificationStatus.PENDING);
+    }
 
+    public Notification notificationOf(DeadlinePassedMail model) throws OpenFormatConnectorException {
+        Notification notification = new Notification();
+        List<String> fausts = collectFausts(model.getPromatCase());
+        Reviewer reviewer = model.getPromatCase().getReviewer();
+        String mailAddress = reviewer.getAddress().getSelected() ? reviewer.getEmail() : reviewer.getPrivateEmail();
+        return notification
+                .withToAddress(mailAddress)
+                .withSubject(subjectDeadlinePassed)
+                .withBodyText(renderer.render("promatcase_passed_deadline.jte",
+                        model.withTitleSections(getTitleSections(fausts))))
+                .withStatus(NotificationStatus.PENDING);
+    }
 
     private List<BibliographicInformation> getTitleSections(List<String> fausts) throws OpenFormatConnectorException {
         List<BibliographicInformation> titleSections = new ArrayList<>();
@@ -143,5 +172,15 @@ public class NotificationFactory {
             titleSections.add(openFormatHandler.format(faust));
         }
         return titleSections;
+    }
+
+    private List<String> collectFausts(PromatCase promatCase) {
+        List<String> fausts = new ArrayList<>(List.of(promatCase.getPrimaryFaust()));
+        if (promatCase.getRelatedFausts() != null) {
+            fausts.addAll(promatCase.getRelatedFausts()
+                    .stream()
+                    .filter(f -> !f.equals(promatCase.getPrimaryFaust())).collect(Collectors.toList()));
+        }
+        return fausts;
     }
 }
