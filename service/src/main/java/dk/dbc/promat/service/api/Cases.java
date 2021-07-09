@@ -8,9 +8,8 @@ package dk.dbc.promat.service.api;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dk.dbc.connector.openformat.OpenFormatConnectorException;
-import dk.dbc.opennumberroll.OpennumberRollConnector;
-import dk.dbc.opennumberroll.OpennumberRollConnectorException;
 import dk.dbc.promat.service.Repository;
+import dk.dbc.promat.service.batch.Reminders;
 import dk.dbc.promat.service.dto.CaseRequest;
 import dk.dbc.promat.service.dto.CaseSummaryList;
 import dk.dbc.promat.service.dto.CriteriaOperator;
@@ -37,9 +36,6 @@ import dk.dbc.promat.service.templating.CaseviewXmlTransformer;
 import dk.dbc.promat.service.templating.NotificationFactory;
 import dk.dbc.promat.service.templating.model.AssignReviewer;
 import dk.dbc.promat.service.templating.Renderer;
-import java.time.LocalDateTime;
-
-import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -72,7 +68,6 @@ import java.util.HashSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -93,6 +88,9 @@ public class Cases {
 
     @EJB
     Records records;
+
+    @EJB
+    Reminders reminders;
 
     // Default number of results when getting cases
     private static final int DEFAULT_CASES_LIMIT = 100;
@@ -854,6 +852,19 @@ public class Cases {
         }
 
         promatCase.setStatus(CaseStatus.DELETED);
+        return Response.ok().build();
+    }
+
+    @POST
+    @Path(("cases/{id}/processreminder"))
+    public Response processReminder(@PathParam("id") final Integer id) {
+        // Fetch the case
+        PromatCase promatCase = entityManager.find(PromatCase.class, id);
+        if(promatCase == null) {
+            LOGGER.info("No case with id {}", id);
+            return ServiceErrorDto.NotFound("No such case", String.format("No case with id %d exists", id));
+        }
+        reminders.processReminder(promatCase, LocalDate.now());
         return Response.ok().build();
     }
 
