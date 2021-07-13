@@ -112,7 +112,7 @@ public class Reminders {
                     }
                 }
 
-            } catch (OpenFormatConnectorException e) {
+            } catch (OpenFormatConnectorException | NotificationFactory.ValidateException e) {
                 LOGGER.error("Caught exception during 'processReminder': {}", e.getMessage());
             }
         }

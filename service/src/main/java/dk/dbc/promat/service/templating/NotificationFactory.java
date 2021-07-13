@@ -136,6 +136,9 @@ public class NotificationFactory {
         Reviewer reviewer = model.getPromatCase().getReviewer();
         String subject = String.format(subjectTemplateNewMessageFromEditor, model.getPromatCase().getTitle());
         String mailAddress = reviewer.getAddress().getSelected() ? reviewer.getEmail() : reviewer.getPrivateEmail();
+        if (mailAddress == null) {
+            throw new ValidateException("mailAddress cannot be null");
+        }
         return notification
                 .withToAddress(mailAddress)
                 .withSubject(subject)
@@ -143,11 +146,14 @@ public class NotificationFactory {
                 .withStatus(NotificationStatus.PENDING);
     }
 
-    public Notification notificationOf(EarlyReminderMail model) throws OpenFormatConnectorException {
+    public Notification notificationOf(EarlyReminderMail model) throws OpenFormatConnectorException, ValidateException {
         Notification notification = new Notification();
         List<String> fausts = collectFausts(model.getPromatCase());
         Reviewer reviewer = model.getPromatCase().getReviewer();
         String mailAddress = reviewer.getAddress().getSelected() ? reviewer.getEmail() : reviewer.getPrivateEmail();
+        if (mailAddress == null) {
+            throw new ValidateException("mailAddress cannot be null");
+        }
         return notification
                 .withToAddress(mailAddress)
                 .withSubject(subjectReminderCloseToDeadline)
@@ -156,11 +162,14 @@ public class NotificationFactory {
                 .withStatus(NotificationStatus.PENDING);
     }
 
-    public Notification notificationOf(DeadlinePassedMail model) throws OpenFormatConnectorException {
+    public Notification notificationOf(DeadlinePassedMail model) throws OpenFormatConnectorException, ValidateException {
         Notification notification = new Notification();
         List<String> fausts = collectFausts(model.getPromatCase());
         Reviewer reviewer = model.getPromatCase().getReviewer();
         String mailAddress = reviewer.getAddress().getSelected() ? reviewer.getEmail() : reviewer.getPrivateEmail();
+        if (mailAddress == null) {
+            throw new ValidateException("mailAddress cannot be null");
+        }
         return notification
                 .withToAddress(mailAddress)
                 .withSubject(subjectDeadlinePassed)
