@@ -12,6 +12,7 @@ import dk.dbc.promat.service.dto.ReviewerRequest;
 import dk.dbc.promat.service.persistence.Notification;
 import dk.dbc.promat.service.persistence.NotificationStatus;
 import dk.dbc.promat.service.persistence.PromatCase;
+import dk.dbc.promat.service.persistence.PromatTask;
 import dk.dbc.promat.service.persistence.Reviewer;
 import dk.dbc.promat.service.persistence.TaskFieldType;
 import dk.dbc.promat.service.templating.model.AssignReviewer;
@@ -24,8 +25,10 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 import javax.ejb.Stateless;
 import javax.inject.Inject;
@@ -175,12 +178,17 @@ public class NotificationFactory {
     }
 
     private List<String> collectFausts(PromatCase promatCase) {
-        List<String> fausts = new ArrayList<>(List.of(promatCase.getPrimaryFaust()));
-        if (promatCase.getRelatedFausts() != null) {
-            fausts.addAll(promatCase.getRelatedFausts()
-                    .stream()
-                    .filter(f -> !f.equals(promatCase.getPrimaryFaust())).collect(Collectors.toList()));
+        Set<String> fausts = new HashSet<>(Set.of(promatCase.getPrimaryFaust()));
+        List<PromatTask> tasks = promatCase.getTasks();
+        if (tasks != null && !tasks.isEmpty()) {
+            for (PromatTask task : tasks) {
+                List<String> taskFausts = task.getTargetFausts();
+                if (taskFausts != null && !taskFausts.isEmpty()) {
+                    fausts.addAll(taskFausts);
+                }
+            }
+
         }
-        return fausts;
+        return fausts.stream().sorted().collect(Collectors.toList());
     }
 }

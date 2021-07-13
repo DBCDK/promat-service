@@ -8,7 +8,6 @@ package dk.dbc.promat.service.templating;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import dk.dbc.connector.openformat.OpenFormatConnectorException;
 import dk.dbc.connector.openformat.OpenFormatConnectorFactory;
-import dk.dbc.promat.service.ContainerTest;
 import dk.dbc.promat.service.api.OpenFormatHandler;
 import dk.dbc.promat.service.dto.ReviewerRequest;
 import dk.dbc.promat.service.persistence.Address;
@@ -85,7 +84,8 @@ public class RendererTest {
         Notification notification = notificationFactory.notificationOf(new AssignReviewer()
                 .withPromatCase(aCase.withRelatedFausts(List.of("47672201", "38582801", "51785347"))
                                 .withTasks(List.of(new PromatTask()
-                                .withTaskFieldType(TaskFieldType.METAKOMPAS))))
+                                .withTaskFieldType(TaskFieldType.METAKOMPAS)
+                                        .withTargetFausts(List.of("47672201", "38582801", "51785347")))))
                 .withNote(NOTE));
         String expected = stripTrailingAndLeading(
                 Files.readString(
