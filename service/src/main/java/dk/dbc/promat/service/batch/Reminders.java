@@ -7,7 +7,6 @@ import dk.dbc.promat.service.persistence.PromatEntityManager;
 import dk.dbc.promat.service.templating.NotificationFactory;
 import dk.dbc.promat.service.templating.model.DeadlinePassedMail;
 import dk.dbc.promat.service.templating.model.EarlyReminderMail;
-import java.time.Duration;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
@@ -25,6 +24,14 @@ import org.slf4j.LoggerFactory;
 public class Reminders {
     private static final Logger LOGGER = LoggerFactory.getLogger(Reminders.class);
 
+    // Little helper when testing.
+    // Allows mocking LocalDate.now()
+    protected static class Today {
+        protected LocalDate toDay() {
+            return LocalDate.now();
+        }
+    }
+
     @Inject
     @PromatEntityManager
     EntityManager entityManager;
@@ -32,11 +39,12 @@ public class Reminders {
     @EJB
     NotificationFactory notificationFactory;
 
+    protected Today todayProvider = new Today();
 
     private boolean outsideInterval(LocalDate reminder, LocalDate deadline) {
 
         // Last reminder was sent precisely three days before deadline.
-        LocalDate supposedReminderDate = deadline.minus(Duration.ofDays(3));
+        LocalDate supposedReminderDate = deadline.minusDays(3L);
         if (reminder.isEqual(supposedReminderDate)) {
             return false;
         }
@@ -53,10 +61,11 @@ public class Reminders {
      * - Everyday when deadline is passed.
      */
     public void processReminders() {
+        LOGGER.info("Looking for cases where reminders to reviewers needs to sent.");
         TypedQuery<PromatCase> query = entityManager
                 .createNamedQuery(PromatCase.GET_CASES_FOR_REMINDERS_CHECK_NAME, PromatCase.class);
         List<PromatCase> cases = query.getResultList();
-        LocalDate today = LocalDate.now();
+        LocalDate today = todayProvider.toDay();
         for (PromatCase pc : cases) {
             processReminder(pc, today);
         }
@@ -85,7 +94,7 @@ public class Reminders {
                         Notification notification = notificationFactory
                                 .notificationOf(new EarlyReminderMail().withPromatCase(pc));
                         entityManager.persist(notification);
-                        pc.setReminderSent(LocalDate.now());
+                        pc.setReminderSent(today);
                         return;
                     }
                 }
@@ -99,11 +108,11 @@ public class Reminders {
                         Notification notification = notificationFactory
                                 .notificationOf(new DeadlinePassedMail().withPromatCase(pc));
                         entityManager.persist(notification);
-                        pc.setReminderSent(LocalDate.now());
+                        pc.setReminderSent(today);
                     }
                 }
 
-            } catch (OpenFormatConnectorException | NotificationFactory.ValidateException e) {
+            } catch (OpenFormatConnectorException e) {
                 LOGGER.error("Caught exception during 'processReminder': {}", e.getMessage());
             }
         }

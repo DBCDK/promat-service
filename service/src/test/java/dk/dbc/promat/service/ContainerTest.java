@@ -36,7 +36,7 @@ public abstract class ContainerTest extends IntegrationTest {
     private static final Logger LOGGER = LoggerFactory.getLogger(ContainerTest.class);
     protected static final ObjectMapper mapper = new JsonMapperProvider().getObjectMapper();
 
-    private static WireMockServer wireMockServer;
+    protected static WireMockServer wireMockServer;
 
     static {
         wireMockServer = new WireMockServer(options().dynamicPort());

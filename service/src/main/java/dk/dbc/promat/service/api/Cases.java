@@ -708,6 +708,9 @@ public class Cases {
             if(dto.getDeadline() != null) {
                 existing.setDeadline(LocalDate.parse(dto.getDeadline()));
             }
+            if(dto.getReminderSent() != null) {
+                existing.setReminderSent(LocalDate.parse(dto.getReminderSent()));
+            }
             if(dto.getMaterialType() != null) {
                 existing.setMaterialType(dto.getMaterialType());
             }
@@ -722,7 +725,7 @@ public class Cases {
                 // If status is changing from PENDING_EXTERNAL to APPROVED, any metakompas tasks
                 // should also be approved
                 if( existing.getStatus() == CaseStatus.PENDING_EXTERNAL && status == CaseStatus.APPROVED ) {
-                    LOGGER.info("Promoting metakompas task on case {} to APPROVED prematurely by user request");
+                    LOGGER.info("Promoting metakompas task on case {} to APPROVED prematurely by user request", existing.getId());
                     approveTasks(existing, true);
                 }
 
@@ -857,6 +860,8 @@ public class Cases {
 
     @POST
     @Path(("cases/{id}/processreminder"))
+    @Produces(MediaType.APPLICATION_JSON)
+    @JsonView({CaseView.Summary.class})
     public Response processReminder(@PathParam("id") final Integer id) {
         // Fetch the case
         PromatCase promatCase = entityManager.find(PromatCase.class, id);
@@ -865,7 +870,7 @@ public class Cases {
             return ServiceErrorDto.NotFound("No such case", String.format("No case with id %d exists", id));
         }
         reminders.processReminder(promatCase, LocalDate.now());
-        return Response.ok().build();
+        return Response.ok(promatCase).build();
     }
 
     @POST
