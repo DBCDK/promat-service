@@ -166,7 +166,6 @@ public class CasesIT extends ContainerTest {
                 .withMaterialType(MaterialType.BOOK)
                 .withAssigned("2020-04-11")
                 .withDeadline("2020-04-12")
-                .withRelatedFausts(Arrays.asList("4002222", "4003333"))
                 .withStatus(CaseStatus.CREATED);
 
         Response response = postResponse("v1/api/cases", dto);
@@ -182,13 +181,6 @@ public class CasesIT extends ContainerTest {
         assertThat("created", created.getCreated(), is(LocalDate.now()));
         assertThat("assigned", created.getAssigned(), is(LocalDate.parse("2020-04-11")));
         assertThat("deadline", created.getDeadline(), is(LocalDate.parse("2020-04-12")));
-        assertThat("relatedFausts", created.getRelatedFausts().
-                stream()
-                .sorted()
-                .collect(Collectors.toList())
-                .equals(Arrays.stream(new String[]{"4002222", "4003333"})
-                        .collect(Collectors.toList())), is(true));
-        assertThat(created.getStatus(), is(CaseStatus.CREATED));
     }
 
     @Test
@@ -217,7 +209,6 @@ public class CasesIT extends ContainerTest {
                 .withSubjects(Arrays.asList(3, 4))
                 .withAssigned("2020-04-11")
                 .withDeadline("2020-04-12")
-                .withRelatedFausts(Arrays.asList("6002222", "6003333"))
                 .withStatus(CaseStatus.ASSIGNED)
                 .withTasks(Arrays.asList(
                         new TaskDto()
@@ -260,10 +251,6 @@ public class CasesIT extends ContainerTest {
                         .stream().sorted().collect(Collectors.toList()).toString(),
                 is(Arrays.asList(new String [] {"6002222", "6004444"})
                         .stream().sorted().collect(Collectors.toList()).toString()));
-        assertThat("related fausts contains", created.getRelatedFausts()
-                        .stream().sorted().collect(Collectors.toList()).toString(),
-                is(Arrays.asList(new String [] {"6002222", "6003333", "6004444"})
-                        .stream().sorted().collect(Collectors.toList()).toString()));
 
         // Get the case we created
         response = getResponse("v1/api/cases/" + created.getId().toString());
@@ -286,7 +273,6 @@ public class CasesIT extends ContainerTest {
                 .withMaterialType(MaterialType.BOOK)
                 .withAssigned("2020-04-11")
                 .withDeadline("2020-04-12")
-                .withRelatedFausts(Arrays.asList("7002222", "7003333"))
                 .withStatus(CaseStatus.ASSIGNED);
 
         assertThat("status code", postResponse("v1/api/cases", dto).getStatus(), is(400));
@@ -571,7 +557,6 @@ public class CasesIT extends ContainerTest {
                 .withTitle("Title for 8001111")
                 .withDetails("Details for 8001111")
                 .withPrimaryFaust("8001111")
-                .withRelatedFausts(Arrays.asList("8002222", "8003333"))
                 .withEditor(10)
                 .withSubjects(Arrays.asList(3, 4))
                 .withDeadline("2020-12-18")
@@ -595,7 +580,6 @@ public class CasesIT extends ContainerTest {
                 .withTitle("New title for 8001111")
                 .withDetails("New details for 8001111")
                 .withPrimaryFaust("8002222")
-                .withRelatedFausts(Arrays.asList("8001111", "8003333", "8004444")) // This is incorrect, but has no consequences other than being confusing
                 .withReviewer(1)
                 .withEditor(11)
                 .withSubjects(Arrays.asList(5))
@@ -621,12 +605,6 @@ public class CasesIT extends ContainerTest {
         assertThat("updated title", updated.getTitle(), is("New title for 8001111"));
         assertThat("updated details", updated.getDetails(), is("New details for 8001111"));
         assertThat("updated primary faust", updated.getPrimaryFaust(), is("8002222"));
-        assertThat("updated relatedFausts", updated.getRelatedFausts().
-                stream()
-                .sorted()
-                .collect(Collectors.toList())
-                .equals(Arrays.stream(new String[]{"8001111", "8003333", "8004444"})
-                        .collect(Collectors.toList())), is(true));
         assertThat("updated reviewer", updated.getReviewer().getId(), is(1));
         assertThat("status changed", updated.getStatus(), is(CaseStatus.ASSIGNED));
         assertThat("updated editor", updated.getEditor().getId(), is(11));
@@ -706,11 +684,6 @@ public class CasesIT extends ContainerTest {
 
         // Try to change the primary faustnumber to something that exists
         dto.setPrimaryFaust("001111");
-        response = postResponse("v1/api/cases/" + created.getId(), dto);
-        assertThat("status code", response.getStatus(), is(409));
-
-        // Try to add a faustnumber to related faustnumbers, that exists on an active case
-        dto.setRelatedFausts(Arrays.asList("8001111", "8003333", "8004444", "001111"));
         response = postResponse("v1/api/cases/" + created.getId(), dto);
         assertThat("status code", response.getStatus(), is(409));
     }
@@ -829,15 +802,13 @@ public class CasesIT extends ContainerTest {
         assertThat("status code", response.getStatus(), is(200));
         PromatCase fetched = mapper.readValue(response.readEntity(String.class), PromatCase.class);
 
-        // Check that the two targetfausts has been added as related fausts
-        assertThat("case has related fausts", fetched.getRelatedFausts(), is(notNullValue()));
-        assertThat("case has 2 related fausts", fetched.getRelatedFausts().size(), is(2));
-        assertThat("case has the expected 2 related fausts", fetched.getRelatedFausts().stream().sorted().collect(Collectors.toList()).equals(Arrays.asList("12002222", "12003333")));
-
         // Check that the case now has 1 task which matches the created task
         assertThat("case tasks is not null", fetched.getTasks(), is(notNullValue()));
         assertThat("case has 1 task", fetched.getTasks().size(), is(1));
         assertThat("task is the created task", fetched.getTasks().get(0).equals(createdTask));
+        assertThat("has two targetfaust", fetched.getTasks().get(0).getTargetFausts().size(), is(2));
+        assertThat("First targetfaust", fetched.getTasks().get(0).getTargetFausts().contains("12002222"), is(true));
+        assertThat("Second targetfausts", fetched.getTasks().get(0).getTargetFausts().contains("12003333"), is(true));
 
         // Check that the case now has 1 task with the expected types and data
         assertThat("task is expected TaskType", fetched.getTasks().get(0).getTaskType(), is(TaskType.GROUP_1_LESS_THAN_100_PAGES));
@@ -971,7 +942,6 @@ public class CasesIT extends ContainerTest {
         // Create case 1
         CaseRequest dto = new CaseRequest()
                 .withPrimaryFaust("17001111")
-                .withRelatedFausts(Arrays.asList("17002222"))
                 .withTitle("Title for 17001111")
                 .withDetails("Details for 17001111")
                 .withMaterialType(MaterialType.BOOK)
@@ -988,7 +958,6 @@ public class CasesIT extends ContainerTest {
         // Create case 2
         dto = new CaseRequest()
                 .withPrimaryFaust("18001111")
-                .withRelatedFausts(Arrays.asList("18002222"))
                 .withTitle("Title for 18001111")
                 .withDetails("Details for 18001111")
                 .withMaterialType(MaterialType.BOOK)
@@ -1237,9 +1206,6 @@ public class CasesIT extends ContainerTest {
                 is(caseCreated.getId()));
 
         final PromatCase caseUpdated = promatServiceConnector.getCase(caseCreated.getId());
-        assertThat("manifestation added as related faust",
-                caseUpdated.getRelatedFausts().contains(matchingCaseRequest.getPrimaryFaust()),
-                is(true));
         assertThat("fulltext link updated", caseUpdated.getFulltextLink(),
                 is(matchingCaseRequest.getFulltextLink()));
         assertThat("title not updated", caseUpdated.getTitle(),
@@ -1497,7 +1463,6 @@ public class CasesIT extends ContainerTest {
                 .withTitle("Title for 80011112")
                 .withDetails("Details for 80011112")
                 .withPrimaryFaust("80011112")
-                .withRelatedFausts(Arrays.asList("80022222", "80033332"))
                 .withEditor(10)
                 .withSubjects(Arrays.asList(3, 4))
                 .withDeadline("2021-04-01")
@@ -1521,7 +1486,6 @@ public class CasesIT extends ContainerTest {
                 .withTitle("Title for 80011113")
                 .withDetails("Details for 80011113")
                 .withPrimaryFaust("80011113")
-                .withRelatedFausts(Arrays.asList("80022223", "80033333"))
                 .withEditor(10)
                 .withSubjects(Arrays.asList(3, 4))
                 .withDeadline("2021-04-01")
@@ -1546,7 +1510,6 @@ public class CasesIT extends ContainerTest {
                 .withTitle("Title for 80011114")
                 .withDetails("Details for 80011114")
                 .withPrimaryFaust("80011114")
-                .withRelatedFausts(Arrays.asList("80022224", "80033334"))
                 .withEditor(10)
                 .withSubjects(Arrays.asList(3, 4))
                 .withDeadline("2021-04-01")
