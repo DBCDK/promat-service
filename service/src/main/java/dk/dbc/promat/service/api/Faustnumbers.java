@@ -1,9 +1,13 @@
 package dk.dbc.promat.service.api;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
 
 public class Faustnumbers {
+    private static final Logger LOGGER = LoggerFactory.getLogger(Faustnumbers.class);
 
     static boolean checkNoOpenCaseWithFaust(EntityManager entityManager, String... fausts) {
         return checkNoOpenCaseWithFaust(entityManager, null, fausts);

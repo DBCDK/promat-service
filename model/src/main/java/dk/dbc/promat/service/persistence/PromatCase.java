@@ -102,10 +102,14 @@ public class PromatCase {
 
     public static final String GET_CASE_BY_FAUST_NAME =
             "PromatCase.get.case.by.faust";
-    public static final String GET_CASE_BY_FAUST_QUERY = "select c" +
+    public static final String GET_CASE_BY_FAUST_QUERY = "select distinct c" +
             "                                               from PromatCase c" +
+            "                                               join CaseTasks ct" +
+            "                                                 on c.id = ct.case_id" +
+            "                                               join PromatTask t" +
+            "                                                 on t.id = ct.task_id" +
             "                                              where (c.primaryFaust = :faust" +
-            "                                                 or function('JsonbContainsFromString', c.relatedFausts, :faust))" +
+            "                                                 or function('JsonbContainsFromString', t.targetFausts, :faust))" +
             "                                                and c.status not in (dk.dbc.promat.service.persistence.CaseStatus.PENDING_CLOSE," +
             "                                                                    dk.dbc.promat.service.persistence.CaseStatus.CLOSED," +
             "                                                                    dk.dbc.promat.service.persistence.CaseStatus.DELETED)";
@@ -132,6 +136,9 @@ public class PromatCase {
     @JsonView({CaseView.Export.class, CaseView.Summary.class, CaseView.Case.class})
     private String primaryFaust;
 
+    // Todo: Replace by use of column targetFausts in promattask. Should be removed when
+    //       we are certain that the frontend does not expect this field anywhere
+    @Deprecated
     @Column(columnDefinition = "jsonb")
     @Convert(converter = StringListToJsonArrayConverter.class)
     @JsonView({CaseView.Export.class, CaseView.Summary.class, CaseView.Case.class})

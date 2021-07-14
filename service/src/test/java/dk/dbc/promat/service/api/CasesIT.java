@@ -65,7 +65,7 @@ public class CasesIT extends ContainerTest {
     private static final Logger LOGGER = LoggerFactory.getLogger(CasesIT.class);
 
     @Test
-    public void testCreateCase() throws JsonProcessingException {
+    public void testCreateCase() throws JsonProcessingException, PromatServiceConnectorException {
 
         CaseRequest dto = new CaseRequest();
 
@@ -73,11 +73,11 @@ public class CasesIT extends ContainerTest {
         assertThat("status code", postResponse("v1/api/cases", dto).getStatus(), is(400));
 
         // title set
-        dto.setTitle("Title for 1001111");
+        dto.setTitle("Title for 11001111");
         assertThat("status code", postResponse("v1/api/cases", dto).getStatus(), is(400));
 
         // primaryFaust set
-        dto.setPrimaryFaust("1001111");
+        dto.setPrimaryFaust("11001111");
         assertThat("status code", postResponse("v1/api/cases", dto).getStatus(), is(400));
 
         // materialType set
@@ -88,8 +88,8 @@ public class CasesIT extends ContainerTest {
         // Check that the returned object has title, primary faust and materialtype set
         String obj = response.readEntity(String.class);
         PromatCase created = mapper.readValue(obj, PromatCase.class);
-        assertThat("primary faust", created.getPrimaryFaust(), is("1001111"));
-        assertThat("title", created.getTitle(), is("Title for 1001111"));
+        assertThat("primary faust", created.getPrimaryFaust(), is("11001111"));
+        assertThat("title", created.getTitle(), is("Title for 11001111"));
         assertThat("materialType", created.getMaterialType(), is(MaterialType.BOOK));
     }
 
@@ -99,7 +99,6 @@ public class CasesIT extends ContainerTest {
         // New case with primary faust 001111 which already exists
         CaseRequest dto = new CaseRequest()
                 .withPrimaryFaust("001111")
-                .withRelatedFausts(Arrays.asList(new String[] {"002222", "003333"}))
                 .withTitle("Title for 001111")
                 .withMaterialType(MaterialType.MOVIE);
 
@@ -110,14 +109,8 @@ public class CasesIT extends ContainerTest {
         dto.setTitle("New title for 002222");
         assertThat("status code", postResponse("v1/api/cases", dto).getStatus(), is(409));
 
-        // New case with primary faust 2004444 and related faust 002222 which exists as related faust
-        dto.setPrimaryFaust("204444");
-        dto.setTitle("New title for 2004444");
-        dto.setRelatedFausts(Arrays.asList(new String[] {"002222"}));
-        assertThat("status code", postResponse("v1/api/cases", dto).getStatus(), is(409));
-
         // New case with primary faust 2004444 and related faust 2005555 (all is good)
-        dto.setRelatedFausts(Arrays.asList(new String[] {"2005555"}));
+        dto.setPrimaryFaust("2004444");
         assertThat("status code", postResponse("v1/api/cases", dto).getStatus(), is(201));
     }
 
@@ -892,7 +885,6 @@ public class CasesIT extends ContainerTest {
         // Create case 1
         CaseRequest dto = new CaseRequest()
                 .withPrimaryFaust("14001111")
-                .withRelatedFausts(Arrays.asList("14002222"))
                 .withTitle("Title for 14001111")
                 .withDetails("Details for 14001111")
                 .withMaterialType(MaterialType.BOOK)
@@ -900,7 +892,7 @@ public class CasesIT extends ContainerTest {
                         new TaskDto()
                                 .withTaskType(TaskType.GROUP_1_LESS_THAN_100_PAGES)
                                 .withTaskFieldType(TaskFieldType.BRIEF)
-                                .withTargetFausts(Arrays.asList("14003333"))
+                                .withTargetFausts(Arrays.asList("14002222"))
                 ));
         Response response = postResponse("v1/api/cases", dto);
         assertThat("status code", response.getStatus(), is(201));
@@ -908,7 +900,6 @@ public class CasesIT extends ContainerTest {
         // Create case 2
         dto = new CaseRequest()
                 .withPrimaryFaust("15001111")
-                .withRelatedFausts(Arrays.asList("15002222"))
                 .withTitle("Title for 15001111")
                 .withDetails("Details for 15001111")
                 .withMaterialType(MaterialType.BOOK)
@@ -916,7 +907,7 @@ public class CasesIT extends ContainerTest {
                         new TaskDto()
                                 .withTaskType(TaskType.GROUP_1_LESS_THAN_100_PAGES)
                                 .withTaskFieldType(TaskFieldType.BRIEF)
-                                .withTargetFausts(Arrays.asList("15003333"))
+                                .withTargetFausts(Arrays.asList("15002222"))
                 ));
         response = postResponse("v1/api/cases", dto);
         assertThat("status code", response.getStatus(), is(201));
@@ -1425,7 +1416,7 @@ public class CasesIT extends ContainerTest {
     }
 
     @Test
-    public void testDbckatXmlViewOfRelatedFaust1() throws IOException, PromatServiceConnectorException {
+    public void testDbckatXmlViewOfRelatedFaust() throws IOException, PromatServiceConnectorException {
 
         // Fetch the xml view for the first related faustnumber
         String expected = new String(Files.readAllBytes(Path.of("src/test/resources/__files/case-view-for-id-20-100001.xml")), StandardCharsets.ISO_8859_1);

@@ -51,6 +51,8 @@ public class CaseRequest implements Dto {
 
     private String primaryFaust;
 
+    // Todo: Remove when no longer used
+    @Deprecated
     private List<String> relatedFausts;
 
     private Integer reviewer = null;
@@ -107,10 +109,14 @@ public class CaseRequest implements Dto {
         this.primaryFaust = primaryFaust;
     }
 
+    // Todo: Remove when no longer used
+    @Deprecated
     public List<String> getRelatedFausts() {
         return relatedFausts;
     }
 
+    // Todo: Remove when no longer used
+    @Deprecated
     public void setRelatedFausts(List<String> relatedFausts) {
         this.relatedFausts = relatedFausts;
     }
@@ -242,6 +248,8 @@ public class CaseRequest implements Dto {
         return this;
     }
 
+    // Todo: Remove when no longer used
+    @Deprecated
     public CaseRequest withRelatedFausts(List<String> relatedFausts)
     {
         this.relatedFausts = relatedFausts;

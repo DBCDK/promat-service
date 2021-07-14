@@ -46,6 +46,8 @@ import javax.persistence.EntityManager;
 import javax.persistence.TypedQuery;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Join;
+import javax.persistence.criteria.JoinType;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 import javax.ws.rs.Consumes;
@@ -342,8 +344,17 @@ public class Cases {
                 }
             }
 
-            var relatedFausts = new ArrayList<>(cases.get(0).getRelatedFausts());
-            relatedFausts.add(cases.get(0).getPrimaryFaust());
+            // Extract related faustnumbers found in the 'targetFaust' field
+            var targetFausts = new ArrayList<>();
+            for( PromatTask task : cases.get(0).getTasks() ) {
+                targetFausts.addAll(task.getTargetFausts());
+            }
+            targetFausts.add(cases.get(0).getPrimaryFaust());
+            var relatedFausts = targetFausts.stream().distinct().collect(Collectors.toList());
+
+            // Remove the faustnumber that was requested since it will appear above the
+            // list of brief notes for the related fausts in the view (disregarding which
+            // is actually the primary faust for the case)
             relatedFausts.remove(faust);
 
             Renderer renderer = new Renderer();
@@ -446,7 +457,15 @@ public class Cases {
         // Initialize query and criteriabuilder
         final CriteriaBuilder builder = entityManager.getCriteriaBuilder();
         final CriteriaQuery criteriaQuery = builder.createQuery();
+
+        // Create query root
         final Root<PromatCase> root = criteriaQuery.from(PromatCase.class);
+
+        // Setup join with tasks
+        final Join<PromatCase, PromatTask> tasks = root.join("tasks", JoinType.LEFT);
+        criteriaQuery.distinct(true);
+
+        // Select ...
         criteriaQuery.select(root);
 
         // List of all predicates to be AND'ed together on the final query
@@ -456,7 +475,7 @@ public class Cases {
         final String faust = params.getFaust();
         if (faust != null && !faust.isBlank()) {
             final Predicate primaryFaustPredicat = builder.equal(root.get("primaryFaust"), builder.literal(faust));
-            final Predicate relatedFaustsPredicat = builder.isTrue(builder.function("JsonbContainsFromString", Boolean.class, root.get("relatedFausts"), builder.literal(faust)));
+            final Predicate relatedFaustsPredicat = builder.isTrue(builder.function("JsonbContainsFromString", Boolean.class, tasks.get("targetFausts"), builder.literal(faust)));
             final Predicate faustPredicate = builder.or(primaryFaustPredicat, relatedFaustsPredicat);
 
             // And status not CLOSED or DONE
@@ -1056,19 +1075,6 @@ public class Cases {
                     .withCode(ServiceErrorCode.FAUST_IN_USE)
                     .withCause("Faustnumber is in use")
                     .withDetails(String.format("Case with primary or related faust %s and status not DONE or CLOSED exists", dto.getPrimaryFaust()));
-        }
-
-        // Check that no existing case exists with the same primary or related faustnumber
-        // as the given relasted fasutnumbers and a state other than CLOSED or DONE
-        if(dto.getRelatedFausts() != null && dto.getRelatedFausts().size() > 0) {
-            if(!Faustnumbers.checkNoOpenCaseWithFaust(entityManager, dto.getRelatedFausts().toArray(String[]::new))) {
-                LOGGER.info("Case with primary or related {} and state <> CLOSED|DONE exists", dto.getRelatedFausts());
-                throw new ServiceErrorException(String.format("Case with primary or related faust %s and status not DONE or CLOSED exists", dto.getRelatedFausts()))
-                        .withHttpStatus(409)
-                        .withCode(ServiceErrorCode.FAUST_IN_USE)
-                        .withCause("Faustnumber is in use")
-                        .withDetails(String.format("Case with primary or related faust %s and status not DONE or CLOSED exists", dto.getRelatedFausts()));
-            }
         }
 
         // Check that no existing case exists with the same primary or related faustnumber
