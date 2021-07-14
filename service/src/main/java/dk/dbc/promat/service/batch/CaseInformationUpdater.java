@@ -202,10 +202,11 @@ public class CaseInformationUpdater {
     private String getFirstWeekcode(List<String> codes) {
 
         // Only look after BKM and BKX (express) catalogcodes.
-        // If Both exists (as they would for express cases), take the earliest weekcode
+        // If Both exists (as they would for express cases), BKX takes precedence
         Optional<String> newCode = codes.stream()
                 .filter(code -> Arrays.asList("BKM", "BKX").contains(code.substring(0, 3)))
-                .sorted(Comparator.comparing(code -> code.substring(3)))
+                .sorted(Comparator.comparing(code -> code.substring(0, 3)))
+                .sorted(Comparator.reverseOrder())
                 .findFirst();
         return newCode.isPresent() ? newCode.get() : "";
     }
