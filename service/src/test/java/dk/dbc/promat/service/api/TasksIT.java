@@ -37,36 +37,39 @@ public class TasksIT extends ContainerTest {
 
         // Create a new case
         CaseRequest caseDto = new CaseRequest()
-                .withTitle("Title for 11001111")
-                .withDetails("Details for 11001111")
-                .withPrimaryFaust("11001111")
-                .withRelatedFausts(Arrays.asList("11002222"))
+                .withTitle("Title for 31001111")
+                .withDetails("Details for 31001111")
+                .withPrimaryFaust("31001111")
                 .withMaterialType(MaterialType.BOOK)
                 .withTasks(Arrays.asList(
                         new TaskDto()
                                 .withTaskType(TaskType.GROUP_1_LESS_THAN_100_PAGES)
                                 .withTaskFieldType(TaskFieldType.DESCRIPTION)
-                                .withTargetFausts(Arrays.asList("11001111")),
+                                .withTargetFausts(Arrays.asList("31001111", "31002222")),
                         new TaskDto()
                                 .withTaskType(TaskType.GROUP_1_LESS_THAN_100_PAGES)
                                 .withTaskFieldType(TaskFieldType.BRIEF)
-                                .withTargetFausts(Arrays.asList(new String[] {"11003333", "11004444"}))
+                                .withTargetFausts(Arrays.asList("31003333", "31004444"))
                 ));
         response = postResponse("v1/api/cases", caseDto);
         assertThat("status code", response.getStatus(), is(201));
         PromatCase createdCase = mapper.readValue(response.readEntity(String.class), PromatCase.class);
-        assertThat("related fausts", createdCase.getRelatedFausts()
-                        .stream().sorted().collect(Collectors.toList()),
-                is(Arrays.asList("11002222", "11003333", "11004444")));
+        assertThat("related fausts", createdCase.getTasks()
+                        .stream()
+                        .flatMap(t -> t.getTargetFausts()
+                                .stream())
+                        .sorted()
+                        .collect(Collectors.toList()),
+                is(Arrays.asList("31001111", "31002222", "31003333", "31004444")));
 
         // Find task ids
         PromatTask taskWithPrimaryTargetFaust = createdCase.getTasks().stream()
                 .filter(task -> task.getTargetFausts() != null && task.getTargetFausts().size() != 0)
-                .filter(task -> task.getTargetFausts().contains("11001111"))
+                .filter(task -> task.getTargetFausts().contains("31001111"))
                 .findFirst().get();
         PromatTask taskWithRelatedTargetFaust = createdCase.getTasks().stream()
                 .filter(task -> task.getTargetFausts() != null && task.getTargetFausts().size() != 0)
-                .filter(task -> task.getTargetFausts().contains("11003333"))
+                .filter(task -> task.getTargetFausts().contains("31003333"))
                 .findFirst().get();
         assertThat("has task with primary targetFaust", taskWithPrimaryTargetFaust, is(notNullValue()));
         assertThat("has task with related targetFaust", taskWithRelatedTargetFaust, is(notNullValue()));
@@ -104,52 +107,15 @@ public class TasksIT extends ContainerTest {
         updated = mapper.readValue(response.readEntity(String.class), PromatTask.class);
         assertThat("data value is correct", updated.getData().equals(""), is(true));
 
-        // Add an existing related faustnumber to one task, this should succeed
-        dto = new TaskDto().withTargetFausts(Arrays.asList("11002222"));
-        response = putResponse("v1/api/tasks/" + taskWithRelatedTargetFaust.getId(), dto);
-        assertThat("status code", response.getStatus(), is(200));
-        updated = mapper.readValue(response.readEntity(String.class), PromatTask.class);
-        assertThat("targetfaust is not null", updated.getTargetFausts(), is(notNullValue()));
-        assertThat("targetfaust contains", updated.getTargetFausts().stream().findFirst().get().equals("11002222"), is(true));
-
-        // Related fausts should remain unchanged
-        response = getResponse("v1/api/cases/" + createdCase.getId());
-        assertThat("status code", response.getStatus(), is(200));
-        PromatCase updatedCase = mapper.readValue(response.readEntity(String.class), PromatCase.class);
-        assertThat("related fausts", updatedCase.getRelatedFausts()
-                        .stream().sorted().collect(Collectors.toList()),
-                is(Arrays.asList("11002222", "11003333", "11004444")));
-
         // Add a new faustnumber to one task, this should succeed
         dto = new TaskDto().withTargetFausts(updated.getTargetFausts());
-        dto.getTargetFausts().add("11005555");
+        dto.getTargetFausts().add("31005555");
         response = putResponse("v1/api/tasks/" + taskWithPrimaryTargetFaust.getId(), dto);
         assertThat("status code", response.getStatus(), is(200));
         updated = mapper.readValue(response.readEntity(String.class), PromatTask.class);
         assertThat("targetfaust is not null", updated.getTargetFausts(), is(notNullValue()));
         assertThat("targetfaust contains", updated.getTargetFausts().stream().sorted().collect(Collectors.toList()),
-                is(Arrays.asList("11002222", "11005555")));
-
-        // Related fausts should now also contain 11005555
-        response = getResponse("v1/api/cases/" + createdCase.getId());
-        assertThat("status code", response.getStatus(), is(200));
-        updatedCase = mapper.readValue(response.readEntity(String.class), PromatCase.class);
-        assertThat("related fausts", updatedCase.getRelatedFausts()
-                        .stream().sorted().collect(Collectors.toList()),
-                is(Arrays.asList("11002222", "11003333", "11004444", "11005555")));
-
-        // We do not prevent adding the same targetfaust to more tasks, even though it may be
-        // a bit useless if it is added to two different tasks with the same TaskFieldType.
-        // Such duality may exist for a short period when the user is moving a targetfaust from one task
-        // to another and they would wonder why the got an error.
-        dto = new TaskDto().withTargetFausts(taskWithRelatedTargetFaust.getTargetFausts());
-        dto.getTargetFausts().add("11002222");
-        response = putResponse("v1/api/tasks/" + taskWithRelatedTargetFaust.getId(), dto);
-        assertThat("status code", response.getStatus(), is(200));
-        updated = mapper.readValue(response.readEntity(String.class), PromatTask.class);
-        assertThat("targetfaust is not null", updated.getTargetFausts(), is(notNullValue()));
-        assertThat("targetfaust contains", updated.getTargetFausts().stream().sorted().collect(Collectors.toList()),
-                is(Arrays.asList("11002222", "11003333", "11004444")));
+                is(Arrays.asList("31001111", "31002222", "31005555")));
 
         // When adding a targetfaust, the number should either not belong to any active case, or belong (as primary
         // or related faust) to the case to which the task belongs

@@ -78,7 +78,6 @@ public class Tasks {
             }
             if(dto.getTargetFausts() != null) {
                 existing.setTargetFausts(dto.getTargetFausts());
-                updateRelatedFausts(caseOfTask, existing);
             }
             if(dto.getTaskType() != null) {
                 existing.setTaskType(dto.getTaskType());
@@ -158,13 +157,5 @@ public class Tasks {
         }
 
         return entityManager.merge(caseOfTask);
-    }
-
-    private void updateRelatedFausts(PromatCase caseOfTask, PromatTask task) {
-        for(String faust : task.getTargetFausts()) {
-            if(!caseOfTask.getRelatedFausts().contains(faust)) {
-                caseOfTask.getRelatedFausts().add(faust);
-            }
-        }
     }
 }

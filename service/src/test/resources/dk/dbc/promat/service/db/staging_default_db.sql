@@ -92,7 +92,7 @@ values(1, 4900),
 -- First migrated case has at 130214, sequence starts at 500000 = put cases at id 1-10.000
 -- Last migrated task has id 16100, sequence starts at 500000 = put tasks at id 400000-499999
 insert into promatcase(id, title, details, primaryFaust, relatedFausts, reviewer_id, editor_id, created, deadline, assigned, status, materialType, weekcode, trimmedWeekcode, creator_id)
-values (1, 'Title for 001111', 'Details for 001111', '001111', '["002222","003333"]', NULL, NULL, '2020-11-11', '2020-12-11', NULL, 'CREATED', 'BOOK', 'BKM202101', '202101', 4953);
+values (1, 'Title for 001111', 'Details for 001111', '001111', '[]', NULL, NULL, '2020-11-11', '2020-12-11', NULL, 'CREATED', 'BOOK', 'BKM202101', '202101', 4953);
 
 insert into promattask(id, tasktype, taskfieldtype, created, paycategory, approved, payed, data, targetFausts)
 values (400001,  'GROUP_1_LESS_THAN_100_PAGES', 'DESCRIPTION', '202-12-10', 'GROUP_1_LESS_THAN_100_PAGES', '2020-12-10',  NULL,         NULL,                     '["001111", "002222","003333"]'),
@@ -109,7 +109,7 @@ values (1, 400001),
        (1, 400005);
 --
 insert into promatcase(id, title, details, primaryFaust, relatedFausts, reviewer_id, editor_id, created, deadline, assigned, status, materialType, weekcode, trimmedWeekcode, creator_id)
-values (2, 'Title for 004444', 'Details for 004444', '004444', '["005555","006666"]', NULL, NULL, '2020-11-11', '2020-12-11', NULL, 'CREATED', 'MOVIE', 'DBF202049', '202049', 4953);
+values (2, 'Title for 004444', 'Details for 004444', '004444', '[]', NULL, NULL, '2020-11-11', '2020-12-11', NULL, 'CREATED', 'MOVIE', 'DBF202049', '202049', 4953);
 --
 insert into promatcase(id, title, details, primaryFaust, relatedFausts, reviewer_id, editor_id, created, deadline, assigned, status, materialType, weekcode, trimmedWeekcode, creator_id)
 values (3, 'Title for 011111', 'Details for 011111', '011111', '[]', 4900, NULL, '2020-11-11', '2020-12-11', NULL, 'CREATED', 'BOOK', null, null, 4953);
@@ -233,7 +233,7 @@ values (21, 400021),
        (21, 400023);
 --
 insert into promatcase(id, title, details, primaryFaust, relatedFausts, reviewer_id, editor_id, created, deadline, assigned, status, materialType, weekcode, trimmedWeekcode, creator_id, author, publisher)
-values (22, 'Title for 100000', 'Details for 100000', '100000', '["100001", "100002"]', 4900, 4950, '2021-01-09', '2021-02-09', '2021-01-10', 'EXPORTED', 'BOOK', 'BKM202104', '202104', 4953, 'Author for 100000', 'Publisher for 100000');
+values (22, 'Title for 100000', 'Details for 100000', '100000', '[]', 4900, 4950, '2021-01-09', '2021-02-09', '2021-01-10', 'EXPORTED', 'BOOK', 'BKM202104', '202104', 4953, 'Author for 100000', 'Publisher for 100000');
 
 insert into promattask(id, tasktype, taskfieldtype, created, paycategory, approved, payed, data, targetFausts)
 values  (400024,  'GROUP_1_LESS_THAN_100_PAGES', 'DESCRIPTION',    '202-12-10', 'GROUP_1_LESS_THAN_100_PAGES', '2020-12-10',  NULL,         NULL,                        '["100000", "100001", "100002"]'),
@@ -375,7 +375,7 @@ values (1070, 401071),
        (1070, 401072);
 --
 insert into promatcase(id, title, details, primaryFaust, relatedFausts, reviewer_id, editor_id, created, deadline, assigned, status, materialType)
-values (1080, 'Case 9', 'Details', '1001080', '["1001081", "1001082", "1001083"]', 4900, 4950, '2021-01-13', '2021-02-13', '2021-01-13', 'APPROVED', 'BOOK');
+values (1080, 'Case 9', 'Details', '1001080', '[]', 4900, 4950, '2021-01-13', '2021-02-13', '2021-01-13', 'APPROVED', 'BOOK');
 
 insert into promattask(id, tasktype, taskfieldtype, created, paycategory, approved, payed, data, targetFausts)
 values  (401081, 'GROUP_1_LESS_THAN_100_PAGES', 'BRIEF', '2021-01-13','BRIEF', '2021-01-13', NULL, 'data', '["1001080"]'),
@@ -388,7 +388,7 @@ values (1080, 401081),
        (1080, 401083);
 --
 insert into promatcase(id, title, details, primaryFaust, relatedFausts, reviewer_id, editor_id, created, deadline, assigned, status, materialType)
-values (1090, 'Case 10', 'Details', '05510228', '["05510228", "22341995", "51768116", "25417925", "52880645"]', 4900, 4950, '2021-01-13', '2021-02-13', '2021-01-13', 'APPROVED', 'BOOK');
+values (1090, 'Case 10', 'Details', '05510228', '[]', 4900, 4950, '2021-01-13', '2021-02-13', '2021-01-13', 'APPROVED', 'BOOK');
 
 insert into promattask(id, tasktype, taskfieldtype, created, paycategory, approved, payed, data, targetFausts)
 values  (401091, 'GROUP_1_LESS_THAN_100_PAGES', 'BRIEF', '2021-01-13','BRIEF', '2021-01-13', NULL, 'data', '["05510228", "52880645"]'),
@@ -401,7 +401,7 @@ values (1090, 401091),
        (1090, 401093);
 --
 insert into promatcase(id, title, details, primaryFaust, relatedFausts, reviewer_id, editor_id, created, deadline, assigned, status, materialType)
-values (1100, 'Case 11', 'Details', '1001100', '["1001101", 1001102, 1001103, 1001104]', 4900, 4950, '2021-01-13', '2021-02-13', '2021-01-13', 'APPROVED', 'BOOK');
+values (1100, 'Case 11', 'Details', '1001100', '[]', 4900, 4950, '2021-01-13', '2021-02-13', '2021-01-13', 'APPROVED', 'BOOK');
 
 insert into promattask(id, tasktype, taskfieldtype, created, paycategory, approved, payed, data, targetFausts)
 values  (401101, 'GROUP_1_LESS_THAN_100_PAGES', 'BRIEF', '2021-01-13','BRIEF', '2021-01-13', NULL, 'data', '["1001100"]'),
@@ -416,7 +416,7 @@ values (1100, 401101),
        (1100, 401104);
 --
 insert into promatcase(id, title, details, primaryFaust, relatedFausts, reviewer_id, editor_id, created, deadline, assigned, status, materialType)
-values (1110, 'Case 12', 'Details', '1001110', '["1001111"]', 4900, 4950, '2021-01-13', '2021-02-13', '2021-01-13', 'APPROVED', 'BOOK');
+values (1110, 'Case 12', 'Details', '1001110', '[]', 4900, 4950, '2021-01-13', '2021-02-13', '2021-01-13', 'APPROVED', 'BOOK');
 
 insert into promattask(id, tasktype, taskfieldtype, created, paycategory, approved, payed, data, targetFausts)
 values  (401111, 'GROUP_1_LESS_THAN_100_PAGES', 'BRIEF',          '2021-01-13', 'BRIEF',                       '2021-01-13', NULL, 'data', '["1001110"]'),
@@ -439,7 +439,7 @@ values (1110, 401111),
        (1110, 401119);
 --
 insert into promatcase(id, title, details, primaryFaust, relatedFausts, reviewer_id, editor_id, created, deadline, assigned, status, materialType)
-values (1120, 'Case 13', 'Details', '1001120', '["1001121"]', 4900, 4950, '2021-01-13', '2021-02-13', '2021-01-13', 'PENDING_APPROVAL', 'BOOK');
+values (1120, 'Case 13', 'Details', '1001120', '[]', 4900, 4950, '2021-01-13', '2021-02-13', '2021-01-13', 'PENDING_APPROVAL', 'BOOK');
 
 insert into promattask(id, tasktype, taskfieldtype, created, paycategory, approved, payed, data, targetFausts)
 values  (401121, 'GROUP_1_LESS_THAN_100_PAGES', 'BRIEF',          '2021-01-13','BRIEF',                        '2021-01-13', NULL, 'data', '["1001120"]'),
@@ -462,7 +462,7 @@ values (1120, 401121),
        (1120, 401129);
 --
 insert into promatcase(id, title, details, primaryFaust, relatedFausts, reviewer_id, editor_id, created, deadline, assigned, status, materialType)
-values (1130, 'Case 14', 'Details', '1001130', '["1001131"]', 4901, 4950, '2021-01-13', '2021-02-13', '2021-01-13', 'PENDING_EXPORT', 'MOVIE');
+values (1130, 'Case 14', 'Details', '1001130', '[]', 4901, 4950, '2021-01-13', '2021-02-13', '2021-01-13', 'PENDING_EXPORT', 'MOVIE');
 
 insert into promattask(id, tasktype, taskfieldtype, created, paycategory, approved, payed, data, targetFausts)
 values  (401131, 'MOVIES_GR_2', 'BRIEF',          '2021-01-13','BRIEF',        '2021-01-13', NULL, 'data', '["1001130"]'),
@@ -479,7 +479,7 @@ values (1130, 401131),
        (1130, 401135);
 --
 insert into promatcase(id, title, details, primaryFaust, relatedFausts, reviewer_id, editor_id, created, deadline, assigned, status, materialType)
-values (1140, 'Case 15', 'Details', '1001140', '["1001141", "1001142"]', 4901, 4950, '2021-01-13', '2021-02-13', '2021-01-13', 'EXPORTED', 'MOVIE');
+values (1140, 'Case 15', 'Details', '1001140', '[]', 4901, 4950, '2021-01-13', '2021-02-13', '2021-01-13', 'EXPORTED', 'MOVIE');
 
 insert into promattask(id, tasktype, taskfieldtype, created, paycategory, approved, payed, data, targetFausts)
 values  (401141, 'MOVIES_GR_2', 'BRIEF',          '2021-01-13', 'BRIEF',       '2020-12-13', '2020-12-21 12:13:14.567', 'data', '[1001140]'),
@@ -498,7 +498,7 @@ values (1140, 401141),
        (1140, 401147);
 --
 insert into promatcase(id, title, details, primaryFaust, relatedFausts, reviewer_id, editor_id, created, deadline, assigned, status, materialType)
-values (1150, 'Case 16', 'Details', '1001150', '["1001151", "1001152"]', 4901, 4950, '2021-01-13', '2021-02-13', '2021-01-13', 'APPROVED', 'MOVIE');
+values (1150, 'Case 16', 'Details', '1001150', '[]', 4901, 4950, '2021-01-13', '2021-02-13', '2021-01-13', 'APPROVED', 'MOVIE');
 
 insert into promattask(id, tasktype, taskfieldtype, created, paycategory, approved, payed, data, targetFausts)
 values  (401151, 'MOVIES_GR_2', 'BRIEF',          '2021-01-13', 'BRIEF',       NULL,         NULL, 'data', '["1001150", "1001151"]'),
@@ -517,7 +517,7 @@ values (1150, 401151),
        (1150, 401157);
 --
 insert into promatcase(id, title, details, primaryFaust, relatedFausts, reviewer_id, editor_id, created, deadline, assigned, status, materialType)
-values (1160, 'Case 17', 'Details', '1001160', '["1001161", "1001162"]', 4900, 4950, '2021-01-13', '2021-02-13', '2021-01-13', 'APPROVED', 'MOVIE');
+values (1160, 'Case 17', 'Details', '1001160', '[]', 4900, 4950, '2021-01-13', '2021-02-13', '2021-01-13', 'APPROVED', 'MOVIE');
 
 insert into promattask(id, tasktype, taskfieldtype, created, paycategory, approved, payed, data, targetFausts)
 values  (401161, 'MOVIES_GR_2', 'BRIEF',          '2021-01-13', 'BRIEF',       NULL,         NULL, 'data', '["1001160", "1001161"]'),
@@ -536,7 +536,7 @@ values (1160, 401161),
        (1160, 401167);
 --
 insert into promatcase(id, title, details, primaryFaust, relatedFausts, reviewer_id, editor_id, created, deadline, assigned, status, materialType)
-values (1170, 'Case 18', 'Details', '1001170', '["1001171", "1001172"]', 4901, 4950, '2021-01-24', '2021-01-26', '2021-01-24', 'APPROVED', 'MULTIMEDIA');
+values (1170, 'Case 18', 'Details', '1001170', '[]', 4901, 4950, '2021-01-24', '2021-01-26', '2021-01-24', 'APPROVED', 'MULTIMEDIA');
 
 insert into promattask(id, tasktype, taskfieldtype, created, paycategory, approved, payed, data, targetFausts)
 values  (401171, 'MULTIMEDIA_FEE', 'BRIEF',          '2021-01-13', 'BRIEF',          '2021-01-26', NULL, 'data', '["1001170", "1001171"]'),
@@ -557,7 +557,7 @@ values (1170, 401171),
        (1170, 401178);
 --
 insert into promatcase(id, title, details, primaryFaust, relatedFausts, reviewer_id, editor_id, created, deadline, assigned, status, materialType)
-values (1180, 'Case 19', 'Details', '1001180', '["1001181", "1001182"]', 4901, 4950, '2021-01-24', '2021-01-26', '2021-01-24', 'APPROVED', 'MULTIMEDIA');
+values (1180, 'Case 19', 'Details', '1001180', '[]', 4901, 4950, '2021-01-24', '2021-01-26', '2021-01-24', 'APPROVED', 'MULTIMEDIA');
 
 insert into promattask(id, tasktype, taskfieldtype, created, paycategory, approved, payed, data, targetFausts)
 values  (401181, 'MULTIMEDIA_FEE', 'BRIEF',          '2021-01-13', 'BRIEF',       '2021-01-26', NULL, 'data', '["1001180", "1001181"]'),

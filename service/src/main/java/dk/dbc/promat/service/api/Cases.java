@@ -46,6 +46,8 @@ import javax.persistence.EntityManager;
 import javax.persistence.TypedQuery;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Join;
+import javax.persistence.criteria.JoinType;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 import javax.ws.rs.Consumes;
@@ -158,9 +160,6 @@ public class Cases {
         Editor editor;
         Editor creator;
         List<PromatTask> tasks;
-        ArrayList<String> relatedFausts = new ArrayList<>(dto.getRelatedFausts() == null
-                ? new ArrayList<>()
-                : dto.getRelatedFausts());
         try {
             // Check that the new case does not use any faustnumbers used on any other active case
             checkValidFaustNumbers(dto);
@@ -171,8 +170,8 @@ public class Cases {
             editor = resolveEditor(dto.getEditor());
             creator = resolveEditor(dto.getCreator());
 
-            // Create tasks (and update related fausts if needed)
-            tasks = createTasks(dto.getPrimaryFaust(), dto.getTasks(), relatedFausts);
+            // Create tasks
+            tasks = createTasks(dto.getPrimaryFaust(), dto.getTasks());
 
         } catch(ServiceErrorException serviceErrorException) {
             LOGGER.info("Received serviceErrorException while mapping entities: {}", serviceErrorException.getMessage());
@@ -201,7 +200,7 @@ public class Cases {
             .withTitle(dto.getTitle())
             .withDetails(dto.getDetails() == null ? "" : dto.getDetails())
             .withPrimaryFaust(dto.getPrimaryFaust())
-            .withRelatedFausts(relatedFausts)
+            .withRelatedFausts(new ArrayList<>())  // Todo: remove use of relatedFausts when db is ready
             .withReviewer(reviewer)
             .withEditor(editor)
             .withSubjects(subjects)
@@ -342,8 +341,17 @@ public class Cases {
                 }
             }
 
-            var relatedFausts = new ArrayList<>(cases.get(0).getRelatedFausts());
-            relatedFausts.add(cases.get(0).getPrimaryFaust());
+            // Extract related faustnumbers found in the 'targetFaust' field
+            var targetFausts = new ArrayList<>();
+            for( PromatTask task : cases.get(0).getTasks() ) {
+                targetFausts.addAll(task.getTargetFausts());
+            }
+            targetFausts.add(cases.get(0).getPrimaryFaust());
+            var relatedFausts = targetFausts.stream().distinct().collect(Collectors.toList());
+
+            // Remove the faustnumber that was requested since it will appear above the
+            // list of brief notes for the related fausts in the view (disregarding which
+            // is actually the primary faust for the case)
             relatedFausts.remove(faust);
 
             Renderer renderer = new Renderer();
@@ -446,7 +454,15 @@ public class Cases {
         // Initialize query and criteriabuilder
         final CriteriaBuilder builder = entityManager.getCriteriaBuilder();
         final CriteriaQuery criteriaQuery = builder.createQuery();
+
+        // Create query root
         final Root<PromatCase> root = criteriaQuery.from(PromatCase.class);
+
+        // Setup join with tasks
+        final Join<PromatCase, PromatTask> tasks = root.join("tasks", JoinType.LEFT);
+        criteriaQuery.distinct(true);
+
+        // Select ...
         criteriaQuery.select(root);
 
         // List of all predicates to be AND'ed together on the final query
@@ -456,7 +472,7 @@ public class Cases {
         final String faust = params.getFaust();
         if (faust != null && !faust.isBlank()) {
             final Predicate primaryFaustPredicat = builder.equal(root.get("primaryFaust"), builder.literal(faust));
-            final Predicate relatedFaustsPredicat = builder.isTrue(builder.function("JsonbContainsFromString", Boolean.class, root.get("relatedFausts"), builder.literal(faust)));
+            final Predicate relatedFaustsPredicat = builder.isTrue(builder.function("JsonbContainsFromString", Boolean.class, tasks.get("targetFausts"), builder.literal(faust)));
             final Predicate faustPredicate = builder.or(primaryFaustPredicat, relatedFaustsPredicat);
 
             // And status not CLOSED or DONE
@@ -682,13 +698,6 @@ public class Cases {
                 }
                 existing.setPrimaryFaust(dto.getPrimaryFaust());
             }
-            if(dto.getRelatedFausts() != null) {
-                if(!Faustnumbers.checkNoOpenCaseWithFaust(entityManager, existing.getId(), dto.getRelatedFausts().toArray(String[]::new))) {
-                    LOGGER.info("Case with primary or related faust {} and state <> CLOSED|DONE exists", dto.getPrimaryFaust());
-                    return ServiceErrorDto.FaustInUse(String.format("Case with primary or related fausts %s and status not DONE or CLOSED exists", dto.getRelatedFausts()));
-                }
-                existing.setRelatedFausts(dto.getRelatedFausts());
-            }
             if(dto.getNote() != null) {
                 existing.setNote(dto.getNote());
             }
@@ -829,15 +838,6 @@ public class Cases {
             // Add the new task
             promatCase.getTasks().add(task);
 
-            // Add new targetfausts
-            if(dto.getTargetFausts() != null && dto.getTargetFausts().size() > 0) {
-                for(String faust : dto.getTargetFausts()) {
-                    if(!promatCase.getRelatedFausts().contains(faust)) {
-                        promatCase.getRelatedFausts().add(faust);
-                    }
-                }
-            }
-
             return Response.status(201)
                     .entity(task)
                     .build();
@@ -953,19 +953,6 @@ public class Cases {
         }
 
         entityManager.refresh(existingCase);
-        if (!existingCase.getPrimaryFaust().equals(caseRequest.getPrimaryFaust())) {
-            if (existingCase.getRelatedFausts() == null) {
-                existingCase.setRelatedFausts(List.of(caseRequest.getPrimaryFaust()));
-                LOGGER.info("Set related fausts for existing case {}: {}",
-                        existingCase.getId(), existingCase.getRelatedFausts());
-            } else if (!existingCase.getRelatedFausts().contains(caseRequest.getPrimaryFaust())) {
-                final ArrayList<String> relatedFausts = new ArrayList<>(existingCase.getRelatedFausts());
-                relatedFausts.add(caseRequest.getPrimaryFaust());
-                existingCase.setRelatedFausts(relatedFausts);
-                LOGGER.info("Updated related fausts for existing case {}: {}",
-                        existingCase.getId(), existingCase.getRelatedFausts());
-            }
-        }
         existingCase.setFulltextLink(caseRequest.getFulltextLink());
         LOGGER.info("Updated existing case {}", existingCase.getId());
 
@@ -1006,7 +993,7 @@ public class Cases {
         return editor;
     }
 
-    private List<PromatTask> createTasks(String primaryFaust, List<TaskDto> taskDtos, List<String> relatedFausts) throws ServiceErrorException {
+    private List<PromatTask> createTasks(String primaryFaust, List<TaskDto> taskDtos) throws ServiceErrorException {
         ArrayList<PromatTask> tasks = new ArrayList<>();
 
         if( taskDtos != null && taskDtos.size() > 0) {
@@ -1020,14 +1007,6 @@ public class Cases {
                                 Repository.getPayCategoryForTaskFieldTypeOfTaskType(task.getTaskType(), task.getTaskFieldType()))
                         .withCreated(LocalDate.now())
                         .withTargetFausts(task.getTargetFausts() == null ? null : task.getTargetFausts()));
-
-                if( task.getTargetFausts() != null ) {
-                    for(String faust : task.getTargetFausts() ) {
-                        if(!relatedFausts.contains(faust) && !faust.equals(primaryFaust)) {
-                            relatedFausts.add(faust);
-                        }
-                    }
-                }
             }
         }
 
@@ -1056,19 +1035,6 @@ public class Cases {
                     .withCode(ServiceErrorCode.FAUST_IN_USE)
                     .withCause("Faustnumber is in use")
                     .withDetails(String.format("Case with primary or related faust %s and status not DONE or CLOSED exists", dto.getPrimaryFaust()));
-        }
-
-        // Check that no existing case exists with the same primary or related faustnumber
-        // as the given relasted fasutnumbers and a state other than CLOSED or DONE
-        if(dto.getRelatedFausts() != null && dto.getRelatedFausts().size() > 0) {
-            if(!Faustnumbers.checkNoOpenCaseWithFaust(entityManager, dto.getRelatedFausts().toArray(String[]::new))) {
-                LOGGER.info("Case with primary or related {} and state <> CLOSED|DONE exists", dto.getRelatedFausts());
-                throw new ServiceErrorException(String.format("Case with primary or related faust %s and status not DONE or CLOSED exists", dto.getRelatedFausts()))
-                        .withHttpStatus(409)
-                        .withCode(ServiceErrorCode.FAUST_IN_USE)
-                        .withCause("Faustnumber is in use")
-                        .withDetails(String.format("Case with primary or related faust %s and status not DONE or CLOSED exists", dto.getRelatedFausts()));
-            }
         }
 
         // Check that no existing case exists with the same primary or related faustnumber

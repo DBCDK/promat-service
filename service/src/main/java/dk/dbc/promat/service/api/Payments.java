@@ -297,7 +297,7 @@ public class Payments {
                                     promatCase.getTitle()))
                             .withReviewer(promatCase.getReviewer())
                             .withPrimaryFaust(promatCase.getPrimaryFaust())
-                            .withRelatedFausts(promatCase.getRelatedFausts().stream().collect(Collectors.joining(",")))
+                            .withRelatedFausts(promatCase.getTasks().stream().flatMap(t -> t.getTargetFausts().stream()).collect(Collectors.joining(",")))
                             .withTitle(promatCase.getTitle())
                             .withWeekCode(promatCase.getWeekCode())
                             .withMaterialType(promatCase.getMaterialType())

@@ -16,7 +16,7 @@
 <head><meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <title>Anmeldelse for ${requestedFaustnumber}@if(relatedFaustnumbers.size() > 0) + (${relatedFaustnumbers.stream().sorted().collect(Collectors.joining(","))})@endif</title>
     <style type="text/css">
-        body {font: 10pt arial, helvetica, sans-serif;}
+        body {font: 11pt arial; line-height: 13pt;}
         div.metadata div.container {font-weight: bold;}
         div.metadata div.data {font-weight: normal; margin-bottom: 5px;}
         div.fields {margin-top: 20px;}
