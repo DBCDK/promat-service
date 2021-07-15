@@ -15,6 +15,7 @@ import dk.dbc.promat.service.persistence.PromatCase;
 import dk.dbc.promat.service.persistence.PromatTask;
 import dk.dbc.promat.service.persistence.TaskFieldType;
 import dk.dbc.promat.service.persistence.TaskType;
+import dk.dbc.promat.service.util.PromatTaskUtils;
 import org.junit.jupiter.api.Test;
 
 import javax.ws.rs.core.Response;
@@ -155,5 +156,27 @@ public class TasksIT extends ContainerTest {
         assertThat("number of tasks", existing.getTasks().size(), is(3));
         assertThat("expected tasks", existing.getTasks().stream().map(task -> task.getId()).sorted().collect(Collectors.toList()),
                 is(Arrays.asList(1, 2, 3)));
+    }
+
+    @Test
+    public void testPromatTaskUtilsGetFormattedDataForLinksMarkup() {
+        assertThat("no markup",
+                PromatTaskUtils.getFormattedDataForLinksMarkup("Here is some data without markup")
+                        .equals("Here is some data without markup"));
+        assertThat("markup, current style",
+                PromatTaskUtils.getFormattedDataForLinksMarkup("this link <t>1234<t> is marked")
+                        .equals("this link <span style=\"font-style: italic;\">1234</span> is marked"));
+        assertThat("markup of multiple links, current style",
+                PromatTaskUtils.getFormattedDataForLinksMarkup("this link <t>1234<t> is marked, and also <t>this<t> link is marked")
+                        .equals("this link <span style=\"font-style: italic;\">1234</span> is marked, and also <span style=\"font-style: italic;\">this</span> link is marked"));
+        assertThat("markup, leading tag",
+                PromatTaskUtils.getFormattedDataForLinksMarkup("<t>1234<t> is marked")
+                        .equals("<span style=\"font-style: italic;\">1234</span> is marked"));
+        assertThat("markup, trailing tag",
+                PromatTaskUtils.getFormattedDataForLinksMarkup("this link should be marked <t>1234<t>")
+                        .equals("this link should be marked <span style=\"font-style: italic;\">1234</span>"));
+        assertThat("markup, leading and trailing tags",
+                PromatTaskUtils.getFormattedDataForLinksMarkup("<t>this link should be marked 1234<t>")
+                        .equals("<span style=\"font-style: italic;\">this link should be marked 1234</span>"));
     }
 }

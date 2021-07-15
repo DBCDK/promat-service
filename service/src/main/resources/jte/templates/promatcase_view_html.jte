@@ -2,6 +2,7 @@
 @import dk.dbc.promat.service.persistence.PromatTask
 @import dk.dbc.promat.service.persistence.TaskFieldType
 @import dk.dbc.promat.service.templating.Formatting
+@import dk.dbc.promat.service.util.PromatTaskUtils
 @import java.util.List
 @import java.util.Optional
 @import java.util.stream.Collectors
@@ -90,7 +91,7 @@
                 <div>
                     !{var comparison = promatCase.getTasks().stream().filter(t -> t.getTaskFieldType() == TaskFieldType.COMPARISON).findFirst(); }
                     !{var comparisonvalue = comparison.isPresent() ? (comparison.get().getData() != null ? comparison.get().getData() : "") : ""; }
-                    $unsafe{comparisonvalue.replace("<t>", "<span style=\"font-style: italic;\">").replace("</t>", "</span>")}
+                    $unsafe{PromatTaskUtils.getFormattedDataForLinksMarkup(comparisonvalue)}
                 </div>
             </div>
 
