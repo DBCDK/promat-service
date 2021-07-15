@@ -101,6 +101,7 @@ public class ScheduleRemindersIT extends ContainerTest {
         for(Notification  n : getNotifications()) {
             LOGGER.info("To:{} subject:{} created:{}", n.getToAddress(), n.getSubject(), n.getCreated());
         }
+        
         // Make sure that there are now two 'you're-late' reminders.
         notifications =
                 getNotifications("Afleveringsfrist for anmeldelse",
