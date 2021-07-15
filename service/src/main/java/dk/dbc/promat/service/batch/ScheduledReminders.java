@@ -1,6 +1,7 @@
 package dk.dbc.promat.service.batch;
 
 import dk.dbc.promat.service.cluster.ServerRole;
+import java.util.Locale;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import javax.ejb.EJB;
@@ -25,12 +26,12 @@ public class ScheduledReminders {
 
     @Inject
     @ConfigProperty(name = "ENABLE_REMINDERS")
-    Boolean ENABLE_REMINDERS = Boolean.FALSE;
+    String ENABLE_REMINDERS = "no";
 
     @EJB
     Reminders reminders;
 
-    @Schedule(second = "30", minute = "50", hour = "6-16", dayOfWeek = "Mon-Fri", persistent = false)
+    @Schedule(second = "30", minute = "10", hour = "6-16", dayOfWeek = "Mon-Fri", persistent = false)
     public void processReminders() {
         if (serverRole == ServerRole.PRIMARY) {
             if (!lock.tryLock()) {
@@ -43,7 +44,7 @@ public class ScheduledReminders {
             //  In the intermediary period, where old and new versions of promat are running
             //  side by side, we might risk mails being sent from here on "stale" cases,
             //  already handled in old promat.
-            if (ENABLE_REMINDERS) {
+            if ("yes".equals(ENABLE_REMINDERS.toLowerCase())) {
                 reminders.processReminders();
             } else {
                 LOGGER.info("Reminders batch is currently switched off. To reenable set env var ENABLE_REMINDERS to true.");
