@@ -381,6 +381,7 @@ public class Cases {
                               @QueryParam("status") final String status,
                               @QueryParam("reviewer") final Integer reviewer,
                               @QueryParam("editor") final Integer editor,
+                              @QueryParam("creator") final Integer creator,
                               @QueryParam("title") final String title,
                               @QueryParam("author") final String author,
                               @QueryParam("trimmedWeekcode") final String trimmedWeekcode,
@@ -398,6 +399,7 @@ public class Cases {
                 .withStatus(status)
                 .withReviewer(reviewer)
                 .withEditor(editor)
+                .withCreator(creator)
                 .withTitle(title)
                 .withAuthor(author)
                 .withWeekCode(weekCode)
@@ -503,6 +505,12 @@ public class Cases {
         final Integer editor = params.getEditor();
         if (editor != null && editor > 0) {
             allPredicates.add(builder.equal(root.get("editor").get("id"), editor));
+        }
+
+        // Get cases with given creator
+        final Integer creator = params.getCreator();
+        if (creator != null && creator > 0) {
+            allPredicates.add(builder.equal(root.get("creator").get("id"), creator));
         }
 
         // Get cases with a title that matches (entire, or part of) the given title

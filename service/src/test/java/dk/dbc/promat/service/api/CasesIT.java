@@ -2124,4 +2124,43 @@ public class CasesIT extends ContainerTest {
         assertThat("numFound", fetched.getNumFound(), is(1));
     }
 
+    @Test
+    public void testQueryByCreator() throws JsonProcessingException {
+        // Create a new case
+        CaseRequest dto = new CaseRequest()
+                .withTitle("Title for 28001112")
+                .withDetails("Details for 28001112")
+                .withPrimaryFaust("28001112")
+                .withEditor(10)
+                .withCreator(10)
+                .withReviewer(1)
+                .withSubjects(Arrays.asList(3, 4))
+                .withDeadline("2021-03-30")
+                .withMaterialType(MaterialType.BOOK)
+                .withTasks(Arrays.asList(
+                        new TaskDto()
+                                .withTaskType(TaskType.GROUP_1_LESS_THAN_100_PAGES)
+                                .withTaskFieldType(TaskFieldType.BRIEF)
+                                .withTargetFausts(Collections.singletonList("28001112")),
+                        new TaskDto()
+                                .withTaskType(TaskType.GROUP_1_LESS_THAN_100_PAGES)
+                                .withTaskFieldType(TaskFieldType.METAKOMPAS)
+                                .withTargetFausts(Collections.singletonList("28001112"))));
+
+        Response response = postResponse("v1/api/cases", dto);
+        PromatCase created = mapper.readValue(response.readEntity(String.class), PromatCase.class);
+        assertThat("status code", response.getStatus(), is(201));
+
+        response = getResponse("v1/api/cases", Map.of("creator", 10));
+        CaseSummaryList cases = mapper.readValue(response.readEntity(String.class), CaseSummaryList.class);
+        assertThat("Number of cases belonging to creator '10'", cases.getNumFound(),
+                is(greaterThanOrEqualTo(1)));
+        for (PromatCase pc : cases.getCases()) {
+            assertThat("Creator is '10'", pc.getCreator().getId(), is(10));
+        }
+        // Delete the case
+        response = deleteResponse("v1/api/cases/" + created.getId());
+        assertThat("status code", response.getStatus(), is(200));
+    }
+
 }

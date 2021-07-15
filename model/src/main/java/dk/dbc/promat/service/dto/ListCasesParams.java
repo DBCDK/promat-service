@@ -16,6 +16,10 @@ public class ListCasesParams extends HashMap<String, Object> {
          */
         EDITOR("editor"),
         /**
+         * ID of creator of case
+         */
+        CREATOR("creator"),
+        /**
          * Faust number that must be covered by the cases returned
          */
         FAUST("faust"),
@@ -98,6 +102,12 @@ public class ListCasesParams extends HashMap<String, Object> {
     public Integer getEditor() {
         return getInteger(Key.EDITOR);
     }
+
+    public ListCasesParams withCreator(Integer id) {
+        return withInteger(Key.CREATOR, id);
+    }
+
+    public Integer getCreator() { return getInteger(Key.CREATOR); }
 
     public ListCasesParams withFaust(String faust) {
         return withString(Key.FAUST, faust);
