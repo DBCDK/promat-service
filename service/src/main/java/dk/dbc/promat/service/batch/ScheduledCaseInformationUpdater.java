@@ -40,8 +40,10 @@ public class ScheduledCaseInformationUpdater {
     private static Lock updateLock = new ReentrantLock();
 
     // Since every update traverses all active cases, we should not run too often.
-    // Run once every hour during working days and normal working hours
-    @Schedule(second = "0", minute = "42", hour = "6-16", dayOfWeek = "Mon-Fri", persistent = false)
+    // Run once every 10 minutes on digit 0 to match dataio which is running every
+    // 10 minutes on digit 5.
+    // Only run during working days and normal working hours
+    @Schedule(second = "0", minute = "*/10", hour = "6-16", dayOfWeek = "Mon-Fri", persistent = false)
     public void updateCaseInformation() {
 
         try {
