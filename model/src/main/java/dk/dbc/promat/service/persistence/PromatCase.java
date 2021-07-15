@@ -48,7 +48,10 @@ import javax.persistence.Transient;
                 query = PromatCase.GET_CASES_FOR_UPDATE_QUERY),
         @NamedQuery(
                 name = PromatCase.GET_CASE_BY_FAUST_NAME,
-                query = PromatCase.GET_CASE_BY_FAUST_QUERY)
+                query = PromatCase.GET_CASE_BY_FAUST_QUERY),
+        @NamedQuery(
+                name = PromatCase.GET_CASES_FOR_REMINDERS_CHECK_NAME,
+                query = PromatCase.GET_CASES_FOR_REMINDERS_CHECK_QUERY)
 })
 @Entity
 public class PromatCase {
@@ -106,6 +109,14 @@ public class PromatCase {
             "                                                and c.status not in (dk.dbc.promat.service.persistence.CaseStatus.PENDING_CLOSE," +
             "                                                                    dk.dbc.promat.service.persistence.CaseStatus.CLOSED," +
             "                                                                    dk.dbc.promat.service.persistence.CaseStatus.DELETED)";
+
+    public static final String GET_CASES_FOR_REMINDERS_CHECK_NAME =
+            "PromatCase.get.cases.for.reminders.check";
+    public static final String GET_CASES_FOR_REMINDERS_CHECK_QUERY = "select c" +
+            "                                                           from PromatCase c"+
+            "                                                          where c.status in (dk.dbc.promat.service.persistence.CaseStatus.ASSIGNED," +
+            "                                                                             dk.dbc.promat.service.persistence.CaseStatus.PENDING_ISSUES)";
+
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -203,6 +214,9 @@ public class PromatCase {
     @JsonView({CaseView.Case.class, CaseView.Summary.class})
     @Transient
     private String note;
+
+    @JsonView({CaseView.Case.class, CaseView.Summary.class})
+    private LocalDate reminderSent;
 
     public Integer getId() {
         return id;
@@ -503,6 +517,19 @@ public class PromatCase {
         return this;
     }
 
+    public LocalDate getReminderSent() {
+        return reminderSent;
+    }
+
+    public void setReminderSent(LocalDate reminderSent) {
+        this.reminderSent = reminderSent;
+    }
+
+    public PromatCase withReminder(LocalDate reminderSent) {
+        this.reminderSent = reminderSent;
+        return this;
+    }
+
     @PrePersist
     @PreUpdate
     private void beforeUpdate() {
@@ -539,14 +566,15 @@ public class PromatCase {
                 Objects.equals(publisher, aCase.publisher) &&
                 Objects.equals(fulltextLink, aCase.fulltextLink) &&
                 newMessagesToEditor == aCase.newMessagesToEditor &&
-                newMessagesToReviewer == aCase.newMessagesToReviewer;
+                newMessagesToReviewer == aCase.newMessagesToReviewer &&
+                Objects.equals(reminderSent, aCase.reminderSent);
     }
 
     @Override
     public int hashCode() {
         return Objects.hash(id, title, details, primaryFaust, relatedFausts, reviewer, editor, subjects, created,
                 deadline, assigned, status, materialType, tasks, weekCode, trimmedWeekCode, author, creator, publisher,
-                fulltextLink, newMessagesToEditor, newMessagesToReviewer);
+                fulltextLink, newMessagesToEditor, newMessagesToReviewer, reminderSent);
     }
 
     @Override
@@ -575,6 +603,7 @@ public class PromatCase {
                 ", newMessagesToEditor='" + newMessagesToEditor + '\'' +
                 ", newMessagesToReviewer='" + newMessagesToReviewer + '\'' +
                 ", note='" + note + '\'' +
+                ", reminderSent'" + reminderSent + '\'' +
                 '}';
     }
 }

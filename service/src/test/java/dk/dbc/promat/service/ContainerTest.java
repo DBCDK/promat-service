@@ -36,7 +36,7 @@ public abstract class ContainerTest extends IntegrationTest {
     private static final Logger LOGGER = LoggerFactory.getLogger(ContainerTest.class);
     protected static final ObjectMapper mapper = new JsonMapperProvider().getObjectMapper();
 
-    private static WireMockServer wireMockServer;
+    protected static WireMockServer wireMockServer;
 
     static {
         wireMockServer = new WireMockServer(options().dynamicPort());
@@ -93,6 +93,7 @@ public abstract class ContainerTest extends IntegrationTest {
                 .withEnv("LU_MAILADDRESS", "TEST@dbc.dk")
                 .withEnv("OPENNUMBERROLL_SERVICE_URL", "http://host.testcontainers.internal:" + wireMockServer.port() + "/")
                 .withEnv("OPENNUMBERROLL_NUMBERROLLNAME", "faust")
+                .withEnv("ENABLE_REMINDERS", String.valueOf(true))
                 .withExposedPorts(8080)
                 .waitingFor(Wait.forHttp("/openapi"))
                 .withStartupTimeout(Duration.ofMinutes(2));

@@ -8,9 +8,8 @@ package dk.dbc.promat.service.api;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dk.dbc.connector.openformat.OpenFormatConnectorException;
-import dk.dbc.opennumberroll.OpennumberRollConnector;
-import dk.dbc.opennumberroll.OpennumberRollConnectorException;
 import dk.dbc.promat.service.Repository;
+import dk.dbc.promat.service.batch.Reminders;
 import dk.dbc.promat.service.dto.CaseRequest;
 import dk.dbc.promat.service.dto.CaseSummaryList;
 import dk.dbc.promat.service.dto.CriteriaOperator;
@@ -37,9 +36,6 @@ import dk.dbc.promat.service.templating.CaseviewXmlTransformer;
 import dk.dbc.promat.service.templating.NotificationFactory;
 import dk.dbc.promat.service.templating.model.AssignReviewer;
 import dk.dbc.promat.service.templating.Renderer;
-import java.time.LocalDateTime;
-
-import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -72,7 +68,6 @@ import java.util.HashSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -93,6 +88,9 @@ public class Cases {
 
     @EJB
     Records records;
+
+    @EJB
+    Reminders reminders;
 
     // Default number of results when getting cases
     private static final int DEFAULT_CASES_LIMIT = 100;
@@ -718,6 +716,9 @@ public class Cases {
             if(dto.getDeadline() != null) {
                 existing.setDeadline(LocalDate.parse(dto.getDeadline()));
             }
+            if(dto.getReminderSent() != null) {
+                existing.setReminderSent(LocalDate.parse(dto.getReminderSent()));
+            }
             if(dto.getMaterialType() != null) {
                 existing.setMaterialType(dto.getMaterialType());
             }
@@ -732,7 +733,7 @@ public class Cases {
                 // If status is changing from PENDING_EXTERNAL to APPROVED, any metakompas tasks
                 // should also be approved
                 if( existing.getStatus() == CaseStatus.PENDING_EXTERNAL && status == CaseStatus.APPROVED ) {
-                    LOGGER.info("Promoting metakompas task on case {} to APPROVED prematurely by user request");
+                    LOGGER.info("Promoting metakompas task on case {} to APPROVED prematurely by user request", existing.getId());
                     approveTasks(existing, true);
                 }
 
@@ -863,6 +864,21 @@ public class Cases {
 
         promatCase.setStatus(CaseStatus.DELETED);
         return Response.ok().build();
+    }
+
+    @POST
+    @Path(("cases/{id}/processreminder"))
+    @Produces(MediaType.APPLICATION_JSON)
+    @JsonView({CaseView.Summary.class})
+    public Response processReminder(@PathParam("id") final Integer id) {
+        // Fetch the case
+        PromatCase promatCase = entityManager.find(PromatCase.class, id);
+        if(promatCase == null) {
+            LOGGER.info("No case with id {}", id);
+            return ServiceErrorDto.NotFound("No such case", String.format("No case with id %d exists", id));
+        }
+        reminders.processReminder(promatCase, LocalDate.now());
+        return Response.ok(promatCase).build();
     }
 
     @POST

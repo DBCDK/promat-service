@@ -1,0 +1,1 @@
+ALTER TABLE promatcase ADD COLUMN remindersent DATE DEFAULT NULL;

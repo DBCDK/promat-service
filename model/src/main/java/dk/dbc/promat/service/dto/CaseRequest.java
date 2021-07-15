@@ -10,6 +10,7 @@ import dk.dbc.promat.service.persistence.CaseStatus;
 import dk.dbc.promat.service.persistence.MaterialType;
 import dk.dbc.promat.service.persistence.PromatCase;
 
+import dk.dbc.promat.service.persistence.Subject;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -37,7 +38,7 @@ public class CaseRequest implements Dto {
         }
         this.status = promatCase.getStatus();
         if (promatCase.getSubjects() != null) {
-            this.subjects = promatCase.getSubjects().stream().map(subject -> subject.getId()).collect(Collectors.toList());
+            this.subjects = promatCase.getSubjects().stream().map(Subject::getId).collect(Collectors.toList());
         }
         this.title = promatCase.getTitle();
         this.weekCode = promatCase.getWeekCode();
@@ -79,6 +80,8 @@ public class CaseRequest implements Dto {
     private String note;
 
     private String fulltextLink;
+
+    private String reminderSent;
 
     public String getTitle() {
         return title;
@@ -216,6 +219,14 @@ public class CaseRequest implements Dto {
         this.note = note;
     }
 
+    public String getReminderSent() {
+        return reminderSent;
+    }
+
+    public void setReminderSent(String reminderSent) {
+        this.reminderSent = reminderSent;
+    }
+
     public CaseRequest withTitle(String title) {
         this.title = title;
         return this;
@@ -315,6 +326,11 @@ public class CaseRequest implements Dto {
         return this;
     }
 
+    public CaseRequest withReminderSent(String reminderSent) {
+        this.reminderSent = reminderSent;
+        return this;
+    }
+
     @Override
     public String toString() {
         return "CaseRequestDto{" +
@@ -336,6 +352,7 @@ public class CaseRequest implements Dto {
                 ", publisher='" + publisher + '\'' +
                 ", note='" + note + '\'' +
                 ", fulltextLink='" + fulltextLink + '\'' +
+                ", reminderSent='" + reminderSent + '\'' +
                 '}';
     }
 
@@ -401,7 +418,10 @@ public class CaseRequest implements Dto {
         if (note != null ? !note.equals(that.note) : that.note != null) {
             return false;
         }
-        return fulltextLink != null ? fulltextLink.equals(that.fulltextLink) : that.fulltextLink == null;
+        if (fulltextLink != null ? !fulltextLink.equals(that.fulltextLink) : that.fulltextLink != null) {
+            return false;
+        }
+        return reminderSent != null ? reminderSent.equals(that.reminderSent) : that.reminderSent == null;
     }
 
     @Override
@@ -424,6 +444,7 @@ public class CaseRequest implements Dto {
         result = 31 * result + (publisher != null ? publisher.hashCode() : 0);
         result = 31 * result + (note != null ? note.hashCode() : 0);
         result = 31 * result + (fulltextLink != null ? fulltextLink.hashCode() : 0);
+        result = 31 * result + (reminderSent != null ? reminderSent.hashCode() : 0);
         return result;
     }
 }
