@@ -49,7 +49,7 @@ public class ScheduledReminders {
             } else {
                 LOGGER.info("Reminders batch is currently switched off. To reenable set env var ENABLE_REMINDERS to true.");
             }
+            lock.unlock();
         }
-        lock.unlock();
     }
 }
