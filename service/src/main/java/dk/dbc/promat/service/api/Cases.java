@@ -869,7 +869,7 @@ public class Cases {
     @POST
     @Path(("cases/{id}/processreminder"))
     @Produces(MediaType.APPLICATION_JSON)
-    @JsonView({CaseView.Summary.class})
+    @JsonView({CaseView.Case.class})
     public Response processReminder(@PathParam("id") final Integer id) {
         // Fetch the case
         PromatCase promatCase = entityManager.find(PromatCase.class, id);
