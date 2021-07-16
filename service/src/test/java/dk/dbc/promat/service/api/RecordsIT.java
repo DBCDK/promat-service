@@ -29,7 +29,7 @@ public class RecordsIT extends ContainerTest {
         assertThat("status code", response.getStatus(), is(200));
         RecordsListDto resolved = mapper.readValue(response.readEntity(String.class), RecordsListDto.class);
 
-        assertThat("results", resolved.getNumFound(), is(19));
+        assertThat("results", resolved.getNumFound(), is(20));
     }
 
     @Test
@@ -39,7 +39,7 @@ public class RecordsIT extends ContainerTest {
         assertThat("status code", response.getStatus(), is(200));
         RecordsListDto resolved = mapper.readValue(response.readEntity(String.class), RecordsListDto.class);
 
-        assertThat("results", resolved.getNumFound(), is(19));
+        assertThat("results", resolved.getNumFound(), is(20));
     }
 
     @Test

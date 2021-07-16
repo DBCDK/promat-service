@@ -2146,6 +2146,31 @@ public class CasesIT extends ContainerTest {
         PromatCase created = mapper.readValue(response.readEntity(String.class), PromatCase.class);
         assertThat("status code", response.getStatus(), is(201));
 
+        // Create another new case
+        dto = new CaseRequest()
+                .withTitle("Title for 38352253")
+                .withDetails("Details for 38352253")
+                .withPrimaryFaust("38352253")
+                .withEditor(10)
+                .withCreator(10)
+                .withReviewer(1)
+                .withSubjects(Arrays.asList(3, 4))
+                .withDeadline("2021-07-30")
+                .withMaterialType(MaterialType.BOOK)
+                .withTasks(Arrays.asList(
+                        new TaskDto()
+                                .withTaskType(TaskType.GROUP_1_LESS_THAN_100_PAGES)
+                                .withTaskFieldType(TaskFieldType.BRIEF)
+                                .withTargetFausts(List.of("38352253", "38352296")),
+                        new TaskDto()
+                                .withTaskType(TaskType.GROUP_1_LESS_THAN_100_PAGES)
+                                .withTaskFieldType(TaskFieldType.METAKOMPAS)
+                                .withTargetFausts(List.of("38352253", "38352296"))));
+
+        response = postResponse("v1/api/cases", dto);
+        PromatCase created_2 = mapper.readValue(response.readEntity(String.class), PromatCase.class);
+        assertThat("status code", response.getStatus(), is(201));
+
         // Query by id with faust 24699773: Expected is at least the case just created.
         response = getResponse("v1/api/cases", Map.of("id", 24699773));
         CaseSummaryList cases = mapper.readValue(response.readEntity(String.class), CaseSummaryList.class);
@@ -2160,12 +2185,12 @@ public class CasesIT extends ContainerTest {
         assertThat("The newly created case with this faust is one of them",
                 cases.getCases().stream().map(PromatCase::getId).collect(Collectors.toList()).contains(created.getId()));
 
-        // Query by ean 9788764432589: Expected is at least the case just created.
+        // Query by ean 5053083221386: Expected is at least the case just created.
         response = getResponse("v1/api/cases", Map.of("id", "5053083221386"));
         cases = mapper.readValue(response.readEntity(String.class), CaseSummaryList.class);
         assertThat(cases.getNumFound(), is(greaterThanOrEqualTo(1)));
         assertThat("The newly created case with this faust is one of them",
-                cases.getCases().stream().map(PromatCase::getId).collect(Collectors.toList()).contains(created.getId()));
+                cases.getCases().stream().map(PromatCase::getId).collect(Collectors.toList()).contains(created_2.getId()));
     }
 
 }
