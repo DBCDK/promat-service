@@ -2113,6 +2113,7 @@ public class CasesIT extends ContainerTest {
         for (PromatCase pc : cases.getCases()) {
             assertThat("Creator is '10'", pc.getCreator().getId(), is(10));
         }
+
         // Delete the case
         response = deleteResponse("v1/api/cases/" + created.getId());
         assertThat("status code", response.getStatus(), is(200));
@@ -2191,6 +2192,13 @@ public class CasesIT extends ContainerTest {
         assertThat(cases.getNumFound(), is(greaterThanOrEqualTo(1)));
         assertThat("The newly created case with this faust is one of them",
                 cases.getCases().stream().map(PromatCase::getId).collect(Collectors.toList()).contains(created_2.getId()));
-    }
 
+        // Delete case 1
+        response = deleteResponse("v1/api/cases/" + created.getId());
+        assertThat("status code", response.getStatus(), is(200));
+
+        // Delete case 2
+        response = deleteResponse("v1/api/cases/" + created_2.getId());
+        assertThat("status code", response.getStatus(), is(200));
+    }
 }
