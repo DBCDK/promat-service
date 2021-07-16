@@ -74,7 +74,11 @@ public class ListCasesParams extends HashMap<String, Object> {
         /**
          * How to order search results (ascending/descending)
          */
-        ORDER("order");
+        ORDER("order"),
+        /**
+         * Search for case with ean, isbn or faust.
+         */
+        ID("id");
 
         private final String keyName;
 
@@ -247,6 +251,14 @@ public class ListCasesParams extends HashMap<String, Object> {
             return (Order) value;
         }
         return null;
+    }
+
+    public ListCasesParams withId(String id) {
+        return withString(Key.ID, id);
+    }
+
+    public String getId() {
+        return getString(Key.ID);
     }
 
     private void putOrRemoveOnNull(Key param, Object value) {

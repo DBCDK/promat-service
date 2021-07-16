@@ -2080,6 +2080,7 @@ public class CasesIT extends ContainerTest {
 
     @Test
     public void testQueryByCreator() throws JsonProcessingException {
+
         // Create a new case
         CaseRequest dto = new CaseRequest()
                 .withTitle("Title for 28001112")
@@ -2115,6 +2116,56 @@ public class CasesIT extends ContainerTest {
         // Delete the case
         response = deleteResponse("v1/api/cases/" + created.getId());
         assertThat("status code", response.getStatus(), is(200));
+    }
+
+    @Test
+    public void testQueryBiId() throws JsonProcessingException {
+
+        // Create a new case
+        CaseRequest dto = new CaseRequest()
+                .withTitle("Title for 24699773")
+                .withDetails("Details for 24699773")
+                .withPrimaryFaust("24699773")
+                .withEditor(10)
+                .withCreator(10)
+                .withReviewer(1)
+                .withSubjects(Arrays.asList(3, 4))
+                .withDeadline("2021-07-30")
+                .withMaterialType(MaterialType.BOOK)
+                .withTasks(Arrays.asList(
+                        new TaskDto()
+                                .withTaskType(TaskType.GROUP_1_LESS_THAN_100_PAGES)
+                                .withTaskFieldType(TaskFieldType.BRIEF)
+                                .withTargetFausts(Collections.singletonList("24699773")),
+                        new TaskDto()
+                                .withTaskType(TaskType.GROUP_1_LESS_THAN_100_PAGES)
+                                .withTaskFieldType(TaskFieldType.METAKOMPAS)
+                                .withTargetFausts(Collections.singletonList("24699773"))));
+
+        Response response = postResponse("v1/api/cases", dto);
+        PromatCase created = mapper.readValue(response.readEntity(String.class), PromatCase.class);
+        assertThat("status code", response.getStatus(), is(201));
+
+        // Query by id with faust 24699773: Expected is at least the case just created.
+        response = getResponse("v1/api/cases", Map.of("id", 24699773));
+        CaseSummaryList cases = mapper.readValue(response.readEntity(String.class), CaseSummaryList.class);
+        assertThat(cases.getNumFound(), is(greaterThanOrEqualTo(1)));
+        assertThat("The newly created case with this faust is one of them",
+                cases.getCases().stream().map(PromatCase::getId).collect(Collectors.toList()).contains(created.getId()));
+
+        // Query by isbn 9788764432589: Expected is at least the case just created.
+        response = getResponse("v1/api/cases", Map.of("id", "9788764432589"));
+        cases = mapper.readValue(response.readEntity(String.class), CaseSummaryList.class);
+        assertThat(cases.getNumFound(), is(greaterThanOrEqualTo(1)));
+        assertThat("The newly created case with this faust is one of them",
+                cases.getCases().stream().map(PromatCase::getId).collect(Collectors.toList()).contains(created.getId()));
+
+        // Query by ean 9788764432589: Expected is at least the case just created.
+        response = getResponse("v1/api/cases", Map.of("id", "5053083221386"));
+        cases = mapper.readValue(response.readEntity(String.class), CaseSummaryList.class);
+        assertThat(cases.getNumFound(), is(greaterThanOrEqualTo(1)));
+        assertThat("The newly created case with this faust is one of them",
+                cases.getCases().stream().map(PromatCase::getId).collect(Collectors.toList()).contains(created.getId()));
     }
 
 }
