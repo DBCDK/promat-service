@@ -2120,7 +2120,7 @@ public class CasesIT extends ContainerTest {
     }
 
     @Test
-    public void testQueryBiId() throws JsonProcessingException {
+    public void testQueryById() throws JsonProcessingException {
 
         // Create a new case
         CaseRequest dto = new CaseRequest()
