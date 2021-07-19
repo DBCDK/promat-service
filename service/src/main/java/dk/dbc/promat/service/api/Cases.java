@@ -403,7 +403,8 @@ public class Cases {
                               @QueryParam("to") final Integer to,
                               @QueryParam("materials") final String materials,
                               @QueryParam("order") final ListCasesParams.Order order,
-                              @QueryParam("id") final String id) {
+                              @QueryParam("id") final String id,
+                              @QueryParam("publisher") final String publisher) {
 
         final ListCasesParams listCasesParams = new ListCasesParams()
                 .withFaust(faust)
@@ -422,7 +423,8 @@ public class Cases {
                 .withTo(to)
                 .withMaterials(materials)
                 .withId(id)
-                .withOrder(order);
+                .withOrder(order)
+                .withPublisher(publisher);
 
         LOGGER.info("GET cases/ {}", listCasesParams);
 
@@ -638,11 +640,18 @@ public class Cases {
             allPredicates.add(builder.lt(root.get("id"), builder.literal(to)));
         }
 
+        // Publisher parameter
+        final String publisher = params.getPublisher();
+        if (publisher != null) {
+            allPredicates.add(builder.like(root.get("publisher"), builder.literal("%"+publisher+"%")));
+        }
+
         // Combine all where clauses together with AND and add them to the query
         if (allPredicates.size() > 0) {
             Predicate finalPredicate = builder.and(allPredicates.toArray(Predicate[]::new));
             criteriaQuery.where(finalPredicate);
         }
+
 
         // Add ordering
         ListCasesParams.Order order = params.getOrder();

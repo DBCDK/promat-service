@@ -55,6 +55,7 @@ import static java.nio.file.StandardOpenOption.CREATE_NEW;
 import static java.nio.file.StandardOpenOption.WRITE;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
+import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.core.Is.is;
@@ -2120,7 +2121,7 @@ public class CasesIT extends ContainerTest {
     }
 
     @Test
-    public void testQueryById() throws JsonProcessingException {
+    public void testQueryByIdAndPublisher() throws JsonProcessingException {
 
         // Create a new case
         CaseRequest dto = new CaseRequest()
@@ -2133,6 +2134,7 @@ public class CasesIT extends ContainerTest {
                 .withSubjects(Arrays.asList(3, 4))
                 .withDeadline("2021-07-30")
                 .withMaterialType(MaterialType.BOOK)
+                .withPublisher("Publisher for 24699773")
                 .withTasks(Arrays.asList(
                         new TaskDto()
                                 .withTaskType(TaskType.GROUP_1_LESS_THAN_100_PAGES)
@@ -2158,6 +2160,7 @@ public class CasesIT extends ContainerTest {
                 .withSubjects(Arrays.asList(3, 4))
                 .withDeadline("2021-07-30")
                 .withMaterialType(MaterialType.BOOK)
+                .withPublisher("Publisher for 38352253")
                 .withTasks(Arrays.asList(
                         new TaskDto()
                                 .withTaskType(TaskType.GROUP_1_LESS_THAN_100_PAGES)
@@ -2176,22 +2179,41 @@ public class CasesIT extends ContainerTest {
         response = getResponse("v1/api/cases", Map.of("id", 24699773));
         CaseSummaryList cases = mapper.readValue(response.readEntity(String.class), CaseSummaryList.class);
         assertThat(cases.getNumFound(), is(greaterThanOrEqualTo(1)));
-        assertThat("The newly created case with this faust is one of them",
+        assertThat("The newly created first case with this faust is one of them",
                 cases.getCases().stream().map(PromatCase::getId).collect(Collectors.toList()).contains(created.getId()));
 
         // Query by isbn 9788764432589: Expected is at least the case just created.
         response = getResponse("v1/api/cases", Map.of("id", "9788764432589"));
         cases = mapper.readValue(response.readEntity(String.class), CaseSummaryList.class);
         assertThat(cases.getNumFound(), is(greaterThanOrEqualTo(1)));
-        assertThat("The newly created case with this faust is one of them",
+        assertThat("The newly created first case with this isbn is one of them",
                 cases.getCases().stream().map(PromatCase::getId).collect(Collectors.toList()).contains(created.getId()));
 
         // Query by ean 5053083221386: Expected is at least the case just created.
         response = getResponse("v1/api/cases", Map.of("id", "5053083221386"));
         cases = mapper.readValue(response.readEntity(String.class), CaseSummaryList.class);
         assertThat(cases.getNumFound(), is(greaterThanOrEqualTo(1)));
-        assertThat("The newly created case with this faust is one of them",
+        assertThat("The newly created second case with this ean is one of them",
                 cases.getCases().stream().map(PromatCase::getId).collect(Collectors.toList()).contains(created_2.getId()));
+
+        // Query by publisher: Expected are both cases.
+        response = getResponse("v1/api/cases", Map.of("publisher", "for"));
+        cases = mapper.readValue(response.readEntity(String.class), CaseSummaryList.class);
+        assertThat(cases.getNumFound(), is(greaterThanOrEqualTo(2)));
+        assertThat("Both newly created cases, should be present",
+                cases.getCases().stream().map(PromatCase::getId).collect(Collectors.toList())
+                        .containsAll(List.of(created_2.getId(), created.getId())));
+
+        // Query by publisher: Expected is only the first.
+        response = getResponse("v1/api/cases", Map.of("publisher", "24699773"));
+        cases = mapper.readValue(response.readEntity(String.class), CaseSummaryList.class);
+        List<Integer> caseIds = cases.getCases().stream().map(PromatCase::getId).collect(Collectors.toList());
+        assertThat(cases.getNumFound(), is(greaterThanOrEqualTo(1)));
+        assertThat("The first of the cases, should be present",
+                caseIds.contains(created.getId()));
+
+        assertThat("The second one of the two cases, should NOT be present",
+                not(caseIds.contains(created_2.getId())));
 
         // Delete case 1
         response = deleteResponse("v1/api/cases/" + created.getId());
