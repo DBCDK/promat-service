@@ -97,6 +97,13 @@ public class CaseInformationUpdater {
                 promatCase.setAuthor(bibliographicInformation.getCreator());
             }
 
+            // Update publisher, if changed
+            if(useSameOrUpdateValue(promatCase.getPublisher(), bibliographicInformation.getPublisher(), false)) {
+                LOGGER.info("Updating publisher: '{}' ==> '{}' of case with id {}", promatCase.getPublisher(),
+                        bibliographicInformation.getPublisher(), promatCase.getId());
+                promatCase.setPublisher(bibliographicInformation.getPublisher());
+            }
+
             // Check if the record has a BKMxxxxxx catalog code, if so - then check if we need to update the case,
             // otherwise check if we need to clear an existing weekcode (record may have been pulled back for further
             // editing by the cataloging team)

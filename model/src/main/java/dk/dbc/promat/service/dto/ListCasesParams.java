@@ -74,7 +74,15 @@ public class ListCasesParams extends HashMap<String, Object> {
         /**
          * How to order search results (ascending/descending)
          */
-        ORDER("order");
+        ORDER("order"),
+        /**
+         * Search for cases with publisher.
+         */
+        PUBLISHER("publisher"),
+        /**
+         * Search for case with ean, isbn or faust.
+         */
+        ID("id");
 
         private final String keyName;
 
@@ -248,6 +256,18 @@ public class ListCasesParams extends HashMap<String, Object> {
         }
         return null;
     }
+
+    public ListCasesParams withId(String id) {
+        return withString(Key.ID, id);
+    }
+
+    public String getId() {
+        return getString(Key.ID);
+    }
+
+    public ListCasesParams withPublisher(String publisher) { return  withString(Key.PUBLISHER, publisher); }
+
+    public String getPublisher() { return getString(Key.PUBLISHER); }
 
     private void putOrRemoveOnNull(Key param, Object value) {
         if (value == null) {

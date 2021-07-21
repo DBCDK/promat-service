@@ -36,6 +36,8 @@ import dk.dbc.promat.service.templating.CaseviewXmlTransformer;
 import dk.dbc.promat.service.templating.NotificationFactory;
 import dk.dbc.promat.service.templating.model.AssignReviewer;
 import dk.dbc.promat.service.templating.Renderer;
+import java.util.Collection;
+import javax.persistence.criteria.ParameterExpression;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -82,14 +84,14 @@ public class Cases {
     @PromatEntityManager
     EntityManager entityManager;
 
+    @Inject
+    RecordsResolver recordsResolver;
+
     @EJB
     Repository repository;
 
     @EJB
     NotificationFactory notificationFactory;
-
-    @EJB
-    Records records;
 
     @EJB
     Reminders reminders;
@@ -400,7 +402,9 @@ public class Cases {
                               @QueryParam("from") final Integer from,
                               @QueryParam("to") final Integer to,
                               @QueryParam("materials") final String materials,
-                              @QueryParam("order") final ListCasesParams.Order order) {
+                              @QueryParam("order") final ListCasesParams.Order order,
+                              @QueryParam("id") final String id,
+                              @QueryParam("publisher") final String publisher) {
 
         final ListCasesParams listCasesParams = new ListCasesParams()
                 .withFaust(faust)
@@ -418,7 +422,9 @@ public class Cases {
                 .withFrom(from)
                 .withTo(to)
                 .withMaterials(materials)
-                .withOrder(order);
+                .withId(id)
+                .withOrder(order)
+                .withPublisher(publisher);
 
         LOGGER.info("GET cases/ {}", listCasesParams);
 
@@ -484,6 +490,52 @@ public class Cases {
 
             allPredicates.add(builder.and(faustPredicate, statusPredicate));
         }
+
+        // Search by faust, ean (barcode) or isbn.
+        String id = params.getId();
+        if (id != null && !id.isBlank()) {
+            try {
+                Set<String> fausts = new HashSet<>();
+                Set<Integer> caseIds = new HashSet<>();
+
+                // Is this a faust?
+                if (id.length()<10) {
+                    fausts.add(id);
+                } else {
+
+                    // This is EAN (barcode) or ISBN.
+                    RecordsListDto faustList = (RecordsListDto) recordsResolver.resolveId(id);
+                    fausts.addAll(faustList.getRecords().stream().
+                            map(RecordDto::getFaust).collect(Collectors.toList()));
+                }
+                // Fetch all caseids
+                for (String f : fausts) {
+                    TypedQuery<PromatCase> query =
+                            entityManager.createNamedQuery(PromatCase.GET_CASE_BY_FAUST_NAME, PromatCase.class);
+                    query.setParameter("faust", f);
+                    caseIds.addAll(query.getResultList().stream().map(PromatCase::getId).collect(Collectors.toList()));
+                }
+
+                if (caseIds.size() > 0) {
+                    final CriteriaBuilder.In<Integer> inIdsClause = builder.in(root.get("id"));
+
+                    // Now set caseid, one by one.
+                    for (Integer cid : caseIds) {
+                        inIdsClause.value(cid);
+                    }
+                    Predicate inIdsPredicate = builder.and(inIdsClause);
+                    allPredicates.add(inIdsPredicate);
+                } else {
+                    return new CaseSummaryList().withNumFound(0);
+                }
+
+            } catch (Exception e) {
+                LOGGER.error("Lookup caseids from faust/isbn/ean failed:{}", e.getMessage());
+                return new CaseSummaryList().withNumFound(0);
+            }
+        }
+
+
 
         // Get cases with given set of statuses
         final String status = params.getStatus();
@@ -588,11 +640,18 @@ public class Cases {
             allPredicates.add(builder.lt(root.get("id"), builder.literal(to)));
         }
 
+        // Publisher parameter
+        final String publisher = params.getPublisher();
+        if (publisher != null) {
+            allPredicates.add(builder.like(root.get("publisher"), builder.literal("%"+publisher+"%")));
+        }
+
         // Combine all where clauses together with AND and add them to the query
         if (allPredicates.size() > 0) {
             Predicate finalPredicate = builder.and(allPredicates.toArray(Predicate[]::new));
             criteriaQuery.where(finalPredicate);
         }
+
 
         // Add ordering
         ListCasesParams.Order order = params.getOrder();
@@ -898,7 +957,7 @@ public class Cases {
                     "Drafts cannot be created with an assigned reviewer");
         }
 
-        final Dto dto = records.resolveId(caseRequest.getPrimaryFaust());
+        final Dto dto = recordsResolver.resolveId(caseRequest.getPrimaryFaust());
         if (!(dto instanceof RecordsListDto)) {
             return Response.status(400).entity(dto).build();
         }
