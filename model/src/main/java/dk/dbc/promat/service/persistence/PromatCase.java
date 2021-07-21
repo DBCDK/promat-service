@@ -222,7 +222,7 @@ public class PromatCase {
     @Transient
     private String note;
 
-    @JsonView({CaseView.Case.class, CaseView.Summary.class})
+    @JsonView({CaseView.Case.class})
     private LocalDate reminderSent;
 
     public Integer getId() {

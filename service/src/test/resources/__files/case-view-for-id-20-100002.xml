@@ -24,7 +24,7 @@
             <brief>BRIEF TEXT FOR 100002 éö^</brief>
             <description>DESCRIPTION TEXT</description>
             <evaluation>EVALUATION TEXT</evaluation>
-            <comparison>TEXT BEFORE &lt;t>48611435 Jeg tæller mine skridt&lt;/t> TEXT BETWEEN &lt;t>48611435 Hest horse Pferd cheval love&lt;/t> TEXT AFTER</comparison>
+            <comparison>TEXT BEFORE &lt;t>48611435 Jeg tæller mine skridt&lt;t> TEXT BETWEEN &lt;t>48611435 Hest horse Pferd cheval love&lt;t> TEXT AFTER</comparison>
             <recommendation>RECOMMENDATION TEXT</recommendation>
             <age>AGE TEXT</age>
             <matlevel>MATLEVEL TEXT</matlevel>
