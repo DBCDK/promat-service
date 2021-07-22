@@ -437,7 +437,7 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
 
         //
         // Third round: Metadata for one of the related faust has been done. There is still only one in
-        // the list of done Metakompas tasks. Lets say we updated the case to PENDING_EXTERNAL.
+        // the list of done Metakompas tasks.
         //
         openFormatResponse.get("48959955").setMetakompassubject(CaseInformationUpdater.METAKOMPASDATA_PRESENT);
         persistenceContext.run(() -> upd.caseInformationUpdater.updateCaseInformation(promatCase));
@@ -450,6 +450,7 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
 
         //
         // Fourth round: Metadata for both of the related faust has been done.
+        // AND lets say we updated the case to PENDING_EXTERNAL.
         //
         promatCase.setStatus(CaseStatus.PENDING_EXTERNAL);
         entityManager.persist(promatCase);
