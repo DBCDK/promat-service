@@ -457,7 +457,6 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
         openFormatResponse.get("48959912").setMetakompassubject(CaseInformationUpdater.METAKOMPASDATA_PRESENT);
         persistenceContext.run(() -> upd.caseInformationUpdater.updateCaseInformation(promatCase));
         created = getCaseWithId(promatCase.getId());
-        LOGGER.info("task1 fausts:{}, task2 fausts:{}", created.getTasks().get(0).getData(), created.getTasks().get(1).getData());
 
         tasks = getTasksWhereMetakompasIsPresent(created);
         assertThat("They all are finished.", tasks.size(), is(2));
@@ -484,14 +483,6 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
         query.setParameter("id", id);
         return query.getSingleResult();
 
-    }
-    private int updateCaseWithId(Integer id, CaseStatus caseStatus) {
-        TypedQuery<PromatCase> query = entityManager.createQuery(
-                "UPDATE PromatCase c SET c.status = :status " +
-                        "WHERE c.id = :id", PromatCase.class);
-        query.setParameter("id", id);
-        query.setParameter("status", caseStatus);
-        return query.executeUpdate();
     }
 
     private BibliographicInformation getOpenformatResponseFromResource(String faust) throws IOException {
