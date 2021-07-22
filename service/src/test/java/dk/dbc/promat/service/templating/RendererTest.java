@@ -68,6 +68,7 @@ public class RendererTest {
                 OpenFormatConnectorFactory.create(wireMockServer.baseUrl()));
         notificationFactory.reviewerDiffer = new ReviewerDiffer();
         notificationFactory.LU_MAILADDRESS = "TEST@dbc.dk";
+        notificationFactory.CC_MAILADDRESS = "cc_test@dbc.dk";
     }
 
     @AfterAll
@@ -95,7 +96,8 @@ public class RendererTest {
         assertThat("Subject", notification.getSubject(), is("Ny ProMat anmeldelse:  Frist: 16/1 2021. - TvekampenAsterix og briterne"));
         assertThat("Mailtext", actual, is(expected));
 
-        assertThat("Mail address", notification.getToAddress(), is("hans@hansen.dk"));
+        assertThat("Mail address", notification.getToAddress(),
+                is(String.join(",","hans@hansen.dk", notificationFactory.CC_MAILADDRESS)));
         assertThat( "Note", notification.getBodyText().contains(NOTE));
     }
 
@@ -132,7 +134,8 @@ public class RendererTest {
         assertThat("Mailtext", actual, is(expected));
 
         assertThat("Subject", notification.getSubject(), is("Ny ProMat anmeldelse: EKSPRES! Frist: 16/1 2021. - TvekampenAsterix og briterne"));
-        assertThat("Mail address", notification.getToAddress(), is("hans@hansen.dk"));
+        assertThat("Mail address", notification.getToAddress(), is(String.join(",",
+                "hans@hansen.dk", notificationFactory.CC_MAILADDRESS)));
     }
 
     @Test

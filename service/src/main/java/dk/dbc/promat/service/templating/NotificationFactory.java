@@ -13,6 +13,7 @@ import dk.dbc.promat.service.persistence.Notification;
 import dk.dbc.promat.service.persistence.NotificationStatus;
 import dk.dbc.promat.service.persistence.PromatCase;
 import dk.dbc.promat.service.persistence.PromatTask;
+import dk.dbc.promat.service.persistence.PromatUser;
 import dk.dbc.promat.service.persistence.Reviewer;
 import dk.dbc.promat.service.persistence.TaskFieldType;
 import dk.dbc.promat.service.templating.model.AssignReviewer;
@@ -59,6 +60,10 @@ public class NotificationFactory {
     @ConfigProperty(name = "LU_MAILADDRESS")
     String LU_MAILADDRESS;
 
+    @Inject
+    @ConfigProperty(name = "CC_MAILADDRESS")
+    String CC_MAILADDRESS;
+
     private final Renderer renderer = new Renderer();
     private static final String subjectTemplate;
     private static final String subjectTemplateReviewerChanged;
@@ -98,7 +103,7 @@ public class NotificationFactory {
                 Formatting.format(promatCase.getDeadline()),
                 promatCase.getTitle());
         return notification
-                .withToAddress(promatCase.getReviewer().getEmail())
+                .withToAddress(compileMailAddressesForReviewerMails(promatCase.getReviewer()))
                 .withSubject(subject)
                 .withBodyText(renderer.render("reviewer_assign_to_case.jte",
                         model.withTitleSections(getTitleSections(fausts))))
@@ -133,14 +138,9 @@ public class NotificationFactory {
     public Notification notificationOf(MailToReviewerOnNewMessage model) throws ValidateException {
         Notification notification = new Notification();
 
-        Reviewer reviewer = model.getPromatCase().getReviewer();
         String subject = String.format(subjectTemplateNewMessageFromEditor, model.getPromatCase().getTitle());
-        String mailAddress = reviewer.getAddress().getSelected() ? reviewer.getEmail() : reviewer.getPrivateEmail();
-        if (mailAddress == null) {
-            throw new ValidateException("mailAddress cannot be null");
-        }
         return notification
-                .withToAddress(mailAddress)
+                .withToAddress(compileMailAddressesForReviewerMails(model.getPromatCase().getReviewer()))
                 .withSubject(subject)
                 .withBodyText(renderer.render("new_message_to_reviewer_mail.jte", model))
                 .withStatus(NotificationStatus.PENDING);
@@ -149,13 +149,9 @@ public class NotificationFactory {
     public Notification notificationOf(EarlyReminderMail model) throws OpenFormatConnectorException, ValidateException {
         Notification notification = new Notification();
         List<String> fausts = collectFausts(model.getPromatCase());
-        Reviewer reviewer = model.getPromatCase().getReviewer();
-        String mailAddress = reviewer.getAddress().getSelected() ? reviewer.getEmail() : reviewer.getPrivateEmail();
-        if (mailAddress == null) {
-            throw new ValidateException("mailAddress cannot be null");
-        }
+
         return notification
-                .withToAddress(mailAddress)
+                .withToAddress(compileMailAddressesForReviewerMails(model.getPromatCase().getReviewer()))
                 .withSubject(subjectReminderCloseToDeadline)
                 .withBodyText(renderer.render("promatcase_near_deadline.jte",
                         model.withTitleSections(getTitleSections(fausts))))
@@ -165,13 +161,9 @@ public class NotificationFactory {
     public Notification notificationOf(DeadlinePassedMail model) throws OpenFormatConnectorException, ValidateException {
         Notification notification = new Notification();
         List<String> fausts = collectFausts(model.getPromatCase());
-        Reviewer reviewer = model.getPromatCase().getReviewer();
-        String mailAddress = reviewer.getAddress().getSelected() ? reviewer.getEmail() : reviewer.getPrivateEmail();
-        if (mailAddress == null) {
-            throw new ValidateException("mailAddress cannot be null");
-        }
+
         return notification
-                .withToAddress(mailAddress)
+                .withToAddress(compileMailAddressesForReviewerMails(model.getPromatCase().getReviewer()))
                 .withSubject(subjectDeadlinePassed)
                 .withBodyText(renderer.render("promatcase_passed_deadline.jte",
                         model.withTitleSections(getTitleSections(fausts))))
@@ -199,5 +191,21 @@ public class NotificationFactory {
 
         }
         return fausts.stream().sorted().collect(Collectors.toList());
+    }
+
+    private String compileMailAddressesForReviewerMails(Reviewer reviewer) throws ValidateException {
+        List<String> addresses = new ArrayList<>();
+        if (reviewer.getEmail() != null && !reviewer.getEmail().isEmpty()) {
+            addresses.add(reviewer.getEmail());
+        }
+        if (reviewer.getPrivateEmail() != null && !reviewer.getPrivateEmail().isEmpty()) {
+            addresses.add(reviewer.getPrivateEmail());
+        }
+        if (addresses.isEmpty()) {
+            throw new ValidateException("Email address for reviewer '%s', and private email " +
+                    "addresses cannot both be unassigned.");
+        }
+        addresses.add(CC_MAILADDRESS);
+        return String.join(",", addresses);
     }
 }
