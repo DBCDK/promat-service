@@ -198,9 +198,11 @@ public class NotificationFactory {
         if (reviewer.getEmail() != null && !reviewer.getEmail().isEmpty()) {
             addresses.add(reviewer.getEmail());
         }
-        if (reviewer.getPrivateEmail() != null && !reviewer.getPrivateEmail().isEmpty()) {
-            addresses.add(reviewer.getPrivateEmail());
-        }
+        // When GDPR issues are resolved add this section
+        //if (reviewer.getPrivateEmail() != null && !reviewer.getPrivateEmail().isEmpty()) {
+        //    addresses.add(reviewer.getPrivateEmail());
+        //}
+        //
         if (addresses.isEmpty()) {
             throw new ValidateException("Email address for reviewer '%s', and private email " +
                     "addresses cannot both be unassigned.");
