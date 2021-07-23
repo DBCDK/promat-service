@@ -223,6 +223,6 @@ public class MessagesIT extends ContainerTest {
 
 
     private long size(List<Notification> notifications, String mailAddress) {
-        return notifications.stream().filter(notification -> notification.getToAddress().equals(mailAddress)).count();
+        return notifications.stream().filter(notification -> notification.getToAddress().contains(mailAddress)).count();
     }
 }

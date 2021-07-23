@@ -94,6 +94,7 @@ public abstract class ContainerTest extends IntegrationTest {
                 .withEnv("OPENNUMBERROLL_SERVICE_URL", "http://host.testcontainers.internal:" + wireMockServer.port() + "/")
                 .withEnv("OPENNUMBERROLL_NUMBERROLLNAME", "faust")
                 .withEnv("ENABLE_REMINDERS", String.valueOf(true))
+                .withEnv("CC_MAILADDRESS", "cc_test@dbc.dk")
                 .withExposedPorts(8080)
                 .waitingFor(Wait.forHttp("/openapi"))
                 .withStartupTimeout(Duration.ofMinutes(2));

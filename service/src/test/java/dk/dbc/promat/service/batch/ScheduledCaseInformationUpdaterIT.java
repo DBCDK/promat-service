@@ -33,8 +33,11 @@ import java.nio.file.Path;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
 import org.eclipse.microprofile.metrics.ConcurrentGauge;
 import org.eclipse.microprofile.metrics.Metadata;
 import org.eclipse.microprofile.metrics.MetricRegistry;
@@ -365,17 +368,44 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
 
     @Test
     public void testWaitForMetakompasData() throws Exception {
-        Integer CASE_ID = 23;
+
+        // Create a case three fausts to check metakompas for.
+        CaseRequest dto = new CaseRequest()
+                .withPrimaryFaust("48959939")
+                .withTitle("Title for 48959939")
+                .withDetails("Details for 48959939")
+                .withMaterialType(MaterialType.BOOK)
+                .withTasks(
+                        List.of(
+                                new TaskDto()
+                                        .withTaskType(TaskType.GROUP_2_100_UPTO_199_PAGES)
+                                        .withTaskFieldType(TaskFieldType.METAKOMPAS)
+                                        .withTargetFausts(List.of("48959939")),
+                                new TaskDto()
+                                        .withTaskType(TaskType.GROUP_2_100_UPTO_199_PAGES)
+                                        .withTaskFieldType(TaskFieldType.METAKOMPAS)
+                                        .withTargetFausts(List.of( "48959955", "48959912"))
+                        )
+                )
+                .withAssigned("2021-07-21")
+                .withDeadline("2024-08-07")
+                .withCreator(10)
+                .withEditor(10)
+                .withReviewer(1);
+
+        Response response = postResponse("v1/api/cases", dto);
+        assertThat("status code", response.getStatus(), is(201));
+        PromatCase created = mapper.readValue(response.readEntity(String.class), PromatCase.class);
 
         Map<String, BibliographicInformation> openFormatResponse =
                 Map.of(
-                        "48959938", getOpenformatResponseFromResource("48959938").withMetakompassubject(null),
-                        "48959911", getOpenformatResponseFromResource("48959911").withMetakompassubject("false"),
-                        "48959954", getOpenformatResponseFromResource("48959954").withMetakompassubject(null)
+                        "48959939", getOpenformatResponseFromResource("48959939").withMetakompassubject(null),
+                        "48959912", getOpenformatResponseFromResource("48959912").withMetakompassubject("false"),
+                        "48959955", getOpenformatResponseFromResource("48959955").withMetakompassubject(null)
                 );
 
 
-        PromatCase promatCase = getCaseWithId(CASE_ID);
+        PromatCase promatCase = getCaseWithId(created.getId());
         ScheduledCaseInformationUpdater upd = new ScheduledCaseInformationUpdater();
         upd.caseInformationUpdater = new CaseInformationUpdater();
         upd.caseInformationUpdater.metricRegistry = metricRegistry;
@@ -389,76 +419,63 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
         //
         persistenceContext.run(() -> upd.caseInformationUpdater.updateCaseInformation(promatCase));
 
-        PromatTask task = PromatTaskUtils.getTaskForMainFaust(promatCase, TaskFieldType.METAKOMPAS)
-                .orElseThrow(() -> new Exception("task not found"));
-        assertThat("metakompasdata for main faust",
-                task.getData(),
-                is(nullValue()));
-        task = PromatTaskUtils.getTaskForRelatedFaust(promatCase, TaskFieldType.METAKOMPAS)
-                .orElseThrow(() -> new Exception("task not found"));
-
-        assertThat("metakompasdata for related faust",
-                task.getData(), anyOf(is(nullValue()), is("false")));
-
+        for (PromatTask task : PromatTaskUtils.getTasksOfType(promatCase, TaskFieldType.METAKOMPAS)) {
+            assertThat("metakompasdata task",
+                    task.getData(),
+                    anyOf(is(nullValue()), is("false")));
+        }
 
         //
         // Second round: lets say metakompasdata for primary faust now has been done.
         //
-        openFormatResponse.get("48959938").setMetakompassubject(CaseInformationUpdater.METAKOMPASDATA_PRESENT);
+        openFormatResponse.get("48959939").setMetakompassubject(CaseInformationUpdater.METAKOMPASDATA_PRESENT);
         persistenceContext.run(() -> upd.caseInformationUpdater.updateCaseInformation(promatCase));
-
-        task = PromatTaskUtils.getTaskForMainFaust(promatCase, TaskFieldType.METAKOMPAS)
-                .orElseThrow(() -> new Exception("task not found"));
-        assertThat("metakompasdata for main faust",
-                task.getData(),
-                is("true"));
-        task = PromatTaskUtils.getTaskForRelatedFaust(promatCase, TaskFieldType.METAKOMPAS)
-                .orElseThrow(() -> new Exception("task not found"));
-        assertThat("metakompasdata for related faust I",
-                task.getData(), anyOf(is(nullValue()), is("false")));
-
+        created = getCaseWithId(promatCase.getId());
+        List<PromatTask> tasks = getTasksWhereMetakompasIsPresent(created);
+        assertThat("There is only one finished.", tasks.size(), is(1));
+        assertThat("And it is the primaryfaust", tasks.get(0).getTargetFausts().contains("48959939"));
 
         //
-        // Third round: Metadata for one of the related faust has been done.
+        // Third round: Metadata for one of the related faust has been done. There is still only one in
+        // the list of done Metakompas tasks.
         //
-        openFormatResponse.get("48959911").setMetakompassubject(CaseInformationUpdater.METAKOMPASDATA_PRESENT);
+        openFormatResponse.get("48959955").setMetakompassubject(CaseInformationUpdater.METAKOMPASDATA_PRESENT);
         persistenceContext.run(() -> upd.caseInformationUpdater.updateCaseInformation(promatCase));
-        task = PromatTaskUtils.getTaskForMainFaust(getCaseWithId(CASE_ID), TaskFieldType.METAKOMPAS)
-                .orElseThrow(() -> new Exception("task not found"));
-        assertThat("metakompasdata for main faust",
-                task.getData(),
-                is("true"));
-        task = PromatTaskUtils.getTaskForRelatedFaust(promatCase, TaskFieldType.METAKOMPAS)
-                .orElseThrow(() -> new Exception("task not found"));
-        assertThat("metakompasdata for related faust II",
-                task.getData(), anyOf(is(nullValue()), is("false")));
-        assertThat("cases status", getCaseWithId(CASE_ID).getStatus(), is(CaseStatus.PENDING_EXTERNAL));
+        created = getCaseWithId(promatCase.getId());
+        tasks = getTasksWhereMetakompasIsPresent(created);
+        assertThat("There is only one finished.", tasks.size(), is(1));
+        assertThat("And it is the task with the primaryfaust", tasks.get(0).getTargetFausts().contains("48959939"));
+
+
 
         //
         // Fourth round: Metadata for both of the related faust has been done.
+        // AND lets say we updated the case to PENDING_EXTERNAL.
         //
-        openFormatResponse.get("48959954").setMetakompassubject(CaseInformationUpdater.METAKOMPASDATA_PRESENT);
+        promatCase.setStatus(CaseStatus.PENDING_EXTERNAL);
+        entityManager.persist(promatCase);
+        openFormatResponse.get("48959912").setMetakompassubject(CaseInformationUpdater.METAKOMPASDATA_PRESENT);
         persistenceContext.run(() -> upd.caseInformationUpdater.updateCaseInformation(promatCase));
+        created = getCaseWithId(promatCase.getId());
 
-        task = PromatTaskUtils.getTaskForMainFaust(promatCase, TaskFieldType.METAKOMPAS)
-                .orElseThrow(() -> new Exception("task not found"));
-        assertThat("metakompasdata for main faust",
-                task.getData(),
-                is("true"));
-        task = PromatTaskUtils.getTaskForRelatedFaust(promatCase, TaskFieldType.METAKOMPAS)
-                .orElseThrow(() -> new Exception("task not found"));
-        assertThat("metakompasdata for related faust II",
-                task.getData(), is("true"));
-        assertThat("case closed", promatCase.getStatus(), is(CaseStatus.APPROVED));
+        tasks = getTasksWhereMetakompasIsPresent(created);
+        assertThat("They all are finished.", tasks.size(), is(2));
 
+        created = getCaseWithId(promatCase.getId());
+        assertThat("case closed", created.getStatus(), is(CaseStatus.APPROVED));
 
-        assertThat("cases status", getCaseWithId(CASE_ID).getStatus(), is(CaseStatus.APPROVED));
 
         // Delete the case so that we dont mess up payments and dataio-export tests
-        Response response = deleteResponse("v1/api/cases/" + CASE_ID);
+        response = deleteResponse("v1/api/cases/" + created.getId());
         assertThat("status code", response.getStatus(), is(200));
     }
 
+    private List<PromatTask> getTasksWhereMetakompasIsPresent(PromatCase promatCase) {
+        return PromatTaskUtils.getTasksOfType(promatCase, TaskFieldType.METAKOMPAS)
+                .stream().filter(promatTask -> promatTask.getData() != null &&
+                        promatTask.getData().equals(CaseInformationUpdater.METAKOMPASDATA_PRESENT))
+                .collect(Collectors.toList());
+    }
     private PromatCase getCaseWithId(Integer id) {
         TypedQuery<PromatCase> query = entityManager.createQuery(
                 "SELECT c FROM PromatCase c " +
