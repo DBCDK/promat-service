@@ -721,13 +721,13 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
     }
 
     @Test
-    public void testUpdateCaseWithPendingExportForBKMWeekcode() throws OpenFormatConnectorException, JsonProcessingException, OpennumberRollConnectorException {
+    public void testUpdateCaseWithApprovedForBKMWeekcode() throws OpenFormatConnectorException, JsonProcessingException, OpennumberRollConnectorException {
 
         // Create a case
         CaseRequest dto = new CaseRequest()
                 .withPrimaryFaust("24699773")
                 .withTitle("Title for 24699773")
-                .withWeekCode("BMK202002")
+                .withWeekCode("BKM202002")
                 .withDetails("Details for 24699773")
                 .withMaterialType(MaterialType.BOOK)
                 .withAssigned("2021-01-28")
@@ -761,14 +761,73 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
         created.setStatus(CaseStatus.APPROVED);
         when(mockedHandler.format(anyString()))
                 .thenReturn(new BibliographicInformation()
-                        .withCatalogcodes(Arrays.asList("BKM" + date.format(formatter), "BKX299999")));
+                        .withCatalogcodes(Arrays.asList("BKM" + date.format(formatter), "BKX299999", "FFK299999")));
         doAnswer(answer -> {
             PromatCase existing = ((PromatCase) answer.getArgument(0));
             existing.getTasks().stream().forEach(t -> t.setRecordId("123456789"));
             return null;
         }).when(mockedRepository).assignFaustnumber(any(PromatCase.class));
 
-        // BKM is previous week, but BKX is in the future, and since BKX takes precedence, status should not change
+        // BKM is previous week, but BKX and FFK is in the future, and since BKX or FFK takes precedence, status should not change
+
+        persistenceContext.run(() -> upd.caseInformationUpdater.updateCaseInformation(created));
+        assertThat("status", created.getStatus(), is(CaseStatus.APPROVED));
+        created.getTasks().stream().forEach(t -> assertThat("recordId", t.getRecordId(), is(nullValue())));
+
+        // Delete the case so that we dont mess up payments and dataio-export tests
+        response = deleteResponse("v1/api/cases/" + created.getId());
+        assertThat("status code", response.getStatus(), is(200));
+    }
+
+    @Test
+    public void testUpdateCaseWithApprovedForBKMAndBkxWeekcode() throws OpenFormatConnectorException, JsonProcessingException, OpennumberRollConnectorException {
+
+        // Create a case
+        CaseRequest dto = new CaseRequest()
+                .withPrimaryFaust("24699773")
+                .withTitle("Title for 24699773")
+                .withWeekCode("BKM202002")
+                .withDetails("Details for 24699773")
+                .withMaterialType(MaterialType.BOOK)
+                .withAssigned("2021-01-28")
+                .withDeadline("2024-02-29")
+                .withCreator(10)
+                .withEditor(10)
+                .withReviewer(1)
+                .withTasks(Arrays.asList(new TaskDto()
+                        .withTaskType(TaskType.GROUP_1_LESS_THAN_100_PAGES)
+                        .withTaskFieldType(TaskFieldType.BRIEF)
+                        .withTargetFausts(Arrays.asList("24699773"))
+                ));
+
+        Response response = postResponse("v1/api/cases", dto);
+        assertThat("status code", response.getStatus(), is(201));
+        PromatCase created = mapper.readValue(response.readEntity(String.class), PromatCase.class);
+
+        ScheduledCaseInformationUpdater upd = new ScheduledCaseInformationUpdater();
+        upd.caseInformationUpdater = new CaseInformationUpdater();
+        upd.caseInformationUpdater.metricRegistry = metricRegistry;
+        upd.entityManager = entityManager;
+        upd.serverRole = ServerRole.PRIMARY;
+        OpenFormatHandler mockedHandler = mock(OpenFormatHandler.class);
+        upd.caseInformationUpdater.openFormatHandler = mockedHandler;
+        Repository mockedRepository = mock(Repository.class);
+        upd.caseInformationUpdater.repository = mockedRepository;
+
+        LocalDate date = LocalDate.now().minusWeeks(1);
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyw", new Locale("da", "DK"));
+
+        created.setStatus(CaseStatus.APPROVED);
+        when(mockedHandler.format(anyString()))
+                .thenReturn(new BibliographicInformation()
+                        .withCatalogcodes(Arrays.asList("BKM" + date.format(formatter), "BKX" + date.format(formatter), "FFK299999")));
+        doAnswer(answer -> {
+            PromatCase existing = ((PromatCase) answer.getArgument(0));
+            existing.getTasks().stream().forEach(t -> t.setRecordId("123456789"));
+            return null;
+        }).when(mockedRepository).assignFaustnumber(any(PromatCase.class));
+
+        // BKM and BKX is previous week, but FFK is in the future, and since FFK takes precedence, status should not change
 
         persistenceContext.run(() -> upd.caseInformationUpdater.updateCaseInformation(created));
         assertThat("status", created.getStatus(), is(CaseStatus.APPROVED));
@@ -786,7 +845,7 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
         CaseRequest dto = new CaseRequest()
                 .withPrimaryFaust("24699773")
                 .withTitle("Title for 24699773")
-                .withWeekCode("BMK202002")
+                .withWeekCode("BKM202002")
                 .withDetails("Details for 24699773")
                 .withMaterialType(MaterialType.BOOK)
                 .withAssigned("2021-01-28")
@@ -838,4 +897,62 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
         assertThat("status code", response.getStatus(), is(200));
     }
 
+    @Test
+    public void testUpdateCaseWithPendingExportForFFKWeekcode() throws OpenFormatConnectorException, JsonProcessingException, OpennumberRollConnectorException {
+
+        // Create a case
+        CaseRequest dto = new CaseRequest()
+                .withPrimaryFaust("24699773")
+                .withTitle("Title for 24699773")
+                .withWeekCode("BKM202002")
+                .withDetails("Details for 24699773")
+                .withMaterialType(MaterialType.BOOK)
+                .withAssigned("2021-01-28")
+                .withDeadline("2024-02-29")
+                .withCreator(10)
+                .withEditor(10)
+                .withReviewer(1)
+                .withTasks(Arrays.asList(new TaskDto()
+                        .withTaskType(TaskType.GROUP_1_LESS_THAN_100_PAGES)
+                        .withTaskFieldType(TaskFieldType.BRIEF)
+                        .withTargetFausts(Arrays.asList("24699773"))
+                ));
+
+        Response response = postResponse("v1/api/cases", dto);
+        assertThat("status code", response.getStatus(), is(201));
+        PromatCase created = mapper.readValue(response.readEntity(String.class), PromatCase.class);
+
+        ScheduledCaseInformationUpdater upd = new ScheduledCaseInformationUpdater();
+        upd.caseInformationUpdater = new CaseInformationUpdater();
+        upd.caseInformationUpdater.metricRegistry = metricRegistry;
+        upd.entityManager = entityManager;
+        upd.serverRole = ServerRole.PRIMARY;
+        OpenFormatHandler mockedHandler = mock(OpenFormatHandler.class);
+        upd.caseInformationUpdater.openFormatHandler = mockedHandler;
+        Repository mockedRepository = mock(Repository.class);
+        upd.caseInformationUpdater.repository = mockedRepository;
+
+        LocalDate date = LocalDate.now().minusWeeks(1);
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyw", new Locale("da", "DK"));
+
+        created.setStatus(CaseStatus.APPROVED);
+        when(mockedHandler.format(anyString()))
+                .thenReturn(new BibliographicInformation()
+                        .withCatalogcodes(Arrays.asList("FFK" + date.format(formatter), "BKM299999", "BKX299999")));
+        doAnswer(answer -> {
+            PromatCase existing = ((PromatCase) answer.getArgument(0));
+            existing.getTasks().stream().forEach(t -> t.setRecordId("123456789"));
+            return null;
+        }).when(mockedRepository).assignFaustnumber(any(PromatCase.class));
+
+        // FFK is previous week, but BKM and BKX is in the future, since FFK takes precedence, status should change
+
+        persistenceContext.run(() -> upd.caseInformationUpdater.updateCaseInformation(created));
+        assertThat("status", created.getStatus(), is(CaseStatus.PENDING_EXPORT));
+        created.getTasks().stream().forEach(t -> assertThat("recordId", t.getRecordId(), is("123456789")));
+
+        // Delete the case so that we dont mess up payments and dataio-export tests
+        response = deleteResponse("v1/api/cases/" + created.getId());
+        assertThat("status code", response.getStatus(), is(200));
+    }
 }
