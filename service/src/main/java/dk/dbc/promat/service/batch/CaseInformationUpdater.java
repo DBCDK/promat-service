@@ -198,9 +198,8 @@ public class CaseInformationUpdater {
         // Only look after BKM and BKX (express) catalogcodes.
         // If Both exists (as they would for express cases), BKX takes precedence
         Optional<String> newCode = codes.stream()
-                .filter(code -> Arrays.asList("BKM", "BKX").contains(code.substring(0, 3)))
-                .sorted(Comparator.comparing(code -> code.substring(0, 3)))
-                .sorted(Comparator.reverseOrder())
+                .filter(code -> Arrays.asList("BKM", "BKX", "FFK").contains(code.substring(0, 3)))
+                .sorted(Comparator.comparingInt(code -> "FFK BKX BKM".indexOf(code.substring(0, 3))))
                 .findFirst();
         return newCode.isPresent() ? newCode.get() : "";
     }
