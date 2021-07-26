@@ -90,7 +90,6 @@ public class CaseInformationUpdater {
                 return;
             }
             metricRegistry.simpleTimer(openformatTimerMetadata).update(Duration.ofMillis(System.currentTimeMillis() - taskStartTime));
-
             // Update title, if changed
             if (useSameOrUpdateValue(promatCase.getTitle(), bibliographicInformation.getTitle(), false)) {
                 LOGGER.info("Updating title: '{}' ==> '{}' of case with id {}", promatCase.getTitle(),
@@ -120,7 +119,6 @@ public class CaseInformationUpdater {
                 LOGGER.info("Updating weekcode: '{}' ==> '{}' of case with id {}", promatCase.getWeekCode(), newCode, promatCase.getId());
                 promatCase.setWeekCode(newCode);
             }
-
             // Check if the case has status 'APPROVED' and we have reached the week specified by the weekcode
             if( CaseStatus.APPROVED == promatCase.getStatus() && weekcodeMatchOrBefore(promatCase) ) {
                 LOGGER.info("Changing status on case {} to PENDING_EXPORT since weekcode {} is actual or previous week", promatCase.getId(), promatCase.getWeekCode());
@@ -130,7 +128,6 @@ public class CaseInformationUpdater {
 
             // Check and update case with Metakompasdata
             checkAndUpdateCaseWithMetakompasdata(promatCase, bibliographicInformation);
-
             //
             // Status is 'PENDING_EXTERNAL'. Now do last check of metakompas data before setting
             // final state: APPROVED.
@@ -141,22 +138,19 @@ public class CaseInformationUpdater {
                 boolean approved = promatCase.getTasks().stream().allMatch(promatTask -> promatTask.getApproved() != null);
                 promatCase.setStatus(approved ? CaseStatus.APPROVED : CaseStatus.PENDING_EXTERNAL);
             }
-
             //
             // A given ebook or book might be present in the "material content repo" (DMAT) for handout to reviewer,
             // through promat-frontend.
             // If a fulltextlink is already present on this case: Assume that everything is ok.
             if (promatCase.getMaterialType() == MaterialType.BOOK &&
-                    promatCase.getFulltextLink() != null &&
-                    !promatCase.getFulltextLink().isBlank()) {
+                    (promatCase.getFulltextLink() == null ||
+                    promatCase.getFulltextLink().isBlank())) {
                 Optional<String > fullTextLink = contentLookUp.lookUpContent(promatCase.getPrimaryFaust());
-
                 if (fullTextLink.isPresent()) {
                     promatCase.setFulltextLink(fullTextLink.get());
                     LOGGER.info("Fulltextlink '{}' has been added to case:{}", fullTextLink, promatCase.getId());
                 }
             }
-
 
         } catch(OpenFormatConnectorException e) {
             LOGGER.error("Caught exception when trying to obtain bibliographic information for faust {} in case with id {}: {}",

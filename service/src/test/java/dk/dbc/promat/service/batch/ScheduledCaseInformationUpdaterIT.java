@@ -838,4 +838,55 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
         assertThat("status code", response.getStatus(), is(200));
     }
 
+    @Test
+    public void testThatFulltextLinksAreUpdated() throws JsonProcessingException, OpenFormatConnectorException {
+        final String DOWNLOAD_LINK = "http://host.testcontainers.internal:" + wireMockServer.port() +
+                "?faust=48959940";
+
+        // Create a case. No download is present for main faust.
+        CaseRequest dto = new CaseRequest()
+                .withPrimaryFaust("48959940")
+                .withTitle("Title for 48959940")
+                .withDetails("Details for 48959940")
+                .withMaterialType(MaterialType.BOOK)
+                .withTasks(
+                        List.of(
+                                new TaskDto()
+                                        .withTaskType(TaskType.GROUP_2_100_UPTO_199_PAGES)
+                                        .withTaskFieldType(TaskFieldType.BRIEF)
+                                        .withTargetFausts(List.of("48959940"))))
+                .withAssigned("2021-07-21")
+                .withDeadline("2024-08-07")
+                .withCreator(10)
+                .withEditor(10)
+                .withReviewer(1);
+
+        Response response = postResponse("v1/api/cases", dto);
+        assertThat("status code", response.getStatus(), is(201));
+        PromatCase created = mapper.readValue(response.readEntity(String.class), PromatCase.class);
+
+        PromatCase promatCase = getCaseWithId(created.getId());
+        ScheduledCaseInformationUpdater upd = new ScheduledCaseInformationUpdater();
+        upd.caseInformationUpdater = new CaseInformationUpdater();
+        upd.caseInformationUpdater.metricRegistry = metricRegistry;
+        upd.caseInformationUpdater.openFormatHandler = mock(OpenFormatHandler.class);
+        when(upd.caseInformationUpdater.openFormatHandler.format(anyString()))
+                .thenReturn(new BibliographicInformation()
+                        .withCatalogcodes(new ArrayList<>()));
+
+        ContentLookUp contentLookUpMock = mock(ContentLookUp.class);
+        upd.caseInformationUpdater.contentLookUp = contentLookUpMock;
+        when(contentLookUpMock.lookUpContent("48959940")).thenReturn(Optional.of(DOWNLOAD_LINK));
+
+
+        //
+        // Now do an update, and confirm that the corrct link is present.
+        //
+        persistenceContext.run(() -> upd.caseInformationUpdater.updateCaseInformation(promatCase));
+        assertThat("Download link is now present", promatCase.getFulltextLink(), is(DOWNLOAD_LINK));
+
+        // Delete the case so that we dont mess up payments and dataio-export tests
+        response = deleteResponse("v1/api/cases/" + created.getId());
+        assertThat("status code", response.getStatus(), is(200));
+    }
 }

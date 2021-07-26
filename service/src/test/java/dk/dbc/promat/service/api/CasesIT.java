@@ -2225,8 +2225,64 @@ public class CasesIT extends ContainerTest {
     }
 
     @Test
-    public void testThatEmaterialForDownloadIsRegisteredProperly() {
+    public void testThatEmaterialForDownloadIsRegisteredProperly() throws JsonProcessingException {
 
+        // Create a new case
+        CaseRequest dto = new CaseRequest()
+                .withTitle("Title for 39449668")
+                .withDetails("Details for 39449668")
+                .withPrimaryFaust("39449668")
+                .withEditor(10)
+                .withCreator(10)
+                .withReviewer(1)
+                .withSubjects(Arrays.asList(3, 4))
+                .withDeadline("2021-07-30")
+                .withMaterialType(MaterialType.BOOK)
+                .withPublisher("Publisher for 39449668")
+                .withTasks(Collections.singletonList(
+                        new TaskDto()
+                                .withTaskType(TaskType.GROUP_1_LESS_THAN_100_PAGES)
+                                .withTaskFieldType(TaskFieldType.BRIEF)
+                                .withTargetFausts(Collections.singletonList("39449668"))));
+
+        // Create a another new case
+        CaseRequest dto2 = new CaseRequest()
+                .withTitle("Title for 39449669")
+                .withDetails("Details for 39449669")
+                .withPrimaryFaust("39449669")
+                .withEditor(10)
+                .withCreator(10)
+                .withReviewer(1)
+                .withSubjects(Arrays.asList(3, 4))
+                .withDeadline("2021-07-30")
+                .withMaterialType(MaterialType.BOOK)
+                .withPublisher("Publisher for 39449669")
+                .withTasks(Collections.singletonList(
+                        new TaskDto()
+                                .withTaskType(TaskType.GROUP_1_LESS_THAN_100_PAGES)
+                                .withTaskFieldType(TaskFieldType.BRIEF)
+                                .withTargetFausts(Collections.singletonList("39449669"))));
+
+        Response response = postResponse("v1/api/cases", dto);
+        PromatCase created = mapper.readValue(response.readEntity(String.class), PromatCase.class);
+        assertThat("status code", response.getStatus(), is(201));
+
+        // Check that there now is a download url.
+        assertThat(created.getFulltextLink(), is("http://host.testcontainers.internal:" + wireMockServer.port() +
+                "?faust=39449668"));
+
+        // Check that for the next one, no url is present.
+        response = postResponse("v1/api/cases", dto2);
+        PromatCase created2 = mapper.readValue(response.readEntity(String.class), PromatCase.class);
+        assertThat("status code", response.getStatus(), is(201));
+        assertThat("No e-content for this faust could be found at creation time.",created2.getFulltextLink(), nullValue());
+
+        // Delete the cases so that we dont mess up payments and dataio-export tests
+        response = deleteResponse("v1/api/cases/" + created.getId());
+        assertThat("status code", response.getStatus(), is(200));
+
+        response = deleteResponse("v1/api/cases/" + created2.getId());
+        assertThat("status code", response.getStatus(), is(200));
     }
 
 }
