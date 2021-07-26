@@ -7,8 +7,10 @@ package dk.dbc.promat.service.batch;
 
 import dk.dbc.connector.openformat.OpenFormatConnectorException;
 import dk.dbc.promat.service.api.BibliographicInformation;
+import dk.dbc.promat.service.api.FulltextHandler;
 import dk.dbc.promat.service.api.OpenFormatHandler;
 import dk.dbc.promat.service.persistence.CaseStatus;
+import dk.dbc.promat.service.persistence.MaterialType;
 import dk.dbc.promat.service.persistence.PromatCase;
 import dk.dbc.promat.service.persistence.PromatTask;
 import dk.dbc.promat.service.persistence.TaskFieldType;
@@ -17,6 +19,7 @@ import dk.dbc.promat.service.Repository;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.metrics.ConcurrentGauge;
 import org.eclipse.microprofile.metrics.Metadata;
 import org.eclipse.microprofile.metrics.MetricRegistry;
@@ -53,6 +56,10 @@ public class CaseInformationUpdater {
 
     @EJB
     Repository repository;
+
+    @Inject
+    ContentLookUp contentLookUp;
+
 
     static final Metadata openformatTimerMetadata = Metadata.builder()
             .withName("promat_service_caseinformationupdater_openformat_timer")
@@ -134,6 +141,22 @@ public class CaseInformationUpdater {
                 boolean approved = promatCase.getTasks().stream().allMatch(promatTask -> promatTask.getApproved() != null);
                 promatCase.setStatus(approved ? CaseStatus.APPROVED : CaseStatus.PENDING_EXTERNAL);
             }
+
+            //
+            // A given ebook or book might be present in the "material content repo" (DMAT) for handout to reviewer,
+            // through promat-frontend.
+            // If a fulltextlink is already present on this case: Assume that everything is ok.
+            if (promatCase.getMaterialType() == MaterialType.BOOK &&
+                    promatCase.getFulltextLink() != null &&
+                    !promatCase.getFulltextLink().isBlank()) {
+                Optional<String > fullTextLink = contentLookUp.lookUpContent(promatCase.getPrimaryFaust());
+
+                if (fullTextLink.isPresent()) {
+                    promatCase.setFulltextLink(fullTextLink.get());
+                    LOGGER.info("Fulltextlink '{}' has been added to case:{}", fullTextLink, promatCase.getId());
+                }
+            }
+
 
         } catch(OpenFormatConnectorException e) {
             LOGGER.error("Caught exception when trying to obtain bibliographic information for faust {} in case with id {}: {}",

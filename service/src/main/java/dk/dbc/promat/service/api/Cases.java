@@ -9,6 +9,7 @@ import com.fasterxml.jackson.annotation.JsonView;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dk.dbc.connector.openformat.OpenFormatConnectorException;
 import dk.dbc.promat.service.Repository;
+import dk.dbc.promat.service.batch.ContentLookUp;
 import dk.dbc.promat.service.batch.Reminders;
 import dk.dbc.promat.service.dto.CaseRequest;
 import dk.dbc.promat.service.dto.CaseSummaryList;
@@ -36,8 +37,9 @@ import dk.dbc.promat.service.templating.CaseviewXmlTransformer;
 import dk.dbc.promat.service.templating.NotificationFactory;
 import dk.dbc.promat.service.templating.model.AssignReviewer;
 import dk.dbc.promat.service.templating.Renderer;
-import java.util.Collection;
-import javax.persistence.criteria.ParameterExpression;
+import java.util.Optional;
+import javax.swing.text.SimpleAttributeSet;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -86,6 +88,9 @@ public class Cases {
 
     @Inject
     RecordsResolver recordsResolver;
+
+    @Inject
+    ContentLookUp contentLookUp;
 
     @EJB
     Repository repository;
@@ -196,6 +201,16 @@ public class Cases {
             }
         }
 
+        // Frontend should not post fulltextLinks. But anyhow IF IT DOES: Use that one.
+        // Else do a lookup in "material content repo".
+        final String fullTextLink;
+        if (dto.getFulltextLink() != null && !dto.getFulltextLink().isBlank()) {
+            fullTextLink = dto.getFulltextLink();
+        } else {
+            Optional<String> lookUpContent = contentLookUp.lookUpContent(dto.getPrimaryFaust());
+            fullTextLink = lookUpContent.orElse(null);
+        }
+
         // Create case
         try {
             PromatCase entity = new PromatCase()
@@ -216,7 +231,7 @@ public class Cases {
             .withCreator(creator)
             .withPublisher(dto.getPublisher())
             .withWeekCode(dto.getWeekCode())
-            .withFulltextLink(dto.getFulltextLink())
+            .withFulltextLink(fullTextLink)
             .withNote(dto.getNote());
 
             entityManager.persist(entity);

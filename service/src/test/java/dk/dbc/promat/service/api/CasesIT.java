@@ -2223,4 +2223,10 @@ public class CasesIT extends ContainerTest {
         response = deleteResponse("v1/api/cases/" + created_2.getId());
         assertThat("status code", response.getStatus(), is(200));
     }
+
+    @Test
+    public void testThatEmaterialForDownloadIsRegisteredProperly() {
+
+    }
+
 }

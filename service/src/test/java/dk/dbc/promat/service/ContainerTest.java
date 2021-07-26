@@ -92,6 +92,8 @@ public abstract class ContainerTest extends IntegrationTest {
                 .withEnv("OPENFORMAT_SERVICE_URL", "http://host.testcontainers.internal:" + wireMockServer.port() + "/")
                 .withEnv("LU_MAILADDRESS", "TEST@dbc.dk")
                 .withEnv("OPENNUMBERROLL_SERVICE_URL", "http://host.testcontainers.internal:" + wireMockServer.port() + "/")
+                .withEnv("EMATERIAL_CONTENT_REPO", "http://host.testcontainers.internal:" + wireMockServer.port() +
+                        "?faust=%s")
                 .withEnv("OPENNUMBERROLL_NUMBERROLLNAME", "faust")
                 .withEnv("ENABLE_REMINDERS", String.valueOf(true))
                 .withEnv("CC_MAILADDRESS", "cc_test@dbc.dk")
