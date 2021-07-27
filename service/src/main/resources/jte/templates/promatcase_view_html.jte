@@ -62,7 +62,7 @@
                                 ? task.getTargetFausts().stream()
                                         .collect(Collectors.joining(", "))
                                 : promatCase.getPrimaryFaust()
-                        }: ${task.getData()}
+                        }: ${PromatTaskUtils.getFormattedDataForLinksMarkup(task.getData() != null ? task.getData() : "")}
                     </div>
                 </div>
             @endfor
@@ -72,7 +72,8 @@
                 <div class="type">Beskrivelse:</div>
                 <div>
                     !{var description = promatCase.getTasks().stream().filter(t -> t.getTaskFieldType() == TaskFieldType.DESCRIPTION).findFirst(); }
-                    ${description.isPresent() && description.get().getData() != null ? description.get().getData() : ""}
+                    !{var descriptionvalue = description.isPresent() ? (description.get().getData() != null ? description.get().getData() : "") : ""}
+                    $unsafe{PromatTaskUtils.getFormattedDataForLinksMarkup(descriptionvalue)}
                 </div>
             </div>
 
@@ -81,7 +82,8 @@
                 <div class="type">Vurdering:</div>
                 <div>
                     !{var evaluation = promatCase.getTasks().stream().filter(t -> t.getTaskFieldType() == TaskFieldType.EVALUATION).findFirst(); }
-                    ${evaluation.isPresent() && evaluation.get().getData() != null ? evaluation.get().getData() : ""}
+                    !{var evaluationvalue = evaluation.isPresent() ? (evaluation.get().getData() != null ? evaluation.get().getData() : "") : ""; }
+                    $unsafe{PromatTaskUtils.getFormattedDataForLinksMarkup(evaluationvalue)}
                 </div>
             </div>
 
@@ -100,7 +102,8 @@
                 <div class="type">Til bibliotekaren:</div>
                 <div>
                     !{var recommendation = promatCase.getTasks().stream().filter(t -> t.getTaskFieldType() == TaskFieldType.RECOMMENDATION).findFirst(); }
-                    ${recommendation.isPresent() && recommendation.get().getData() != null ? recommendation.get().getData() : ""}
+                    !{var recommendationvalue = recommendation.isPresent() ? (recommendation.get().getData() != null ? recommendation.get().getData() : "") :  ""}
+                    $unsafe{PromatTaskUtils.getFormattedDataForLinksMarkup(recommendationvalue)}
                 </div>
             </div>
 
