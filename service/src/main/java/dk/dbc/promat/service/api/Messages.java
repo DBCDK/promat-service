@@ -6,6 +6,7 @@ import dk.dbc.promat.service.dto.MarkAsReadRequest;
 import dk.dbc.promat.service.dto.MessageRequestDto;
 import dk.dbc.promat.service.dto.PromatMessagesList;
 import dk.dbc.promat.service.dto.ServiceErrorDto;
+import dk.dbc.promat.service.persistence.CaseStatus;
 import dk.dbc.promat.service.persistence.Editor;
 import dk.dbc.promat.service.persistence.Notification;
 import dk.dbc.promat.service.persistence.PromatCase;
@@ -25,6 +26,7 @@ import javax.inject.Inject;
 import javax.persistence.EntityManager;
 import javax.persistence.TypedQuery;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
@@ -151,6 +153,27 @@ public class Messages {
             return Response.status(201).build();
         } catch (Exception e) {
             LOGGER.error("Caught exception {}", e.getMessage());
+            return ServiceErrorDto.Failed(e.getMessage());
+        }
+    }
+
+    @DELETE
+    @Path("messages/{id}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response deleteMessage(@PathParam("id") final Integer id) {
+        try {
+            PromatMessage message = entityManager.find(PromatMessage.class, id);
+            if( message == null ) {
+                LOGGER.info("Requested message {} does not exist", id);
+                return ServiceErrorDto.NotFound("Message not found",
+                        String.format("Requested message %s does not exist", id));
+            }
+
+            // Todo: Delete the message
+
+            return Response.ok().build();
+        } catch (Exception e) {
+            LOGGER.error("Caught exception: {}", e.getMessage());
             return ServiceErrorDto.Failed(e.getMessage());
         }
     }

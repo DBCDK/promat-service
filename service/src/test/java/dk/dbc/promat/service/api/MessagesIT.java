@@ -238,10 +238,14 @@ public class MessagesIT extends ContainerTest {
         response = postMessage(aCase.getId(), "What a piece of total CRAP!!!.. must I really read this piece of shit!",
                 REVIEWER_ID, PromatMessage.Direction.REVIEWER_TO_EDITOR);
         assertThat("status code", response.getStatus(), is(201));
+        PromatMessage aMessage = mapper.readValue(response.readEntity(String.class), PromatMessage.class);
+        int firstBadMessage = aMessage.getId();
 
         response = postMessage(aCase.getId(), "Oh sorry.. got the wrong book. Strange with two books having almost the same title..  e-hehe..  hee.",
                 REVIEWER_ID, PromatMessage.Direction.REVIEWER_TO_EDITOR);
         assertThat("status code", response.getStatus(), is(201));
+        aMessage = mapper.readValue(response.readEntity(String.class), PromatMessage.class);
+        int secondBadMessage = aMessage.getId();
 
         response = postMessage(aCase.getId(), "Nice book.. I'll be done in a jiffy",
                 REVIEWER_ID, PromatMessage.Direction.REVIEWER_TO_EDITOR);
@@ -261,7 +265,11 @@ public class MessagesIT extends ContainerTest {
                 size(getMessageList(aCase), PromatMessage.Direction.REVIEWER_TO_EDITOR, true),
                 is(4L));
 
-        // Todo: Remove those nasty messages in the middle
+        // Remove those nasty messages in the middle
+        response = deleteResponse("/v1/api/messages/" + firstBadMessage);
+        assertThat("status code", response.getStatus(), is(200));
+        response = deleteResponse("/v1/api/messages/" + secondBadMessage);
+        assertThat("status code", response.getStatus(), is(200));
 
         // We now have 2 messages from the editor to the reviewer
         assertThat("Editor to reviewer messages",
@@ -272,6 +280,10 @@ public class MessagesIT extends ContainerTest {
         assertThat("Reviewer to editor messages",
                 size(getMessageList(aCase), PromatMessage.Direction.REVIEWER_TO_EDITOR, true),
                 is(4L));  // Todo: Must have 2 messages left
+
+        // Try deleting a non-existing message
+        response = deleteResponse("/v1/api/messages/987654321");
+        assertThat("status code", response.getStatus(), is(404));
 
         // Cleanup
         response = deleteResponse("v1/api/cases/" + aCase.getId());

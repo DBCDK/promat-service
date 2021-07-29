@@ -820,7 +820,27 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Message'
-
+    delete:
+      tags:
+        - messages
+      summary: Delete existing message
+      operationId: deleteMessage
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            description: Message id
+      responses:
+        '200':
+          description: successful operation
+        '404':
+          description: Message not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
 
   /tasks/{id}:
     put:
