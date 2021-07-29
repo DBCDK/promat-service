@@ -1,6 +1,5 @@
 package dk.dbc.promat.service.persistence;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Objects;
 import javax.persistence.Column;
@@ -127,7 +126,10 @@ public class PromatMessage {
     public static final String TABLE_NAME = "promatmessage";
     public static final String GET_MESSAGES_FOR_CASE = "PromatMessage.getMessagesForCase";
     public static final String GET_MESSAGES_FOR_CASE_QUERY =
-            "SELECT promatmessage FROM PromatMessage promatmessage WHERE promatmessage.caseId = :caseId ORDER BY promatmessage.id DESC";
+            "SELECT promatmessage FROM PromatMessage promatmessage " +
+                    "WHERE promatmessage.caseId = :caseId " +
+                    "AND NOT promatmessage.isDeleted " +
+                    "ORDER BY promatmessage.id DESC";
     public static final String UPDATE_READ_STATE = "PromatMessage.updateReadState";
     public static final String UPDATE_READ_STATE_QUERY =
             "UPDATE PromatMessage promatMessage SET promatMessage.isRead = :isRead " +
@@ -137,7 +139,8 @@ public class PromatMessage {
     public static final String GET_NEWS_FOR_CASE_QUERY =
             "SELECT promatmessage FROM PromatMessage promatmessage " +
                     "WHERE promatmessage.caseId = :caseId AND promatmessage.direction = :direction " +
-                    "AND NOT promatmessage.isRead";
+                    "AND NOT promatmessage.isRead " +
+                    "AND NOT promatmessage.isDeleted";
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -154,7 +157,7 @@ public class PromatMessage {
 
     private Boolean isRead;
 
-    private Boolean isDeleted;
+    private Boolean isDeleted = false;
 
     @Enumerated(EnumType.STRING)
     private Direction direction;

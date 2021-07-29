@@ -277,9 +277,16 @@ public class MessagesIT extends ContainerTest {
                 is(2L));
 
         // and 2 nice messages from the reviewer to the editor
+        PromatMessagesList messages = getMessageList(aCase);
         assertThat("Reviewer to editor messages",
-                size(getMessageList(aCase), PromatMessage.Direction.REVIEWER_TO_EDITOR, true),
-                is(4L));  // Todo: Must have 2 messages left
+                size(messages, PromatMessage.Direction.REVIEWER_TO_EDITOR, true),
+                is(2L));
+        assertThat("First bad message has been deleted", messages.getPromatMessages().stream()
+                .filter(m -> m.getId() == firstBadMessage)
+                .count(), is(0L));
+        assertThat("Second bad message has been deleted", messages.getPromatMessages().stream()
+                .filter(m -> m.getId() == secondBadMessage)
+                .count(), is(0L));
 
         // Try deleting a non-existing message
         response = deleteResponse("/v1/api/messages/987654321");

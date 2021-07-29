@@ -6,7 +6,6 @@ import dk.dbc.promat.service.dto.MarkAsReadRequest;
 import dk.dbc.promat.service.dto.MessageRequestDto;
 import dk.dbc.promat.service.dto.PromatMessagesList;
 import dk.dbc.promat.service.dto.ServiceErrorDto;
-import dk.dbc.promat.service.persistence.CaseStatus;
 import dk.dbc.promat.service.persistence.Editor;
 import dk.dbc.promat.service.persistence.Notification;
 import dk.dbc.promat.service.persistence.PromatCase;
@@ -113,6 +112,12 @@ public class Messages {
     public Response getMessage(@PathParam("id") final Integer id) {
         try {
             PromatMessage message = entityManager.find(PromatMessage.class, id);
+            if( message == null || message.getDeleted() ) {
+                LOGGER.info("Requested message {} does not exist", id);
+                return ServiceErrorDto.NotFound("Message not found",
+                        String.format("Requested message %s does not exist", id));
+            }
+
             return Response.ok().entity(message).build();
         } catch (Exception e) {
             LOGGER.error("Caught exception: {}", e.getMessage());
