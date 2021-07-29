@@ -1,0 +1,1 @@
+ALTER TABLE promatmessage ADD COLUMN isDeleted BOOLEAN DEFAULT false;

@@ -154,6 +154,8 @@ public class PromatMessage {
 
     private Boolean isRead;
 
+    private Boolean isDeleted;
+
     @Enumerated(EnumType.STRING)
     private Direction direction;
 
@@ -189,6 +191,14 @@ public class PromatMessage {
         isRead = read;
     }
 
+    public Boolean getDeleted() {
+        return isDeleted;
+    }
+
+    public void setDeleted(Boolean deleted) {
+        isDeleted = deleted;
+    }
+
     public Direction getDirection() {
         return direction;
     }
@@ -219,6 +229,10 @@ public class PromatMessage {
         this.isRead = isRead;
         return this;
     }
+
+    // Deliberately missing 'withIsDeleted()' since it makes no sense
+    // to create a new message that is never to be shown!
+
     public PromatMessage withDirection(Direction direction) {
         this.direction = direction;
         return this;
@@ -250,12 +264,13 @@ public class PromatMessage {
                 Objects.equals(messageText, aMessage.messageText) &&
                 Objects.equals(created, aMessage.created) &&
                 Objects.equals(isRead, aMessage.isRead) &&
+                Objects.equals(isDeleted, aMessage.isDeleted) &&
                 direction == aMessage.direction;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, author, caseId, messageText, created, isRead, direction);
+        return Objects.hash(id, author, caseId, messageText, created, isRead, isDeleted, direction);
     }
 
     @Override
@@ -267,6 +282,7 @@ public class PromatMessage {
                 ", messageText='" + messageText + '\'' +
                 ", created=" + created +
                 ", isRead=" + isRead +
+                ", isRead=" + isDeleted +
                 ", direction=" + direction +
                 '}';
     }

@@ -169,7 +169,10 @@ public class Messages {
                         String.format("Requested message %s does not exist", id));
             }
 
-            // Todo: Delete the message
+            // Delete the message
+            message.setDeleted(true);
+            message.setRead(true);
+            entityManager.flush();
 
             return Response.ok().build();
         } catch (Exception e) {
