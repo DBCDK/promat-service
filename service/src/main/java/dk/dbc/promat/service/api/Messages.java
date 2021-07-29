@@ -25,6 +25,7 @@ import javax.inject.Inject;
 import javax.persistence.EntityManager;
 import javax.persistence.TypedQuery;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
@@ -111,6 +112,12 @@ public class Messages {
     public Response getMessage(@PathParam("id") final Integer id) {
         try {
             PromatMessage message = entityManager.find(PromatMessage.class, id);
+            if( message == null || message.getDeleted() ) {
+                LOGGER.info("Requested message {} does not exist", id);
+                return ServiceErrorDto.NotFound("Message not found",
+                        String.format("Requested message %s does not exist", id));
+            }
+
             return Response.ok().entity(message).build();
         } catch (Exception e) {
             LOGGER.error("Caught exception: {}", e.getMessage());
@@ -151,6 +158,30 @@ public class Messages {
             return Response.status(201).build();
         } catch (Exception e) {
             LOGGER.error("Caught exception {}", e.getMessage());
+            return ServiceErrorDto.Failed(e.getMessage());
+        }
+    }
+
+    @DELETE
+    @Path("messages/{id}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response deleteMessage(@PathParam("id") final Integer id) {
+        try {
+            PromatMessage message = entityManager.find(PromatMessage.class, id);
+            if( message == null ) {
+                LOGGER.info("Requested message {} does not exist", id);
+                return ServiceErrorDto.NotFound("Message not found",
+                        String.format("Requested message %s does not exist", id));
+            }
+
+            // Delete the message
+            message.setDeleted(true);
+            message.setRead(true);
+            entityManager.flush();
+
+            return Response.ok().build();
+        } catch (Exception e) {
+            LOGGER.error("Caught exception: {}", e.getMessage());
             return ServiceErrorDto.Failed(e.getMessage());
         }
     }
