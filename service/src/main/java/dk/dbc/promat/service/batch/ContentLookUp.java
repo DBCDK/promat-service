@@ -25,12 +25,18 @@ public class ContentLookUp {
         final String fullTextLink = String.format(contentRepo, faust);;
 
         try {
+            LOGGER.info("Looking up ebook content via HEAD to {}", fullTextLink);
             var client = HttpClient.newBuilder().version(HttpClient.Version.HTTP_1_1).build();
             var request = HttpRequest.newBuilder()
                     .uri(URI.create(fullTextLink))
                     .method("HEAD", HttpRequest.BodyPublishers.noBody())
                     .build();
             var headResponse = client.send(request, HttpResponse.BodyHandlers.discarding());
+            LOGGER.info("response.statusCode() = {}, {}",
+                    headResponse.statusCode(),
+                    (headResponse.statusCode() == 200
+                            ? "Content exists"
+                            : "No content"));
             return headResponse.statusCode() == 200 ? Optional.of(fullTextLink) : Optional.empty();
         } catch (InterruptedException | IOException exception) {
             LOGGER.error("Unable to lookup '{}', error:", fullTextLink, exception);
