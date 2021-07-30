@@ -128,6 +128,11 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
         upd.caseInformationUpdater.metricRegistry = metricRegistry;
         upd.caseInformationUpdater.openFormatHandler = new OpenFormatHandler()
                 .withConnector(OpenFormatConnectorFactory.create(wiremockHost));
+
+        ContentLookUp contentLookUpMock = mock(ContentLookUp.class);
+        upd.caseInformationUpdater.contentLookUp = contentLookUpMock;
+        when(contentLookUpMock.lookUpContent(anyString())).thenReturn(Optional.empty());
+
         persistenceContext.run(() -> upd.caseInformationUpdater.updateCaseInformation(created));
 
         assertThat("title is correct", created.getTitle(), is("Den lukkede bog"));
@@ -162,6 +167,11 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
         upd.caseInformationUpdater.metricRegistry = metricRegistry;
         upd.caseInformationUpdater.openFormatHandler = new OpenFormatHandler()
                 .withConnector(OpenFormatConnectorFactory.create(wiremockHost));
+
+        ContentLookUp contentLookUpMock = mock(ContentLookUp.class);
+        upd.caseInformationUpdater.contentLookUp = contentLookUpMock;
+        when(contentLookUpMock.lookUpContent(anyString())).thenReturn(Optional.empty());
+
         persistenceContext.run(() -> upd.caseInformationUpdater.updateCaseInformation(created));
 
         assertThat("weekcode is correct", created.getWeekCode(), is("BKM201105"));
@@ -196,6 +206,11 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
         upd.caseInformationUpdater.metricRegistry = metricRegistry;
         upd.caseInformationUpdater.openFormatHandler = new OpenFormatHandler()
                 .withConnector(OpenFormatConnectorFactory.create(wiremockHost));
+
+        ContentLookUp contentLookUpMock = mock(ContentLookUp.class);
+        upd.caseInformationUpdater.contentLookUp = contentLookUpMock;
+        when(contentLookUpMock.lookUpContent(anyString())).thenReturn(Optional.empty());
+
         persistenceContext.run(() -> upd.caseInformationUpdater.updateCaseInformation(created));
 
         assertThat("weekcode is correct", created.getWeekCode(), is("BKM201105"));
@@ -230,6 +245,11 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
         upd.caseInformationUpdater.metricRegistry = metricRegistry;
         upd.caseInformationUpdater.openFormatHandler = new OpenFormatHandler()
                 .withConnector(OpenFormatConnectorFactory.create(wiremockHost));
+
+        ContentLookUp contentLookUpMock = mock(ContentLookUp.class);
+        upd.caseInformationUpdater.contentLookUp = contentLookUpMock;
+        when(contentLookUpMock.lookUpContent(anyString())).thenReturn(Optional.empty());
+
         persistenceContext.run(() -> upd.caseInformationUpdater.updateCaseInformation(created));
 
         assertThat("weekcode is correct", created.getWeekCode(), is(""));
@@ -274,6 +294,10 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
         when(mockedHandler.format(not(eq(created.getPrimaryFaust()))))
                 .thenReturn(new BibliographicInformation()
                         .withError("not real handler")); // Causing update of case to be skipped
+
+        ContentLookUp contentLookUpMock = mock(ContentLookUp.class);
+        upd.caseInformationUpdater.contentLookUp = contentLookUpMock;
+        when(contentLookUpMock.lookUpContent(anyString())).thenReturn(Optional.empty());
 
         persistenceContext.run(() -> {
             upd.updateCaseInformation();
@@ -320,6 +344,11 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
         upd.caseInformationUpdater.metricRegistry = metricRegistry;
         upd.caseInformationUpdater.openFormatHandler = new OpenFormatHandler()
                 .withConnector(OpenFormatConnectorFactory.create(wiremockHost));
+
+        ContentLookUp contentLookUpMock = mock(ContentLookUp.class);
+        upd.caseInformationUpdater.contentLookUp = contentLookUpMock;
+        when(contentLookUpMock.lookUpContent(anyString())).thenReturn(Optional.empty());
+
         persistenceContext.run(() -> upd.caseInformationUpdater.updateCaseInformation(created));
 
         assertThat("weekcode is removed", created.getWeekCode(), is(""));
@@ -355,6 +384,11 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
         upd.caseInformationUpdater.metricRegistry = metricRegistry;
         upd.caseInformationUpdater.openFormatHandler = new OpenFormatHandler()
                 .withConnector(OpenFormatConnectorFactory.create(wiremockHost));
+
+        ContentLookUp contentLookUpMock = mock(ContentLookUp.class);
+        upd.caseInformationUpdater.contentLookUp = contentLookUpMock;
+        when(contentLookUpMock.lookUpContent(anyString())).thenReturn(Optional.empty());
+
         persistenceContext.run(() -> upd.caseInformationUpdater.updateCaseInformation(created));
 
         assertThat("title is updated", created.getTitle().equals("Deadpool"));
@@ -414,6 +448,10 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
         when(openFormatHandler.format(anyString()))
                 .thenAnswer(invocationOnMock -> openFormatResponse.get(invocationOnMock.getArgument(0)));
 
+        ContentLookUp contentLookUpMock = mock(ContentLookUp.class);
+        upd.caseInformationUpdater.contentLookUp = contentLookUpMock;
+        when(contentLookUpMock.lookUpContent(anyString())).thenReturn(Optional.empty());
+
         //
         // First round: Lets say that none are ready yet.
         //
@@ -445,8 +483,6 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
         tasks = getTasksWhereMetakompasIsPresent(created);
         assertThat("There is only one finished.", tasks.size(), is(1));
         assertThat("And it is the task with the primaryfaust", tasks.get(0).getTargetFausts().contains("48959939"));
-
-
 
         //
         // Fourth round: Metadata for both of the related faust has been done.
@@ -527,6 +563,10 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
         Repository mockedRepository = mock(Repository.class);
         upd.caseInformationUpdater.repository = mockedRepository;
 
+        ContentLookUp contentLookUpMock = mock(ContentLookUp.class);
+        upd.caseInformationUpdater.contentLookUp = contentLookUpMock;
+        when(contentLookUpMock.lookUpContent(anyString())).thenReturn(Optional.empty());
+
         created.setStatus(CaseStatus.APPROVED);
         when(mockedHandler.format(anyString()))
                 .thenReturn(new BibliographicInformation()
@@ -580,6 +620,10 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
         upd.caseInformationUpdater.openFormatHandler = mockedHandler;
         Repository mockedRepository = mock(Repository.class);
         upd.caseInformationUpdater.repository = mockedRepository;
+
+        ContentLookUp contentLookUpMock = mock(ContentLookUp.class);
+        upd.caseInformationUpdater.contentLookUp = contentLookUpMock;
+        when(contentLookUpMock.lookUpContent(anyString())).thenReturn(Optional.empty());
 
         LocalDate date = LocalDate.now().plusWeeks(1);
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyw", new Locale("da", "DK"));
@@ -637,6 +681,10 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
         Repository mockedRepository = mock(Repository.class);
         upd.caseInformationUpdater.repository = mockedRepository;
 
+        ContentLookUp contentLookUpMock = mock(ContentLookUp.class);
+        upd.caseInformationUpdater.contentLookUp = contentLookUpMock;
+        when(contentLookUpMock.lookUpContent(anyString())).thenReturn(Optional.empty());
+
         LocalDate date = LocalDate.now().plusWeeks(2);
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyw", new Locale("da", "DK"));
 
@@ -693,6 +741,10 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
         upd.caseInformationUpdater.openFormatHandler = mockedHandler;
         Repository mockedRepository = mock(Repository.class);
         upd.caseInformationUpdater.repository = mockedRepository;
+
+        ContentLookUp contentLookUpMock = mock(ContentLookUp.class);
+        upd.caseInformationUpdater.contentLookUp = contentLookUpMock;
+        when(contentLookUpMock.lookUpContent(anyString())).thenReturn(Optional.empty());
 
         created.setStatus(CaseStatus.APPROVED);
 
@@ -755,6 +807,10 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
         Repository mockedRepository = mock(Repository.class);
         upd.caseInformationUpdater.repository = mockedRepository;
 
+        ContentLookUp contentLookUpMock = mock(ContentLookUp.class);
+        upd.caseInformationUpdater.contentLookUp = contentLookUpMock;
+        when(contentLookUpMock.lookUpContent(anyString())).thenReturn(Optional.empty());
+
         LocalDate date = LocalDate.now().minusWeeks(1);
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyw", new Locale("da", "DK"));
 
@@ -813,6 +869,10 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
         upd.caseInformationUpdater.openFormatHandler = mockedHandler;
         Repository mockedRepository = mock(Repository.class);
         upd.caseInformationUpdater.repository = mockedRepository;
+
+        ContentLookUp contentLookUpMock = mock(ContentLookUp.class);
+        upd.caseInformationUpdater.contentLookUp = contentLookUpMock;
+        when(contentLookUpMock.lookUpContent(anyString())).thenReturn(Optional.empty());
 
         LocalDate date = LocalDate.now().minusWeeks(1);
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyw", new Locale("da", "DK"));
