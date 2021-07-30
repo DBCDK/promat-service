@@ -7,8 +7,10 @@ package dk.dbc.promat.service.batch;
 
 import dk.dbc.connector.openformat.OpenFormatConnectorException;
 import dk.dbc.promat.service.api.BibliographicInformation;
+import dk.dbc.promat.service.api.FulltextHandler;
 import dk.dbc.promat.service.api.OpenFormatHandler;
 import dk.dbc.promat.service.persistence.CaseStatus;
+import dk.dbc.promat.service.persistence.MaterialType;
 import dk.dbc.promat.service.persistence.PromatCase;
 import dk.dbc.promat.service.persistence.PromatTask;
 import dk.dbc.promat.service.persistence.TaskFieldType;
@@ -17,6 +19,7 @@ import dk.dbc.promat.service.Repository;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.metrics.ConcurrentGauge;
 import org.eclipse.microprofile.metrics.Metadata;
 import org.eclipse.microprofile.metrics.MetricRegistry;
@@ -54,6 +57,10 @@ public class CaseInformationUpdater {
     @EJB
     Repository repository;
 
+    @Inject
+    ContentLookUp contentLookUp;
+
+
     static final Metadata openformatTimerMetadata = Metadata.builder()
             .withName("promat_service_caseinformationupdater_openformat_timer")
             .withDescription("Openformat response time")
@@ -83,7 +90,6 @@ public class CaseInformationUpdater {
                 return;
             }
             metricRegistry.simpleTimer(openformatTimerMetadata).update(Duration.ofMillis(System.currentTimeMillis() - taskStartTime));
-
             // Update title, if changed
             if (useSameOrUpdateValue(promatCase.getTitle(), bibliographicInformation.getTitle(), false)) {
                 LOGGER.info("Updating title: '{}' ==> '{}' of case with id {}", promatCase.getTitle(),
@@ -113,7 +119,6 @@ public class CaseInformationUpdater {
                 LOGGER.info("Updating weekcode: '{}' ==> '{}' of case with id {}", promatCase.getWeekCode(), newCode, promatCase.getId());
                 promatCase.setWeekCode(newCode);
             }
-
             // Check if the case has status 'APPROVED' and we have reached the week specified by the weekcode
             if( CaseStatus.APPROVED == promatCase.getStatus() && weekcodeMatchOrBefore(promatCase) ) {
                 LOGGER.info("Changing status on case {} to PENDING_EXPORT since weekcode {} is actual or previous week", promatCase.getId(), promatCase.getWeekCode());
@@ -123,7 +128,6 @@ public class CaseInformationUpdater {
 
             // Check and update case with Metakompasdata
             checkAndUpdateCaseWithMetakompasdata(promatCase, bibliographicInformation);
-
             //
             // Status is 'PENDING_EXTERNAL'. Now do last check of metakompas data before setting
             // final state: APPROVED.
@@ -133,6 +137,19 @@ public class CaseInformationUpdater {
                         "data has been registered", promatCase.getId());
                 boolean approved = promatCase.getTasks().stream().allMatch(promatTask -> promatTask.getApproved() != null);
                 promatCase.setStatus(approved ? CaseStatus.APPROVED : CaseStatus.PENDING_EXTERNAL);
+            }
+            //
+            // A given ebook or book might be present in the "material content repo" (DMAT) for handout to reviewer,
+            // through promat-frontend.
+            // If a fulltextlink is already present on this case: Assume that everything is ok.
+            if (promatCase.getMaterialType() == MaterialType.BOOK &&
+                    (promatCase.getFulltextLink() == null ||
+                    promatCase.getFulltextLink().isBlank())) {
+                Optional<String > fullTextLink = contentLookUp.lookUpContent(promatCase.getPrimaryFaust());
+                if (fullTextLink.isPresent()) {
+                    promatCase.setFulltextLink(fullTextLink.get());
+                    LOGGER.info("Fulltextlink '{}' has been added to case:{}", fullTextLink, promatCase.getId());
+                }
             }
 
         } catch(OpenFormatConnectorException e) {
