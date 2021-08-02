@@ -38,6 +38,7 @@ import dk.dbc.promat.service.templating.NotificationFactory;
 import dk.dbc.promat.service.templating.model.AssignReviewer;
 import dk.dbc.promat.service.templating.Renderer;
 import java.util.Optional;
+import javax.persistence.criteria.Expression;
 import javax.swing.text.SimpleAttributeSet;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.slf4j.Logger;
@@ -550,8 +551,6 @@ public class Cases {
             }
         }
 
-
-
         // Get cases with given set of statuses
         final String status = params.getStatus();
         if (status != null && !status.isBlank()) {
@@ -622,7 +621,10 @@ public class Cases {
 
         final String weekCode = params.getWeekCode();
         if (weekCode != null && !weekCode.isBlank()) {
-            allPredicates.add(builder.equal(builder.lower(root.get("weekCode")), weekCode.toLowerCase()));
+            final Predicate weekCodePredicate = builder.equal(builder.lower(root.get("weekCode")), weekCode.toLowerCase());
+            final Predicate codesPredicate = builder.isTrue(builder.function("JsonbContainsFromString", Boolean.class, root.get("codes"), builder.literal(weekCode)));
+
+            allPredicates.add(builder.or(weekCodePredicate, codesPredicate));
         }
 
         // Get cases with these (commaseparated) materials
