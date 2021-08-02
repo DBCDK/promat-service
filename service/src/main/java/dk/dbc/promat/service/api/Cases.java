@@ -38,9 +38,6 @@ import dk.dbc.promat.service.templating.NotificationFactory;
 import dk.dbc.promat.service.templating.model.AssignReviewer;
 import dk.dbc.promat.service.templating.Renderer;
 import java.util.Optional;
-import javax.persistence.criteria.Expression;
-import javax.swing.text.SimpleAttributeSet;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
