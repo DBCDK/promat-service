@@ -41,6 +41,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Stateless
 public class CaseInformationUpdater {
@@ -130,7 +131,9 @@ public class CaseInformationUpdater {
             // Add all catalog codes to the case since they are needed by dataIO when creating the final review record(s)
             if( bibliographicInformation.getCatalogcodes() != null && bibliographicInformation.getCatalogcodes().size() > 0 ) {
                 LOGGER.info("Adding or updating catalog codes: {}", bibliographicInformation.getCatalogcodes());
-                promatCase.setCodes(bibliographicInformation.getCatalogcodes());
+                promatCase.setCodes(bibliographicInformation.getCatalogcodes().stream()
+                        .map(code -> code.toUpperCase())
+                        .collect(Collectors.toList()));
             }
 
             // Check and update case with Metakompasdata

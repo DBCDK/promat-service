@@ -1170,6 +1170,10 @@ public class CasesIT extends ContainerTest {
         fetched = promatServiceConnector.listCases(new ListCasesParams()
                 .withWeekCode("BKX202107"));
         assertThat("Cases found", fetched.getNumFound(), is(2));
+
+        fetched = promatServiceConnector.listCases(new ListCasesParams()
+                .withWeekCode("bkx202107"));
+        assertThat("Cases found", fetched.getNumFound(), is(2));
     }
 
     @Test

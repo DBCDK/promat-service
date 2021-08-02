@@ -1159,7 +1159,7 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
 
         when(mockedHandler.format(anyString()))
                 .thenReturn(new BibliographicInformation()
-                        .withCatalogcodes(Arrays.asList("FFK20210603", "BKM20210603", "BKX20210602", "ACC20210601")));
+                        .withCatalogcodes(Arrays.asList("FFK20210603", "BKM20210603", "bkx20210602", "ACC20210601")));
         doNothing().when(mockedRepository).assignFaustnumber(any(PromatCase.class));
 
         persistenceContext.run(() -> upd.caseInformationUpdater.updateCaseInformation(created));

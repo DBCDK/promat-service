@@ -61,6 +61,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.client.Invocation;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.StreamingOutput;
@@ -619,7 +620,7 @@ public class Cases {
         final String weekCode = params.getWeekCode();
         if (weekCode != null && !weekCode.isBlank()) {
             final Predicate weekCodePredicate = builder.equal(builder.lower(root.get("weekCode")), weekCode.toLowerCase());
-            final Predicate codesPredicate = builder.isTrue(builder.function("JsonbContainsFromString", Boolean.class, root.get("codes"), builder.literal(weekCode)));
+            final Predicate codesPredicate = builder.isTrue(builder.function("JsonbContainsFromString", Boolean.class, root.get("codes"), builder.upper(builder.literal(weekCode))));
 
             allPredicates.add(builder.or(weekCodePredicate, codesPredicate));
         }
