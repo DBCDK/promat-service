@@ -592,14 +592,15 @@ public class PromatCase {
                 Objects.equals(fulltextLink, aCase.fulltextLink) &&
                 newMessagesToEditor == aCase.newMessagesToEditor &&
                 newMessagesToReviewer == aCase.newMessagesToReviewer &&
-                Objects.equals(reminderSent, aCase.reminderSent);
+                Objects.equals(reminderSent, aCase.reminderSent) &&
+                Objects.equals(codes, aCase.codes);
     }
 
     @Override
     public int hashCode() {
         return Objects.hash(id, title, details, primaryFaust, relatedFausts, reviewer, editor, subjects, created,
                 deadline, assigned, status, materialType, tasks, weekCode, trimmedWeekCode, author, creator, publisher,
-                fulltextLink, newMessagesToEditor, newMessagesToReviewer, reminderSent);
+                fulltextLink, newMessagesToEditor, newMessagesToReviewer, reminderSent, codes);
     }
 
     @Override
@@ -629,6 +630,7 @@ public class PromatCase {
                 ", newMessagesToReviewer='" + newMessagesToReviewer + '\'' +
                 ", note='" + note + '\'' +
                 ", reminderSent'" + reminderSent + '\'' +
+                ", codes=" + codes +
                 '}';
     }
 }
