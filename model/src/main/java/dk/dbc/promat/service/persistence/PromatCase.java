@@ -225,6 +225,11 @@ public class PromatCase {
     @JsonView({CaseView.Case.class})
     private LocalDate reminderSent;
 
+    @Column(columnDefinition = "jsonb")
+    @Convert(converter = StringListToJsonArrayConverter.class)
+    @JsonView({CaseView.Export.class, CaseView.Summary.class, CaseView.Case.class})
+    private List<String> codes;
+
     public Integer getId() {
         return id;
     }
@@ -534,6 +539,19 @@ public class PromatCase {
 
     public PromatCase withReminder(LocalDate reminderSent) {
         this.reminderSent = reminderSent;
+        return this;
+    }
+
+    public List<String> getCodes() {
+        return codes;
+    }
+
+    public void setCodes(List<String> codes) {
+        this.codes = codes;
+    }
+
+    public PromatCase withCodes(List<String> codes) {
+        this.codes = codes;
         return this;
     }
 
