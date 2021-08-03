@@ -94,7 +94,6 @@ public class Messages {
             }
 
             entityManager.persist(promatMessage);
-            entityManager.flush();
 
             // 201 CREATED
             return Response.status(201)
@@ -154,7 +153,7 @@ public class Messages {
             query.setParameter("direction", markAsReadRequest.getDirection());
             query.setParameter("isRead", Boolean.TRUE);
             query.executeUpdate();
-            entityManager.flush();
+
             return Response.status(201).build();
         } catch (Exception e) {
             LOGGER.error("Caught exception {}", e.getMessage());
@@ -177,7 +176,6 @@ public class Messages {
             // Delete the message
             message.setDeleted(true);
             message.setRead(true);
-            entityManager.flush();
 
             return Response.ok().build();
         } catch (Exception e) {

@@ -50,6 +50,7 @@ import org.junit.jupiter.api.Test;
 import static com.github.tomakehurst.wiremock.client.WireMock.configureFor;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options;
 import static org.hamcrest.CoreMatchers.anyOf;
+import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
@@ -68,6 +69,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -570,7 +572,7 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
         created.setStatus(CaseStatus.APPROVED);
         when(mockedHandler.format(anyString()))
                 .thenReturn(new BibliographicInformation()
-                        .withCatalogcodes(Arrays.asList("BKM202001")));
+                        .withCatalogcodes(Arrays.asList("BKM202001", "ACC202001")));
         doAnswer(answer -> {
             PromatCase existing = ((PromatCase) answer.getArgument(0));
             existing.getTasks().stream().forEach(t -> t.setRecordId("123456789"));
@@ -631,7 +633,7 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
         created.setStatus(CaseStatus.APPROVED);
         when(mockedHandler.format(anyString()))
                 .thenReturn(new BibliographicInformation()
-                        .withCatalogcodes(Arrays.asList("BKM" + date.format(formatter))));
+                        .withCatalogcodes(Arrays.asList("BKM" + date.format(formatter), "ACC202001")));
         doAnswer(answer -> {
             PromatCase existing = ((PromatCase) answer.getArgument(0));
             existing.getTasks().stream().forEach(t -> t.setRecordId("123456789"));
@@ -691,7 +693,7 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
         created.setStatus(CaseStatus.APPROVED);
         when(mockedHandler.format(anyString()))
                 .thenReturn(new BibliographicInformation()
-                        .withCatalogcodes(Arrays.asList("BKM" + date.format(formatter))));
+                        .withCatalogcodes(Arrays.asList("BKM" + date.format(formatter), "ACC202001")));
         doAnswer(answer -> {
             PromatCase existing = ((PromatCase) answer.getArgument(0));
             existing.getTasks().stream().forEach(t -> t.setRecordId("123456789"));
@@ -750,7 +752,7 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
 
         when(mockedHandler.format(anyString()))
                 .thenReturn(new BibliographicInformation()
-                        .withCatalogcodes(new ArrayList<>()));
+                        .withCatalogcodes(Arrays.asList("ACC202001")));
 
         ConcurrentGauge mockedGauge = mock(ConcurrentGauge.class);
         doAnswer(answer -> {
@@ -813,7 +815,7 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
         created.setStatus(CaseStatus.APPROVED);
         when(mockedHandler.format(anyString()))
                 .thenReturn(new BibliographicInformation()
-                        .withCatalogcodes(Arrays.asList("BKM" + date.format(formatter), "BKX299999", "FFK299999")));
+                        .withCatalogcodes(Arrays.asList("BKM" + date.format(formatter), "BKX299999", "FFK299999", "ACC202001")));
         doAnswer(answer -> {
             PromatCase existing = ((PromatCase) answer.getArgument(0));
             existing.getTasks().stream().forEach(t -> t.setRecordId("123456789"));
@@ -876,7 +878,10 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
         created.setStatus(CaseStatus.APPROVED);
         when(mockedHandler.format(anyString()))
                 .thenReturn(new BibliographicInformation()
-                        .withCatalogcodes(Arrays.asList("BKM" + date.format(formatter), "BKX" + date.format(formatter), "FFK299999")));
+                        .withCatalogcodes(Arrays.asList("BKM" + date.format(formatter),
+                                "BKX" + date.format(formatter),
+                                "FFK299999",
+                                "ACC202001")));
         doAnswer(answer -> {
             PromatCase existing = ((PromatCase) answer.getArgument(0));
             existing.getTasks().stream().forEach(t -> t.setRecordId("123456789"));
@@ -939,7 +944,7 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
         created.setStatus(CaseStatus.APPROVED);
         when(mockedHandler.format(anyString()))
                 .thenReturn(new BibliographicInformation()
-                        .withCatalogcodes(Arrays.asList("BKX" + date.format(formatter), "BKM299999")));
+                        .withCatalogcodes(Arrays.asList("BKX" + date.format(formatter), "BKM299999", "ACC202001")));
         doAnswer(answer -> {
             PromatCase existing = ((PromatCase) answer.getArgument(0));
             existing.getTasks().stream().forEach(t -> t.setRecordId("123456789"));
@@ -998,7 +1003,7 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
         created.setStatus(CaseStatus.APPROVED);
         when(mockedHandler.format(anyString()))
                 .thenReturn(new BibliographicInformation()
-                        .withCatalogcodes(Arrays.asList("FFK" + date.format(formatter), "BKM299999", "BKX299999")));
+                        .withCatalogcodes(Arrays.asList("FFK" + date.format(formatter), "BKM299999", "BKX299999", "ACC202001")));
         doAnswer(answer -> {
             PromatCase existing = ((PromatCase) answer.getArgument(0));
             existing.getTasks().stream().forEach(t -> t.setRecordId("123456789"));
@@ -1062,6 +1067,107 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
         //
         persistenceContext.run(() -> upd.caseInformationUpdater.updateCaseInformation(promatCase));
         assertThat("Download link is now present", promatCase.getFulltextLink(), is(DOWNLOAD_LINK));
+
+        // Delete the case so that we dont mess up payments and dataio-export tests
+        response = deleteResponse("v1/api/cases/" + created.getId());
+        assertThat("status code", response.getStatus(), is(200));
+    }
+
+    @Test
+    public void testUpdateCaseWithNoCatalogCodes() throws OpenFormatConnectorException, JsonProcessingException, OpennumberRollConnectorException {
+
+        // Create a case
+        CaseRequest dto = new CaseRequest()
+                .withPrimaryFaust("24699773")
+                .withTitle("Title for 24699773")
+                .withWeekCode("BKM202002")
+                .withDetails("Details for 24699773")
+                .withMaterialType(MaterialType.BOOK)
+                .withAssigned("2021-01-28")
+                .withDeadline("2024-02-29")
+                .withCreator(10)
+                .withEditor(10)
+                .withReviewer(1)
+                .withTasks(Arrays.asList(new TaskDto()
+                        .withTaskType(TaskType.GROUP_1_LESS_THAN_100_PAGES)
+                        .withTaskFieldType(TaskFieldType.BRIEF)
+                        .withTargetFausts(Arrays.asList("24699773"))
+                ));
+
+        Response response = postResponse("v1/api/cases", dto);
+        assertThat("status code", response.getStatus(), is(201));
+        PromatCase created = mapper.readValue(response.readEntity(String.class), PromatCase.class);
+
+        ScheduledCaseInformationUpdater upd = new ScheduledCaseInformationUpdater();
+        upd.caseInformationUpdater = new CaseInformationUpdater();
+        upd.caseInformationUpdater.metricRegistry = metricRegistry;
+        upd.entityManager = entityManager;
+        upd.serverRole = ServerRole.PRIMARY;
+        OpenFormatHandler mockedHandler = mock(OpenFormatHandler.class);
+        upd.caseInformationUpdater.openFormatHandler = mockedHandler;
+        Repository mockedRepository = mock(Repository.class);
+        upd.caseInformationUpdater.repository = mockedRepository;
+
+        when(mockedHandler.format(anyString()))
+                .thenReturn(new BibliographicInformation()
+                        .withCatalogcodes(null));
+        doNothing().when(mockedRepository).assignFaustnumber(any(PromatCase.class));
+
+        persistenceContext.run(() -> upd.caseInformationUpdater.updateCaseInformation(created));
+        LOGGER.info("codes: {}", created.getCodes());
+        assertThat("codes exists", created.getCodes(), is(nullValue()));
+
+        // Delete the case so that we dont mess up payments and dataio-export tests
+        response = deleteResponse("v1/api/cases/" + created.getId());
+        assertThat("status code", response.getStatus(), is(200));
+    }
+
+    @Test
+    public void testUpdateCaseWithManyCatalogCodes() throws OpenFormatConnectorException, JsonProcessingException, OpennumberRollConnectorException {
+
+        // Create a case
+        CaseRequest dto = new CaseRequest()
+                .withPrimaryFaust("24699773")
+                .withTitle("Title for 24699773")
+                .withWeekCode("BKM202002")
+                .withDetails("Details for 24699773")
+                .withMaterialType(MaterialType.BOOK)
+                .withAssigned("2021-01-28")
+                .withDeadline("2024-02-29")
+                .withCreator(10)
+                .withEditor(10)
+                .withReviewer(1)
+                .withTasks(Arrays.asList(new TaskDto()
+                        .withTaskType(TaskType.GROUP_1_LESS_THAN_100_PAGES)
+                        .withTaskFieldType(TaskFieldType.BRIEF)
+                        .withTargetFausts(Arrays.asList("24699773"))
+                ));
+
+        Response response = postResponse("v1/api/cases", dto);
+        assertThat("status code", response.getStatus(), is(201));
+        PromatCase created = mapper.readValue(response.readEntity(String.class), PromatCase.class);
+
+        ScheduledCaseInformationUpdater upd = new ScheduledCaseInformationUpdater();
+        upd.caseInformationUpdater = new CaseInformationUpdater();
+        upd.caseInformationUpdater.metricRegistry = metricRegistry;
+        upd.entityManager = entityManager;
+        upd.serverRole = ServerRole.PRIMARY;
+        OpenFormatHandler mockedHandler = mock(OpenFormatHandler.class);
+        upd.caseInformationUpdater.openFormatHandler = mockedHandler;
+        Repository mockedRepository = mock(Repository.class);
+        upd.caseInformationUpdater.repository = mockedRepository;
+
+        when(mockedHandler.format(anyString()))
+                .thenReturn(new BibliographicInformation()
+                        .withCatalogcodes(Arrays.asList("FFK20210603", "BKM20210603", "bkx20210602", "ACC20210601")));
+        doNothing().when(mockedRepository).assignFaustnumber(any(PromatCase.class));
+
+        persistenceContext.run(() -> upd.caseInformationUpdater.updateCaseInformation(created));
+        LOGGER.info("codes: {}", created.getCodes());
+        assertThat("codes exists", created.getCodes(), is(notNullValue()));
+        assertThat("codes contains", created.getCodes().stream()
+                .sorted().collect(Collectors.toList()),
+                is(Arrays.asList("ACC20210601", "BKM20210603", "BKX20210602", "FFK20210603")));
 
         // Delete the case so that we dont mess up payments and dataio-export tests
         response = deleteResponse("v1/api/cases/" + created.getId());

@@ -38,8 +38,6 @@ import dk.dbc.promat.service.templating.NotificationFactory;
 import dk.dbc.promat.service.templating.model.AssignReviewer;
 import dk.dbc.promat.service.templating.Renderer;
 import java.util.Optional;
-import javax.swing.text.SimpleAttributeSet;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -63,6 +61,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.client.Invocation;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.StreamingOutput;
@@ -550,8 +549,6 @@ public class Cases {
             }
         }
 
-
-
         // Get cases with given set of statuses
         final String status = params.getStatus();
         if (status != null && !status.isBlank()) {
@@ -622,7 +619,10 @@ public class Cases {
 
         final String weekCode = params.getWeekCode();
         if (weekCode != null && !weekCode.isBlank()) {
-            allPredicates.add(builder.equal(builder.lower(root.get("weekCode")), weekCode.toLowerCase()));
+            final Predicate weekCodePredicate = builder.equal(builder.lower(root.get("weekCode")), weekCode.toLowerCase());
+            final Predicate codesPredicate = builder.isTrue(builder.function("JsonbContainsFromString", Boolean.class, root.get("codes"), builder.upper(builder.literal(weekCode))));
+
+            allPredicates.add(builder.or(weekCodePredicate, codesPredicate));
         }
 
         // Get cases with these (commaseparated) materials

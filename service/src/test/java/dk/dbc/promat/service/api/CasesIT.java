@@ -1135,14 +1135,12 @@ public class CasesIT extends ContainerTest {
 
         Integer someOther = createCaseWithAuthorAndWeekCode(9, "NONE", "BKM202052").getId();
 
-
         CaseSummaryList fetched = promatServiceConnector.listCases(new ListCasesParams()
                 .withWeekCode("BKM202102"));
         assertThat("Cases found", fetched.getNumFound(), greaterThanOrEqualTo(3));
         Set<Integer> actual = fetched.getCases().stream().map( c -> c.getId()).collect(Collectors.toSet());
         assertThat("cases are all there", actual.containsAll(expected));
         assertThat("Case prior to weekcode is not there", !actual.contains(someOther));
-
 
         // Add the 'other' to the ones that needs to be deleted
         expected.add(someOther);
@@ -1153,6 +1151,29 @@ public class CasesIT extends ContainerTest {
             response = deleteResponse("v1/api/cases/"+cid);
             assertThat("status code", response.getStatus(), is(200));
         }
+    }
+
+    @Test
+    public void testLookupOfWeekcodesInCodes() throws PromatServiceConnectorException {
+        CaseSummaryList fetched = promatServiceConnector.listCases(new ListCasesParams()
+                .withWeekCode("BKM197901"));
+        assertThat("Cases found", fetched.getNumFound(), is(0));
+
+        fetched = promatServiceConnector.listCases(new ListCasesParams()
+                .withWeekCode("BKM202104"));
+        assertThat("Cases found", fetched.getNumFound(), is(2));
+
+        fetched = promatServiceConnector.listCases(new ListCasesParams()
+                .withWeekCode("BKM202110"));
+        assertThat("Cases found", fetched.getNumFound(), is(1));
+
+        fetched = promatServiceConnector.listCases(new ListCasesParams()
+                .withWeekCode("BKX202107"));
+        assertThat("Cases found", fetched.getNumFound(), is(2));
+
+        fetched = promatServiceConnector.listCases(new ListCasesParams()
+                .withWeekCode("bkx202107"));
+        assertThat("Cases found", fetched.getNumFound(), is(2));
     }
 
     @Test
