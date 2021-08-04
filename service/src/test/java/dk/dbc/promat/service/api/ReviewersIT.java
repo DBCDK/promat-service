@@ -143,8 +143,8 @@ public class ReviewersIT extends ContainerTest {
         assertThat("reviewer", reviewer, is(expectedReviewer));
 
         // Example log entry:
-        // [docker-java-stream--208115991] INFO dk.dbc.promat.service.ContainerTest - STDOUT: {"timestamp":"2021-08-04T14:14:48.151178+02:00","sys_event_type":"audit","client_ip":["172.17.0.1"],"app_name":"PROMAT","action":"READ","accessing_user":{"token":"1-2-3-4-5"},"owning_user":"123/190976","PROMAT":{"View full profile":"/reviewers/1","Response":"200"}}
-        assertThat("auditlog entry", promatServiceContainer.getLogs().contains("{\"View full profile\":\"/reviewers/1\",\"Response\":\"200\"}"));
+        // [docker-java-stream--208115991] INFO dk.dbc.promat.service.ContainerTest - STDOUT: {"timestamp":"2021-08-04T14:14:48.151178+02:00","sys_event_type":"audit","client_ip":["172.17.0.1"],"app_name":"PROMAT","action":"READ","accessing_user":{"token":"1-2-3-4-5"},"owning_user":"123/190976","PROMAT":{"View full profile":"reviewers/1","Response":"200"}}
+        assertThat("auditlog entry", promatServiceContainer.getLogs().contains("{\"View full profile\":\"reviewers/1\",\"Response\":\"200\"}"));
     }
 
     @Test
@@ -153,8 +153,8 @@ public class ReviewersIT extends ContainerTest {
         assertThat(response.getStatus(), is(404));
 
         // Example log entry:
-        // [docker-java-stream--208115991] INFO dk.dbc.promat.service.ContainerTest - STDOUT: {"timestamp":"2021-08-04T14:14:47.633206+02:00","sys_event_type":"audit","client_ip":["172.17.0.1"],"app_name":"PROMAT","action":"READ","accessing_user":{"token":"1-2-3-4-5"},"owning_user":"0/190976","PROMAT":{"Request for full profile":"/reviewers/4242","Response":"404"}}
-        assertThat("auditlog entry", promatServiceContainer.getLogs().contains("{\"Request for full profile\":\"/reviewers/4242\",\"Response\":\"404\"}"));
+        // [docker-java-stream--208115991] INFO dk.dbc.promat.service.ContainerTest - STDOUT: {"timestamp":"2021-08-04T14:14:47.633206+02:00","sys_event_type":"audit","client_ip":["172.17.0.1"],"app_name":"PROMAT","action":"READ","accessing_user":{"token":"1-2-3-4-5"},"owning_user":"0/190976","PROMAT":{"Request for full profile":"reviewers/4242","Response":"404"}}
+        assertThat("auditlog entry", promatServiceContainer.getLogs().contains("{\"Request for full profile\":\"reviewers/4242\",\"Response\":\"404\"}"));
     }
 
     @Test

@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.core.UriInfo;
 
 @ApplicationScoped
 public class AuditLogHandler {
@@ -30,12 +31,12 @@ public class AuditLogHandler {
 
     private final String APP_NAME = "PROMAT";
 
-    public void logTraceForToken(String reason, String path, Integer culrId, Integer status) {
+    public void logTraceReadForToken(String reason, UriInfo uriInfo, Integer culrId, Integer status) {
         AuditTrace.log(APP_NAME, requestContext,
                 accessingToken(callerPrincipal.getRawToken()),
                 READ,
                 owningLenderId(culrId.toString(), PROMAT_AGENCY_ID),
-                kv(reason, path),
+                kv(reason, uriInfo.getPath()),
                 kv("Response", status.toString()));
     }
 }
