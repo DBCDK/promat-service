@@ -40,7 +40,7 @@ public class AuditLogHandler {
     public void logTraceReadForToken(String reason, UriInfo uriInfo, Integer culrId, Integer status) {
         AuditTrace.log(APP_NAME, requestContext,
                 accessingToken(callerPrincipal.getRawToken()),
-                READ,
+                Action.READ,
                 owningLenderId(culrId.toString(), PROMAT_AGENCY_ID),
                 kv(reason, uriInfo.getPath()),
                 kv("Response", status.toString()));
@@ -65,6 +65,15 @@ public class AuditLogHandler {
         AuditTrace.log(APP_NAME, requestContext,
                 accessingToken(callerPrincipal.getRawToken()),
                 Action.UPDATE,
+                owningLenderId(culrId.toString(), PROMAT_AGENCY_ID),
+                kv(reason, uriInfo.getPath()),
+                kv("Response", status.toString()));
+    }
+
+    public void logTraceCreateForToken(String reason, UriInfo uriInfo, Integer culrId, Integer status) {
+        AuditTrace.log(APP_NAME, requestContext,
+                accessingToken(callerPrincipal.getRawToken()),
+                Action.CREATE,
                 owningLenderId(culrId.toString(), PROMAT_AGENCY_ID),
                 kv(reason, uriInfo.getPath()),
                 kv("Response", status.toString()));

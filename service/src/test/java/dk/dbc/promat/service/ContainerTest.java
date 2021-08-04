@@ -175,10 +175,17 @@ public abstract class ContainerTest extends IntegrationTest {
     }
 
     public <T> Response postResponse(String path, T body) {
+        return postResponse(path, body, null);
+    }
+
+    public <T> Response postResponse(String path, T body, String authToken) {
         HttpPost httpPost = new HttpPost(httpClient)
                 .withBaseUrl(promatServiceBaseUrl)
                 .withPathElements(path)
                 .withData(body, "application/json");
+        if( authToken != null ) {
+            httpPost.getHeaders().put("Authorization", "Bearer " + authToken);
+        }
         return httpClient.execute(httpPost);
     }
 

@@ -102,7 +102,8 @@ public class Reviewers {
     @POST
     @Path("reviewers")
     @Produces({MediaType.APPLICATION_JSON})
-    public Response createReviewer(ReviewerRequest reviewerRequest) throws CulrConnectorException {
+    @RolesAllowed({"authenticated-user"})
+    public Response createReviewer(ReviewerRequest reviewerRequest, @Context UriInfo uriInfo) throws CulrConnectorException {
         LOGGER.info("reviewers (POST)");
 
         final String cprNumber = reviewerRequest.getCprNumber();
@@ -150,6 +151,7 @@ public class Reviewers {
             entityManager.persist(entity);
             entityManager.flush();
 
+            auditLogHandler.logTraceCreateForToken("Created new user", uriInfo, entity.getPaycode(), 201);
             LOGGER.info("Created new reviewer with ID {}", entity.getId());
             return Response.status(201)
                     .entity(entity)
