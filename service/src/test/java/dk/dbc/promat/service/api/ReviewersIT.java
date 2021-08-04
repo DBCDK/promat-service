@@ -116,12 +116,18 @@ public class ReviewersIT extends ContainerTest {
     void getReviewerWithoutAuthToken() throws JsonProcessingException {
         final Response response = getResponse("v1/api/reviewers/1");
         assertThat("response status", response.getStatus(), is(401));
+
+        // Log contains no messages warning that no token was given when required
     }
 
     @Test
     void getReviewerWithInactiveAuthToken() throws JsonProcessingException {
         final Response response = getResponse("v1/api/reviewers/1", "6-7-8-9-0");
         assertThat("response status", response.getStatus(), is(401));
+
+        // Example log entry:
+        // [docker-java-stream--208115991] INFO dk.dbc.promat.service.ContainerTest - STDOUT: 14:14:47.700 [INFO] [http-thread-pool::http-listener(18)] dk.dbc.commons.rs.auth.DBCAuthenticationMechanism - Token is invalid: 6-7-8-9-0
+        assertThat("rs-auth log entry", promatServiceContainer.getLogs().contains("Token is invalid: 6-7-8-9-0"));
     }
 
     @Test
@@ -135,12 +141,20 @@ public class ReviewersIT extends ContainerTest {
         final Reviewer reviewer = mapper.readValue(response.readEntity(String.class), Reviewer.class);
 
         assertThat("reviewer", reviewer, is(expectedReviewer));
+
+        // Example log entry:
+        // [docker-java-stream--208115991] INFO dk.dbc.promat.service.ContainerTest - STDOUT: {"timestamp":"2021-08-04T14:14:48.151178+02:00","sys_event_type":"audit","client_ip":["172.17.0.1"],"app_name":"PROMAT","action":"READ","accessing_user":{"token":"1-2-3-4-5"},"owning_user":"123/190976","PROMAT":{"View full profile":"/reviewers/1","Response":"200"}}
+        assertThat("auditlog entry", promatServiceContainer.getLogs().contains("{\"View full profile\":\"/reviewers/1\",\"Response\":\"200\"}"));
     }
 
     @Test
     void reviewerNotFound() {
         final Response response = getResponse("v1/api/reviewers/4242", "1-2-3-4-5");
         assertThat(response.getStatus(), is(404));
+
+        // Example log entry:
+        // [docker-java-stream--208115991] INFO dk.dbc.promat.service.ContainerTest - STDOUT: {"timestamp":"2021-08-04T14:14:47.633206+02:00","sys_event_type":"audit","client_ip":["172.17.0.1"],"app_name":"PROMAT","action":"READ","accessing_user":{"token":"1-2-3-4-5"},"owning_user":"0/190976","PROMAT":{"Request for full profile":"/reviewers/4242","Response":"404"}}
+        assertThat("auditlog entry", promatServiceContainer.getLogs().contains("{\"Request for full profile\":\"/reviewers/4242\",\"Response\":\"404\"}"));
     }
 
     @Test

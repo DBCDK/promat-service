@@ -1,9 +1,6 @@
 package dk.dbc.promat.service.api;
 
-import dk.dbc.audittrace.AccessingUser;
-import dk.dbc.audittrace.Action;
-import dk.dbc.audittrace.KeyValue;
-import dk.dbc.audittrace.OwningUser;
+import dk.dbc.audittrace.AuditTrace;
 import static dk.dbc.audittrace.Action.READ;
 import static dk.dbc.audittrace.AuditTrace.accessingToken;
 import static dk.dbc.audittrace.AuditTrace.kv;
@@ -34,28 +31,11 @@ public class AuditLogHandler {
     private final String APP_NAME = "PROMAT";
 
     public void logTraceForToken(String reason, String path, Integer culrId, Integer status) {
-
-        AccessingUser accessingUser = accessingToken(callerPrincipal.getRawToken());
-        Action action = READ;
-        OwningUser owningUser = owningLenderId(culrId.toString(), PROMAT_AGENCY_ID);
-        KeyValue keyValueReason = kv(reason, path);
-        KeyValue keyValueStatus = kv("Response", status.toString());
-
-        // Todo: BEGIN__ Temporary log message to verify that we have valid parameters for audit trail logging
-        LOGGER.info("Raw token: {}", callerPrincipal.getRawToken());
-        LOGGER.info("culrId: {}", culrId);
-        LOGGER.info("appName: {}", APP_NAME);
-        LOGGER.info("requestContext: {}", requestContext);
-        LOGGER.info("action: {}", action);
-        LOGGER.info("owningUser: {}", owningUser);
-        LOGGER.info("accesingUser: {}", accessingUser);
-        LOGGER.info("keyValueReason: {}", keyValueReason);
-        LOGGER.info("keyValueStatus: {}", keyValueStatus);
-        // Example: AuditTrace.log("app_name", requestContext, userToken(token), READ, owningLenderId("1234", "710100"), kv("app_key", "app_value"));
-        // Todo: __END remove before going into production
-
-        // Todo: Enable audit log call
-        // Real call: AuditTrace.log(APP_NAME, requestContext, accessingUser, action, owningUser, keyValueReason, keyValueStatus);
-        LOGGER.info("AuditTrace({} @{} for {} = {})", reason, path, culrId, status);
+        AuditTrace.log(APP_NAME, requestContext,
+                accessingToken(callerPrincipal.getRawToken()),
+                READ,
+                owningLenderId(culrId.toString(), PROMAT_AGENCY_ID),
+                kv(reason, path),
+                kv("Response", status.toString()));
     }
 }
