@@ -7,7 +7,6 @@ package dk.dbc.promat.service.api;
 
 import dk.dbc.connector.culr.CulrConnectorException;
 import dk.dbc.promat.service.Repository;
-import dk.dbc.promat.service.batch.NotificationSender;
 import dk.dbc.promat.service.dto.ReviewerList;
 import dk.dbc.promat.service.dto.ReviewerRequest;
 import dk.dbc.promat.service.dto.ReviewerWithWorkloads;
@@ -20,7 +19,10 @@ import dk.dbc.promat.service.persistence.Subject;
 import dk.dbc.promat.service.persistence.SubjectNote;
 import dk.dbc.promat.service.templating.NotificationFactory;
 import dk.dbc.promat.service.templating.model.ReviewerDataChanged;
+
+import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.DefaultValue;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -52,9 +54,6 @@ public class Reviewers {
     @PromatEntityManager
     EntityManager entityManager;
 
-    @EJB
-    NotificationSender notificationSender;
-
     @Inject
     NotificationFactory notificationFactory;
 
@@ -64,17 +63,31 @@ public class Reviewers {
     @Inject
     CulrHandler culrHandler;
 
+    @Inject
+    AuditLogHandler auditLogHandler;
+
     @GET
     @Path("reviewers/{id}")
     @Produces({MediaType.APPLICATION_JSON})
+    @RolesAllowed({"authenticated-user"})
     public Response getReviewer(@PathParam("id") Integer id) {
         LOGGER.info("reviewers/{} (GET)", id);
 
-        final Reviewer reviewer = entityManager.find(Reviewer.class, id);
-        if (reviewer == null) {
-            return Response.status(404).build();
+        try {
+            final Reviewer reviewer = entityManager.find(Reviewer.class, id);
+            if (reviewer == null) {
+                auditLogHandler.logTraceForToken("Request for full profile", "/reviewers/" + id, 0, 404);
+                return Response.status(404).build();
+            }
+
+            auditLogHandler.logTraceForToken("View full profile", "/reviewers/" + id, reviewer.getPaycode(), 200);
+            return Response.ok(reviewer).build();
         }
-        return Response.ok(reviewer).build();
+        catch (Exception e) {
+            LOGGER.error("Exception in /reviewers when requesting id {}", id);
+            LOGGER.error("Exception was: {}\n{}", e.getMessage(), e.getStackTrace());
+            return ServiceErrorDto.Failed("Unexpected exception when trying to find reviewer");
+        }
     }
 
     @POST

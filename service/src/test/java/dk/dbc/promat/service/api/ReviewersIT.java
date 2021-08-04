@@ -27,6 +27,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.ws.rs.core.Response;
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
 import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.Collections;
@@ -111,11 +113,23 @@ public class ReviewersIT extends ContainerTest {
     }
 
     @Test
-    void getReviewer() throws JsonProcessingException {
+    void getReviewerWithoutAuthToken() throws JsonProcessingException {
+        final Response response = getResponse("v1/api/reviewers/1");
+        assertThat("response status", response.getStatus(), is(401));
+    }
+
+    @Test
+    void getReviewerWithInactiveAuthToken() throws JsonProcessingException {
+        final Response response = getResponse("v1/api/reviewers/1", "6-7-8-9-0");
+        assertThat("response status", response.getStatus(), is(401));
+    }
+
+    @Test
+    void getReviewer() throws JsonProcessingException, NoSuchAlgorithmException, KeyManagementException {
         final Reviewer expectedReviewer = new Reviewer();
         loadReviewer1(expectedReviewer);
 
-        final Response response = getResponse("v1/api/reviewers/1");
+        final Response response = getResponse("v1/api/reviewers/1", "1-2-3-4-5");
         assertThat("response status", response.getStatus(), is(200));
 
         final Reviewer reviewer = mapper.readValue(response.readEntity(String.class), Reviewer.class);
@@ -125,7 +139,7 @@ public class ReviewersIT extends ContainerTest {
 
     @Test
     void reviewerNotFound() {
-        final Response response = getResponse("v1/api/reviewers/4242");
+        final Response response = getResponse("v1/api/reviewers/4242", "1-2-3-4-5");
         assertThat(response.getStatus(), is(404));
     }
 
@@ -609,7 +623,7 @@ public class ReviewersIT extends ContainerTest {
     @Test
     public void testUpdateReviewerWithNullAddress() throws JsonProcessingException {
 
-        Response response = getResponse("v1/api/reviewers/5");
+        Response response = getResponse("v1/api/reviewers/5", "1-2-3-4-5");
         assertThat("response status", response.getStatus(), is(200));
 
         final Reviewer reviewer = mapper.readValue(response.readEntity(String.class), Reviewer.class);
@@ -648,7 +662,7 @@ public class ReviewersIT extends ContainerTest {
     @Test
     public void testUpdateSubjectNotes() throws JsonProcessingException {
         final ReviewerRequest reviewerUpdateRequest = new ReviewerRequest();
-        Response response = getResponse("v1/api/reviewers/6");
+        Response response = getResponse("v1/api/reviewers/6", "1-2-3-4-5");
         assertThat("response status", response.getStatus(), is(200));
         Reviewer fetched = mapper.readValue(response.readEntity(String.class), Reviewer.class);
         Reviewer reviewer6 = new Reviewer();
