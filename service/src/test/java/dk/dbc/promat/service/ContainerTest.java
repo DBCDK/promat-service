@@ -23,7 +23,14 @@ import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.output.Slf4jLogConsumer;
 import org.testcontainers.containers.wait.strategy.Wait;
 
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.X509TrustManager;
 import javax.ws.rs.core.Response;
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
+import java.security.cert.X509Certificate;
 import java.time.Duration;
 import java.util.Map;
 
@@ -58,6 +65,31 @@ public abstract class ContainerTest extends IntegrationTest {
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json")
                         .withBody(genericOpenFormatResult)));
+
+        // Add two catch-all responses for AdgangsPlatformen's introspect endpoint.
+        // ...
+        // It is not possible to record the request/response using an external wiremock
+        // unless ssl certificate validation is disabled for the service application.
+        // Instead use regular http for the introspection endpoint and mock the response here
+        wireMockServer.stubFor(requestMatching(request ->
+                MatchResult.of(
+                        request.queryParameter("access_token").isPresent() &&
+                        request.queryParameter("access_token").containsValue("1-2-3-4-5")
+                ))
+                .willReturn(ResponseDefinitionBuilder
+                        .responseDefinition()
+                        .withStatus(200)
+                        .withBody("{\"active\":true}")));
+        wireMockServer.stubFor(requestMatching(request ->
+                MatchResult.of(
+                        request.queryParameter("access_token").isPresent() &&
+                                request.queryParameter("access_token").containsValue("6-7-8-9-0")
+                ))
+                .willReturn(ResponseDefinitionBuilder
+                        .responseDefinition()
+                        .withStatus(200)
+                        .withBody("{\"active\":false}")));
+
         wireMockServer.start();
         configureFor("localhost", wireMockServer.port());
         Testcontainers.exposeHostPorts(wireMockServer.port());
@@ -97,6 +129,9 @@ public abstract class ContainerTest extends IntegrationTest {
                 .withEnv("OPENNUMBERROLL_NUMBERROLLNAME", "faust")
                 .withEnv("ENABLE_REMINDERS", String.valueOf(true))
                 .withEnv("CC_MAILADDRESS", "cc_test@dbc.dk")
+                .withEnv("OAUTH2_CLIENT_ID", "123456789")
+                .withEnv("OAUTH2_CLIENT_SECRET", "abcdef")
+                .withEnv("OAUTH2_INTROSPECTION_URL", "http://host.testcontainers.internal:" + wireMockServer.port())
                 .withExposedPorts(8080)
                 .waitingFor(Wait.forHttp("/openapi"))
                 .withStartupTimeout(Duration.ofMinutes(2));
@@ -118,6 +153,14 @@ public abstract class ContainerTest extends IntegrationTest {
         return new HttpGet(httpClient)
                 .withBaseUrl(promatServiceBaseUrl)
                 .withPathElements(path)
+                .execute();
+    }
+
+    public Response getResponse(String path, String authToken) {
+        return new HttpGet(httpClient)
+                .withBaseUrl(promatServiceBaseUrl)
+                .withPathElements(path)
+                .withHeader("Authorization", "Bearer " + authToken)
                 .execute();
     }
 
