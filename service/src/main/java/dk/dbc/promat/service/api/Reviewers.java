@@ -38,8 +38,10 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriInfo;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.util.List;
@@ -70,17 +72,17 @@ public class Reviewers {
     @Path("reviewers/{id}")
     @Produces({MediaType.APPLICATION_JSON})
     @RolesAllowed({"authenticated-user"})
-    public Response getReviewer(@PathParam("id") Integer id) {
+    public Response getReviewer(@PathParam("id") Integer id, @Context UriInfo uriInfo) {
         LOGGER.info("reviewers/{} (GET)", id);
 
         try {
             final Reviewer reviewer = entityManager.find(Reviewer.class, id);
             if (reviewer == null) {
-                auditLogHandler.logTraceForToken("Request for full profile", "/reviewers/" + id, 0, 404);
+                auditLogHandler.logTraceReadForToken("Request for full profile", uriInfo, 0, 404);
                 return Response.status(404).build();
             }
 
-            auditLogHandler.logTraceForToken("View full profile", "/reviewers/" + id, reviewer.getPaycode(), 200);
+            auditLogHandler.logTraceReadForToken("View full profile", uriInfo, reviewer.getPaycode(), 200);
             return Response.ok(reviewer).build();
         }
         catch (Exception e) {
