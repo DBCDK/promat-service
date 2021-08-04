@@ -48,7 +48,10 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.util.HashMap;
+import java.util.IdentityHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Stateless
@@ -199,8 +202,10 @@ public class Reviewers {
     @PUT
     @Path("reviewers/{id}")
     @Produces({MediaType.APPLICATION_JSON})
+    @RolesAllowed({"authenticated-user"})
     public Response updateReviewer(@PathParam("id") final Integer id, ReviewerRequest reviewerRequest,
-                                   @QueryParam("notify") @DefaultValue("false") final Boolean notify) {
+                                   @QueryParam("notify") @DefaultValue("false") final Boolean notify,
+                                   @Context UriInfo uriInfo) {
         Notification notification = null;
 
         LOGGER.info("reviewers/{} (PUT), notify:{}", id, notify);
@@ -211,6 +216,7 @@ public class Reviewers {
             final Reviewer reviewer = entityManager.find(Reviewer.class, id);
             if (reviewer == null) {
                 LOGGER.info("Reviewer with id {} does not exists", id);
+                auditLogHandler.logTraceUpdateForToken("Request for update of profile", uriInfo, 0, 404);
                 return Response.status(404).build();
             }
 
@@ -257,6 +263,12 @@ public class Reviewers {
                 reviewer.setInstitution(reviewerRequest.getInstitution());
             }
             if(reviewerRequest.getPaycode() != null) {
+                if( !reviewerRequest.getPaycode().equals(reviewer.getPaycode()) ) {
+                    Map<String, String> paycodeChanges = new HashMap<>();
+                    paycodeChanges.put("Current value", reviewer.getPaycode().toString());
+                    paycodeChanges.put("New value", reviewerRequest.getPaycode().toString());
+                    auditLogHandler.logTraceUpdateForToken("Change of paycode (owning id)", uriInfo, reviewer.getPaycode(), paycodeChanges);
+                }
                 reviewer.setPaycode(reviewerRequest.getPaycode());
             }
             if(reviewerRequest.getPhone() != null) {
@@ -297,6 +309,7 @@ public class Reviewers {
                 entityManager.persist(notification);
             }
 
+            auditLogHandler.logTraceUpdateForToken("Update and view full profile", uriInfo, reviewer.getPaycode(), 200);
             return Response.status(200)
                     .entity(reviewer)
                     .build();
