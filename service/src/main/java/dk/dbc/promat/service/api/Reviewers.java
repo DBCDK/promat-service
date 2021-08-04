@@ -5,6 +5,8 @@
 
 package dk.dbc.promat.service.api;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import dk.dbc.connector.culr.CulrConnectorException;
 import dk.dbc.promat.service.Repository;
 import dk.dbc.promat.service.dto.ReviewerList;
@@ -12,9 +14,11 @@ import dk.dbc.promat.service.dto.ReviewerRequest;
 import dk.dbc.promat.service.dto.ReviewerWithWorkloads;
 import dk.dbc.promat.service.dto.ServiceErrorCode;
 import dk.dbc.promat.service.dto.ServiceErrorDto;
+import dk.dbc.promat.service.persistence.CaseView;
 import dk.dbc.promat.service.persistence.Notification;
 import dk.dbc.promat.service.persistence.PromatEntityManager;
 import dk.dbc.promat.service.persistence.Reviewer;
+import dk.dbc.promat.service.persistence.ReviewerView;
 import dk.dbc.promat.service.persistence.Subject;
 import dk.dbc.promat.service.persistence.SubjectNote;
 import dk.dbc.promat.service.templating.NotificationFactory;
@@ -155,14 +159,16 @@ public class Reviewers {
     @GET
     @Path("reviewers")
     @Produces({MediaType.APPLICATION_JSON})
-    public Response getAllReviewers(@QueryParam("deadline") LocalDate deadline) {
+    public Response getAllReviewers(@QueryParam("deadline") LocalDate deadline) throws JsonProcessingException {
         LOGGER.info("reviewers (GET)");
+        final ObjectMapper objectMapper = new JsonMapperProvider().getObjectMapper();
 
         if (deadline == null) {
             final TypedQuery<Reviewer> query = entityManager.createNamedQuery(
                     Reviewer.GET_ALL_REVIEWERS_NAME, Reviewer.class);
-            return Response.ok(new ReviewerList<>()
-                    .withReviewers(query.getResultList()))
+            ReviewerList listOfReviewers = new ReviewerList<>()
+                    .withReviewers(query.getResultList());
+            return Response.ok(objectMapper.writerWithView(ReviewerView.Summary.class).writeValueAsString(listOfReviewers))
                     .build();
         }
 
@@ -185,7 +191,9 @@ public class Reviewers {
                         .withWeekBeforeWorkload((long) objects[2])
                         .withWeekAfterWorkload((long) objects[3]))
                 .collect(Collectors.toList());
-        return Response.ok(new ReviewerList<ReviewerWithWorkloads>().withReviewers(reviewers)).build();
+        ReviewerList<ReviewerWithWorkloads> listOfReviewers = new ReviewerList<ReviewerWithWorkloads>().withReviewers(reviewers);
+        return Response.ok(objectMapper.writerWithView(ReviewerView.Summary.class).writeValueAsString(listOfReviewers))
+                .build();
     }
 
     @PUT

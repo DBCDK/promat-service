@@ -16,9 +16,11 @@ import dk.dbc.promat.service.dto.ServiceErrorDto;
 import dk.dbc.promat.service.persistence.Address;
 import dk.dbc.promat.service.persistence.Notification;
 import dk.dbc.promat.service.persistence.Reviewer;
+import dk.dbc.promat.service.persistence.ReviewerView;
 import dk.dbc.promat.service.persistence.Subject;
 import dk.dbc.promat.service.persistence.SubjectNote;
 import dk.dbc.promat.service.templating.Formatting;
+import org.checkerframework.checker.units.qual.A;
 import org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
@@ -133,7 +135,7 @@ public class ReviewersIT extends ContainerTest {
     @Test
     void getReviewer() throws JsonProcessingException, NoSuchAlgorithmException, KeyManagementException {
         final Reviewer expectedReviewer = new Reviewer();
-        loadReviewer1(expectedReviewer);
+        loadReviewer1(expectedReviewer, ReviewerView.Reviewer.class);
 
         final Response response = getResponse("v1/api/reviewers/1", "1-2-3-4-5");
         assertThat("response status", response.getStatus(), is(200));
@@ -161,25 +163,25 @@ public class ReviewersIT extends ContainerTest {
     @Order(1)
     public void listReviewers() throws JsonProcessingException {
         final Reviewer reviewer1 = new Reviewer();
-        loadReviewer1(reviewer1);
+        loadReviewer1(reviewer1, ReviewerView.Summary.class);
 
         final Reviewer reviewer2 = new Reviewer();
-        loadReviewer2(reviewer2);
+        loadReviewer2(reviewer2, ReviewerView.Summary.class);
 
         final Reviewer reviewer3 = new Reviewer();
-        loadReviewer3(reviewer3);
+        loadReviewer3(reviewer3, ReviewerView.Summary.class);
 
         final Reviewer reviewer4 = new Reviewer();
-        loadReviewer4(reviewer4);
+        loadReviewer4(reviewer4, ReviewerView.Summary.class);
 
         final Reviewer reviewer5 = new Reviewer();
-        loadReviewer5(reviewer5);
+        loadReviewer5(reviewer5, ReviewerView.Summary.class);
 
         final Reviewer reviewer6 = new Reviewer();
-        loadReviewer6(reviewer6);
+        loadReviewer6(reviewer6, ReviewerView.Summary.class);
 
         final Reviewer reviewer7 = new Reviewer();
-        loadReviewer7(reviewer7);
+        loadReviewer7(reviewer7, ReviewerView.Summary.class);
 
         final ReviewerList<Reviewer> expected = new ReviewerList<>()
                 .withReviewers(List.of(reviewer1, reviewer2, reviewer3, reviewer4, reviewer5, reviewer6, reviewer7));
@@ -189,7 +191,10 @@ public class ReviewersIT extends ContainerTest {
         final ReviewerList<Reviewer> actual = mapper.readValue(
                 response.readEntity(String.class), new TypeReference<>() {});
 
-        assertThat("List of reviewers is just 'Hans Hansen', 'Ole Olsen', 'Peter Petersen' and 'Boe Boesen'",
+        LOGGER.info("===LIST===");
+        LOGGER.info("{}", actual);
+
+        assertThat("List of reviewers has all reviewers",
                 actual, is(expected));
     }
 
@@ -200,43 +205,43 @@ public class ReviewersIT extends ContainerTest {
                 .withWeekWorkload(0)
                 .withWeekBeforeWorkload(0)
                 .withWeekAfterWorkload(1);
-        loadReviewer1(reviewer1);
+        loadReviewer1(reviewer1, ReviewerView.Summary.class);
 
         final ReviewerWithWorkloads reviewer2 = new ReviewerWithWorkloads()
                 .withWeekWorkload(0)
                 .withWeekBeforeWorkload(0)
                 .withWeekAfterWorkload(0);
-        loadReviewer2(reviewer2);
+        loadReviewer2(reviewer2, ReviewerView.Summary.class);
 
         final ReviewerWithWorkloads reviewer3 = new ReviewerWithWorkloads()
                 .withWeekWorkload(0)
                 .withWeekBeforeWorkload(0)
                 .withWeekAfterWorkload(0);
-        loadReviewer3(reviewer3);
+        loadReviewer3(reviewer3, ReviewerView.Summary.class);
 
         final ReviewerWithWorkloads reviewer4 = new ReviewerWithWorkloads()
                 .withWeekWorkload(0)
                 .withWeekBeforeWorkload(0)
                 .withWeekAfterWorkload(0);
-        loadReviewer4(reviewer4);
+        loadReviewer4(reviewer4, ReviewerView.Summary.class);
 
         final ReviewerWithWorkloads reviewer5 = new ReviewerWithWorkloads()
                 .withWeekWorkload(0)
                 .withWeekBeforeWorkload(0)
                 .withWeekAfterWorkload(0);
-        loadReviewer5(reviewer5);
+        loadReviewer5(reviewer5, ReviewerView.Summary.class);
 
         final ReviewerWithWorkloads reviewer6 = new ReviewerWithWorkloads()
                 .withWeekWorkload(0)
                 .withWeekBeforeWorkload(0)
                 .withWeekAfterWorkload(0);
-        loadReviewer6(reviewer6);
+        loadReviewer6(reviewer6, ReviewerView.Summary.class);
 
         final ReviewerWithWorkloads reviewer7 = new ReviewerWithWorkloads()
                 .withWeekWorkload(0)
                 .withWeekBeforeWorkload(0)
                 .withWeekAfterWorkload(0);
-        loadReviewer7(reviewer7);
+        loadReviewer7(reviewer7, ReviewerView.Summary.class);
 
         final ReviewerList<ReviewerWithWorkloads> expected = new ReviewerList<ReviewerWithWorkloads>()
                 .withReviewers(List.of(reviewer1, reviewer2, reviewer3, reviewer4, reviewer5, reviewer6, reviewer7));
@@ -277,7 +282,7 @@ public class ReviewersIT extends ContainerTest {
         final Reviewer updated = mapper.readValue(response.readEntity(String.class), Reviewer.class);
 
         final Reviewer expected = new Reviewer();
-        loadUpdatedReviewer3(expected);
+        loadUpdatedReviewer3(expected, ReviewerView.Reviewer.class);
 
         assertThat("Reviewer has been updated", updated, is(expected));
         assertThat("Equals", updated.equals(expected));
@@ -367,21 +372,13 @@ public class ReviewersIT extends ContainerTest {
         assertThat("Private address is not selected", updated.getPrivateAddress().getSelected(), is(false));
     }
 
-    private void loadReviewer1(Reviewer reviewer) {
+    private void loadReviewer1(Reviewer reviewer, Class view) {
         reviewer.setId(1);
         reviewer.setActive(true);
-        reviewer.setCulrId("41");
         reviewer.setFirstName("Hans");
         reviewer.setLastName("Hansen");
-        reviewer.setEmail("hans@hansen.dk");
-        reviewer.setAddress(
-                new Address()
-                        .withAddress1("Lillegade 1")
-                        .withZip("9999")
-                        .withCity("Lilleved")
-                        .withSelected(true));
-        reviewer.setInstitution("Hans Hansens Bix");
         reviewer.setPaycode(123);
+        reviewer.setInstitution("Hans Hansens Bix");
         reviewer.setSubjects(
                 List.of(
                         new Subject()
@@ -398,21 +395,23 @@ public class ReviewersIT extends ContainerTest {
         reviewer.setNote("note1");
         reviewer.setCapacity(1);
         reviewer.setSubjectNotes(List.of());
+        if( view == ReviewerView.Reviewer.class ) {
+            reviewer.setCulrId("41");
+            reviewer.setEmail("hans@hansen.dk");
+            reviewer.setAddress(
+                    new Address()
+                            .withAddress1("Lillegade 1")
+                            .withZip("9999")
+                            .withCity("Lilleved")
+                            .withSelected(true));
+        }
     }
 
-    private void loadReviewer2(Reviewer reviewer) {
+    private void loadReviewer2(Reviewer reviewer, Class view) {
         reviewer.setId(2);
         reviewer.setActive(true);
-        reviewer.setCulrId("42");
         reviewer.setFirstName("Ole");
         reviewer.setLastName("Olsen");
-        reviewer.setEmail("ole@olsen.dk");
-        reviewer.setAddress(
-                new Address()
-                        .withAddress1("Storegade 99")
-                        .withZip("1111")
-                        .withCity("Storeved")
-                        .withSelected(true));
         reviewer.setInstitution("Ole Olsens Goodies");
         reviewer.setPaycode(456);
         reviewer.setSubjects(
@@ -427,21 +426,23 @@ public class ReviewersIT extends ContainerTest {
         reviewer.setNote("note2");
         reviewer.setCapacity(2);
         reviewer.setSubjectNotes(List.of());
+        if( view == ReviewerView.Reviewer.class) {
+            reviewer.setCulrId("42");
+            reviewer.setEmail("ole@olsen.dk");
+            reviewer.setAddress(
+                    new Address()
+                            .withAddress1("Storegade 99")
+                            .withZip("1111")
+                            .withCity("Storeved")
+                            .withSelected(true));
+        }
     }
 
-    private void loadReviewer3(Reviewer reviewer) {
+    private void loadReviewer3(Reviewer reviewer, Class view) {
         reviewer.setId(3);
         reviewer.setActive(true);
-        reviewer.setCulrId("43");
         reviewer.setFirstName("Peter");
         reviewer.setLastName("Petersen");
-        reviewer.setEmail("peter@petersen.dk");
-        reviewer.setAddress(
-                new Address()
-                        .withAddress1("Mellemgade 50")
-                        .withZip("5555")
-                        .withCity("Mellemved")
-                        .withSelected(true));
         reviewer.setInstitution("Peter Petersens pedaler");
         reviewer.setPaycode(22);
         reviewer.setSubjects(
@@ -454,24 +455,26 @@ public class ReviewersIT extends ContainerTest {
         reviewer.setAccepts(List.of(
                 Reviewer.Accepts.BOOK));
         reviewer.setNote("note3");
-        reviewer.setPhone("12345678");
         reviewer.setCapacity(2);
         reviewer.setSubjectNotes(List.of());
+        if( view == ReviewerView.Reviewer.class) {
+            reviewer.setCulrId("43");
+            reviewer.setEmail("peter@petersen.dk");
+            reviewer.setAddress(
+                    new Address()
+                            .withAddress1("Mellemgade 50")
+                            .withZip("5555")
+                            .withCity("Mellemved")
+                            .withSelected(true));
+            reviewer.setPhone("12345678");
+        }
     }
 
-    private void loadReviewer4(Reviewer reviewer) {
+    private void loadReviewer4(Reviewer reviewer, Class view) {
         reviewer.setId(4);
         reviewer.setActive(true);
-        reviewer.setCulrId("55");
         reviewer.setFirstName("Kirsten");
         reviewer.setLastName("Kirstensen");
-        reviewer.setEmail("kirsten@kirstensen.dk");
-        reviewer.setAddress(
-                new Address()
-                        .withAddress1("Overgade 50")
-                        .withZip("5432")
-                        .withCity("Overlev")
-                        .withSelected(true));
         reviewer.setInstitution("Kirstens Bix");
         reviewer.setPaycode(0);
         reviewer.setHiatusBegin(LocalDate.parse("2021-01-11"));
@@ -483,18 +486,26 @@ public class ReviewersIT extends ContainerTest {
                         .withId(5)
                         .withName("Multimedie")));
         reviewer.setNote("note4");
-        reviewer.setPhone("123456789010");
         reviewer.setCapacity(2);
         reviewer.setSubjectNotes(List.of());
+        if( view == ReviewerView.Reviewer.class) {
+            reviewer.setCulrId("55");
+            reviewer.setEmail("kirsten@kirstensen.dk");
+            reviewer.setAddress(
+                    new Address()
+                            .withAddress1("Overgade 50")
+                            .withZip("5432")
+                            .withCity("Overlev")
+                            .withSelected(true));
+            reviewer.setPhone("123456789010");
+        }
     }
 
-    private void loadReviewer5(Reviewer reviewer) {
+    private void loadReviewer5(Reviewer reviewer, Class view) {
         reviewer.setId(5);
         reviewer.setActive(true);
-        reviewer.setCulrId("44");
         reviewer.setFirstName("Boe");
         reviewer.setLastName("Boesen");
-        reviewer.setEmail("boe@boesen.dk");
         reviewer.setInstitution("Boe Boesens Bøjler");
         reviewer.setPaycode(23);
         reviewer.setSubjects(
@@ -507,33 +518,20 @@ public class ReviewersIT extends ContainerTest {
         reviewer.setAccepts(List.of(
                 Reviewer.Accepts.BOOK));
         reviewer.setNote("note5");
-        reviewer.setPhone("9123456789");
         reviewer.setCapacity(2);
         reviewer.setSubjectNotes(List.of());
+        if( view == ReviewerView.Reviewer.class ) {
+            reviewer.setCulrId("44");
+            reviewer.setEmail("boe@boesen.dk");
+            reviewer.setPhone("9123456789");
+        }
     }
 
-    private void loadUpdatedReviewer3(Reviewer reviewer) {
+    private void loadUpdatedReviewer3(Reviewer reviewer, Class view) {
         reviewer.setId(3);
         reviewer.setActive(false);
-        reviewer.setCulrId("43");
         reviewer.setFirstName("Peder");
         reviewer.setLastName("Pedersen");
-        reviewer.setEmail("peder@pedersen.dk");
-        reviewer.setPrivateEmail("peder-pedersen@hjemme.dk");
-        reviewer.setAddress(
-                new Address()
-                        .withAddress1("Mellemgade 51")
-                        .withZip("6666")
-                        .withCity("Mellemtved")
-                        .withAddress2("Øvre Mellem")
-                        .withSelected(true));
-        reviewer.setPrivateAddress(
-                new Address()
-                        .withAddress1("Hjemmegade 51")
-                        .withZip("1236")
-                        .withCity("Hjemmeby")
-                        .withAddress2("Hjemme")
-                        .withSelected(false));
         reviewer.setInstitution("Peder Pedersens pedaler");
         reviewer.setPaycode(7777);
         reviewer.setSubjects(
@@ -548,20 +546,36 @@ public class ReviewersIT extends ContainerTest {
                 Reviewer.Accepts.BOOK, Reviewer.Accepts.MULTIMEDIA));
         reviewer.setNote("note3");
         reviewer.setCapacity(2);
-        reviewer.setPhone("87654321");
-        reviewer.setPrivatePhone("12345678");
         reviewer.setSubjectNotes(List.of());
+        if( view == ReviewerView.Reviewer.class ) {
+            reviewer.setCulrId("43");
+            reviewer.setEmail("peder@pedersen.dk");
+            reviewer.setPrivateEmail("peder-pedersen@hjemme.dk");
+            reviewer.setAddress(
+                    new Address()
+                            .withAddress1("Mellemgade 51")
+                            .withZip("6666")
+                            .withCity("Mellemtved")
+                            .withAddress2("Øvre Mellem")
+                            .withSelected(true));
+            reviewer.setPrivateAddress(
+                    new Address()
+                            .withAddress1("Hjemmegade 51")
+                            .withZip("1236")
+                            .withCity("Hjemmeby")
+                            .withAddress2("Hjemme")
+                            .withSelected(false));
+            reviewer.setPhone("87654321");
+            reviewer.setPrivatePhone("12345678");
+        }
     }
 
-    private void loadReviewer6(Reviewer reviewer) {
+    private void loadReviewer6(Reviewer reviewer, Class view) {
         reviewer.setId(6);
         reviewer.setActive(true);
-        reviewer.setCulrId("56434241");
         reviewer.setFirstName("Michael");
         reviewer.setLastName("Michelsen");
-        reviewer.setEmail("mich@mich.dk");
         reviewer.setInstitution("Michs Mechanics");
-        reviewer.setAddress(new Address().withSelected(true));
         reviewer.setPaycode(232221);
         reviewer.setSubjects(
                 List.of(
@@ -575,21 +589,24 @@ public class ReviewersIT extends ContainerTest {
         reviewer.setAccepts(List.of(
                 Reviewer.Accepts.MULTIMEDIA));
         reviewer.setNote("note6");
-        reviewer.setPhone("912345678901");
         reviewer.setCapacity(2);
         reviewer.setSubjectNotes(List.of(
                 new SubjectNote().withNote("Anmelder det meste").withId(1).withSubjectId(5),
                 new SubjectNote().withNote("(Hvis et eller andet underemne, så kommentar)").withId(2).withSubjectId(6)
         ));
+        if( view == ReviewerView.Reviewer.class ) {
+            reviewer.setCulrId("56434241");
+            reviewer.setEmail("mich@mich.dk");
+            reviewer.setAddress(new Address().withSelected(true));
+            reviewer.setPhone("912345678901");
+        }
     }
 
-    private void loadReviewer7(Reviewer reviewer) {
+    private void loadReviewer7(Reviewer reviewer, Class view) {
         reviewer.setId(7);
         reviewer.setActive(false);
-        reviewer.setCulrId("56434242");
         reviewer.setFirstName("Holger");
         reviewer.setLastName("Holgersen");
-        reviewer.setEmail("holg@holg.dk");
         reviewer.setInstitution("Holgers Holdings");
         reviewer.setPaycode(232222);
         reviewer.setHiatusBegin(null);
@@ -597,12 +614,16 @@ public class ReviewersIT extends ContainerTest {
         reviewer.setAccepts(List.of(
                 Reviewer.Accepts.MULTIMEDIA));
         reviewer.setNote("note7");
-        reviewer.setPhone("912345678902");
         reviewer.setCapacity(2);
-        reviewer.setPrivateEmail("holger.privat@holg.dk");
         reviewer.setSubjects(List.of());
         reviewer.setSubjectNotes(List.of());
-        reviewer.setAddress(new Address().withSelected(true));
+        if( view == ReviewerView.Reviewer.class ) {
+            reviewer.setCulrId("56434242");
+            reviewer.setEmail("holg@holg.dk");
+            reviewer.setPrivateEmail("holger.privat@holg.dk");
+            reviewer.setAddress(new Address().withSelected(true));
+            reviewer.setPhone("912345678902");
+        }
     }
 
     @Test
@@ -680,7 +701,7 @@ public class ReviewersIT extends ContainerTest {
         assertThat("response status", response.getStatus(), is(200));
         Reviewer fetched = mapper.readValue(response.readEntity(String.class), Reviewer.class);
         Reviewer reviewer6 = new Reviewer();
-        loadReviewer6(reviewer6);
+        loadReviewer6(reviewer6, ReviewerView.Reviewer.class);
         assertThat(fetched, is(reviewer6));
 
         // Check that notes can be changed.
@@ -721,7 +742,7 @@ public class ReviewersIT extends ContainerTest {
         response = putResponse("v1/api/reviewers/6", reviewerUpdateRequest);
         assertThat("response status", response.getStatus(), is(200));
         fetched = mapper.readValue(response.readEntity(String.class), Reviewer.class);
-        loadReviewer6(reviewer6);
+        loadReviewer6(reviewer6, ReviewerView.Reviewer.class);
         assertThat(fetched, is(reviewer6));
     }
 
