@@ -175,14 +175,21 @@ public abstract class ContainerTest extends IntegrationTest {
     }
 
     public <T> Response postResponse(String path, T body) {
+        return postResponse(path, body, null);
+    }
+
+    public <T> Response postResponse(String path, T body, String authToken) {
         HttpPost httpPost = new HttpPost(httpClient)
                 .withBaseUrl(promatServiceBaseUrl)
                 .withPathElements(path)
                 .withData(body, "application/json");
+        if( authToken != null ) {
+            httpPost.getHeaders().put("Authorization", "Bearer " + authToken);
+        }
         return httpClient.execute(httpPost);
     }
 
-    public <T> Response putResponse(String path, T body, Map<String, Object> queryParameter) {
+    public <T> Response putResponse(String path, T body, Map<String, Object> queryParameter, String authToken) {
         HttpPut httpPut = new HttpPut(httpClient)
                 .withBaseUrl(promatServiceBaseUrl)
                 .withPathElements(path)
@@ -190,11 +197,18 @@ public abstract class ContainerTest extends IntegrationTest {
         if (queryParameter != null) {
             httpPut.getQueryParameters().putAll(queryParameter);
         }
+        if( authToken != null ) {
+            httpPut.getHeaders().put("Authorization", "Bearer " + authToken);
+        }
         return httpClient.execute(httpPut);
     }
 
+    public <T> Response putResponse(String path, T body, String authToken) {
+        return putResponse(path, body, null, authToken);
+    }
+
     public <T> Response putResponse(String path, T body) {
-        return putResponse(path, body, null);
+        return putResponse(path, body, null, null);
     }
 
     public <T> Response deleteResponse(String path) {

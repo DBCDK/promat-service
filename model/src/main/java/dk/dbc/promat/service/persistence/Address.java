@@ -5,15 +5,26 @@
 
 package dk.dbc.promat.service.persistence;
 
+import com.fasterxml.jackson.annotation.JsonView;
+
 import javax.persistence.Embeddable;
 import java.util.Objects;
 
 @Embeddable
 public class Address {
+    @JsonView({CaseView.Case.class, ReviewerView.Reviewer.class})
     private String address1;
+
+    @JsonView({CaseView.Case.class, ReviewerView.Reviewer.class})
     private String address2;
+
+    @JsonView({CaseView.Case.class, ReviewerView.Reviewer.class})
     private String zip;
+
+    @JsonView({CaseView.Case.class, ReviewerView.Reviewer.class})
     private String city;
+
+    @JsonView({CaseView.Case.class, ReviewerView.Reviewer.class})
     private Boolean selected = null;
 
     public String getAddress1() {

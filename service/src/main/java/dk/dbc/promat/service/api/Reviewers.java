@@ -5,6 +5,8 @@
 
 package dk.dbc.promat.service.api;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import dk.dbc.connector.culr.CulrConnectorException;
 import dk.dbc.promat.service.Repository;
 import dk.dbc.promat.service.dto.ReviewerList;
@@ -12,9 +14,11 @@ import dk.dbc.promat.service.dto.ReviewerRequest;
 import dk.dbc.promat.service.dto.ReviewerWithWorkloads;
 import dk.dbc.promat.service.dto.ServiceErrorCode;
 import dk.dbc.promat.service.dto.ServiceErrorDto;
+import dk.dbc.promat.service.persistence.CaseView;
 import dk.dbc.promat.service.persistence.Notification;
 import dk.dbc.promat.service.persistence.PromatEntityManager;
 import dk.dbc.promat.service.persistence.Reviewer;
+import dk.dbc.promat.service.persistence.ReviewerView;
 import dk.dbc.promat.service.persistence.Subject;
 import dk.dbc.promat.service.persistence.SubjectNote;
 import dk.dbc.promat.service.templating.NotificationFactory;
@@ -44,7 +48,10 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.util.HashMap;
+import java.util.IdentityHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Stateless
@@ -95,7 +102,8 @@ public class Reviewers {
     @POST
     @Path("reviewers")
     @Produces({MediaType.APPLICATION_JSON})
-    public Response createReviewer(ReviewerRequest reviewerRequest) throws CulrConnectorException {
+    @RolesAllowed({"authenticated-user"})
+    public Response createReviewer(ReviewerRequest reviewerRequest, @Context UriInfo uriInfo) throws CulrConnectorException {
         LOGGER.info("reviewers (POST)");
 
         final String cprNumber = reviewerRequest.getCprNumber();
@@ -143,6 +151,7 @@ public class Reviewers {
             entityManager.persist(entity);
             entityManager.flush();
 
+            auditLogHandler.logTraceCreateForToken("Created new user", uriInfo, entity.getPaycode(), 201);
             LOGGER.info("Created new reviewer with ID {}", entity.getId());
             return Response.status(201)
                     .entity(entity)
@@ -155,14 +164,16 @@ public class Reviewers {
     @GET
     @Path("reviewers")
     @Produces({MediaType.APPLICATION_JSON})
-    public Response getAllReviewers(@QueryParam("deadline") LocalDate deadline) {
+    public Response getAllReviewers(@QueryParam("deadline") LocalDate deadline) throws JsonProcessingException {
         LOGGER.info("reviewers (GET)");
+        final ObjectMapper objectMapper = new JsonMapperProvider().getObjectMapper();
 
         if (deadline == null) {
             final TypedQuery<Reviewer> query = entityManager.createNamedQuery(
                     Reviewer.GET_ALL_REVIEWERS_NAME, Reviewer.class);
-            return Response.ok(new ReviewerList<>()
-                    .withReviewers(query.getResultList()))
+            ReviewerList listOfReviewers = new ReviewerList<>()
+                    .withReviewers(query.getResultList());
+            return Response.ok(objectMapper.writerWithView(ReviewerView.Summary.class).writeValueAsString(listOfReviewers))
                     .build();
         }
 
@@ -185,14 +196,18 @@ public class Reviewers {
                         .withWeekBeforeWorkload((long) objects[2])
                         .withWeekAfterWorkload((long) objects[3]))
                 .collect(Collectors.toList());
-        return Response.ok(new ReviewerList<ReviewerWithWorkloads>().withReviewers(reviewers)).build();
+        ReviewerList<ReviewerWithWorkloads> listOfReviewers = new ReviewerList<ReviewerWithWorkloads>().withReviewers(reviewers);
+        return Response.ok(objectMapper.writerWithView(ReviewerView.Summary.class).writeValueAsString(listOfReviewers))
+                .build();
     }
 
     @PUT
     @Path("reviewers/{id}")
     @Produces({MediaType.APPLICATION_JSON})
+    @RolesAllowed({"authenticated-user"})
     public Response updateReviewer(@PathParam("id") final Integer id, ReviewerRequest reviewerRequest,
-                                   @QueryParam("notify") @DefaultValue("false") final Boolean notify) {
+                                   @QueryParam("notify") @DefaultValue("false") final Boolean notify,
+                                   @Context UriInfo uriInfo) {
         Notification notification = null;
 
         LOGGER.info("reviewers/{} (PUT), notify:{}", id, notify);
@@ -203,6 +218,7 @@ public class Reviewers {
             final Reviewer reviewer = entityManager.find(Reviewer.class, id);
             if (reviewer == null) {
                 LOGGER.info("Reviewer with id {} does not exists", id);
+                auditLogHandler.logTraceUpdateForToken("Request for update of profile", uriInfo, 0, 404);
                 return Response.status(404).build();
             }
 
@@ -249,6 +265,12 @@ public class Reviewers {
                 reviewer.setInstitution(reviewerRequest.getInstitution());
             }
             if(reviewerRequest.getPaycode() != null) {
+                if( !reviewerRequest.getPaycode().equals(reviewer.getPaycode()) ) {
+                    Map<String, String> paycodeChanges = new HashMap<>();
+                    paycodeChanges.put("Current value", reviewer.getPaycode().toString());
+                    paycodeChanges.put("New value", reviewerRequest.getPaycode().toString());
+                    auditLogHandler.logTraceUpdateForToken("Change of paycode (owning id)", uriInfo, reviewer.getPaycode(), paycodeChanges);
+                }
                 reviewer.setPaycode(reviewerRequest.getPaycode());
             }
             if(reviewerRequest.getPhone() != null) {
@@ -289,6 +311,7 @@ public class Reviewers {
                 entityManager.persist(notification);
             }
 
+            auditLogHandler.logTraceUpdateForToken("Update and view full profile", uriInfo, reviewer.getPaycode(), 200);
             return Response.status(200)
                     .entity(reviewer)
                     .build();
