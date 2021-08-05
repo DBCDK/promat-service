@@ -93,7 +93,7 @@ public class Reviewer extends PromatUser {
     }
 
     @Embedded
-    @JsonView({CaseView.Case.class, ReviewerView.Reviewer.class})
+    @JsonView({ReviewerView.Reviewer.class})
     protected Address address;
 
     @AttributeOverrides({
@@ -104,21 +104,21 @@ public class Reviewer extends PromatUser {
         @AttributeOverride(name="selected",column=@Column(name="privateSelected")),
     })
     @Embedded
-    @JsonView({CaseView.Case.class, ReviewerView.Reviewer.class})
+    @JsonView({ReviewerView.Reviewer.class})
     protected Address privateAddress;
 
-    @JsonView({CaseView.Case.class, ReviewerView.Summary.class, ReviewerView.Reviewer.class})
+    @JsonView({CaseView.Summary.class, CaseView.Case.class, ReviewerView.Summary.class, ReviewerView.Reviewer.class})
     protected String institution;
 
-    @JsonView({CaseView.Case.class, ReviewerView.Summary.class})
+    @JsonView({CaseView.Summary.class, CaseView.Case.class, ReviewerView.Summary.class})
     protected Integer paycode;
 
-    @JsonView({CaseView.Case.class, ReviewerView.Summary.class})
+    @JsonView({CaseView.Summary.class, CaseView.Case.class, ReviewerView.Summary.class})
     @JsonProperty("hiatus_begin")
     @Column(name = "hiatus_begin")
     protected LocalDate hiatusBegin;
 
-    @JsonView({CaseView.Case.class, ReviewerView.Summary.class})
+    @JsonView({CaseView.Summary.class, CaseView.Case.class, ReviewerView.Summary.class})
     @JsonProperty("hiatus_end")
     @Column(name = "hiatus_end")
     protected LocalDate hiatusEnd;
@@ -133,7 +133,7 @@ public class Reviewer extends PromatUser {
             joinColumns = @JoinColumn(name = "reviewer_id"),
             inverseJoinColumns = @JoinColumn(name = "subject_id")
     )
-    @JsonView({CaseView.Case.class, ReviewerView.Summary.class})
+    @JsonView({CaseView.Summary.class, CaseView.Case.class, ReviewerView.Summary.class})
     protected Collection<Subject> subjects;
 
     @OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
@@ -142,17 +142,17 @@ public class Reviewer extends PromatUser {
             joinColumns = @JoinColumn(name = "reviewer_id"),
             inverseJoinColumns = @JoinColumn(name = "subjectnote_id")
     )
-    @JsonView({CaseView.Case.class, ReviewerView.Summary.class})
+    @JsonView({CaseView.Summary.class, CaseView.Case.class, ReviewerView.Summary.class})
     protected Collection<SubjectNote> subjectNotes;
 
     @Convert(converter = AcceptsListToJsonArrayConverter.class)
-    @JsonView({CaseView.Case.class, ReviewerView.Summary.class})
+    @JsonView({CaseView.Summary.class, CaseView.Case.class, ReviewerView.Summary.class})
     protected List<Accepts> accepts;
 
-    @JsonView({CaseView.Case.class, ReviewerView.Reviewer.class})
+    @JsonView({ReviewerView.Reviewer.class})
     protected String privateEmail;
 
-    @JsonView({CaseView.Case.class, ReviewerView.Reviewer.class})
+    @JsonView({ReviewerView.Reviewer.class})
     protected String privatePhone;
 
     public Address getAddress() {
