@@ -158,7 +158,7 @@ public class PromatCase {
             joinColumns = @JoinColumn(name = "case_id"),
             inverseJoinColumns = @JoinColumn(name = "subject_id")
     )
-    @JsonView({CaseView.Case.class})
+    @JsonView({CaseView.Summary.class, CaseView.Case.class})
     private List<Subject> subjects;
 
     @JsonView({CaseView.Export.class, CaseView.Summary.class, CaseView.Case.class})
@@ -185,7 +185,7 @@ public class PromatCase {
             inverseJoinColumns = @JoinColumn(name = "task_id")
     )
     @OrderBy(value = "id")
-    @JsonView({CaseView.Export.class, CaseView.Case.class})
+    @JsonView({CaseView.Export.class, CaseView.Summary.class, CaseView.Case.class})
     private List<PromatTask> tasks;
 
     @JsonView({CaseView.Export.class, CaseView.Summary.class, CaseView.Case.class})
@@ -207,7 +207,7 @@ public class PromatCase {
     @JsonView({CaseView.Export.class, CaseView.Summary.class, CaseView.Case.class})
     private String publisher;
 
-    @JsonView({CaseView.Export.class, CaseView.Case.class})
+    @JsonView({CaseView.Export.class, CaseView.Summary.class, CaseView.Case.class})
     private String fulltextLink;
 
     @JsonView({CaseView.Case.class, CaseView.Summary.class})
@@ -222,7 +222,7 @@ public class PromatCase {
     @Transient
     private String note;
 
-    @JsonView({CaseView.Case.class})
+    @JsonView({CaseView.Summary.class, CaseView.Case.class})
     private LocalDate reminderSent;
 
     @Column(columnDefinition = "jsonb")

@@ -6,6 +6,7 @@
 package dk.dbc.promat.service.api;
 
 import com.fasterxml.jackson.annotation.JsonView;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dk.dbc.connector.openformat.OpenFormatConnectorException;
 import dk.dbc.promat.service.Repository;
@@ -247,7 +248,7 @@ public class Cases {
             // 201 CREATED
             LOGGER.info("Created new case for primaryFaust {}", entity.getPrimaryFaust());
             return Response.status(201)
-                    .entity(entity)
+                    .entity(asSummary(entity))
                     .build();
         } catch(Exception exception) {
             LOGGER.error("Caught unexpected exception: {} of type {}", exception.getMessage(), exception.toString());
@@ -277,7 +278,7 @@ public class Cases {
             requested.setNewMessagesToReviewer(
                     areThereNewMessages(id, PromatMessage.Direction.EDITOR_TO_REVIEWER));
 
-            return Response.status(200).entity(requested).build();
+            return Response.status(200).entity(asCase(requested)).build();
         } catch(Exception exception) {
             LOGGER.error("Caught exception: {}", exception.getMessage());
             return ServiceErrorDto.Failed(exception.getMessage());
@@ -458,10 +459,8 @@ public class Cases {
             // Note that the http status is set to 404 (NOT FOUND) if no case matched the query
             // this is to allow a quick(er) check for existing cases by using HEAD and checking
             // the statuscode instead of deserializing the response body and looking at numFound
-            final ObjectMapper objectMapper = new JsonMapperProvider().getObjectMapper();
             return Response.status(caseList.getNumFound() > 0 ? 200 : 404)
-                    .entity(objectMapper.writerWithView(format.getViewClass())
-                            .writeValueAsString(caseList)).build();
+                    .entity(asSummary(caseList)).build();
         } catch (ServiceErrorException e) {
             return Response.status(e.getHttpStatus()).entity(e.getServiceErrorDto()).build();
         } catch(Exception exception) {
@@ -850,7 +849,7 @@ public class Cases {
             // Set the "are there new Messages?" pins for reviewer and editor
             existing.setNewMessagesToReviewer(areThereNewMessages(existing.getId(), PromatMessage.Direction.EDITOR_TO_REVIEWER));
             existing.setNewMessagesToEditor(areThereNewMessages(existing.getId(), PromatMessage.Direction.REVIEWER_TO_EDITOR));
-            return Response.ok(existing).build();
+            return Response.ok(asSummary(existing)).build();
         } catch(ServiceErrorException serviceErrorException) {
             LOGGER.info("Received serviceErrorException while mapping entities: {}", serviceErrorException.getMessage());
 
@@ -944,7 +943,7 @@ public class Cases {
     @Path(("cases/{id}/processreminder"))
     @Produces(MediaType.APPLICATION_JSON)
     @JsonView({CaseView.Case.class})
-    public Response processReminder(@PathParam("id") final Integer id) {
+    public Response processReminder(@PathParam("id") final Integer id) throws JsonProcessingException {
         // Fetch the case
         PromatCase promatCase = entityManager.find(PromatCase.class, id);
         if(promatCase == null) {
@@ -952,7 +951,7 @@ public class Cases {
             return ServiceErrorDto.NotFound("No such case", String.format("No case with id %d exists", id));
         }
         reminders.processReminder(promatCase, LocalDate.now());
-        return Response.ok(promatCase).build();
+        return Response.ok(asSummary(promatCase)).build();
     }
 
     @POST
@@ -1030,7 +1029,7 @@ public class Cases {
         existingCase.setFulltextLink(caseRequest.getFulltextLink());
         LOGGER.info("Updated existing case {}", existingCase.getId());
 
-        return Response.status(200).entity(existingCase).build();
+        return Response.status(200).entity(asSummary(existingCase)).build();
     }
 
     public Reviewer resolveReviewer(Integer reviewerId) throws ServiceErrorException {
@@ -1298,4 +1297,15 @@ public class Cases {
         return query.getResultList().size() > 0;
     }
 
+    private <T> String asSummary(T entity) throws JsonProcessingException {
+        final ObjectMapper objectMapper = new JsonMapperProvider().getObjectMapper();
+        return objectMapper.writerWithView(CaseView.Summary.class)
+                .writeValueAsString(entity);
+    }
+
+    private <T> String asCase(T entity) throws JsonProcessingException {
+        final ObjectMapper objectMapper = new JsonMapperProvider().getObjectMapper();
+        return objectMapper.writerWithView(CaseView.Case.class)
+                .writeValueAsString(entity);
+    }
 }

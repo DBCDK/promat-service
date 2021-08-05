@@ -528,27 +528,27 @@ public class CasesIT extends ContainerTest {
         Response response = postResponse("v1/api/cases/9876", dto);
         assertThat("status code", response.getStatus(), is(404));
 
-        // Attemtp to set field 'assigned' - should return 400 BAD REQUEST
+        // Attempt to set field 'assigned' - should return 400 BAD REQUEST
         dto = new CaseRequest().withAssigned("2020-11-18");
         response = postResponse("v1/api/cases/1", dto);
         assertThat("status code", response.getStatus(), is(400));
 
-        // Attemtp to set field 'status' - should return 400 BAD REQUEST
+        // Attempt to set field 'status' - should return 400 BAD REQUEST
         dto = new CaseRequest().withStatus(CaseStatus.ASSIGNED);
         response = postResponse("v1/api/cases/1", dto);
         assertThat("status code", response.getStatus(), is(400));
 
-        // Attemtp to set field 'reviewer' with non existing reviewer - should return 400 BAD REQUEST
+        // Attempt to set field 'reviewer' with non existing reviewer - should return 400 BAD REQUEST
         dto = new CaseRequest().withReviewer(9999);
         response = postResponse("v1/api/cases/1", dto);
         assertThat("status code", response.getStatus(), is(400));
 
-        // Attemtp to set field 'editor' with non existing editor - should return 400 BAD REQUEST
+        // Attempt to set field 'editor' with non existing editor - should return 400 BAD REQUEST
         dto = new CaseRequest().withEditor(9999);
         response = postResponse("v1/api/cases/1", dto);
         assertThat("status code", response.getStatus(), is(400));
 
-        // Attemtp to set field 'subject' with non existing subject - should return 400 BAD REQUEST
+        // Attempt to set field 'subject' with non existing subject - should return 400 BAD REQUEST
         dto = new CaseRequest().withSubjects(Arrays.asList(9999));
         response = postResponse("v1/api/cases/1", dto);
         assertThat("status code", response.getStatus(), is(400));
@@ -2306,4 +2306,64 @@ public class CasesIT extends ContainerTest {
         assertThat("status code", response.getStatus(), is(200));
     }
 
+    @Test
+    public void testThatGdprFieldsIsNeverExposedOnCases() throws JsonProcessingException {
+
+        // Create case
+        CaseRequest dto = new CaseRequest()
+                .withPrimaryFaust("5001111")
+                .withTitle("Title for 5001111")
+                .withMaterialType(MaterialType.BOOK)
+                .withReviewer(1)
+                .withEditor(10)
+                .withDeadline("2021-08-21")
+                .withSubjects(Arrays.asList(3, 4));
+
+        Response response = postResponse("v1/api/cases", dto);
+        assertThat("status code", response.getStatus(), is(201));
+        PromatCase created = mapper.readValue(response.readEntity(String.class), PromatCase.class);
+
+        assertGdprFields(created);
+
+        // Get the case
+        response = getResponse("v1/api/cases/" + created.getId());
+        assertThat("status code", response.getStatus(), is(200));
+        PromatCase fetched = mapper.readValue(response.readEntity(String.class), PromatCase.class);
+
+        assertGdprFields(fetched);
+
+        // Update the case
+        dto = new CaseRequest()
+                .withTitle("Title for 5001111 - rettet");
+
+        response = postResponse("v1/api/cases/" + created.getId(), dto);
+        assertThat("status code", response.getStatus(), is(200));
+        PromatCase updated = mapper.readValue(response.readEntity(String.class), PromatCase.class);
+
+        assertGdprFields(updated);
+
+        // Search the case
+        response = getResponse("v1/api/cases", Map.of("faust", "5001111"));
+        assertThat("status code", response.getStatus(), is(200));
+        CaseSummaryList found = mapper.readValue(response.readEntity(String.class), CaseSummaryList.class);
+        assertThat("found the case", found.getCases().size(), is(1));
+
+        assertGdprFields(found.getCases().get(0));
+    }
+
+    private void assertGdprFields(PromatCase promatCase) {
+        assertThat("reviewer is set", promatCase.getReviewer(), is(notNullValue()));
+        assertThat("editor is set", promatCase.getEditor(), is(notNullValue()));
+
+        assertThat("reviewer address is not set", promatCase.getReviewer().getAddress(), is(nullValue()));
+        assertThat("reviewer email is not set", promatCase.getReviewer().getEmail(), is(nullValue()));
+        assertThat("reviewer phone is not set", promatCase.getReviewer().getPhone(), is(nullValue()));
+
+        assertThat("reviewer private address is not set", promatCase.getReviewer().getPrivateAddress(), is(nullValue()));
+        assertThat("reviewer private email is not set", promatCase.getReviewer().getPrivateEmail(), is(nullValue()));
+        assertThat("reviewer private phone is not set", promatCase.getReviewer().getPrivatePhone(), is(nullValue()));
+
+        assertThat("editor email is not set", promatCase.getEditor().getEmail(), is(nullValue()));
+        assertThat("editor phone is not set", promatCase.getEditor().getPhone(), is(nullValue()));
+    }
 }
