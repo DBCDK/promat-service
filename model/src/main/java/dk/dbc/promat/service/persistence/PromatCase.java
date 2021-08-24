@@ -158,7 +158,7 @@ public class PromatCase {
             joinColumns = @JoinColumn(name = "case_id"),
             inverseJoinColumns = @JoinColumn(name = "subject_id")
     )
-    @JsonView({CaseView.Case.class})
+    @JsonView({CaseView.Summary.class, CaseView.Case.class})
     private List<Subject> subjects;
 
     @JsonView({CaseView.Export.class, CaseView.Summary.class, CaseView.Case.class})
@@ -185,7 +185,7 @@ public class PromatCase {
             inverseJoinColumns = @JoinColumn(name = "task_id")
     )
     @OrderBy(value = "id")
-    @JsonView({CaseView.Export.class, CaseView.Case.class})
+    @JsonView({CaseView.Export.class, CaseView.Summary.class, CaseView.Case.class})
     private List<PromatTask> tasks;
 
     @JsonView({CaseView.Export.class, CaseView.Summary.class, CaseView.Case.class})
@@ -207,7 +207,7 @@ public class PromatCase {
     @JsonView({CaseView.Export.class, CaseView.Summary.class, CaseView.Case.class})
     private String publisher;
 
-    @JsonView({CaseView.Export.class, CaseView.Case.class})
+    @JsonView({CaseView.Export.class, CaseView.Summary.class, CaseView.Case.class})
     private String fulltextLink;
 
     @JsonView({CaseView.Case.class, CaseView.Summary.class})
@@ -222,8 +222,13 @@ public class PromatCase {
     @Transient
     private String note;
 
-    @JsonView({CaseView.Case.class})
+    @JsonView({CaseView.Summary.class, CaseView.Case.class})
     private LocalDate reminderSent;
+
+    @Column(columnDefinition = "jsonb")
+    @Convert(converter = StringListToJsonArrayConverter.class)
+    @JsonView({CaseView.Export.class, CaseView.Summary.class, CaseView.Case.class})
+    private List<String> codes;
 
     public Integer getId() {
         return id;
@@ -537,6 +542,19 @@ public class PromatCase {
         return this;
     }
 
+    public List<String> getCodes() {
+        return codes;
+    }
+
+    public void setCodes(List<String> codes) {
+        this.codes = codes;
+    }
+
+    public PromatCase withCodes(List<String> codes) {
+        this.codes = codes;
+        return this;
+    }
+
     @PrePersist
     @PreUpdate
     private void beforeUpdate() {
@@ -574,14 +592,15 @@ public class PromatCase {
                 Objects.equals(fulltextLink, aCase.fulltextLink) &&
                 newMessagesToEditor == aCase.newMessagesToEditor &&
                 newMessagesToReviewer == aCase.newMessagesToReviewer &&
-                Objects.equals(reminderSent, aCase.reminderSent);
+                Objects.equals(reminderSent, aCase.reminderSent) &&
+                Objects.equals(codes, aCase.codes);
     }
 
     @Override
     public int hashCode() {
         return Objects.hash(id, title, details, primaryFaust, relatedFausts, reviewer, editor, subjects, created,
                 deadline, assigned, status, materialType, tasks, weekCode, trimmedWeekCode, author, creator, publisher,
-                fulltextLink, newMessagesToEditor, newMessagesToReviewer, reminderSent);
+                fulltextLink, newMessagesToEditor, newMessagesToReviewer, reminderSent, codes);
     }
 
     @Override
@@ -611,6 +630,7 @@ public class PromatCase {
                 ", newMessagesToReviewer='" + newMessagesToReviewer + '\'' +
                 ", note='" + note + '\'' +
                 ", reminderSent'" + reminderSent + '\'' +
+                ", codes=" + codes +
                 '}';
     }
 }

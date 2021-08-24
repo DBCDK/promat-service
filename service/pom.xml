@@ -148,6 +148,16 @@
       <artifactId>opennumberroll-connector</artifactId>
       <version>1.1-SNAPSHOT</version>
     </dependency>
+    <dependency>
+      <groupId>dk.dbc</groupId>
+      <artifactId>dbc-commons-rs-auth</artifactId>
+      <version>1.1-SNAPSHOT</version>
+    </dependency>
+    <dependency>
+      <groupId>dk.dbc</groupId>
+      <artifactId>dbc-commons-audit-trail</artifactId>
+      <version>1.0-SNAPSHOT</version>
+    </dependency>
   </dependencies>
 
   <build>

@@ -11,14 +11,14 @@ import javax.persistence.Id;
 public class SubjectNote {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @JsonView({CaseView.Case.class})
+    @JsonView({CaseView.Case.class, ReviewerView.Summary.class, ReviewerView.Reviewer.class})
     protected Integer id;
 
-    @JsonView({CaseView.Case.class})
+    @JsonView({CaseView.Case.class, ReviewerView.Summary.class, ReviewerView.Reviewer.class})
     @Column(name = "subject_id")
     protected Integer subjectId;
 
-    @JsonView({CaseView.Case.class})
+    @JsonView({CaseView.Case.class, ReviewerView.Summary.class, ReviewerView.Reviewer.class})
     protected String note;
 
     public Integer getId() {
@@ -64,6 +64,9 @@ public class SubjectNote {
     public boolean equals(Object o) {
         if (this == o) {
             return true;
+        }
+        if( o == null ) {
+            return false;
         }
         if (!(o instanceof SubjectNote)) {
             return false;

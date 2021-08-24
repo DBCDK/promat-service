@@ -95,8 +95,9 @@ public class XmlCaseview {
         String age = GetTaskDataForFaust(requestedFaust, TaskFieldType.AGE, promatCase.getTasks());
         String matlevel = GetTaskDataForFaust(requestedFaust, TaskFieldType.MATLEVEL, promatCase.getTasks());
         List<String> subjterms = Arrays.asList(GetTaskDataForFaust(requestedFaust,TaskFieldType.TOPICS, promatCase.getTasks())
-                .split("[;|,| ]"))
+                .split("[;|,]"))
                 .stream()
+                .map(t -> t.trim())
                 .filter(t -> !t.isEmpty())
                 .collect(Collectors.toList());
 

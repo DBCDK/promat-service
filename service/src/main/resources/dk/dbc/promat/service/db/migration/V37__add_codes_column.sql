@@ -1,0 +1,1 @@
+ALTER TABLE promatcase ADD codes jsonb DEFAULT NULL;

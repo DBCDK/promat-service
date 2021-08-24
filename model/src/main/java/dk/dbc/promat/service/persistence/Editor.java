@@ -49,7 +49,7 @@ public class Editor extends PromatUser {
         result = 31 * result + (active ? 1 : 0);
         result = 31 * result + firstName.hashCode();
         result = 31 * result + lastName.hashCode();
-        result = 31 * result + email.hashCode();
+        result = 31 * result + (email != null ? email.hashCode() : 0);
         result = 31 * result + (phone != null ? phone.hashCode() : 0);
         return result;
     }
@@ -65,7 +65,7 @@ public class Editor extends PromatUser {
         if (active != editor.active) return false;
         if (!firstName.equals(editor.firstName)) return false;
         if (!lastName.equals(editor.lastName)) return false;
-        if (!email.equals(editor.email)) return false;
+        if (email != null ? !email.equals(editor.email) : editor.email != null) return false;
         return phone != null ? phone.equals(editor.phone) : editor.phone == null;
     }
 

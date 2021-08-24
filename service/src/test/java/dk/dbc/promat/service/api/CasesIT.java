@@ -528,27 +528,27 @@ public class CasesIT extends ContainerTest {
         Response response = postResponse("v1/api/cases/9876", dto);
         assertThat("status code", response.getStatus(), is(404));
 
-        // Attemtp to set field 'assigned' - should return 400 BAD REQUEST
+        // Attempt to set field 'assigned' - should return 400 BAD REQUEST
         dto = new CaseRequest().withAssigned("2020-11-18");
         response = postResponse("v1/api/cases/1", dto);
         assertThat("status code", response.getStatus(), is(400));
 
-        // Attemtp to set field 'status' - should return 400 BAD REQUEST
+        // Attempt to set field 'status' - should return 400 BAD REQUEST
         dto = new CaseRequest().withStatus(CaseStatus.ASSIGNED);
         response = postResponse("v1/api/cases/1", dto);
         assertThat("status code", response.getStatus(), is(400));
 
-        // Attemtp to set field 'reviewer' with non existing reviewer - should return 400 BAD REQUEST
+        // Attempt to set field 'reviewer' with non existing reviewer - should return 400 BAD REQUEST
         dto = new CaseRequest().withReviewer(9999);
         response = postResponse("v1/api/cases/1", dto);
         assertThat("status code", response.getStatus(), is(400));
 
-        // Attemtp to set field 'editor' with non existing editor - should return 400 BAD REQUEST
+        // Attempt to set field 'editor' with non existing editor - should return 400 BAD REQUEST
         dto = new CaseRequest().withEditor(9999);
         response = postResponse("v1/api/cases/1", dto);
         assertThat("status code", response.getStatus(), is(400));
 
-        // Attemtp to set field 'subject' with non existing subject - should return 400 BAD REQUEST
+        // Attempt to set field 'subject' with non existing subject - should return 400 BAD REQUEST
         dto = new CaseRequest().withSubjects(Arrays.asList(9999));
         response = postResponse("v1/api/cases/1", dto);
         assertThat("status code", response.getStatus(), is(400));
@@ -1135,14 +1135,12 @@ public class CasesIT extends ContainerTest {
 
         Integer someOther = createCaseWithAuthorAndWeekCode(9, "NONE", "BKM202052").getId();
 
-
         CaseSummaryList fetched = promatServiceConnector.listCases(new ListCasesParams()
                 .withWeekCode("BKM202102"));
         assertThat("Cases found", fetched.getNumFound(), greaterThanOrEqualTo(3));
         Set<Integer> actual = fetched.getCases().stream().map( c -> c.getId()).collect(Collectors.toSet());
         assertThat("cases are all there", actual.containsAll(expected));
         assertThat("Case prior to weekcode is not there", !actual.contains(someOther));
-
 
         // Add the 'other' to the ones that needs to be deleted
         expected.add(someOther);
@@ -1153,6 +1151,29 @@ public class CasesIT extends ContainerTest {
             response = deleteResponse("v1/api/cases/"+cid);
             assertThat("status code", response.getStatus(), is(200));
         }
+    }
+
+    @Test
+    public void testLookupOfWeekcodesInCodes() throws PromatServiceConnectorException {
+        CaseSummaryList fetched = promatServiceConnector.listCases(new ListCasesParams()
+                .withWeekCode("BKM197901"));
+        assertThat("Cases found", fetched.getNumFound(), is(0));
+
+        fetched = promatServiceConnector.listCases(new ListCasesParams()
+                .withWeekCode("BKM202104"));
+        assertThat("Cases found", fetched.getNumFound(), is(2));
+
+        fetched = promatServiceConnector.listCases(new ListCasesParams()
+                .withWeekCode("BKM202110"));
+        assertThat("Cases found", fetched.getNumFound(), is(1));
+
+        fetched = promatServiceConnector.listCases(new ListCasesParams()
+                .withWeekCode("BKX202107"));
+        assertThat("Cases found", fetched.getNumFound(), is(2));
+
+        fetched = promatServiceConnector.listCases(new ListCasesParams()
+                .withWeekCode("bkx202107"));
+        assertThat("Cases found", fetched.getNumFound(), is(2));
     }
 
     @Test
@@ -2222,5 +2243,127 @@ public class CasesIT extends ContainerTest {
         // Delete case 2
         response = deleteResponse("v1/api/cases/" + created_2.getId());
         assertThat("status code", response.getStatus(), is(200));
+    }
+
+    @Test
+    public void testThatEmaterialForDownloadIsRegisteredProperly() throws JsonProcessingException {
+
+        // Create a new case
+        CaseRequest dto = new CaseRequest()
+                .withTitle("Title for 39449668")
+                .withDetails("Details for 39449668")
+                .withPrimaryFaust("39449668")
+                .withEditor(10)
+                .withCreator(10)
+                .withReviewer(1)
+                .withSubjects(Arrays.asList(3, 4))
+                .withDeadline("2021-07-30")
+                .withMaterialType(MaterialType.BOOK)
+                .withPublisher("Publisher for 39449668")
+                .withTasks(Collections.singletonList(
+                        new TaskDto()
+                                .withTaskType(TaskType.GROUP_1_LESS_THAN_100_PAGES)
+                                .withTaskFieldType(TaskFieldType.BRIEF)
+                                .withTargetFausts(Collections.singletonList("39449668"))));
+
+        // Create a another new case
+        CaseRequest dto2 = new CaseRequest()
+                .withTitle("Title for 39449669")
+                .withDetails("Details for 39449669")
+                .withPrimaryFaust("39449669")
+                .withEditor(10)
+                .withCreator(10)
+                .withReviewer(1)
+                .withSubjects(Arrays.asList(3, 4))
+                .withDeadline("2021-07-30")
+                .withMaterialType(MaterialType.BOOK)
+                .withPublisher("Publisher for 39449669")
+                .withTasks(Collections.singletonList(
+                        new TaskDto()
+                                .withTaskType(TaskType.GROUP_1_LESS_THAN_100_PAGES)
+                                .withTaskFieldType(TaskFieldType.BRIEF)
+                                .withTargetFausts(Collections.singletonList("39449669"))));
+
+        Response response = postResponse("v1/api/cases", dto);
+        PromatCase created = mapper.readValue(response.readEntity(String.class), PromatCase.class);
+        assertThat("status code", response.getStatus(), is(201));
+
+        // Check that there now is a download url.
+        assertThat(created.getFulltextLink(), is("http://host.testcontainers.internal:" + wireMockServer.port() +
+                "?faust=39449668"));
+
+        // Check that for the next one, no url is present.
+        response = postResponse("v1/api/cases", dto2);
+        PromatCase created2 = mapper.readValue(response.readEntity(String.class), PromatCase.class);
+        assertThat("status code", response.getStatus(), is(201));
+        assertThat("No e-content for this faust could be found at creation time.",created2.getFulltextLink(), nullValue());
+
+        // Delete the cases so that we dont mess up payments and dataio-export tests
+        response = deleteResponse("v1/api/cases/" + created.getId());
+        assertThat("status code", response.getStatus(), is(200));
+
+        response = deleteResponse("v1/api/cases/" + created2.getId());
+        assertThat("status code", response.getStatus(), is(200));
+    }
+
+    @Test
+    public void testThatGdprFieldsIsNeverExposedOnCases() throws JsonProcessingException {
+
+        // Create case
+        CaseRequest dto = new CaseRequest()
+                .withPrimaryFaust("5001111")
+                .withTitle("Title for 5001111")
+                .withMaterialType(MaterialType.BOOK)
+                .withReviewer(1)
+                .withEditor(10)
+                .withDeadline("2021-08-21")
+                .withSubjects(Arrays.asList(3, 4));
+
+        Response response = postResponse("v1/api/cases", dto);
+        assertThat("status code", response.getStatus(), is(201));
+        PromatCase created = mapper.readValue(response.readEntity(String.class), PromatCase.class);
+
+        assertGdprFields(created);
+
+        // Get the case
+        response = getResponse("v1/api/cases/" + created.getId());
+        assertThat("status code", response.getStatus(), is(200));
+        PromatCase fetched = mapper.readValue(response.readEntity(String.class), PromatCase.class);
+
+        assertGdprFields(fetched);
+
+        // Update the case
+        dto = new CaseRequest()
+                .withTitle("Title for 5001111 - rettet");
+
+        response = postResponse("v1/api/cases/" + created.getId(), dto);
+        assertThat("status code", response.getStatus(), is(200));
+        PromatCase updated = mapper.readValue(response.readEntity(String.class), PromatCase.class);
+
+        assertGdprFields(updated);
+
+        // Search the case
+        response = getResponse("v1/api/cases", Map.of("faust", "5001111"));
+        assertThat("status code", response.getStatus(), is(200));
+        CaseSummaryList found = mapper.readValue(response.readEntity(String.class), CaseSummaryList.class);
+        assertThat("found the case", found.getCases().size(), is(1));
+
+        assertGdprFields(found.getCases().get(0));
+    }
+
+    private void assertGdprFields(PromatCase promatCase) {
+        assertThat("reviewer is set", promatCase.getReviewer(), is(notNullValue()));
+        assertThat("editor is set", promatCase.getEditor(), is(notNullValue()));
+
+        assertThat("reviewer address is not set", promatCase.getReviewer().getAddress(), is(nullValue()));
+        assertThat("reviewer email is not set", promatCase.getReviewer().getEmail(), is(nullValue()));
+        assertThat("reviewer phone is not set", promatCase.getReviewer().getPhone(), is(nullValue()));
+
+        assertThat("reviewer private address is not set", promatCase.getReviewer().getPrivateAddress(), is(nullValue()));
+        assertThat("reviewer private email is not set", promatCase.getReviewer().getPrivateEmail(), is(nullValue()));
+        assertThat("reviewer private phone is not set", promatCase.getReviewer().getPrivatePhone(), is(nullValue()));
+
+        assertThat("editor email is not set", promatCase.getEditor().getEmail(), is(nullValue()));
+        assertThat("editor phone is not set", promatCase.getEditor().getPhone(), is(nullValue()));
     }
 }

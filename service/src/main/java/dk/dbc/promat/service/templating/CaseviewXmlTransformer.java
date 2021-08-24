@@ -60,7 +60,7 @@ public class CaseviewXmlTransformer {
                     .withHttpStatus(500).withCode(ServiceErrorCode.FAILED);
         }
 
-        // Add header and return as 8859-1..  Allthough unorthodox, this is expected by DBCKat,
+        // Add header and return as 8859-1..  Although unorthodox, this is expected by DBCKat,
         // most likely because data is to be used directly in iso-2709 records without reencoding
         String xml = "<?xml version=\"1.0\" encoding=\"ISO-8859-1\" standalone=\"yes\"?>\n";
         xml += stringWriter.toString();

@@ -49,31 +49,31 @@ public abstract class PromatUser {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @JsonView({CaseView.Summary.class})
+    @JsonView({CaseView.Summary.class, ReviewerView.Summary.class, ReviewerView.Reviewer.class})
     protected Integer id;
 
     // update/insert is managed by discriminator mechanics
     @Column(nullable = false, insertable = false, updatable = false)
     @Convert(converter = RoleConverter.class)
-    @JsonView({CaseView.Case.class})
+    @JsonView({CaseView.Summary.class, CaseView.Case.class, ReviewerView.Summary.class, ReviewerView.Reviewer.class})
     protected Role role;
 
-    @JsonView({CaseView.Case.class})
+    @JsonView({CaseView.Summary.class, CaseView.Case.class, ReviewerView.Summary.class, ReviewerView.Reviewer.class})
     protected boolean active;
 
-    @JsonView({CaseView.Case.class})
+    @JsonView({CaseView.Summary.class, CaseView.Case.class, ReviewerView.Reviewer.class})
     protected String culrId;
 
-    @JsonView({CaseView.Export.class, CaseView.Summary.class})
+    @JsonView({CaseView.Export.class, CaseView.Summary.class, CaseView.Case.class, ReviewerView.Summary.class, ReviewerView.Reviewer.class})
     protected String firstName;
 
-    @JsonView({CaseView.Export.class, CaseView.Summary.class})
+    @JsonView({CaseView.Export.class, CaseView.Summary.class, CaseView.Case.class, ReviewerView.Summary.class, ReviewerView.Reviewer.class})
     protected String lastName;
 
-    @JsonView({CaseView.Case.class})
+    @JsonView({ReviewerView.Reviewer.class})
     protected String email;
 
-    @JsonView({CaseView.Case.class})
+    @JsonView({ReviewerView.Reviewer.class})
     protected String phone;
 
     public Integer getId() {

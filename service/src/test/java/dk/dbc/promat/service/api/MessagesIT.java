@@ -18,7 +18,11 @@ import dk.dbc.promat.service.persistence.PromatMessage;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+
+import org.junit.jupiter.api.MethodOrderer;
+import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestMethodOrder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,12 +34,12 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.core.Is.is;
 
-
-
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class MessagesIT extends ContainerTest {
     private static final Logger LOGGER = LoggerFactory.getLogger(MessagesIT.class);
 
     @Test
+    @Order(1)
     public void testSendMessage() throws JsonProcessingException {
         final int EDITOR_ID = 10;
         final int REVIEWER_ID = 1;
@@ -79,6 +83,7 @@ public class MessagesIT extends ContainerTest {
     }
 
     @Test
+    @Order(2)
     public void createACaseAndSendSomeMessages() throws IOException {
         final int REVIEWER_ID = 4;
         final int EDITOR_ID = 10;
@@ -196,6 +201,102 @@ public class MessagesIT extends ContainerTest {
 
     }
 
+    @Test
+    @Order(3)
+    public void sendAndDeleteMessage() throws IOException {
+        final int CREATOR_ID = 11;
+        final int REVIEWER_ID = 4;
+        final int EDITOR_ID = 10;
+
+        CaseRequest dto = new CaseRequest()
+                .withPrimaryFaust("40001234")
+                .withTitle("Title for 40001234")
+                .withMaterialType(MaterialType.BOOK)
+                .withCreator(CREATOR_ID)
+                .withEditor(EDITOR_ID)
+                .withReviewer(REVIEWER_ID)
+                .withDeadline("2021-08-04")
+                .withSubjects(Arrays.asList(3, 4));
+
+        // Create case.
+        Response response = postResponse("v1/api/cases", dto);
+        assertThat("status code", response.getStatus(), is(201));
+
+        String obj = response.readEntity(String.class);
+        PromatCase aCase = mapper.readValue(obj, PromatCase.class);
+
+        // Now follows a conversation
+
+        response = postMessage(aCase.getId(), "Hi E\n I will look into it soon.",
+                REVIEWER_ID, PromatMessage.Direction.REVIEWER_TO_EDITOR);
+        assertThat("status code", response.getStatus(), is(201));
+
+        response = postMessage(aCase.getId(), "Hi Kirsten\n Good to hear!",
+                EDITOR_ID, PromatMessage.Direction.EDITOR_TO_REVIEWER);
+        assertThat("status code", response.getStatus(), is(201));
+
+        response = postMessage(aCase.getId(), "What a piece of total CRAP!!!.. must I really read this piece of shit!",
+                REVIEWER_ID, PromatMessage.Direction.REVIEWER_TO_EDITOR);
+        assertThat("status code", response.getStatus(), is(201));
+        PromatMessage aMessage = mapper.readValue(response.readEntity(String.class), PromatMessage.class);
+        int firstBadMessage = aMessage.getId();
+
+        response = postMessage(aCase.getId(), "Oh sorry.. got the wrong book. Strange with two books having almost the same title..  e-hehe..  hee.",
+                REVIEWER_ID, PromatMessage.Direction.REVIEWER_TO_EDITOR);
+        assertThat("status code", response.getStatus(), is(201));
+        aMessage = mapper.readValue(response.readEntity(String.class), PromatMessage.class);
+        int secondBadMessage = aMessage.getId();
+
+        response = postMessage(aCase.getId(), "Nice book.. I'll be done in a jiffy",
+                REVIEWER_ID, PromatMessage.Direction.REVIEWER_TO_EDITOR);
+        assertThat("status code", response.getStatus(), is(201));
+
+        response = postMessage(aCase.getId(), "Good You liked it afterall.. Happy reading",
+                EDITOR_ID, PromatMessage.Direction.EDITOR_TO_REVIEWER);
+        assertThat("status code", response.getStatus(), is(201));
+
+        // After that, we now have 2 messages from the editor to the reviewer
+        assertThat("Editor to reviewer messages",
+                size(getMessageList(aCase), PromatMessage.Direction.EDITOR_TO_REVIEWER, true),
+                is(2L));
+
+        // and 4 messages from the reviewer to the editor, some not so very nice
+        assertThat("Reviewer to editor messages",
+                size(getMessageList(aCase), PromatMessage.Direction.REVIEWER_TO_EDITOR, true),
+                is(4L));
+
+        // Remove those nasty messages in the middle
+        response = deleteResponse("/v1/api/messages/" + firstBadMessage);
+        assertThat("status code", response.getStatus(), is(200));
+        response = deleteResponse("/v1/api/messages/" + secondBadMessage);
+        assertThat("status code", response.getStatus(), is(200));
+
+        // We now have 2 messages from the editor to the reviewer
+        assertThat("Editor to reviewer messages",
+                size(getMessageList(aCase), PromatMessage.Direction.EDITOR_TO_REVIEWER, true),
+                is(2L));
+
+        // and 2 nice messages from the reviewer to the editor
+        PromatMessagesList messages = getMessageList(aCase);
+        assertThat("Reviewer to editor messages",
+                size(messages, PromatMessage.Direction.REVIEWER_TO_EDITOR, true),
+                is(2L));
+        assertThat("First bad message has been deleted", messages.getPromatMessages().stream()
+                .filter(m -> m.getId() == firstBadMessage)
+                .count(), is(0L));
+        assertThat("Second bad message has been deleted", messages.getPromatMessages().stream()
+                .filter(m -> m.getId() == secondBadMessage)
+                .count(), is(0L));
+
+        // Try deleting a non-existing message
+        response = deleteResponse("/v1/api/messages/987654321");
+        assertThat("status code", response.getStatus(), is(404));
+
+        // Cleanup
+        response = deleteResponse("v1/api/cases/" + aCase.getId());
+        assertThat("status code", response.getStatus(), is(200));
+    }
+
     private Response postMessage(Integer caseId, String messageText,
                                  Integer userId, PromatMessage.Direction direction) {
         MessageRequestDto messageRequestDto = new MessageRequestDto()
@@ -207,9 +308,13 @@ public class MessagesIT extends ContainerTest {
     }
 
     private long size(PromatMessagesList promatMessagesList, PromatMessage.Direction direction) {
+        return size(promatMessagesList, direction, false);
+    }
+
+    private long size(PromatMessagesList promatMessagesList, PromatMessage.Direction direction, boolean all) {
         List<PromatMessage> messageList = promatMessagesList.getPromatMessages();
         return messageList.stream()
-                .filter(message -> message.getRead() &&
+                .filter(message -> (message.getRead() || all) &&
                         message.getDirection() == direction).count();
     }
 
@@ -219,8 +324,6 @@ public class MessagesIT extends ContainerTest {
 
         return mapper.readValue(response.readEntity(String.class), PromatMessagesList.class);
     }
-
-
 
     private long size(List<Notification> notifications, String mailAddress) {
         return notifications.stream().filter(notification -> notification.getToAddress().contains(mailAddress)).count();
