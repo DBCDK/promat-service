@@ -39,4 +39,12 @@ public class PromatMessagesList {
     public int hashCode() {
         return Objects.hash(numFound, promatMessages);
     }
+
+    @Override
+    public String toString() {
+        return "PromatMessagesList{" +
+                "numFound=" + numFound +
+                ", promatMessages=" + promatMessages +
+                '}';
+    }
 }
