@@ -195,10 +195,10 @@ public class NotificationFactory {
 
     private String compileMailAddressesForReviewerMails(Reviewer reviewer) throws ValidateException {
         List<String> addresses = new ArrayList<>();
-        if (reviewer.getEmail() != null && !reviewer.getEmail().isEmpty()) {
+        if (reviewer.getEmail() != null && !reviewer.getEmail().isBlank()) {
             addresses.add(reviewer.getEmail());
         }
-        if (reviewer.getPrivateEmail() != null && !reviewer.getPrivateEmail().isEmpty()) {
+        if (reviewer.getPrivateEmail() != null && !reviewer.getPrivateEmail().isBlank()) {
             addresses.add(reviewer.getPrivateEmail());
         }
         
