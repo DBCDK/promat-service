@@ -1163,10 +1163,32 @@ public class Cases {
         }
         PromatUser promatUser =  entityManager.find(Editor.class, promatCase.getEditor().getId());
 
+        // Create message text
+        // Todo: Here we should use a set of standard phrases, something that is still in the future
+        String text = "";
+        if( promatCase.getTasks().stream().anyMatch(t -> t.getTaskFieldType() == TaskFieldType.METAKOMPAS) ) {
+            text += "Du bedes tildele metadata via <a href=\"https://metakompas.dk\">https://metakompas.dk</a>";
+        }
+        if( promatCase.getTasks().stream().anyMatch(t -> t.getTaskFieldType() == TaskFieldType.BKM) ) {
+            text += (text.length() > 0 ? "\n\n" : "");
+            text += "Du bedes udarbejde en vurdering af om materialet er biblioteksrelevant inden du udfylder anmeldelsen";
+        }
+        if( promatCase.getTasks().stream().anyMatch(t -> t.getTaskFieldType() == TaskFieldType.EXPRESS) ) {
+            text += (text.length() > 0 ? "\n\n" : "");
+            text += "Anmeldelsen haster og bedes udarbejdet hurtigst muligt\n\n";
+        }
+        if( promatCase.getNote() != null && !promatCase.getNote().isBlank() ) {
+            text += (text.length() > 0 ? "\n\n" : "");
+            text += promatCase.getNote();
+        }
+        if( text.isBlank() ) {
+            return;
+        }
+
         repository.getExclusiveAccessToTable(PromatMessage.TABLE_NAME);
 
         PromatMessage promatMessage = new PromatMessage()
-                .withMessageText(promatCase.getNote())
+                .withMessageText(text)
                 .withCaseId(promatCase.getId())
                 .withAuthor(PromatMessage.Author.fromPromatUser(promatUser))
                 .withDirection(PromatMessage.Direction.EDITOR_TO_REVIEWER)
