@@ -193,8 +193,15 @@ public class ReviewersIT extends ContainerTest {
         final Reviewer reviewer8 = new Reviewer();
         loadReviewer8(reviewer8, ReviewerView.Summary.class);
 
+        final Reviewer reviewer9 = new Reviewer();
+        loadReviewer9(reviewer9, ReviewerView.Summary.class);
+
+        final Reviewer reviewer15 = new Reviewer();
+        loadReviewer15(reviewer15, ReviewerView.Summary.class);
+
         final ReviewerList<Reviewer> expected = new ReviewerList<>()
-                .withReviewers(List.of(reviewer1, reviewer2, reviewer3, reviewer4, reviewer5, reviewer6, reviewer7, reviewer8));
+                .withReviewers(List.of(reviewer1, reviewer2, reviewer3, reviewer4, reviewer5, reviewer6, reviewer7,
+                        reviewer8, reviewer9, reviewer15));
 
         final Response response = getResponse("v1/api/reviewers");
 
@@ -264,8 +271,21 @@ public class ReviewersIT extends ContainerTest {
                 .withWeekAfterWorkload(0);
         loadReviewer8(reviewer8, ReviewerView.Summary.class);
 
+        final ReviewerWithWorkloads reviewer9 = new ReviewerWithWorkloads()
+                .withWeekWorkload(0)
+                .withWeekBeforeWorkload(0)
+                .withWeekAfterWorkload(0);
+        loadReviewer9(reviewer9, ReviewerView.Summary.class);
+
+        final ReviewerWithWorkloads reviewer15 = new ReviewerWithWorkloads()
+                .withWeekWorkload(0)
+                .withWeekBeforeWorkload(0)
+                .withWeekAfterWorkload(0);
+        loadReviewer15(reviewer15, ReviewerView.Summary.class);
+
         final ReviewerList<ReviewerWithWorkloads> expected = new ReviewerList<ReviewerWithWorkloads>()
-                .withReviewers(List.of(reviewer1, reviewer2, reviewer3, reviewer4, reviewer5, reviewer6, reviewer7, reviewer8));
+                .withReviewers(List.of(reviewer1, reviewer2, reviewer3, reviewer4, reviewer5, reviewer6, reviewer7,
+                        reviewer8, reviewer9, reviewer15));
 
         final Response response = getResponse("v1/api/reviewers",
                 Map.of("deadline", "2020-12-01"));
@@ -691,6 +711,69 @@ public class ReviewersIT extends ContainerTest {
         reviewer.setSubjectNotes(List.of());
         if( view == ReviewerView.Reviewer.class) {
             reviewer.setCulrId("88");
+            reviewer.setEmail("soren@sorensen.dk");
+            reviewer.setAddress(
+                    new Address()
+                            .withAddress1("Sørenstræde 7")
+                            .withZip("5555")
+                            .withCity("Sørlev")
+                            .withSelected(true));
+            reviewer.setPhone("11223344");
+        }
+        reviewer.setActiveChanged(Date.from(Instant.ofEpochSecond(1629900636)));
+    }
+
+    private void loadReviewer9(Reviewer reviewer, Class view) {
+        reviewer.setId(9);
+        reviewer.setActive(false);
+        reviewer.setFirstName("Søren");
+        reviewer.setLastName("Sørensen");
+        reviewer.setInstitution("Sørens far har penge");
+        reviewer.setPaycode(0);
+        reviewer.setHiatusBegin(LocalDate.parse("2021-01-11"));
+        reviewer.setHiatusEnd(LocalDate.parse("2021-01-12"));
+        reviewer.setAccepts(List.of(
+                Reviewer.Accepts.BOOK));
+        reviewer.setSubjects(List.of(
+                new Subject()
+                        .withId(5)
+                        .withName("Multimedie")));
+        reviewer.setNote("note4");
+        reviewer.setCapacity(2);
+        reviewer.setSubjectNotes(List.of());
+        if( view == ReviewerView.Reviewer.class) {
+            reviewer.setCulrId("99");
+            reviewer.setEmail("soren@sorensen.dk");
+            reviewer.setAddress(
+                    new Address()
+                            .withAddress1("Sørenstræde 7")
+                            .withZip("5555")
+                            .withCity("Sørlev")
+                            .withSelected(true));
+            reviewer.setPhone("11223344");
+        }
+        reviewer.setActiveChanged(Date.from(Instant.ofEpochSecond(1629900636)));
+    }
+    private void loadReviewer15(Reviewer reviewer, Class view) {
+        reviewer.setId(15);
+        reviewer.setActive(false);
+        reviewer.setFirstName("Søren");
+        reviewer.setLastName("Sørensen");
+        reviewer.setInstitution("Sørens far har penge");
+        reviewer.setPaycode(0);
+        reviewer.setHiatusBegin(LocalDate.parse("2021-01-11"));
+        reviewer.setHiatusEnd(LocalDate.parse("2021-01-12"));
+        reviewer.setAccepts(List.of(
+                Reviewer.Accepts.BOOK));
+        reviewer.setSubjects(List.of(
+                new Subject()
+                        .withId(5)
+                        .withName("Multimedie")));
+        reviewer.setNote("note4");
+        reviewer.setCapacity(2);
+        reviewer.setSubjectNotes(List.of());
+        if( view == ReviewerView.Reviewer.class) {
+            reviewer.setCulrId("1515");
             reviewer.setEmail("soren@sorensen.dk");
             reviewer.setAddress(
                     new Address()

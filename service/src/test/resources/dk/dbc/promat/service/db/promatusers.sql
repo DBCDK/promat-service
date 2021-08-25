@@ -43,7 +43,11 @@ values(12, 'EDITOR', true, '53', 'Edi', 'tor', 'edi.tor@dbc.dk', to_timestamp(16
 insert into promatuser(id, role, active, culrid, firstname, lastname, email, activeChanged, deactivated)
 values(14, 'EDITOR', true, '56', 'E', 'ditor', 'e.ditor@dbc.dk', to_timestamp(1629900822), null);
 
--- This reviewer is used for anonymization testing. Hands off.
+-- These reviewer is used for anonymization testing. Hands off.
 insert into promatuser(id, role, active, culrid, firstname, lastname, email, address1, zip, city, institution, paycode, hiatus_begin, hiatus_end, accepts, note, phone, capacity, selected, privateSelected, activeChanged, deactivated)
-values (8, 'REVIEWER', true, '88', 'Søren', 'Sørensen', 'soren@sorensen.dk', 'Sørenstræde 7', '5555', 'Sørlev', 'Sørens far har penge', 0, '2021-01-11', '2021-01-12', '["BOOK"]', 'note4', '11223344', 2, true, null, to_timestamp(1440518820), null);
+values  (8, 'REVIEWER', true, '88', 'Søren', 'Sørensen', 'soren@sorensen.dk', 'Sørenstræde 7', '5555', 'Sørlev', 'Sørens far har penge', 0, '2021-01-11', '2021-01-12', '["BOOK"]', 'note4', '11223344', 2, true, null, to_timestamp(1440518820), null),
+        (9, 'REVIEWER', false, '99', 'Søren', 'Sørensen', 'soren@sorensen.dk', 'Sørenstræde 7', '5555', 'Sørlev', 'Sørens far har penge', 0, '2021-01-11', '2021-01-12', '["BOOK"]', 'note4', '11223344', 2, true, null, to_timestamp(1440518820), null),
+        (15,'REVIEWER', false, '1515', 'Søren', 'Sørensen', 'soren@sorensen.dk', 'Sørenstræde 7', '5555', 'Sørlev', 'Sørens far har penge', 0, '2021-01-11', '2021-01-12', '["BOOK"]', 'note4', '11223344', 2, true, null, to_timestamp(1440518820), null);
 insert into reviewersubjects(subject_id, reviewer_id) values(5,8);
+insert into reviewersubjects(subject_id, reviewer_id) values(5,9);
+insert into reviewersubjects(subject_id, reviewer_id) values(5,15);
