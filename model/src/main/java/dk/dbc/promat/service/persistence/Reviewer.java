@@ -31,6 +31,7 @@ import javax.persistence.SqlResultSetMapping;
 import java.time.LocalDate;
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 
 @SqlResultSetMapping(
         name = "ReviewerWithWorkloadMapping",
@@ -418,8 +419,15 @@ public class Reviewer extends PromatUser {
         if (accepts != null ? !accepts.equals(reviewer.accepts) : reviewer.accepts != null) {
             return false;
         }
+        if (activeChanged != null ? !activeChanged.equals(reviewer.activeChanged) : reviewer.activeChanged != null) {
+            return false;
+        }
+        if (deactivated != null ? !deactivated.equals(reviewer.activeChanged) : reviewer.deactivated != null) {
+            return false;
+        }
         return subjectNotes != null ? subjectNotes.equals(reviewer.subjectNotes) : reviewer.subjectNotes == null;
     }
+
 
     @Override
     public int hashCode() {
@@ -443,6 +451,8 @@ public class Reviewer extends PromatUser {
         result = 31 * result + (subjects != null ? subjects.hashCode() : 0);
         result = 31 * result + (accepts != null ? accepts.hashCode() : 0);
         result = 31 * result + (subjectNotes != null ? subjectNotes.hashCode() : 0);
+        result = 31 * result + (activeChanged != null ? activeChanged.hashCode() : 0);
+        result = 31 * result + (deactivated != null ? deactivated.hashCode() : 0);
         return result;
     }
 
@@ -469,6 +479,8 @@ public class Reviewer extends PromatUser {
                 ", note='" + note + '\'' +
                 ", capacity=" + capacity +
                 ", subjectNotes=" + subjectNotes +
+                ", activeChanged='" + activeChanged + '\'' +
+                ", deactivated='" + deactivated + '\'' +
                 '}';
     }
 

@@ -10,7 +10,11 @@ import dk.dbc.promat.service.ContainerTest;
 import dk.dbc.promat.service.dto.EditorList;
 import dk.dbc.promat.service.dto.EditorRequest;
 import dk.dbc.promat.service.persistence.Editor;
+import dk.dbc.promat.service.persistence.Reviewer;
 import dk.dbc.promat.service.templating.Formatting;
+
+import java.sql.Date;
+import java.time.Instant;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
@@ -32,8 +36,12 @@ public class EditorsIT extends ContainerTest {
         expectedEditor.setFirstName("Ed");
         expectedEditor.setLastName("Itor");
         expectedEditor.setEmail("ed.itor@dbc.dk");
+        expectedEditor.setActiveChanged(Date.from(Instant.ofEpochSecond(1629900636)));
 
-        assertThat(get("v1/api/editors/10", Editor.class), is(expectedEditor));
+        Editor actual = get("v1/api/editors/10", Editor.class);
+        actual.setActiveChanged(Date.from(Instant.ofEpochSecond(1629900636)));
+        actual.setDeactivated(null);
+        assertThat(actual, is(expectedEditor));
     }
 
     @Test
@@ -80,6 +88,8 @@ public class EditorsIT extends ContainerTest {
         final Editor expected = new Editor();
         loadUpdatedEditor(expected);
 
+        updated.setActiveChanged(Date.from(Instant.ofEpochSecond(1629900636)));
+        updated.setDeactivated(null);
         assertThat("Editor has been updated", updated.equals(expected));
     }
 
@@ -117,6 +127,8 @@ public class EditorsIT extends ContainerTest {
         editor.setFirstName("Edito");
         editor.setLastName("r");
         editor.setEmail("edito.r@dbc.dk");
+        editor.setActiveChanged(Date.from(Instant.ofEpochSecond(1629900636)));
+        editor.setDeactivated(null);
     }
 
     private void loadCreatedEditor(Editor editor) {
