@@ -11,6 +11,7 @@ import dk.dbc.promat.service.dto.CaseRequest;
 import dk.dbc.promat.service.dto.MarkAsReadRequest;
 import dk.dbc.promat.service.dto.MessageRequestDto;
 import dk.dbc.promat.service.dto.PromatMessagesList;
+import dk.dbc.promat.service.persistence.CaseStatus;
 import dk.dbc.promat.service.persistence.MaterialType;
 import dk.dbc.promat.service.persistence.Notification;
 import dk.dbc.promat.service.persistence.PromatCase;
@@ -154,7 +155,7 @@ public class MessagesIT extends ContainerTest {
         // Make sure all messages to reviewer are now status "read"
         assertThat("Editor to reviewer messages are read",
                 size(getMessageList(aCase), PromatMessage.Direction.EDITOR_TO_REVIEWER),
-                is(2L));
+                is(3L));
 
         // And in the opposite direction: No changes
         assertThat("Reviewer to editor messages are not read",
@@ -258,7 +259,7 @@ public class MessagesIT extends ContainerTest {
         // After that, we now have 2 messages from the editor to the reviewer
         assertThat("Editor to reviewer messages",
                 size(getMessageList(aCase), PromatMessage.Direction.EDITOR_TO_REVIEWER, true),
-                is(2L));
+                is(3L));
 
         // and 4 messages from the reviewer to the editor, some not so very nice
         assertThat("Reviewer to editor messages",
@@ -274,7 +275,7 @@ public class MessagesIT extends ContainerTest {
         // We now have 2 messages from the editor to the reviewer
         assertThat("Editor to reviewer messages",
                 size(getMessageList(aCase), PromatMessage.Direction.EDITOR_TO_REVIEWER, true),
-                is(2L));
+                is(3L));
 
         // and 2 nice messages from the reviewer to the editor
         PromatMessagesList messages = getMessageList(aCase);
@@ -291,6 +292,181 @@ public class MessagesIT extends ContainerTest {
         // Try deleting a non-existing message
         response = deleteResponse("/v1/api/messages/987654321");
         assertThat("status code", response.getStatus(), is(404));
+
+        // Cleanup
+        response = deleteResponse("v1/api/cases/" + aCase.getId());
+        assertThat("status code", response.getStatus(), is(200));
+    }
+
+    @Test
+    @Order(4)
+    public void createACaseWithReviewerAndCheckInitialMessage() throws IOException {
+        final int REVIEWER_ID = 4;
+        final int EDITOR_ID = 10;
+        final String caseNote = "Du bedes tildele metadata via <a href=\"https://metakompas.dk\">https://metakompas.dk</a>";
+
+        CaseRequest dto = new CaseRequest()
+                .withPrimaryFaust("5004321")
+                .withTitle("Title for 5004321")
+                .withMaterialType(MaterialType.BOOK)
+                .withReviewer(REVIEWER_ID)
+                .withEditor(EDITOR_ID)
+                .withDeadline("2021-08-28")
+                .withSubjects(Arrays.asList(3, 4))
+                .withNote(caseNote);
+
+        // Create case.
+        Response response = postResponse("v1/api/cases", dto);
+        assertThat("status code", response.getStatus(), is(201));
+        PromatCase aCase = mapper.readValue(response.readEntity(String.class), PromatCase.class);
+
+        // Make sure that we have 1 message from the editor to the reviewer and
+        // no messages from the reviewer to the editor
+        assertThat("1 editor to reviewer message",
+                size(getMessageList(aCase), PromatMessage.Direction.EDITOR_TO_REVIEWER, true),
+                is(1L)
+        );
+        assertThat("No reviewer to editor messages",
+                size(getMessageList(aCase), PromatMessage.Direction.REVIEWER_TO_EDITOR, true),
+                is(0L)
+        );
+
+        // Check that we have the correct text in the message and the direction is correct
+        assertThat("Message contains note", getMessageList(aCase)
+                .getPromatMessages().stream()
+                .findFirst().get()
+                .getMessageText().equals(caseNote));
+
+        // Cleanup
+        response = deleteResponse("v1/api/cases/" + aCase.getId());
+        assertThat("status code", response.getStatus(), is(200));
+    }
+
+    @Test
+    @Order(5)
+    public void createACaseThenAssignReviewerAndCheckInitialMessage() throws IOException {
+        final int REVIEWER_ID = 4;
+        final int EDITOR_ID = 10;
+        final String caseNote = "Du bedes tildele metadata via <a href=\"https://metakompas.dk\">https://metakompas.dk</a>";
+
+        CaseRequest dto = new CaseRequest()
+                .withPrimaryFaust("5004321")
+                .withTitle("Title for 5004321")
+                .withMaterialType(MaterialType.BOOK)
+                .withEditor(EDITOR_ID)
+                .withDeadline("2021-08-28")
+                .withSubjects(Arrays.asList(3, 4))
+                .withNote(caseNote);
+
+        // Create case.
+        Response response = postResponse("v1/api/cases", dto);
+        assertThat("status code", response.getStatus(), is(201));
+        PromatCase aCase = mapper.readValue(response.readEntity(String.class), PromatCase.class);
+        assertThat("not assigned", aCase.getStatus(), is(CaseStatus.CREATED));
+
+        // We should have no messages
+        assertThat("No editor to reviewer messages",
+                size(getMessageList(aCase), PromatMessage.Direction.EDITOR_TO_REVIEWER, true),
+                is(0L)
+        );
+        assertThat("No reviewer to editor messages",
+                size(getMessageList(aCase), PromatMessage.Direction.REVIEWER_TO_EDITOR, true),
+                is(0L)
+        );
+
+        // Assign the case
+        dto.setReviewer(REVIEWER_ID);
+        response = postResponse("v1/api/cases", dto);
+        assertThat("status code", response.getStatus(), is(201));
+        aCase = mapper.readValue(response.readEntity(String.class), PromatCase.class);
+        assertThat("assigned", aCase.getStatus(), is(CaseStatus.ASSIGNED));
+
+        // Make sure that we have 1 message from the editor to the reviewer and
+        // no messages from reviewer to the editor
+        assertThat("1 editor to reviewer message",
+                size(getMessageList(aCase), PromatMessage.Direction.EDITOR_TO_REVIEWER, true),
+                is(1L)
+        );
+        assertThat("No reviewer to editor messages",
+                size(getMessageList(aCase), PromatMessage.Direction.REVIEWER_TO_EDITOR, true),
+                is(0L)
+        );
+
+        // Check that we have the correct text in the message
+        assertThat("Message contains note", getMessageList(aCase)
+                .getPromatMessages().stream()
+                .findFirst().get()
+                .getMessageText().equals(caseNote));
+
+        // Cleanup
+        response = deleteResponse("v1/api/cases/" + aCase.getId());
+        assertThat("status code", response.getStatus(), is(200));
+    }
+
+    @Test
+    @Order(6)
+    public void createACaseWithReviewerAndCheckInitialMessageThenReassign() throws IOException {
+        final int REVIEWER_ID = 4;
+        final int ANOTHER_REVIEWER_ID = 5;  // Reviewer details may change in other tests, but we only need the id here
+        final int EDITOR_ID = 10;
+        final String caseNote = "Du bedes tildele metadata via <a href=\"https://metakompas.dk\">https://metakompas.dk</a>";
+
+        CaseRequest dto = new CaseRequest()
+                .withPrimaryFaust("5004321")
+                .withTitle("Title for 5004321")
+                .withMaterialType(MaterialType.BOOK)
+                .withReviewer(REVIEWER_ID)
+                .withEditor(EDITOR_ID)
+                .withDeadline("2021-08-28")
+                .withSubjects(Arrays.asList(3, 4))
+                .withNote(caseNote);
+
+        // Create case.
+        Response response = postResponse("v1/api/cases", dto);
+        assertThat("status code", response.getStatus(), is(201));
+        PromatCase aCase = mapper.readValue(response.readEntity(String.class), PromatCase.class);
+
+        // Make sure that we have 1 message from the editor to the reviewer and
+        // no messages from the reviewer to the editor
+        assertThat("1 editor to reviewer message",
+                size(getMessageList(aCase), PromatMessage.Direction.EDITOR_TO_REVIEWER, true),
+                is(1L)
+        );
+        assertThat("No reviewer to editor messages",
+                size(getMessageList(aCase), PromatMessage.Direction.REVIEWER_TO_EDITOR, true),
+                is(0L)
+        );
+
+        // Check that we have the correct text in the message and the direction is correct
+        assertThat("Message contains note", getMessageList(aCase)
+                .getPromatMessages().stream()
+                .findFirst().get()
+                .getMessageText().equals(caseNote));
+
+        Integer onlyMessageId = getMessageList(aCase).getPromatMessages().stream()
+                .findFirst().get().getId();
+
+        // Reassign the case
+        dto.setReviewer(ANOTHER_REVIEWER_ID);
+        response = postResponse("v1/api/cases", dto);
+        assertThat("status code", response.getStatus(), is(201));
+
+        // Make sure that we still only have 1 message from the editor to the reviewer and
+        // no messages from reviewer to the editor
+        assertThat("1 editor to reviewer message",
+                size(getMessageList(aCase), PromatMessage.Direction.EDITOR_TO_REVIEWER, true),
+                is(1L)
+        );
+        assertThat("No reviewer to editor messages",
+                size(getMessageList(aCase), PromatMessage.Direction.REVIEWER_TO_EDITOR, true),
+                is(0L)
+        );
+
+        // And that it is the same message as previous
+        assertThat("same message", getMessageList(aCase)
+                .getPromatMessages().stream()
+                .findFirst().get()
+                .getId(), is(onlyMessageId));
 
         // Cleanup
         response = deleteResponse("v1/api/cases/" + aCase.getId());

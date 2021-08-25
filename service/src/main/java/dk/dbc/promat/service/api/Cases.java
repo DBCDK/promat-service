@@ -31,6 +31,7 @@ import dk.dbc.promat.service.persistence.PromatCase;
 import dk.dbc.promat.service.persistence.PromatEntityManager;
 import dk.dbc.promat.service.persistence.PromatMessage;
 import dk.dbc.promat.service.persistence.PromatTask;
+import dk.dbc.promat.service.persistence.PromatUser;
 import dk.dbc.promat.service.persistence.Reviewer;
 import dk.dbc.promat.service.persistence.Subject;
 import dk.dbc.promat.service.persistence.TaskFieldType;
@@ -38,7 +39,11 @@ import dk.dbc.promat.service.templating.CaseviewXmlTransformer;
 import dk.dbc.promat.service.templating.NotificationFactory;
 import dk.dbc.promat.service.templating.model.AssignReviewer;
 import dk.dbc.promat.service.templating.Renderer;
+
+import java.time.LocalDateTime;
 import java.util.Optional;
+
+import dk.dbc.promat.service.templating.model.MailToReviewerOnNewMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -237,6 +242,7 @@ public class Cases {
             entityManager.persist(entity);
             if (entity.getStatus() == CaseStatus.ASSIGNED) {
                 notifyOnReviewerChanged(entity);
+                setInitialMessageForReviewer(entity);
             }
 
             // Set the "are there new Messages?" pins for reviewer and editor
@@ -250,6 +256,9 @@ public class Cases {
             return Response.status(201)
                     .entity(asSummary(entity))
                     .build();
+        } catch(ServiceErrorException serviceErrorException) {
+            LOGGER.info("Received serviceErrorException while creating the case: {}", serviceErrorException.getMessage());
+            return Response.status(serviceErrorException.getHttpStatus()).entity(serviceErrorException.getServiceErrorDto()).build();
         } catch(Exception exception) {
             LOGGER.error("Caught unexpected exception: {} of type {}", exception.getMessage(), exception.toString());
             return ServiceErrorDto.Failed(exception.getMessage());
@@ -780,6 +789,9 @@ public class Cases {
                     if(REVIEWER_CHANGE_ALLOWED_STATES.contains(existing.getStatus())) {
                         existing.setReviewer(resolveReviewer(dto.getReviewer()));
                         notifyOnReviewerChanged(existing);
+                        if( reviewer_id == null ) {
+                            setInitialMessageForReviewer(existing);
+                        }
                         existing.setStatus(calculateStatus(existing, CaseStatus.ASSIGNED));
                     } else {
                         throw new ServiceErrorException("Not allowed to set status ASSIGNED when case is not in CREATED, REJECTED or no reviewer is set")
@@ -1138,7 +1150,30 @@ public class Cases {
         Notification notification = notificationFactory
                 .notificationOf(new AssignReviewer().withPromatCase(promatCase).withNote(promatCase.getNote()));
 
+
         entityManager.persist(notification);
+    }
+
+    private void setInitialMessageForReviewer(PromatCase promatCase) throws ServiceErrorException {
+        if( promatCase.getEditor() == null ) {
+            throw new ServiceErrorException("Reviewer is null")
+                    .withCode(ServiceErrorCode.INVALID_REQUEST)
+                    .withHttpStatus(400)
+                    .withDetails("Reviewer can not be null when creating an initial message");
+        }
+        PromatUser promatUser =  entityManager.find(Editor.class, promatCase.getEditor().getId());
+
+        repository.getExclusiveAccessToTable(PromatMessage.TABLE_NAME);
+
+        PromatMessage promatMessage = new PromatMessage()
+                .withMessageText(promatCase.getNote())
+                .withCaseId(promatCase.getId())
+                .withAuthor(PromatMessage.Author.fromPromatUser(promatUser))
+                .withDirection(PromatMessage.Direction.EDITOR_TO_REVIEWER)
+                .withCreated(LocalDateTime.now())
+                .withIsRead(Boolean.FALSE);
+
+        entityManager.persist(promatMessage);
     }
 
     private CaseStatus calculateStatus(PromatCase existing, CaseStatus proposedStatus) throws ServiceErrorException {
