@@ -195,14 +195,13 @@ public class NotificationFactory {
 
     private String compileMailAddressesForReviewerMails(Reviewer reviewer) throws ValidateException {
         List<String> addresses = new ArrayList<>();
-        if (reviewer.getEmail() != null && !reviewer.getEmail().isEmpty()) {
+        if (reviewer.getEmail() != null && !reviewer.getEmail().isBlank()) {
             addresses.add(reviewer.getEmail());
         }
-        // When GDPR issues are resolved add this section
-        //if (reviewer.getPrivateEmail() != null && !reviewer.getPrivateEmail().isEmpty()) {
-        //    addresses.add(reviewer.getPrivateEmail());
-        //}
-        //
+        if (reviewer.getPrivateEmail() != null && !reviewer.getPrivateEmail().isBlank()) {
+            addresses.add(reviewer.getPrivateEmail());
+        }
+        
         if (addresses.isEmpty()) {
             throw new ValidateException("Email address for reviewer '%s', and private email " +
                     "addresses cannot both be unassigned.");
