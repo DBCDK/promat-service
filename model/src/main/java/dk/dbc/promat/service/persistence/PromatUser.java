@@ -20,6 +20,7 @@ import javax.persistence.Inheritance;
 import javax.persistence.InheritanceType;
 import javax.persistence.NamedNativeQuery;
 import javax.persistence.SqlResultSetMapping;
+import java.util.Date;
 
 @SqlResultSetMapping(
         name = "PromatUser.UserRoleMapping",
@@ -76,6 +77,12 @@ public abstract class PromatUser {
     @JsonView({ReviewerView.Reviewer.class})
     protected String phone;
 
+    @JsonView({ReviewerView.Reviewer.class})
+    protected Date activeChanged;
+
+    @JsonView({ReviewerView.Reviewer.class})
+    protected Date deactivated;
+
     public Integer getId() {
         return id;
     }
@@ -130,5 +137,31 @@ public abstract class PromatUser {
 
     public void setPhone(String phone) {
         this.phone = phone;
+    }
+
+    public Date getActiveChanged()  {
+        return activeChanged;
+    }
+
+    public void setActiveChanged(Date activeChanged) {
+        this.activeChanged = activeChanged;
+    }
+
+    public PromatUser withActiveChanged(Date activeChanged) {
+        this.activeChanged = activeChanged;
+        return this;
+    }
+
+    public Date getDeactivated()  {
+        return deactivated;
+    }
+
+    public void setDeactivated(Date deactivated) {
+        this.deactivated = deactivated;
+    }
+
+    public PromatUser withDeactivated(Date deactivated) {
+        this.deactivated = deactivated;
+        return this;
     }
 }

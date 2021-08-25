@@ -330,7 +330,7 @@ public class ReviewersIT extends ContainerTest {
         response = putResponse("v1/api/reviewers/3", reviewerRequest, "1-2-3-4-5");
         assertThat("response status", response.getStatus(), is(200));
         updated = mapper.readValue(response.readEntity(String.class), Reviewer.class);
-        assertThat("work address is selected", updated.getAddress().getSelected(), is(false));
+        assertThat("work address is selected", updated.getAddress().getSelected(), is(true));
         assertThat("private address is not selected", updated.getPrivateAddress().getSelected(), is(false));
 
         reviewerRequest.getAddress().setSelected(true);

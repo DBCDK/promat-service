@@ -11,9 +11,11 @@ import dk.dbc.promat.service.dto.EditorRequest;
 import dk.dbc.promat.service.dto.ServiceErrorDto;
 import dk.dbc.promat.service.persistence.Editor;
 import dk.dbc.promat.service.persistence.PromatEntityManager;
+
+import java.time.Instant;
+import java.util.Date;
 import java.util.List;
 import javax.persistence.TypedQuery;
-import javax.ws.rs.QueryParam;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -148,6 +150,7 @@ public class Editors {
             // Update by patching
             if(editorRequest.isActive() != null) {
                 editor.setActive(editorRequest.isActive());
+                editor.setActiveChanged(Date.from(Instant.now()));
             }
             if(editorRequest.getEmail() != null) {
                 editor.setEmail(editorRequest.getEmail());

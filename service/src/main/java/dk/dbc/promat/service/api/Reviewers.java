@@ -14,7 +14,6 @@ import dk.dbc.promat.service.dto.ReviewerRequest;
 import dk.dbc.promat.service.dto.ReviewerWithWorkloads;
 import dk.dbc.promat.service.dto.ServiceErrorCode;
 import dk.dbc.promat.service.dto.ServiceErrorDto;
-import dk.dbc.promat.service.persistence.CaseView;
 import dk.dbc.promat.service.persistence.Notification;
 import dk.dbc.promat.service.persistence.PromatEntityManager;
 import dk.dbc.promat.service.persistence.Reviewer;
@@ -47,9 +46,10 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 import java.time.DayOfWeek;
+import java.time.Instant;
 import java.time.LocalDate;
+import java.util.Date;
 import java.util.HashMap;
-import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -233,6 +233,7 @@ public class Reviewers {
             // Update by patching
             if(reviewerRequest.isActive() != null) {
                 reviewer.setActive(reviewerRequest.isActive());
+                reviewer.setActiveChanged(Date.from(Instant.now()));
             }
             if(reviewerRequest.getAccepts() != null) {
                 reviewer.setAccepts(reviewerRequest.getAccepts());
