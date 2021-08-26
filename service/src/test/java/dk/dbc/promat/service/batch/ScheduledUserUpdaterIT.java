@@ -68,6 +68,7 @@ import static org.hamcrest.CoreMatchers.anyOf;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.core.Is.is;
 import static org.mockito.AdditionalMatchers.not;
 import static org.mockito.ArgumentMatchers.any;
@@ -136,8 +137,8 @@ public class ScheduledUserUpdaterIT extends ContainerTest {
                 .setActiveChanged(Date.from(inactive));
 
         // Verify user state before running the update
-        assertThat("number of editors", allEditorsBeforeUpdate.size(), is(5));
-        assertThat("number of reviewers", allReviewersBeforeUpdate.size(), is(10));
+        assertThat("number of editors", allEditorsBeforeUpdate.size(), greaterThanOrEqualTo(5));
+        assertThat("number of reviewers", allReviewersBeforeUpdate.size(), greaterThanOrEqualTo(10));
 
         assertThat("no deactivated editors", allEditorsBeforeUpdate.stream()
                 .filter(e -> e.getDeactivated() != null).count(), is(0L));
