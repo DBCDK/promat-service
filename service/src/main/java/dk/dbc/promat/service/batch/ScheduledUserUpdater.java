@@ -57,8 +57,6 @@ public class ScheduledUserUpdater {
                 }
 
                 try {
-                    userUpdater.resetUpdateUserFailuresGauge();
-
                     List<Editor> allEditors = getAllEditors();
                     if(allEditors == null || allEditors.size() == 0) {
                         LOGGER.error("No editors found when trying to update all editors - this is unexpected!");

@@ -213,13 +213,6 @@ public class CaseInformationUpdater {
         return false;
     }
 
-    public void resetUpdateCaseFailuresGauge() {
-        ConcurrentGauge gauge = metricRegistry.concurrentGauge(caseUpdateFailureGaugeMetadata);
-        while (gauge.getCount() > 0) {
-            gauge.dec();
-        }
-    }
-
     private String getFirstWeekcode(List<String> codes) {
 
         // Only look after BKM and BKX (express) catalogcodes.

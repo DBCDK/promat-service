@@ -54,15 +54,6 @@ public class UserUpdater {
     @RegistryType(type = MetricRegistry.Type.APPLICATION)
     MetricRegistry metricRegistry;
 
-    @Inject
-    OpenFormatHandler openFormatHandler;
-
-    @EJB
-    Repository repository;
-
-    @Inject
-    ContentLookUp contentLookUp;
-
     static final Metadata userUpdateFailureGaugeMetadata = Metadata.builder()
             .withName("promat_service_userupdater_update_failures")
             .withDescription("Number of failing update attempts")
@@ -103,13 +94,6 @@ public class UserUpdater {
         } catch (Exception e) {
             LOGGER.error("Unable to update reviewer with id {}: {}", reviewer.getId(), e.getMessage());
             metricRegistry.concurrentGauge(userUpdateFailureGaugeMetadata).inc();
-        }
-    }
-
-    public void resetUpdateUserFailuresGauge() {
-        ConcurrentGauge gauge = metricRegistry.concurrentGauge(userUpdateFailureGaugeMetadata);
-        while (gauge.getCount() > 0) {
-            gauge.dec();
         }
     }
 }
