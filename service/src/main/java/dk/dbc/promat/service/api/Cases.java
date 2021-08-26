@@ -257,8 +257,6 @@ public class Cases {
             entity.setNewMessagesToReviewer(areThereNewMessages(entity.getId(),
                     PromatMessage.Direction.EDITOR_TO_REVIEWER));
 
-            entityManager.flush();
-
             // 201 CREATED
             LOGGER.info("Created new case for primaryFaust {}", entity.getPrimaryFaust());
             return Response.status(201)
