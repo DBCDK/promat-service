@@ -51,6 +51,8 @@ public class Editor extends PromatUser {
         result = 31 * result + lastName.hashCode();
         result = 31 * result + (email != null ? email.hashCode() : 0);
         result = 31 * result + (phone != null ? phone.hashCode() : 0);
+        result = 31 * result + (activeChanged != null ? activeChanged.hashCode() : 0);
+        result = 31 * result + (deactivated != null ? deactivated.hashCode() : 0);
         return result;
     }
 
@@ -66,6 +68,8 @@ public class Editor extends PromatUser {
         if (!firstName.equals(editor.firstName)) return false;
         if (!lastName.equals(editor.lastName)) return false;
         if (email != null ? !email.equals(editor.email) : editor.email != null) return false;
+        if (activeChanged != null ? !activeChanged.equals(editor.activeChanged) : editor.activeChanged != null) return false;
+        if (deactivated != null ? !deactivated.equals(editor.activeChanged) : editor.deactivated != null)  return false;
         return phone != null ? phone.equals(editor.phone) : editor.phone == null;
     }
 
@@ -78,6 +82,8 @@ public class Editor extends PromatUser {
                 ", lastName='" + lastName + '\'' +
                 ", email='" + email + '\'' +
                 ", phone='" + phone + '\'' +
+                ", activeChanged='" + activeChanged + '\'' +
+                ", deactivated='" + deactivated + '\'' +
                 '}';
     }
 }

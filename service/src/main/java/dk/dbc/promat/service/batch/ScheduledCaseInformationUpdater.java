@@ -57,7 +57,6 @@ public class ScheduledCaseInformationUpdater {
                 }
 
                 try {
-                    caseInformationUpdater.resetUpdateCaseFailuresGauge();
                     List<PromatCase> casesForUpdate = getCasesForUpdate();
                     if(casesForUpdate != null && casesForUpdate.size() > 0) {
                         for(PromatCase promatCase : casesForUpdate) {
