@@ -117,8 +117,8 @@ public class ScheduledUserUpdaterIT extends ContainerTest {
         upd.serverRole = ServerRole.PRIMARY;
 
         // Fetch all users as they where before the test..
-        final List<Editor> allEditorsBeforeUpdate = upd.getAllEditors();
-        final List<Reviewer> allReviewersBeforeUpdate = upd.getAllReviewers();
+        final List<Editor> allEditorsBeforeUpdate = getAllEditors();
+        final List<Reviewer> allReviewersBeforeUpdate = getAllReviewers();
 
         // Detach entities to prevent them from updating during the update
         for( Editor editor : allEditorsBeforeUpdate ) {
@@ -145,12 +145,18 @@ public class ScheduledUserUpdaterIT extends ContainerTest {
                 .filter(r -> r.getDeactivated() != null).count(), is(0L));
 
         assertThat("0 editors to deactivate", allEditorsBeforeUpdate.stream()
-                .filter(e -> e.getActiveChanged().toInstant().isBefore(ZonedDateTime.now().minusYears(5).toInstant()))
+                .filter(e -> !e.isActive() && e.getActiveChanged().toInstant().isBefore(ZonedDateTime.now().minusYears(5).toInstant()))
                 .count(), is(0L));
 
         assertThat("1 reviewer to deactivate", allReviewersBeforeUpdate.stream()
                 .filter(r -> !r.isActive() && r.getActiveChanged().toInstant().isBefore(ZonedDateTime.now().minusYears(5).toInstant()))
                 .count(), is(1L));
+
+        // Check that the getInactiveXxx() functions returns the correct number of users
+        // Note: getInactiveReviewers will return 1+1 since user 15 is currently inactive, but will
+        //       be updated before running the test, to be inactive for slightly less than 5 years
+        assertThat("0 editors to deactivate", upd.getInactiveEditors().size(), is(0));
+        assertThat("2 reviewers to deactivate", upd.getInactiveReviewers().size(), is(2));
 
         persistenceContext.run(() -> {
 
@@ -165,11 +171,11 @@ public class ScheduledUserUpdaterIT extends ContainerTest {
         });
 
         // Verify that all editors is untouched
-        final List<Editor> allEditorsAfterUpdate = upd.getAllEditors();
+        final List<Editor> allEditorsAfterUpdate = getAllEditors();
         assertThat("no editors has changed", allEditorsAfterUpdate, is(allEditorsBeforeUpdate));
 
         // Verify that all but one reviewer is untouched
-        final List<Reviewer> allReviewersAfterUpdate = upd.getAllReviewers();
+        final List<Reviewer> allReviewersAfterUpdate = getAllReviewers();
         assertThat("most reviewers has not changed",
                 allReviewersAfterUpdate.stream()
                         .filter(r -> r.getId() != 9)
@@ -202,4 +208,17 @@ public class ScheduledUserUpdaterIT extends ContainerTest {
         assertThat("deactivated has been set", updated.getDeactivated().after(
                 Date.from(ZonedDateTime.now().minusMinutes(1).toInstant())), is(true));
     }
+
+    public List<Reviewer> getAllReviewers() {
+        return entityManager
+                .createQuery("SELECT r FROM Reviewer r", Reviewer.class)
+                .getResultList();
+    }
+
+    public List<Editor> getAllEditors() {
+        return entityManager
+                .createQuery("SELECT e FROM Editor e", Editor.class)
+                .getResultList();
+    }
+
 }

@@ -62,15 +62,12 @@ public class UserUpdater {
             .build();
 
     @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-    public void updateEditor(Editor editor) {
+    public void deactivateEditor(Editor editor) {
 
         try {
-            if( !editor.isActive() && editor.getActiveChanged().toInstant().isBefore(ZonedDateTime.now().minusYears(5).toInstant())) {
-                LOGGER.info("Editor {} has been inactive for more than 5 years", editor.getId());
-                editor.setEmail("");
-                editor.setPhone("");
-                editor.setDeactivated(Date.from(ZonedDateTime.now().toInstant()));
-            }
+            editor.setEmail("");
+            editor.setPhone("");
+            editor.setDeactivated(Date.from(ZonedDateTime.now().toInstant()));
         } catch (Exception e) {
             LOGGER.error("Unable to update editor with id {}: {}", editor.getId(), e.getMessage());
             metricRegistry.concurrentGauge(userUpdateFailureGaugeMetadata).inc();
@@ -78,19 +75,16 @@ public class UserUpdater {
     }
 
     @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-    public void updateReviewer(Reviewer reviewer) {
+    public void deactivateReviewer(Reviewer reviewer) {
 
         try {
-            if( !reviewer.isActive() && reviewer.getActiveChanged().toInstant().isBefore(ZonedDateTime.now().minusYears(5).toInstant())) {
-                LOGGER.info("Reviewer {} has been inactive for more than 5 years", reviewer.getId());
-                reviewer.setEmail("");
-                reviewer.setPhone("");
-                reviewer.setPrivateEmail("");
-                reviewer.setPrivatePhone("");
-                reviewer.setAddress(new Address());
-                reviewer.setPrivateAddress(new Address());
-                reviewer.setDeactivated(Date.from(ZonedDateTime.now().toInstant()));
-            }
+            reviewer.setEmail("");
+            reviewer.setPhone("");
+            reviewer.setPrivateEmail("");
+            reviewer.setPrivatePhone("");
+            reviewer.setAddress(new Address());
+            reviewer.setPrivateAddress(new Address());
+            reviewer.setDeactivated(Date.from(ZonedDateTime.now().toInstant()));
         } catch (Exception e) {
             LOGGER.error("Unable to update reviewer with id {}: {}", reviewer.getId(), e.getMessage());
             metricRegistry.concurrentGauge(userUpdateFailureGaugeMetadata).inc();

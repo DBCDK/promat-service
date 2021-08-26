@@ -19,6 +19,8 @@ import javax.ejb.Singleton;
 import javax.ejb.Startup;
 import javax.inject.Inject;
 import javax.persistence.EntityManager;
+import java.sql.Date;
+import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -57,24 +59,21 @@ public class ScheduledUserUpdater {
                 }
 
                 try {
-                    List<Editor> allEditors = getAllEditors();
-                    if(allEditors == null || allEditors.size() == 0) {
-                        LOGGER.error("No editors found when trying to update all editors - this is unexpected!");
+                    List<Editor> inactiveEditors = getInactiveEditors();
+                    List<Reviewer> inactiveReviewers = getInactiveReviewers();
+
+                    if( inactiveEditors != null && inactiveEditors.size() > 0 ) {
+                        for (Editor editor : inactiveEditors) {
+                            LOGGER.info("Updating inactive editor with id {}", editor.getId());
+                            userUpdater.deactivateEditor(editor);
+                        }
                     }
 
-                    List<Reviewer> allReviewers = getAllReviewers();
-                    if(allReviewers == null || allReviewers.size() == 0) {
-                        LOGGER.error("No reviewers found when trying to update all reviewers - this is unexpected!");
-                    }
-
-                    for(Editor editor : allEditors) {
-                        LOGGER.info("Updating editor with id {}", editor.getId());
-                        userUpdater.updateEditor(editor);
-                    }
-
-                    for(Reviewer reviewer: allReviewers) {
-                        LOGGER.info("Updating reviewer with id {}", reviewer.getId());
-                        userUpdater.updateReviewer(reviewer);
+                    if( inactiveReviewers != null && inactiveReviewers.size() > 0 ) {
+                        for (Reviewer reviewer : inactiveReviewers) {
+                            LOGGER.info("Updating inactive reviewer with id {}", reviewer.getId());
+                            userUpdater.deactivateReviewer(reviewer);
+                        }
                     }
 
                     entityManager.flush();
@@ -87,15 +86,23 @@ public class ScheduledUserUpdater {
         }
     }
 
-    public List<Reviewer> getAllReviewers() {
+    public List<Reviewer> getInactiveReviewers() {
         return entityManager
                 .createQuery("SELECT r FROM Reviewer r", Reviewer.class)
-                .getResultList();
+                .getResultList()
+                .stream()
+                .filter(r -> !r.isActive() && r.getActiveChanged()
+                        .before(Date.from(ZonedDateTime.now().minusYears(5).toInstant())))
+                .collect(Collectors.toList());
     }
 
-    public List<Editor> getAllEditors() {
+    public List<Editor> getInactiveEditors() {
         return entityManager
                 .createQuery("SELECT e FROM Editor e", Editor.class)
-                .getResultList();
+                .getResultList()
+                .stream()
+                .filter(e -> !e.isActive() && e.getActiveChanged()
+                        .before(Date.from(ZonedDateTime.now().minusYears(5).toInstant())))
+                .collect(Collectors.toList());
     }
 }
