@@ -153,6 +153,12 @@ public class Cases {
 
         repository.getExclusiveAccessToTable(PromatCase.TABLE_NAME);
 
+        // Verify that the primaryfaust used is not in use by any active case
+        if(!Faustnumbers.checkNoOpenCaseWithFaust(entityManager, dto.getPrimaryFaust())) {
+            LOGGER.info("Case with primary or targetFaust {} and state <> CLOSED|DONE exists", dto.getPrimaryFaust());
+            return ServiceErrorDto.FaustInUse(String.format("Case with primary or targetFaust %s and status not DONE or CLOSED exists", dto.getPrimaryFaust()));
+        }
+
         // Check for acceptable status code
         if( dto.getStatus() != null ) {
             switch( dto.getStatus() ) {
@@ -775,8 +781,8 @@ public class Cases {
             }
             if(dto.getPrimaryFaust() != null) {
                 if(!Faustnumbers.checkNoOpenCaseWithFaust(entityManager, existing.getId(), dto.getPrimaryFaust())) {
-                    LOGGER.info("Case with primary or related faust {} and state <> CLOSED|DONE exists", dto.getPrimaryFaust());
-                    return ServiceErrorDto.FaustInUse(String.format("Case with primary or related faust %s and status not DONE or CLOSED exists", dto.getPrimaryFaust()));
+                    LOGGER.info("Case with primary or targetFaust {} and state <> CLOSED|DONE exists", dto.getPrimaryFaust());
+                    return ServiceErrorDto.FaustInUse(String.format("Case with primary or targetFaust %s and status not DONE or CLOSED exists", dto.getPrimaryFaust()));
                 }
                 existing.setPrimaryFaust(dto.getPrimaryFaust());
             }

@@ -18,6 +18,7 @@ import dk.dbc.promat.service.persistence.CaseStatus;
 import dk.dbc.promat.service.persistence.MaterialType;
 import dk.dbc.promat.service.persistence.PayCategory;
 import dk.dbc.promat.service.persistence.PromatCase;
+import dk.dbc.promat.service.persistence.PromatMessage;
 import dk.dbc.promat.service.persistence.PromatTask;
 import dk.dbc.promat.service.persistence.Subject;
 import dk.dbc.promat.service.persistence.TaskFieldType;
@@ -2366,4 +2367,37 @@ public class CasesIT extends ContainerTest {
         assertThat("editor email is not set", promatCase.getEditor().getEmail(), is(nullValue()));
         assertThat("editor phone is not set", promatCase.getEditor().getPhone(), is(nullValue()));
     }
+
+    @Test
+    public void testRepeatedCaseCreation() throws IOException, InterruptedException {
+        final int REVIEWER_ID = 3;
+        final int EDITOR_ID = 11;
+
+        CaseRequest dto = new CaseRequest()
+                .withPrimaryFaust("5004322")
+                .withTitle("Title for 5004322")
+                .withMaterialType(MaterialType.BOOK)
+                .withEditor(EDITOR_ID)
+                .withDeadline("2021-08-28")
+                .withSubjects(Arrays.asList(3, 4));
+
+        // Create case.
+        Response response = postResponse("v1/api/cases", dto);
+        assertThat("status code", response.getStatus(), is(201));
+        PromatCase aCase = mapper.readValue(response.readEntity(String.class), PromatCase.class);
+
+        // Try to assign the case by incorrectly posting it again
+        dto.setReviewer(REVIEWER_ID);
+        response = postResponse("v1/api/cases", dto);
+        assertThat("status code", response.getStatus(), is(409));
+
+        // Now assign a reviewer the correct way
+        response = postResponse("v1/api/cases/" + aCase.getId(), dto);
+        assertThat("status code", response.getStatus(), is(200));
+
+        // Cleanup
+        response = deleteResponse("v1/api/cases/" + aCase.getId());
+        assertThat("status code", response.getStatus(), is(200));
+    }
+
 }
