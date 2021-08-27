@@ -44,10 +44,10 @@ insert into promatuser(id, role, active, culrid, firstname, lastname, email, act
 values(14, 'EDITOR', true, '56', 'E', 'ditor', 'e.ditor@dbc.dk', CURRENT_TIMESTAMP, null);
 
 -- These reviewer is used for anonymization testing. Hands off.
-insert into promatuser(id, role, active, culrid, firstname, lastname, email, address1, zip, city, institution, paycode, hiatus_begin, hiatus_end, accepts, note, phone, capacity, selected, privateSelected, activeChanged, deactivated)
-values  (8, 'REVIEWER', true, '88', 'Søren', 'Sørensen', 'soren@sorensen.dk', 'Sørenstræde 7', '5555', 'Sørlev', 'Sørens far har penge', 0, '2021-01-11', '2021-01-12', '["BOOK"]', 'note4', '11223344', 2, true, null, CURRENT_TIMESTAMP - INTERVAL '6 years', null),
-        (9, 'REVIEWER', false, '99', 'Søren', 'Sørensen', 'soren@sorensen.dk', 'Sørenstræde 7', '5555', 'Sørlev', 'Sørens far har penge', 0, '2021-01-11', '2021-01-12', '["BOOK"]', 'note4', '11223344', 2, true, null, CURRENT_TIMESTAMP - INTERVAL '6 years', null),
-        (15,'REVIEWER', false, '1515', 'Søren', 'Sørensen', 'soren@sorensen.dk', 'Sørenstræde 7', '5555', 'Sørlev', 'Sørens far har penge', 0, '2021-01-11', '2021-01-12', '["BOOK"]', 'note4', '11223344', 2, true, null, CURRENT_TIMESTAMP - INTERVAL '6 years', null);
+insert into promatuser(id, role, active, culrid, firstname, lastname, email, address1, address2, zip, city, privateEmail, privatePhone, privateAddress1, privateAddress2, privateZip, privateCity, institution, paycode, hiatus_begin, hiatus_end, accepts, note, phone, capacity, selected, privateSelected, activeChanged, deactivated)
+values  (8, 'REVIEWER', true, '88', 'Søren', 'Sørensen', 'soren@sorensen.dk', 'Sørenstræde 7', 'Sørensby', '5555', 'Sørlev', 'sorenprivat@sorensen.dk', '98653274', 'Olesgade 7', 'Olestrup', '5432', 'Olesby', 'Sørens far har penge', 0, '2021-01-11', '2021-01-12', '["BOOK"]', 'note4', '11223344', 2, true, null, CURRENT_TIMESTAMP - INTERVAL '6 years', null),
+        (9, 'REVIEWER', false, '99', 'Søren', 'Sørensen', 'soren@sorensen.dk', 'Sørenstræde 7', 'Sørensby', '5555', 'Sørlev', 'sorenprivat@sorensen.dk', '98653274', 'Olesgade 7', 'Olestrup', '5432', 'Olesby', 'Sørens far har penge', 0, '2021-01-11', '2021-01-12', '["BOOK"]', 'note4', '11223344', 2, true, null, CURRENT_TIMESTAMP - INTERVAL '6 years', null),
+        (15,'REVIEWER', false, '1515', 'Søren', 'Sørensen', 'soren@sorensen.dk', 'Sørenstræde 7', 'Sørensby', '5555', 'Sørlev', 'sorenprivat@sorensen.dk', '98653274', 'Olesgade 7', 'Olestrup', '5432', 'Olesby', 'Sørens far har penge', 0, '2021-01-11', '2021-01-12', '["BOOK"]', 'note4', '11223344', 2, true, null, CURRENT_TIMESTAMP - INTERVAL '6 years', null);
 insert into reviewersubjects(subject_id, reviewer_id) values(5,8);
 insert into reviewersubjects(subject_id, reviewer_id) values(5,9);
 insert into reviewersubjects(subject_id, reviewer_id) values(5,15);

@@ -206,7 +206,7 @@ public class ScheduledUserUpdaterIT extends ContainerTest {
         assertThat("private zip cleared", updated.getPrivateAddress().getZip(), is(nullValue()));
         assertThat("private selected", updated.getPrivateAddress().getSelected(), is(false));
         assertThat("deactivated has been set", updated.getDeactivated(), is(notNullValue()));
-        assertThat("deactivated has been set", updated.getDeactivated().after(
+        assertThat("deactivated is now", updated.getDeactivated().after(
                 Date.from(ZonedDateTime.now().minusMinutes(1).toInstant())), is(true));
     }
 

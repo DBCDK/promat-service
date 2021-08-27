@@ -234,6 +234,9 @@ public class Reviewers {
             if(reviewerRequest.isActive() != null) {
                 reviewer.setActive(reviewerRequest.isActive());
                 reviewer.setActiveChanged(Date.from(Instant.now()));
+                if( reviewerRequest.isActive() ) {
+                    reviewer.setDeactivated(null);
+                }
             }
             if(reviewerRequest.getAccepts() != null) {
                 reviewer.setAccepts(reviewerRequest.getAccepts());
