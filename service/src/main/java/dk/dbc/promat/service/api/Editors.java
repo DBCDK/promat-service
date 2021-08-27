@@ -151,6 +151,9 @@ public class Editors {
             if(editorRequest.isActive() != null) {
                 editor.setActive(editorRequest.isActive());
                 editor.setActiveChanged(Date.from(Instant.now()));
+                if( editorRequest.isActive() ) {
+                    editor.setDeactivated(null);
+                }
             }
             if(editorRequest.getEmail() != null) {
                 editor.setEmail(editorRequest.getEmail());

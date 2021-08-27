@@ -715,10 +715,20 @@ public class ReviewersIT extends ContainerTest {
             reviewer.setAddress(
                     new Address()
                             .withAddress1("Sørenstræde 7")
+                            .withAddress2("Sørensby")
                             .withZip("5555")
                             .withCity("Sørlev")
                             .withSelected(true));
             reviewer.setPhone("11223344");
+            reviewer.setPrivateEmail("sorenprivat@sorensen.dk");
+            reviewer.setPrivateAddress(
+                    new Address()
+                            .withAddress1("Olesggade 7")
+                            .withAddress2("Olestrup")
+                            .withZip("5432")
+                            .withCity("Olesby")
+                            .withSelected(false));
+            reviewer.setPrivatePhone("98653274");
         }
         reviewer.setActiveChanged(Date.from(Instant.ofEpochSecond(1629900636)));
     }
@@ -747,10 +757,20 @@ public class ReviewersIT extends ContainerTest {
             reviewer.setAddress(
                     new Address()
                             .withAddress1("Sørenstræde 7")
+                            .withAddress2("Sørensby")
                             .withZip("5555")
                             .withCity("Sørlev")
                             .withSelected(true));
             reviewer.setPhone("11223344");
+            reviewer.setPrivateEmail("sorenprivat@sorensen.dk");
+            reviewer.setPrivateAddress(
+                    new Address()
+                            .withAddress1("Olesggade 7")
+                            .withAddress2("Olestrup")
+                            .withZip("5432")
+                            .withCity("Olesby")
+                            .withSelected(false));
+            reviewer.setPrivatePhone("98653274");
         }
         reviewer.setActiveChanged(Date.from(Instant.ofEpochSecond(1629900636)));
     }
@@ -778,10 +798,20 @@ public class ReviewersIT extends ContainerTest {
             reviewer.setAddress(
                     new Address()
                             .withAddress1("Sørenstræde 7")
+                            .withAddress2("Sørensby")
                             .withZip("5555")
                             .withCity("Sørlev")
                             .withSelected(true));
             reviewer.setPhone("11223344");
+            reviewer.setPrivateEmail("sorenprivat@sorensen.dk");
+            reviewer.setPrivateAddress(
+                    new Address()
+                            .withAddress1("Olesggade 7")
+                            .withAddress2("Olestrup")
+                            .withZip("5432")
+                            .withCity("Olesby")
+                            .withSelected(false));
+            reviewer.setPrivatePhone("98653274");
         }
         reviewer.setActiveChanged(Date.from(Instant.ofEpochSecond(1629900636)));
     }
