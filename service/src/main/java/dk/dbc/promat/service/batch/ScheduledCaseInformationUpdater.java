@@ -44,7 +44,7 @@ public class ScheduledCaseInformationUpdater {
     // 10 minutes on digit 5.
     // Only run during working days and normal working hours
     // Todo: Revert to periodical updates each 10' minut when we have old approved cases in place
-    @Schedule(second = "0", minute = "30", hour = "6-19", dayOfWeek = "Mon-Fri", persistent = false)
+    @Schedule(second = "0", minute = "15", hour = "6-23", dayOfWeek = "Mon-Fri", persistent = false)
     public void updateCaseInformation() {
 
         try {
