@@ -90,9 +90,10 @@ public class PromatCase {
 
     public static final String GET_CASES_FOR_UPDATE_NAME =
             "PromatCase.get.cases.for.update";
-    public static final String GET_CASES_FOR_UPDATE_QUERY = "select c" +  // Todo: Also exclude EXPORTED when we have all old approved-not-exported cases in place
+    public static final String GET_CASES_FOR_UPDATE_QUERY = "select c" +
             "                                                  from PromatCase c" +
-            "                                                 where c.status not in (dk.dbc.promat.service.persistence.CaseStatus.PENDING_REVERT," +
+            "                                                 where c.status not in (dk.dbc.promat.service.persistence.CaseStatus.EXPORTED," +
+            "                                                                    dk.dbc.promat.service.persistence.CaseStatus.PENDING_REVERT," +
             "                                                                    dk.dbc.promat.service.persistence.CaseStatus.REVERTED," +
             "                                                                    dk.dbc.promat.service.persistence.CaseStatus.PENDING_CLOSE," +
             "                                                                    dk.dbc.promat.service.persistence.CaseStatus.CLOSED," +
