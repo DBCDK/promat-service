@@ -41,6 +41,9 @@ public class ContentLookUp {
         } catch (InterruptedException | IOException exception) {
             LOGGER.error("Unable to lookup '{}', error:", fullTextLink, exception);
             return Optional.empty();
+        } catch(Exception exception) {
+            LOGGER.error("Unknown exception when looking up ebook content: {}", exception.getMessage());
+            return Optional.empty();
         }
     }
 }
