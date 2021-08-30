@@ -43,7 +43,8 @@ public class ScheduledCaseInformationUpdater {
     // Run once every 10 minutes on digit 0 to match dataio which is running every
     // 10 minutes on digit 5.
     // Only run during working days and normal working hours
-    @Schedule(second = "0", minute = "*/10", hour = "6-16", dayOfWeek = "Mon-Fri", persistent = false)
+    // Todo: Revert to periodical updates each 10' minut when we have old approved cases in place
+    @Schedule(second = "0", minute = "01", hour = "6-18", dayOfWeek = "Mon-Fri", persistent = false)
     public void updateCaseInformation() {
 
         try {
