@@ -34,10 +34,10 @@ public class ContentLookUp {
             var headResponse = client.send(request, HttpResponse.BodyHandlers.discarding());
             LOGGER.info("response.statusCode() = {}, {}",
                     headResponse.statusCode(),
-                    (headResponse.statusCode() == 200
+                    (headResponse.statusCode() == 200 || headResponse.statusCode() == 302
                             ? "Content exists"
                             : "No content"));
-            return headResponse.statusCode() == 200 ? Optional.of(fullTextLink) : Optional.empty();
+            return (headResponse.statusCode() == 200 || headResponse.statusCode() == 302) ? Optional.of(fullTextLink) : Optional.empty();
         } catch (InterruptedException | IOException exception) {
             LOGGER.error("Unable to lookup '{}', error:", fullTextLink, exception);
             return Optional.empty();
