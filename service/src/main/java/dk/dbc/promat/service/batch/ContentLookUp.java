@@ -20,13 +20,18 @@ public class ContentLookUp {
     @ConfigProperty(name = "EMATERIAL_CONTENT_REPO")
     String contentRepo;
 
+    public static HttpClient client = null;
+
+    public ContentLookUp() {
+        client = HttpClient.newBuilder().version(HttpClient.Version.HTTP_1_1).build();
+    }
+
     public Optional<String> lookUpContent(String faust) {
         final HttpResponse<InputStream> httpResponse;
         final String fullTextLink = String.format(contentRepo, faust);;
 
         try {
             LOGGER.info("Looking up ebook content via HEAD to {}", fullTextLink);
-            var client = HttpClient.newBuilder().version(HttpClient.Version.HTTP_1_1).build();
             var request = HttpRequest.newBuilder()
                     .uri(URI.create(fullTextLink))
                     .method("HEAD", HttpRequest.BodyPublishers.noBody())
