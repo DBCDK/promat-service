@@ -207,6 +207,7 @@ public class RendererTest {
     public void reviewerDataChangedMail() throws NotificationFactory.ValidateException, IOException {
         Reviewer reviewer = new Reviewer()
                 .withId(1001)
+                .withPaycode(1001)
                 .withEmail("m@olsen.dk")
                 .withFirstName("Mikeller").withLastName("Olsen")
                 .withAddress(new Address()
