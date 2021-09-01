@@ -7,7 +7,7 @@
  "capacity", "privateAddress1", "privateAddress2", "privateZip", "privateCity", "privateSelected", "privateEmail", "privatePhone");
  Reviewer reviewer = reviewerDataChanged.getReviewer(); }
 
-<p>Anmelderprofilen '${reviewer.getId()}' (${reviewer.getFirstName()} ${reviewer.getLastName()}) er ændret,
+<p>Anmelderprofilen '${reviewer.getPaycode()}' (${reviewer.getFirstName()} ${reviewer.getLastName()}) er ændret,
     her er ændringerne:</p>
 
 <table>
