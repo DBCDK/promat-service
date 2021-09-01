@@ -31,7 +31,7 @@ public class ScheduledReminders {
     @EJB
     Reminders reminders;
 
-    @Schedule(second = "30", minute = "10", hour = "6-16", dayOfWeek = "Mon-Fri", persistent = false)
+    @Schedule(second = "30", minute = "50", hour = "6-16", dayOfWeek = "Mon-Fri", persistent = false)
     public void processReminders() {
         if (serverRole == ServerRole.PRIMARY) {
             if (!lock.tryLock()) {
