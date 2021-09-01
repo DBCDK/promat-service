@@ -25,8 +25,8 @@ public class ScheduledReminders {
     private static final Lock lock = new ReentrantLock();
 
     @Inject
-    @ConfigProperty(name = "ENABLE_REMINDERS")
-    String ENABLE_REMINDERS = "no";
+    @ConfigProperty(name = "ENABLE_REMINDERS", defaultValue = "no")
+    String ENABLE_REMINDERS;
 
     @EJB
     Reminders reminders;
@@ -44,10 +44,10 @@ public class ScheduledReminders {
             //  In the intermediary period, where old and new versions of promat are running
             //  side by side, we might risk mails being sent from here on "stale" cases,
             //  already handled in old promat.
-            if ("yes".equals(ENABLE_REMINDERS.toLowerCase())) {
+            if ("true".equals(ENABLE_REMINDERS.toLowerCase())) {
                 reminders.processReminders();
             } else {
-                LOGGER.info("Reminders batch is currently switched off. To reenable set env var ENABLE_REMINDERS to true.");
+                LOGGER.info("Reminders batch is currently switched off '{}'. To reenable set env var ENABLE_REMINDERS to true.", ENABLE_REMINDERS);
             }
             lock.unlock();
         }
