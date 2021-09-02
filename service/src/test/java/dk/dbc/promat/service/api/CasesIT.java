@@ -2400,4 +2400,47 @@ public class CasesIT extends ContainerTest {
         assertThat("status code", response.getStatus(), is(200));
     }
 
+    @Test
+    public void testSearchCaseWithPendingClose() throws IOException, InterruptedException {
+
+        CaseRequest dto = new CaseRequest()
+                .withPrimaryFaust("5004422")
+                .withTitle("Title for 5004422")
+                .withMaterialType(MaterialType.BOOK)
+                .withReviewer(3)
+                .withCreator(11)
+                .withEditor(11)
+                .withDeadline("2021-09-09")
+                .withSubjects(Arrays.asList(3, 4));
+
+        // Create case.
+        Response response = postResponse("v1/api/cases", dto);
+        assertThat("status code", response.getStatus(), is(201));
+        PromatCase aCase = mapper.readValue(response.readEntity(String.class), PromatCase.class);
+
+        CaseRequest statusDto = new CaseRequest()
+                .withStatus(CaseStatus.PENDING_APPROVAL);
+        assertThat("set to PENDING_APPROVAL", postResponse("v1/api/cases/" + aCase.getId(), statusDto).getStatus(), is(200));
+
+        statusDto = new CaseRequest()
+                .withStatus(CaseStatus.PENDING_CLOSE);
+        assertThat("set to PENDING_CLOSE", postResponse("v1/api/cases/" + aCase.getId(), statusDto).getStatus(), is(200));
+
+        // Search the case using faust
+        response = getResponse("v1/api/cases", Map.of("faust", "5004422"));
+        assertThat("status code", response.getStatus(), is(200));
+        CaseSummaryList found = mapper.readValue(response.readEntity(String.class), CaseSummaryList.class);
+        assertThat("found the case", found.getCases().size(), is(1));
+
+        // Search the case using id
+        response = getResponse("v1/api/cases", Map.of("id", "5004422"));
+        assertThat("status code", response.getStatus(), is(200));
+        found = mapper.readValue(response.readEntity(String.class), CaseSummaryList.class);
+        assertThat("found the case", found.getCases().size(), is(1));
+
+        // Cleanup
+        response = deleteResponse("v1/api/cases/" + aCase.getId());
+        assertThat("status code", response.getStatus(), is(200));
+    }
+
 }
