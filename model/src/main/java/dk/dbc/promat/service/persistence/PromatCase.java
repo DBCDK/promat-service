@@ -104,14 +104,13 @@ public class PromatCase {
             "PromatCase.get.case.by.faust";
     public static final String GET_CASE_BY_FAUST_QUERY = "select distinct c" +
             "                                               from PromatCase c" +
-            "                                               join CaseTasks ct" +
+            "                                          left join CaseTasks ct" +
             "                                                 on c.id = ct.case_id" +
-            "                                               join PromatTask t" +
+            "                                          left join PromatTask t" +
             "                                                 on t.id = ct.task_id" +
             "                                              where (c.primaryFaust = :faust" +
             "                                                 or function('JsonbContainsFromString', t.targetFausts, :faust))" +
-            "                                                and c.status not in (dk.dbc.promat.service.persistence.CaseStatus.PENDING_CLOSE," +
-            "                                                                    dk.dbc.promat.service.persistence.CaseStatus.CLOSED," +
+            "                                                and c.status not in (dk.dbc.promat.service.persistence.CaseStatus.CLOSED," +
             "                                                                    dk.dbc.promat.service.persistence.CaseStatus.DELETED)";
 
     public static final String GET_CASES_FOR_REMINDERS_CHECK_NAME =
