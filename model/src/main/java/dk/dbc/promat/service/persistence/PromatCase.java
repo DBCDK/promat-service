@@ -110,8 +110,7 @@ public class PromatCase {
             "                                                 on t.id = ct.task_id" +
             "                                              where (c.primaryFaust = :faust" +
             "                                                 or function('JsonbContainsFromString', t.targetFausts, :faust))" +
-            "                                                and c.status not in (dk.dbc.promat.service.persistence.CaseStatus.CLOSED," +
-            "                                                                    dk.dbc.promat.service.persistence.CaseStatus.DELETED)";
+            "                                                and c.status not in (dk.dbc.promat.service.persistence.CaseStatus.DELETED)";
 
     public static final String GET_CASES_FOR_REMINDERS_CHECK_NAME =
             "PromatCase.get.cases.for.reminders.check";
