@@ -2443,4 +2443,81 @@ public class CasesIT extends ContainerTest {
         assertThat("status code", response.getStatus(), is(200));
     }
 
+    @Test
+    public void testSearchAndViewClosedCases() throws IOException, InterruptedException, PromatServiceConnectorException {
+
+        // Create case.
+        CaseRequest dto = new CaseRequest()
+                .withPrimaryFaust("5004522")
+                .withTitle("CASE A")
+                .withMaterialType(MaterialType.BOOK)
+                .withReviewer(3)
+                .withCreator(11)
+                .withEditor(11)
+                .withDeadline("2021-09-09")
+                .withSubjects(Arrays.asList(3, 4))
+                .withTasks(Arrays.asList(
+                        new TaskDto()
+                                .withTaskType(TaskType.GROUP_1_LESS_THAN_100_PAGES)
+                                .withTaskFieldType(TaskFieldType.BRIEF)
+                                .withTargetFausts(Arrays.asList("5004522")),
+                        new TaskDto()
+                                .withTaskType(TaskType.GROUP_1_LESS_THAN_100_PAGES)
+                                .withTaskFieldType(TaskFieldType.DESCRIPTION)
+                                .withTargetFausts(Arrays.asList(new String[] {"5004522"}))
+                ));
+
+        Response response = postResponse("v1/api/cases", dto);
+        assertThat("status code", response.getStatus(), is(201));
+        PromatCase caseA = mapper.readValue(response.readEntity(String.class), PromatCase.class);
+
+        // Close case A
+        dto = new CaseRequest().withStatus(CaseStatus.CLOSED);
+        response = postResponse("v1/api/cases/" + caseA.getId(), dto);
+        assertThat("status code", response.getStatus(), is(200));
+
+        // Create another case with same faustnumber
+        dto = new CaseRequest()
+                .withPrimaryFaust("5004522")
+                .withTitle("CASE B")
+                .withMaterialType(MaterialType.BOOK)
+                .withReviewer(3)
+                .withCreator(11)
+                .withEditor(11)
+                .withDeadline("2021-09-09")
+                .withSubjects(Arrays.asList(3, 4))
+                .withTasks(Arrays.asList(
+                        new TaskDto()
+                                .withTaskType(TaskType.GROUP_1_LESS_THAN_100_PAGES)
+                                .withTaskFieldType(TaskFieldType.BRIEF)
+                                .withTargetFausts(Arrays.asList("5004522")),
+                        new TaskDto()
+                                .withTaskType(TaskType.GROUP_1_LESS_THAN_100_PAGES)
+                                .withTaskFieldType(TaskFieldType.DESCRIPTION)
+                                .withTargetFausts(Arrays.asList(new String[] {"5004522"}))
+                ));
+
+        response = postResponse("v1/api/cases", dto);
+        assertThat("status code", response.getStatus(), is(201));
+        PromatCase caseB = mapper.readValue(response.readEntity(String.class), PromatCase.class);
+
+        // Search can find only find case B when searching specifically on faust
+        response = getResponse("v1/api/cases", Map.of("faust", "5004522"));
+        assertThat("status code", response.getStatus(), is(200));
+        CaseSummaryList found = mapper.readValue(response.readEntity(String.class), CaseSummaryList.class);
+        assertThat("found one case", found.getCases().size(), is(1));
+        assertThat("correct case", found.getCases().get(0).getTitle().equals("CASE B"));
+
+        // Search can find case A and case B when searching on id
+        response = getResponse("v1/api/cases", Map.of("id", "5004522"));
+        assertThat("status code", response.getStatus(), is(200));
+        found = mapper.readValue(response.readEntity(String.class), CaseSummaryList.class);
+        assertThat("found two cases", found.getCases().size(), is(2));
+        assertThat("found case A", found.getCases().stream().anyMatch(c -> c.getTitle().equals("CASE A")));
+        assertThat("found case B", found.getCases().stream().anyMatch(c -> c.getTitle().equals("CASE B")));
+
+        // Caseview (html/xml) of faust 5004522 can only find case B and does not explode
+        String actual = promatServiceConnector.getCaseview("5004522", "HTML", true, StandardCharsets.ISO_8859_1);
+        assertThat("got caseview", actual.contains("CASE B"));
+    }
 }

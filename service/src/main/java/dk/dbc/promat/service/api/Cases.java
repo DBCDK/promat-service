@@ -539,7 +539,7 @@ public class Cases {
                 // Fetch all caseids
                 for (String f : fausts) {
                     TypedQuery<PromatCase> query =
-                            entityManager.createNamedQuery(PromatCase.GET_CASE_BY_FAUST_NAME, PromatCase.class);
+                            entityManager.createNamedQuery(PromatCase.LIST_CASE_BY_FAUST_NAME, PromatCase.class);
                     query.setParameter("faust", f);
                     caseIds.addAll(query.getResultList().stream().map(PromatCase::getId).collect(Collectors.toList()));
                 }

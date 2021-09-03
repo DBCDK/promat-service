@@ -50,6 +50,9 @@ import javax.persistence.Transient;
                 name = PromatCase.GET_CASE_BY_FAUST_NAME,
                 query = PromatCase.GET_CASE_BY_FAUST_QUERY),
         @NamedQuery(
+                name = PromatCase.LIST_CASE_BY_FAUST_NAME,
+                query = PromatCase.LIST_CASE_BY_FAUST_QUERY),
+        @NamedQuery(
                 name = PromatCase.GET_CASES_FOR_REMINDERS_CHECK_NAME,
                 query = PromatCase.GET_CASES_FOR_REMINDERS_CHECK_QUERY)
 })
@@ -103,6 +106,19 @@ public class PromatCase {
     public static final String GET_CASE_BY_FAUST_NAME =
             "PromatCase.get.case.by.faust";
     public static final String GET_CASE_BY_FAUST_QUERY = "select distinct c" +
+            "                                               from PromatCase c" +
+            "                                          left join CaseTasks ct" +
+            "                                                 on c.id = ct.case_id" +
+            "                                          left join PromatTask t" +
+            "                                                 on t.id = ct.task_id" +
+            "                                              where (c.primaryFaust = :faust" +
+            "                                                 or function('JsonbContainsFromString', t.targetFausts, :faust))" +
+            "                                                and c.status not in (dk.dbc.promat.service.persistence.CaseStatus.CLOSED, " +
+            "                                                                     dk.dbc.promat.service.persistence.CaseStatus.DELETED)";
+
+    public static final String LIST_CASE_BY_FAUST_NAME =
+            "PromatCase.list.case.by.faust";
+    public static final String LIST_CASE_BY_FAUST_QUERY = "select distinct c" +
             "                                               from PromatCase c" +
             "                                          left join CaseTasks ct" +
             "                                                 on c.id = ct.case_id" +
