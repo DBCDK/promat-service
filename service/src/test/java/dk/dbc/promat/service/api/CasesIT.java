@@ -2519,5 +2519,11 @@ public class CasesIT extends ContainerTest {
         // Caseview (html/xml) of faust 5004522 can only find case B and does not explode
         String actual = promatServiceConnector.getCaseview("5004522", "HTML", true, StandardCharsets.ISO_8859_1);
         assertThat("got caseview", actual.contains("CASE B"));
+
+        // Cleanup
+        response = deleteResponse("v1/api/cases/" + caseA.getId());
+        assertThat("status code", response.getStatus(), is(200));
+        response = deleteResponse("v1/api/cases/" + caseB.getId());
+        assertThat("status code", response.getStatus(), is(200));
     }
 }
