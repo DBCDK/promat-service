@@ -237,6 +237,10 @@ public class Payments {
                             // must count as part of the base review
                             if (task.getTargetFausts().contains(promatCase.getPrimaryFaust())) {
                                 PayCategory payCategory = Repository.getPayCategoryForTaskType(task.getTaskType());
+                                if( payCategory == PayCategory.NONE ) {
+                                    LOGGER.error("Found approved and nonpayed task {} with paycategory 'NONE' (due to tasktype or taskfieldtype being 'NONE'). Task will not be payed", task.getId());
+                                    continue;
+                                }
                                 if (!casePayCategories.contains(payCategory)) {
                                     casePayCategories.add(payCategory);
                                 }

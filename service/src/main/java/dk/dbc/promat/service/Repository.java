@@ -154,6 +154,9 @@ public class Repository {
                 return PayCategory.MOVIE_NON_FICTION_GR2;
             case MOVIE_NON_FICTION_GR3:
                 return PayCategory.MOVIE_NON_FICTION_GR3;
+
+            case NONE:
+                return PayCategory.NONE;
         }
 
         throw new ServiceErrorException("Bad PayCategory")
