@@ -5,6 +5,7 @@
 
 package dk.dbc.promat.service.persistence;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonView;
 import dk.dbc.commons.jpa.converter.StringListToJsonArrayConverter;
 
@@ -243,6 +244,9 @@ public class PromatCase {
     @Convert(converter = StringListToJsonArrayConverter.class)
     @JsonView({CaseView.Export.class, CaseView.Summary.class, CaseView.Case.class})
     private List<String> codes;
+
+    @JsonIgnore
+    private Boolean keepEditor = false;
 
     public Integer getId() {
         return id;
@@ -569,6 +573,19 @@ public class PromatCase {
         return this;
     }
 
+    public Boolean getKeepEditor() {
+        return keepEditor;
+    }
+
+    public void setKeepEditor(Boolean keepEditor) {
+        this.keepEditor = keepEditor;
+    }
+
+    public PromatCase withKeepEditor(Boolean keepEditor) {
+        this.keepEditor = keepEditor;
+        return this;
+    }
+
     @PrePersist
     @PreUpdate
     private void beforeUpdate() {
@@ -607,14 +624,15 @@ public class PromatCase {
                 newMessagesToEditor == aCase.newMessagesToEditor &&
                 newMessagesToReviewer == aCase.newMessagesToReviewer &&
                 Objects.equals(reminderSent, aCase.reminderSent) &&
-                Objects.equals(codes, aCase.codes);
+                Objects.equals(codes, aCase.codes) &&
+                keepEditor == aCase.keepEditor;
     }
 
     @Override
     public int hashCode() {
         return Objects.hash(id, title, details, primaryFaust, relatedFausts, reviewer, editor, subjects, created,
                 deadline, assigned, status, materialType, tasks, weekCode, trimmedWeekCode, author, creator, publisher,
-                fulltextLink, newMessagesToEditor, newMessagesToReviewer, reminderSent, codes);
+                fulltextLink, newMessagesToEditor, newMessagesToReviewer, reminderSent, codes, keepEditor);
     }
 
     @Override
@@ -645,6 +663,7 @@ public class PromatCase {
                 ", note='" + note + '\'' +
                 ", reminderSent'" + reminderSent + '\'' +
                 ", codes=" + codes +
+                ", keepEditor=" + keepEditor +
                 '}';
     }
 }

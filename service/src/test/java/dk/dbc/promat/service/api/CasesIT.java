@@ -48,6 +48,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -2526,4 +2527,77 @@ public class CasesIT extends ContainerTest {
         response = deleteResponse("v1/api/cases/" + caseB.getId());
         assertThat("status code", response.getStatus(), is(200));
     }
+
+    @Test
+    public void testSetKeepEditor() throws IOException {
+
+        // Note: Since the keepEditor flag is not exposed (it is a strictly internal value
+        //       which should never be used or set from outside - and may change if we decide
+        //       to handle the editor-reassignment differently in the future), we cannot check
+        //       that it actually gets set.. so this test only checks that the service does not
+        //       blow up in a spectacular fashion when changing status to PENDING_ISSUES
+
+        // Create case.
+        CaseRequest dto = new CaseRequest()
+                .withPrimaryFaust("5004622")
+                .withTitle("Title of 5004622")
+                .withMaterialType(MaterialType.BOOK)
+                .withReviewer(3)
+                .withCreator(11)
+                .withEditor(11)
+                .withDeadline("2021-09-13")
+                .withSubjects(Arrays.asList(3, 4))
+                .withTasks(Arrays.asList(
+                        new TaskDto()
+                                .withTaskType(TaskType.GROUP_1_LESS_THAN_100_PAGES)
+                                .withTaskFieldType(TaskFieldType.BRIEF)
+                                .withTargetFausts(Arrays.asList("5004522")),
+                        new TaskDto()
+                                .withTaskType(TaskType.GROUP_1_LESS_THAN_100_PAGES)
+                                .withTaskFieldType(TaskFieldType.DESCRIPTION)
+                                .withTargetFausts(Arrays.asList(new String[] {"5004522"}))
+                ));
+
+        // Create the case and check that the keepEditor field is not exposed
+        Response response = postResponse("v1/api/cases", dto);
+        assertThat("status code", response.getStatus(), is(201));
+        String caseAsString = response.readEntity(String.class);
+        assertThat("keepEditor is not exposed", caseAsString.contains("keepEditor"), is(false));
+        PromatCase aCase = mapper.readValue(caseAsString, PromatCase.class);
+
+        // Send case to approval, then back to the reviewer
+        dto = new CaseRequest().withStatus(CaseStatus.PENDING_APPROVAL);
+        assertThat("status code", postResponse("v1/api/cases/" + aCase.getId(), dto)
+                .getStatus(), is(200));
+        dto.setStatus(CaseStatus.PENDING_ISSUES);
+        assertThat("status code", postResponse("v1/api/cases/" + aCase.getId(), dto)
+                .getStatus(), is(200));
+
+        // Todo: This section should move to the 'scheduledCaseInformationUpdate' test when we can
+        //       handle nightly clearing assigned editors in that batch component
+        // Todo__BEGIN
+
+        // Make sure that we have the expected editor assigned
+        response = getResponse("v1/api/cases/" + aCase.getId());
+        assertThat("status code", response.getStatus(), is(200));
+        PromatCase updated = mapper.readValue(response.readEntity(String.class), PromatCase.class);
+        assertThat("reviewer 3 is assigned", updated.getReviewer().getId(), is (3));
+
+        // Todo: Run 'nightly' update and clear all assigned editors from cases in PENDING_APPROVAL
+        // without the 'keepeditor' flag set, then check that the editor remains set on this specific case
+        // and that all other cases with that status has no editor assigned.
+
+        // Make sure that we have the expected editor assigned for this specific case
+        response = getResponse("v1/api/cases/" + aCase.getId());
+        assertThat("status code", response.getStatus(), is(200));
+        updated = mapper.readValue(response.readEntity(String.class), PromatCase.class);
+        assertThat("reviewer 3 is still assigned", updated.getReviewer().getId(), is (3));
+
+        // Todo__END
+
+        // Cleanup
+        response = deleteResponse("v1/api/cases/" + aCase.getId());
+        assertThat("status code", response.getStatus(), is(200));
+    }
+
 }
