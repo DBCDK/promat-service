@@ -2573,28 +2573,6 @@ public class CasesIT extends ContainerTest {
         assertThat("status code", postResponse("v1/api/cases/" + aCase.getId(), dto)
                 .getStatus(), is(200));
 
-        // Todo: This section should move to the 'scheduledCaseInformationUpdate' test when we can
-        //       handle nightly clearing assigned editors in that batch component
-        // Todo__BEGIN
-
-        // Make sure that we have the expected editor assigned
-        response = getResponse("v1/api/cases/" + aCase.getId());
-        assertThat("status code", response.getStatus(), is(200));
-        PromatCase updated = mapper.readValue(response.readEntity(String.class), PromatCase.class);
-        assertThat("reviewer 3 is assigned", updated.getReviewer().getId(), is (3));
-
-        // Todo: Run 'nightly' update and clear all assigned editors from cases in PENDING_APPROVAL
-        // without the 'keepeditor' flag set, then check that the editor remains set on this specific case
-        // and that all other cases with that status has no editor assigned.
-
-        // Make sure that we have the expected editor assigned for this specific case
-        response = getResponse("v1/api/cases/" + aCase.getId());
-        assertThat("status code", response.getStatus(), is(200));
-        updated = mapper.readValue(response.readEntity(String.class), PromatCase.class);
-        assertThat("reviewer 3 is still assigned", updated.getReviewer().getId(), is (3));
-
-        // Todo__END
-
         // Cleanup
         response = deleteResponse("v1/api/cases/" + aCase.getId());
         assertThat("status code", response.getStatus(), is(200));

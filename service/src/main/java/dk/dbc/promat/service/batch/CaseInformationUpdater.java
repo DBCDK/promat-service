@@ -255,4 +255,15 @@ public class CaseInformationUpdater {
         LOGGER.info("Case has no weekcode yet, so no weekcode match");
         return false;
     }
+
+    @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
+    public void clearEditor(PromatCase promatCase) {
+
+        try {
+            promatCase.setEditor(null);
+        } catch (Exception e) {
+            LOGGER.error("Unable to clear editor on case with id {}: {}",promatCase.getId(), e.getMessage());
+            metricRegistry.concurrentGauge(caseUpdateFailureGaugeMetadata).inc();
+        }
+    }
 }

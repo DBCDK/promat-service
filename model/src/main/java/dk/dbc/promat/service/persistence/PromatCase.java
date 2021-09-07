@@ -48,6 +48,9 @@ import javax.persistence.Transient;
                 name = PromatCase.GET_CASES_FOR_UPDATE_NAME,
                 query = PromatCase.GET_CASES_FOR_UPDATE_QUERY),
         @NamedQuery(
+                name = PromatCase.GET_CASES_WITH_INACTIVE_EDITOR_NAME,
+                query = PromatCase.GET_CASES_WITH_INACTIVE_EDITOR_QUERY),
+        @NamedQuery(
                 name = PromatCase.GET_CASE_BY_FAUST_NAME,
                 query = PromatCase.GET_CASE_BY_FAUST_QUERY),
         @NamedQuery(
@@ -102,6 +105,14 @@ public class PromatCase {
             "                                                                    dk.dbc.promat.service.persistence.CaseStatus.PENDING_CLOSE," +
             "                                                                    dk.dbc.promat.service.persistence.CaseStatus.CLOSED," +
             "                                                                    dk.dbc.promat.service.persistence.CaseStatus.DELETED)" +
+            "                                                 order by c.id";
+
+    public static final String GET_CASES_WITH_INACTIVE_EDITOR_NAME =
+            "PromatCase.get.cases.with.inactive.editor";
+    public static final String GET_CASES_WITH_INACTIVE_EDITOR_QUERY = "select c" +
+            "                                                  from PromatCase c" +
+            "                                                 where c.status = dk.dbc.promat.service.persistence.CaseStatus.PENDING_APPROVAL" +
+            "                                                   and c.keepEditor = false" +
             "                                                 order by c.id";
 
     public static final String GET_CASE_BY_FAUST_NAME =
