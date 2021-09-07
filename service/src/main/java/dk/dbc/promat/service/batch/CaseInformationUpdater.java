@@ -138,6 +138,7 @@ public class CaseInformationUpdater {
 
             // Check and update case with Metakompasdata
             checkAndUpdateCaseWithMetakompasdata(promatCase, bibliographicInformation);
+
             //
             // Status is 'PENDING_EXTERNAL'. Now do last check of metakompas data before setting
             // final state: APPROVED.
@@ -185,6 +186,10 @@ public class CaseInformationUpdater {
                         try {
                             String metakompassubject = openFormatHandler.format(faust).getMetakompassubject();
                             String present = metakompassubject != null ? metakompassubject.strip() : null;
+                            // Todo: Remove this logging when we have found the problem (if any) with early
+                            //       'metakompas exists' registrations
+                            LOGGER.info("OpenFormat Response ({}) = {}: {}", promatCase.getPrimaryFaust(), present, metakompassubject);
+                            // Todo: end_of_todo
                             return METAKOMPASDATA_PRESENT.equals(present);
                         } catch (OpenFormatConnectorException e) {
                             LOGGER.error("Unable to look up faust {}, {}", faust, e);
