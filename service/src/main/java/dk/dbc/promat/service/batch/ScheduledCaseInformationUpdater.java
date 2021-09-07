@@ -112,11 +112,7 @@ public class ScheduledCaseInformationUpdater {
     }
 
     public List<PromatCase> getCasesWithInactiveEditor() {
-        LOGGER.info("getCasesWithInactiveEditor");
         TypedQuery<PromatCase> query = entityManager.createNamedQuery(PromatCase.GET_CASES_WITH_INACTIVE_EDITOR_NAME, PromatCase.class);
-        var x = query.getResultList();
-        LOGGER.info("resultset {}, {}", x, x.size());
-        return x;
-        //return query.getResultList();
+        return query.getResultList();
     }
 }
