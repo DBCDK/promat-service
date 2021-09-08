@@ -186,10 +186,6 @@ public class CaseInformationUpdater {
                         try {
                             String metakompassubject = openFormatHandler.format(faust).getMetakompassubject();
                             String present = metakompassubject != null ? metakompassubject.strip() : null;
-                            // Todo: Remove this logging when we have found the problem (if any) with early
-                            //       'metakompas exists' registrations
-                            LOGGER.info("OpenFormat Response ({}) = {}: {}", promatCase.getPrimaryFaust(), present, metakompassubject);
-                            // Todo: end_of_todo
                             return METAKOMPASDATA_PRESENT.equals(present);
                         } catch (OpenFormatConnectorException e) {
                             LOGGER.error("Unable to look up faust {}, {}", faust, e);
@@ -198,7 +194,7 @@ public class CaseInformationUpdater {
                     });
             if (allIsPresent) {
                 LOGGER.info("Updating metakompas for fausts: '{}' ==> '{}' of case with id {}. Taskid is '{}'",
-                        promatCase.getRelatedFausts(), METAKOMPASDATA_PRESENT, promatCase.getId(), task.getId());
+                        fausts, METAKOMPASDATA_PRESENT, promatCase.getId(), task.getId());
                 task.setData(METAKOMPASDATA_PRESENT);
                 task.setApproved(LocalDate.now());
             }
