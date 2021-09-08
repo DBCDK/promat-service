@@ -43,7 +43,6 @@ public class ScheduledCaseInformationUpdater {
     // Run once every 10 minutes on digit 0 to match dataio which is running every
     // 10 minutes on digit 5.
     // Only run during working days and normal working hours
-    // Todo: Revert to periodical updates each 10' minut when we have old approved cases in place
     @Schedule(second = "0", minute = "*/10", hour = "6-18", dayOfWeek = "Mon-Fri", persistent = false)
     public void updateCaseInformation() {
 
@@ -78,6 +77,42 @@ public class ScheduledCaseInformationUpdater {
 
     public List<PromatCase> getCasesForUpdate() {
         TypedQuery<PromatCase> query = entityManager.createNamedQuery(PromatCase.GET_CASES_FOR_UPDATE_NAME, PromatCase.class);
+        return query.getResultList();
+    }
+
+    @Schedule(second = "0", minute = "15", hour = "01", dayOfWeek = "Mon-Fri", persistent = false)
+    public void updateCaseAssignedEditor() {
+
+        try {
+            if(serverRole == ServerRole.PRIMARY) {
+
+                // Prevent running multiple updates at once
+                if(!updateLock.tryLock()) {
+                    LOGGER.error("Aborting update since update is already running. Check that the service is not locked or frozen!");
+                    return;
+                }
+
+                try {
+                    List<PromatCase> casesForUpdate = getCasesWithInactiveEditor();
+                    if(casesForUpdate != null && casesForUpdate.size() > 0) {
+                        for(PromatCase promatCase : casesForUpdate) {
+                            LOGGER.info("Clearing editor on case with id {}", promatCase.getId());
+                            caseInformationUpdater.clearEditor(promatCase);
+                        }
+                    }
+
+                    entityManager.flush();
+                } finally {
+                    updateLock.unlock();
+                }
+            }
+        } catch (Exception e) {
+            LOGGER.error("Caught exception in scheduled job 'updateCaseAssignedEditor()': {}", e.getMessage());
+        }
+    }
+
+    public List<PromatCase> getCasesWithInactiveEditor() {
+        TypedQuery<PromatCase> query = entityManager.createNamedQuery(PromatCase.GET_CASES_WITH_INACTIVE_EDITOR_NAME, PromatCase.class);
         return query.getResultList();
     }
 }

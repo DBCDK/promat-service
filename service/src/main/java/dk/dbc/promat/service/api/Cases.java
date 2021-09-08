@@ -43,7 +43,6 @@ import dk.dbc.promat.service.templating.Renderer;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
-import dk.dbc.promat.service.templating.model.MailToReviewerOnNewMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -67,7 +66,6 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
-import javax.ws.rs.client.Invocation;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.StreamingOutput;
@@ -824,6 +822,9 @@ public class Cases {
             }
             if(dto.getStatus() != null) {
                 CaseStatus status = calculateStatus(existing, dto.getStatus());
+
+                // If status is changing to PENDING_CLOSE, then approve any BKM tasks (and only them!)
+                // so that the bkm-evalutation will be included in the next payment before the case is being closed
                 if(status == CaseStatus.PENDING_CLOSE) {
                     approveBkmTasks(existing);
                 } else if(APPROVE_TASKS_ALLOWED_STATES.contains(status)) {
@@ -835,6 +836,19 @@ public class Cases {
                 if( existing.getStatus() == CaseStatus.PENDING_EXTERNAL && status == CaseStatus.APPROVED ) {
                     LOGGER.info("Promoting metakompas task on case {} to APPROVED prematurely by user request", existing.getId());
                     approveTasks(existing, true);
+                }
+
+                // If status is changing from PENDING_APPROVAL to PENDING_ISSUES, this means that an editor
+                // has reviewed the case and send it back to the reviewer for further refinement.
+                // The case should then be approved again by the same editor - not reassigned to a new editor
+                // in the next mornings 'distribute cases' operation, so the editor field should not be cleared
+                // during the night.
+                if( existing.getStatus() == CaseStatus.PENDING_APPROVAL && status == CaseStatus.PENDING_ISSUES ) {
+                    if( existing.getEditor() != null ) {
+                        existing.setKeepEditor(true);
+                    } else {
+                        LOGGER.error("Sending case {} back to reviewer without an editor assigned", existing.getId());
+                    }
                 }
 
                 existing.setStatus(status);

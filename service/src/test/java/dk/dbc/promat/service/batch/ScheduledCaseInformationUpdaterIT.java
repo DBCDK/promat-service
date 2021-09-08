@@ -37,6 +37,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import org.eclipse.microprofile.metrics.ConcurrentGauge;
 import org.eclipse.microprofile.metrics.Metadata;
@@ -1163,7 +1164,6 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
         doNothing().when(mockedRepository).assignFaustnumber(any(PromatCase.class));
 
         persistenceContext.run(() -> upd.caseInformationUpdater.updateCaseInformation(created));
-        LOGGER.info("codes: {}", created.getCodes());
         assertThat("codes exists", created.getCodes(), is(notNullValue()));
         assertThat("codes contains", created.getCodes().stream()
                 .sorted().collect(Collectors.toList()),
@@ -1171,6 +1171,90 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
 
         // Delete the case so that we dont mess up payments and dataio-export tests
         response = deleteResponse("v1/api/cases/" + created.getId());
+        assertThat("status code", response.getStatus(), is(200));
+    }
+
+    @Test
+    public void testClearInactiveEditors() throws JsonProcessingException, OpenFormatConnectorException {
+
+        // Create first case and move it to PENDING_APPROVAL
+        CaseRequest dto = new CaseRequest()
+                .withPrimaryFaust("51000101")
+                .withTitle("Title for 51000101")
+                .withWeekCode("BKM202137")
+                .withDetails("Details for 51000101")
+                .withMaterialType(MaterialType.BOOK)
+                .withAssigned("2021-09-07")
+                .withDeadline("2024-09-14")
+                .withCreator(10)
+                .withEditor(10)
+                .withReviewer(1);
+
+        Response response = postResponse("v1/api/cases", dto);
+        assertThat("status code", response.getStatus(), is(201));
+        PromatCase created = mapper.readValue(response.readEntity(String.class), PromatCase.class);
+
+        dto = new CaseRequest().withStatus(CaseStatus.PENDING_APPROVAL);
+        response = postResponse("v1/api/cases/" + created.getId(), dto);
+        assertThat("status code", response.getStatus(), is(200));
+
+        Integer activeId = created.getId();
+
+        // Create second case and move it to PENDING_APPROVAL
+        dto = new CaseRequest()
+                .withPrimaryFaust("51000202")
+                .withTitle("Title for 51000202")
+                .withWeekCode("BKM202137")
+                .withDetails("Details for 51000202")
+                .withMaterialType(MaterialType.BOOK)
+                .withAssigned("2021-09-07")
+                .withDeadline("2024-09-14")
+                .withCreator(10)
+                .withEditor(10)
+                .withReviewer(1);
+
+        response = postResponse("v1/api/cases", dto);
+        assertThat("status code", response.getStatus(), is(201));
+        created = mapper.readValue(response.readEntity(String.class), PromatCase.class);
+
+        dto = new CaseRequest().withStatus(CaseStatus.PENDING_APPROVAL);
+        response = postResponse("v1/api/cases/" + created.getId(), dto);
+        assertThat("status code", response.getStatus(), is(200));
+
+        Integer inactiveId = created.getId();
+
+        // Send the active case back to the reviewer, then again to approval - to set the keepEditor flag
+        dto = new CaseRequest().withStatus(CaseStatus.PENDING_ISSUES);
+        response = postResponse("v1/api/cases/" + activeId, dto);
+        assertThat("status code", response.getStatus(), is(200));
+        dto.setStatus(CaseStatus.PENDING_APPROVAL);
+        response = postResponse("v1/api/cases/" + activeId, dto);
+        assertThat("status code", response.getStatus(), is(200));
+
+        // Run nightly update to clear the editor on the 'inactive case, but retain the editor on the 'active' case
+        ScheduledCaseInformationUpdater upd = new ScheduledCaseInformationUpdater();
+        upd.caseInformationUpdater = new CaseInformationUpdater();
+        upd.caseInformationUpdater.metricRegistry = metricRegistry;
+        upd.entityManager = entityManager;
+        upd.serverRole = ServerRole.PRIMARY;
+
+        persistenceContext.run(() -> {
+            upd.updateCaseAssignedEditor();
+            entityManager.flush();
+        });
+
+
+        PromatCase updated = entityManager.find(PromatCase.class, activeId);
+        assertThat("editor is retained", updated.getEditor(), is(notNullValue()));
+        assertThat("editor is same editor", updated.getEditor().getId(), is(10));
+
+        updated = entityManager.find(PromatCase.class, inactiveId);
+        assertThat("editor is cleared", updated.getEditor(), is(nullValue()));
+
+        // Delete the cases so that we dont mess up payments and dataio-export tests
+        response = deleteResponse("v1/api/cases/" + activeId);
+        assertThat("status code", response.getStatus(), is(200));
+        response = deleteResponse("v1/api/cases/" + inactiveId);
         assertThat("status code", response.getStatus(), is(200));
     }
 }

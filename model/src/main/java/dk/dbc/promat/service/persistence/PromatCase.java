@@ -5,6 +5,7 @@
 
 package dk.dbc.promat.service.persistence;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonView;
 import dk.dbc.commons.jpa.converter.StringListToJsonArrayConverter;
 
@@ -46,6 +47,9 @@ import javax.persistence.Transient;
         @NamedQuery(
                 name = PromatCase.GET_CASES_FOR_UPDATE_NAME,
                 query = PromatCase.GET_CASES_FOR_UPDATE_QUERY),
+        @NamedQuery(
+                name = PromatCase.GET_CASES_WITH_INACTIVE_EDITOR_NAME,
+                query = PromatCase.GET_CASES_WITH_INACTIVE_EDITOR_QUERY),
         @NamedQuery(
                 name = PromatCase.GET_CASE_BY_FAUST_NAME,
                 query = PromatCase.GET_CASE_BY_FAUST_QUERY),
@@ -101,6 +105,14 @@ public class PromatCase {
             "                                                                    dk.dbc.promat.service.persistence.CaseStatus.PENDING_CLOSE," +
             "                                                                    dk.dbc.promat.service.persistence.CaseStatus.CLOSED," +
             "                                                                    dk.dbc.promat.service.persistence.CaseStatus.DELETED)" +
+            "                                                 order by c.id";
+
+    public static final String GET_CASES_WITH_INACTIVE_EDITOR_NAME =
+            "PromatCase.get.cases.with.inactive.editor";
+    public static final String GET_CASES_WITH_INACTIVE_EDITOR_QUERY = "select c" +
+            "                                                  from PromatCase c" +
+            "                                                 where c.status = dk.dbc.promat.service.persistence.CaseStatus.PENDING_APPROVAL" +
+            "                                                   and c.keepEditor = false" +
             "                                                 order by c.id";
 
     public static final String GET_CASE_BY_FAUST_NAME =
@@ -243,6 +255,9 @@ public class PromatCase {
     @Convert(converter = StringListToJsonArrayConverter.class)
     @JsonView({CaseView.Export.class, CaseView.Summary.class, CaseView.Case.class})
     private List<String> codes;
+
+    @JsonIgnore
+    private Boolean keepEditor = false;
 
     public Integer getId() {
         return id;
@@ -569,6 +584,19 @@ public class PromatCase {
         return this;
     }
 
+    public Boolean getKeepEditor() {
+        return keepEditor;
+    }
+
+    public void setKeepEditor(Boolean keepEditor) {
+        this.keepEditor = keepEditor;
+    }
+
+    public PromatCase withKeepEditor(Boolean keepEditor) {
+        this.keepEditor = keepEditor;
+        return this;
+    }
+
     @PrePersist
     @PreUpdate
     private void beforeUpdate() {
@@ -607,14 +635,15 @@ public class PromatCase {
                 newMessagesToEditor == aCase.newMessagesToEditor &&
                 newMessagesToReviewer == aCase.newMessagesToReviewer &&
                 Objects.equals(reminderSent, aCase.reminderSent) &&
-                Objects.equals(codes, aCase.codes);
+                Objects.equals(codes, aCase.codes) &&
+                keepEditor == aCase.keepEditor;
     }
 
     @Override
     public int hashCode() {
         return Objects.hash(id, title, details, primaryFaust, relatedFausts, reviewer, editor, subjects, created,
                 deadline, assigned, status, materialType, tasks, weekCode, trimmedWeekCode, author, creator, publisher,
-                fulltextLink, newMessagesToEditor, newMessagesToReviewer, reminderSent, codes);
+                fulltextLink, newMessagesToEditor, newMessagesToReviewer, reminderSent, codes, keepEditor);
     }
 
     @Override
@@ -645,6 +674,7 @@ public class PromatCase {
                 ", note='" + note + '\'' +
                 ", reminderSent'" + reminderSent + '\'' +
                 ", codes=" + codes +
+                ", keepEditor=" + keepEditor +
                 '}';
     }
 }
