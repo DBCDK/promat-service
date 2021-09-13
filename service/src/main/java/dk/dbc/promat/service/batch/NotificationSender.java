@@ -16,6 +16,8 @@ import javax.ejb.TransactionAttributeType;
 import javax.inject.Inject;
 import javax.mail.MessagingException;
 import javax.persistence.EntityManager;
+
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.metrics.ConcurrentGauge;
 import org.eclipse.microprofile.metrics.Metadata;
 import org.eclipse.microprofile.metrics.MetricRegistry;
@@ -26,6 +28,10 @@ import org.slf4j.LoggerFactory;
 
 @Stateless
 public class NotificationSender {
+    @Inject
+    @ConfigProperty(name = "MAIL_FROM", defaultValue = "promat@dbc.dk")
+    String mailFrom;
+
     @Inject
     @RegistryType(type = MetricRegistry.Type.APPLICATION)
     MetricRegistry metricRegistry;
@@ -62,6 +68,7 @@ public class NotificationSender {
                     .withRecipients(notification.getToAddress())
                     .withSubject(notification.getSubject())
                     .withBodyText(notification.getBodyText())
+                    .withFromAddress(mailFrom)
                     .withHeaders(
                             new Headers()
                                     .withHeader("Content-type", "text/HTML; charset=UTF-8").build()
