@@ -792,6 +792,7 @@ public class Cases {
                 if (!dto.getReviewer().equals(reviewer_id)) {
                     if(REVIEWER_CHANGE_ALLOWED_STATES.contains(existing.getStatus())) {
                         existing.setReviewer(resolveReviewer(dto.getReviewer()));
+                        existing.setCreated(LocalDate.now());
                         notifyOnReviewerChanged(existing);
                         if( reviewer_id == null ) {
                             setInitialMessageForReviewer(existing);
@@ -1176,10 +1177,10 @@ public class Cases {
 
     private void setInitialMessageForReviewer(PromatCase promatCase) throws ServiceErrorException {
         if( promatCase.getEditor() == null ) {
-            throw new ServiceErrorException("Reviewer is null")
+            throw new ServiceErrorException("Editor is null")
                     .withCode(ServiceErrorCode.INVALID_REQUEST)
                     .withHttpStatus(400)
-                    .withDetails("Reviewer can not be null when creating an initial message");
+                    .withDetails("Editor can not be null when creating an initial message");
         }
         PromatUser promatUser =  entityManager.find(Editor.class, promatCase.getEditor().getId());
 

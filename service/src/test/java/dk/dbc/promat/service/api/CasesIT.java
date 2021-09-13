@@ -2578,4 +2578,31 @@ public class CasesIT extends ContainerTest {
         assertThat("status code", response.getStatus(), is(200));
     }
 
+    @Test
+    public void testSetCreatedDateOnAssigned() throws IOException {
+
+        // Initial check to make sure we dont get false results (test is added late)
+        Response response = getResponse("v1/api/cases/6");
+        assertThat("status code", response.getStatus(), is(200));
+        PromatCase aCase = mapper.readValue(response.readEntity(String.class), PromatCase.class);
+        assertThat("case has status ASSIGNED", aCase.getStatus(), is(CaseStatus.ASSIGNED));
+        assertThat("case has created date in the past", aCase.getCreated(), is(LocalDate.parse("2020-11-11")));
+
+        // Set a new editor
+        CaseRequest dto = new CaseRequest().withReviewer(2);
+        response = postResponse("v1/api/cases/6", dto);
+        assertThat("status code", response.getStatus(), is(200));
+
+        // Make sure the case now have today's date as created date
+        response = getResponse("v1/api/cases/6");
+        assertThat("status code", response.getStatus(), is(200));
+        aCase = mapper.readValue(response.readEntity(String.class), PromatCase.class);
+        assertThat("case has status ASSIGNED", aCase.getStatus(), is(CaseStatus.ASSIGNED));
+        assertThat("case has created date = now", aCase.getCreated(), is(LocalDate.now()));
+
+        // Reset reviewer (other tests may depend on this case)
+        dto = new CaseRequest().withReviewer(1);
+        response = postResponse("v1/api/cases/6", dto);
+        assertThat("status code", response.getStatus(), is(200));
+    }
 }
