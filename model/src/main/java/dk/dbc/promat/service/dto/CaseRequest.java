@@ -63,8 +63,6 @@ public class CaseRequest implements Dto {
 
     private String deadline;
 
-    private String assigned;
-
     private CaseStatus status;
 
     private MaterialType materialType;
@@ -151,14 +149,6 @@ public class CaseRequest implements Dto {
 
     public void setDeadline(String deadline) {
         this.deadline = deadline;
-    }
-
-    public String getAssigned() {
-        return assigned;
-    }
-
-    public void setAssigned(String assigned) {
-        this.assigned = assigned;
     }
 
     public CaseStatus getStatus() {
@@ -276,11 +266,6 @@ public class CaseRequest implements Dto {
         return this;
     }
 
-    public CaseRequest withAssigned(String assigned) {
-        this.assigned = assigned;
-        return this;
-    }
-
     public CaseRequest withStatus(CaseStatus status) {
         this.status = status;
         return this;
@@ -350,7 +335,6 @@ public class CaseRequest implements Dto {
                 ", editor=" + editor +
                 ", subjects=" + subjects +
                 ", deadline='" + deadline + '\'' +
-                ", assigned='" + assigned + '\'' +
                 ", status=" + status +
                 ", materialType=" + materialType +
                 ", tasks=" + tasks +
@@ -399,9 +383,6 @@ public class CaseRequest implements Dto {
         if (deadline != null ? !deadline.equals(that.deadline) : that.deadline != null) {
             return false;
         }
-        if (assigned != null ? !assigned.equals(that.assigned) : that.assigned != null) {
-            return false;
-        }
         if (status != that.status) {
             return false;
         }
@@ -442,7 +423,6 @@ public class CaseRequest implements Dto {
         result = 31 * result + (editor != null ? editor.hashCode() : 0);
         result = 31 * result + (subjects != null ? subjects.hashCode() : 0);
         result = 31 * result + (deadline != null ? deadline.hashCode() : 0);
-        result = 31 * result + (assigned != null ? assigned.hashCode() : 0);
         result = 31 * result + (status != null ? status.hashCode() : 0);
         result = 31 * result + (materialType != null ? materialType.hashCode() : 0);
         result = 31 * result + (tasks != null ? tasks.hashCode() : 0);

@@ -198,7 +198,7 @@ public class Cases {
         //
         // If a reviewer has been assigned, then set or modify the status of the case and the assigned field.
         // If no reviwer is given, check that the status is not ASSIGNED - that would be a mess
-        LocalDate assigned = dto.getAssigned() == null ? null : LocalDate.parse(dto.getAssigned());
+        LocalDate assigned = null;
         CaseStatus status = dto.getStatus() == null ? CaseStatus.CREATED : dto.getStatus();
         if( reviewer != null ) {
             assigned = LocalDate.now();
@@ -757,12 +757,6 @@ public class Cases {
             // can be updated on a case, some forbidden fields will trigger an error but most
             // fields not accepted will be silently ignored.
 
-            // Errorchecking when trying to update fields managed by the backend solely
-            if(dto.getAssigned() != null) {
-                LOGGER.info("Attempt to set 'assigned' on case {}", id);
-                return ServiceErrorDto.InvalidRequest("Forbidden field", "Setting the value of 'assigned' is not allowed");
-            }
-
             // Fetch an existing entity with the given id
             existing = entityManager.find(PromatCase.class, id);
             if( existing == null ) {
@@ -792,7 +786,7 @@ public class Cases {
                 if (!dto.getReviewer().equals(reviewer_id)) {
                     if(REVIEWER_CHANGE_ALLOWED_STATES.contains(existing.getStatus())) {
                         existing.setReviewer(resolveReviewer(dto.getReviewer()));
-                        existing.setCreated(LocalDate.now());
+                        existing.setAssigned(LocalDate.now());
                         notifyOnReviewerChanged(existing);
                         if( reviewer_id == null ) {
                             setInitialMessageForReviewer(existing);
