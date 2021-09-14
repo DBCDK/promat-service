@@ -167,7 +167,6 @@ public class CasesIT extends ContainerTest {
                 .withTitle("Title for 4001111")
                 .withDetails("Details for 4001111")
                 .withMaterialType(MaterialType.BOOK)
-                .withAssigned("2020-04-11")
                 .withDeadline("2020-04-12")
                 .withStatus(CaseStatus.CREATED);
 
@@ -182,7 +181,7 @@ public class CasesIT extends ContainerTest {
         assertThat("details", created.getDetails(), is("Details for 4001111"));
         assertThat("materialType", created.getMaterialType(), is(MaterialType.BOOK));
         assertThat("created", created.getCreated(), is(LocalDate.now()));
-        assertThat("assigned", created.getAssigned(), is(LocalDate.parse("2020-04-11")));
+        assertThat("assigned", created.getAssigned(), is(nullValue()));
         assertThat("deadline", created.getDeadline(), is(LocalDate.parse("2020-04-12")));
     }
 
@@ -210,7 +209,6 @@ public class CasesIT extends ContainerTest {
                 .withReviewer(1)
                 .withEditor(11)
                 .withSubjects(Arrays.asList(3, 4))
-                .withAssigned("2020-04-11")
                 .withDeadline("2020-04-12")
                 .withStatus(CaseStatus.ASSIGNED)
                 .withTasks(Arrays.asList(
@@ -274,7 +272,6 @@ public class CasesIT extends ContainerTest {
                 .withTitle("Title for 7001111")
                 .withDetails("Details for 7001111")
                 .withMaterialType(MaterialType.BOOK)
-                .withAssigned("2020-04-11")
                 .withDeadline("2020-04-12")
                 .withStatus(CaseStatus.ASSIGNED);
 
@@ -530,10 +527,11 @@ public class CasesIT extends ContainerTest {
         Response response = postResponse("v1/api/cases/9876", dto);
         assertThat("status code", response.getStatus(), is(404));
 
-        // Attempt to set field 'assigned' - should return 400 BAD REQUEST
-        dto = new CaseRequest().withAssigned("2020-11-18");
-        response = postResponse("v1/api/cases/1", dto);
-        assertThat("status code", response.getStatus(), is(400));
+        // Attempt to set historic, but now obsoleted/removed, field 'assigned'
+        // should be ignored and return 200 OK
+        String json = "{\"assigned\":\"2020-11-18\"}";
+        response = postResponse("v1/api/cases/1", json);
+        assertThat("status code", response.getStatus(), is(200));
 
         // Attempt to set field 'status' - should return 400 BAD REQUEST
         dto = new CaseRequest().withStatus(CaseStatus.ASSIGNED);
@@ -2578,4 +2576,31 @@ public class CasesIT extends ContainerTest {
         assertThat("status code", response.getStatus(), is(200));
     }
 
+    @Test
+    public void testSetAssignedDateOnAssigned() throws IOException {
+
+        // Initial check to make sure we dont get false results (test is added late)
+        Response response = getResponse("v1/api/cases/6");
+        assertThat("status code", response.getStatus(), is(200));
+        PromatCase aCase = mapper.readValue(response.readEntity(String.class), PromatCase.class);
+        assertThat("case has status ASSIGNED", aCase.getStatus(), is(CaseStatus.ASSIGNED));
+        assertThat("case has assigned date in the past", aCase.getAssigned(), is(LocalDate.parse("2020-11-11")));
+
+        // Set a new reviewer
+        CaseRequest dto = new CaseRequest().withReviewer(2);
+        response = postResponse("v1/api/cases/6", dto);
+        assertThat("status code", response.getStatus(), is(200));
+
+        // Make sure the case now have today's date as assigned date
+        response = getResponse("v1/api/cases/6");
+        assertThat("status code", response.getStatus(), is(200));
+        aCase = mapper.readValue(response.readEntity(String.class), PromatCase.class);
+        assertThat("case has status ASSIGNED", aCase.getStatus(), is(CaseStatus.ASSIGNED));
+        assertThat("case has assigned date = now", aCase.getAssigned(), is(LocalDate.now()));
+
+        // Reset reviewer (other tests may depend on this case)
+        dto = new CaseRequest().withReviewer(1);
+        response = postResponse("v1/api/cases/6", dto);
+        assertThat("status code", response.getStatus(), is(200));
+    }
 }
