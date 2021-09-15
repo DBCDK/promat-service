@@ -1251,7 +1251,6 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
                 .withCreator(10)
                 .withEditor(10)
                 .withReviewer(1)
-                .withWeekCode("BKM202138")
                 .withTasks(Arrays.asList(new TaskDto()
                         .withTaskType(TaskType.GROUP_1_LESS_THAN_100_PAGES)
                         .withTaskFieldType(TaskFieldType.BRIEF)
@@ -1272,10 +1271,13 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
         Repository mockedRepository = mock(Repository.class);
         upd.caseInformationUpdater.repository = mockedRepository;
 
+        LocalDate date = LocalDate.now().plusWeeks(2);
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyw", new Locale("da", "DK"));
+
         created.setStatus(CaseStatus.PENDING_EXPORT);
         when(mockedHandler.format(anyString()))
                 .thenReturn(new BibliographicInformation()
-                        .withCatalogcodes(Arrays.asList("BKM202139", "BKX299999", "FFK299999", "ACC202001")));
+                        .withCatalogcodes(Arrays.asList("BKM" + date.format(formatter), "ACC202001")));
         doAnswer(answer -> {
             PromatCase existing = ((PromatCase) answer.getArgument(0));
             existing.getTasks().stream().forEach(t -> t.setRecordId("123456789"));
@@ -1286,6 +1288,63 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
 
         persistenceContext.run(() -> upd.caseInformationUpdater.updateCaseInformation(created));
         assertThat("status", created.getStatus(), is(CaseStatus.APPROVED));
+
+        // Delete the case so that we dont mess up payments and dataio-export tests
+        response = deleteResponse("v1/api/cases/" + created.getId());
+        assertThat("status code", response.getStatus(), is(200));
+    }
+
+    @Test
+    public void testUpdateCaseWithWeekcodeNextWeek() throws OpenFormatConnectorException, JsonProcessingException, OpennumberRollConnectorException {
+
+        // Create a case
+        CaseRequest dto = new CaseRequest()
+                .withPrimaryFaust("53000202")
+                .withTitle("Title for 53000202")
+                .withWeekCode("BKM202002")
+                .withDetails("Details for 53000202")
+                .withMaterialType(MaterialType.BOOK)
+                .withDeadline("2021-09-15")
+                .withCreator(10)
+                .withEditor(10)
+                .withReviewer(1)
+                .withTasks(Arrays.asList(new TaskDto()
+                        .withTaskType(TaskType.GROUP_1_LESS_THAN_100_PAGES)
+                        .withTaskFieldType(TaskFieldType.BRIEF)
+                        .withTargetFausts(Arrays.asList("53000202"))
+                ));
+
+        Response response = postResponse("v1/api/cases", dto);
+        assertThat("status code", response.getStatus(), is(201));
+        PromatCase created = mapper.readValue(response.readEntity(String.class), PromatCase.class);
+
+        ScheduledCaseInformationUpdater upd = new ScheduledCaseInformationUpdater();
+        upd.caseInformationUpdater = new CaseInformationUpdater();
+        upd.caseInformationUpdater.metricRegistry = metricRegistry;
+        upd.entityManager = entityManager;
+        upd.serverRole = ServerRole.PRIMARY;
+        OpenFormatHandler mockedHandler = mock(OpenFormatHandler.class);
+        upd.caseInformationUpdater.openFormatHandler = mockedHandler;
+        Repository mockedRepository = mock(Repository.class);
+        upd.caseInformationUpdater.repository = mockedRepository;
+
+        LocalDate date = LocalDate.now().plusWeeks(1);
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyw", new Locale("da", "DK"));
+
+        created.setStatus(CaseStatus.PENDING_EXPORT);
+        when(mockedHandler.format(anyString()))
+                .thenReturn(new BibliographicInformation()
+                        .withCatalogcodes(Arrays.asList("BKM" + date.format(formatter), "ACC202001")));
+        doAnswer(answer -> {
+            PromatCase existing = ((PromatCase) answer.getArgument(0));
+            existing.getTasks().stream().forEach(t -> t.setRecordId("123456789"));
+            return null;
+        }).when(mockedRepository).assignFaustnumber(any(PromatCase.class));
+
+        // BKM is next week so case must remain in status PENDING_EXPORT
+
+        persistenceContext.run(() -> upd.caseInformationUpdater.updateCaseInformation(created));
+        assertThat("status", created.getStatus(), is(CaseStatus.PENDING_EXPORT));
 
         // Delete the case so that we dont mess up payments and dataio-export tests
         response = deleteResponse("v1/api/cases/" + created.getId());
