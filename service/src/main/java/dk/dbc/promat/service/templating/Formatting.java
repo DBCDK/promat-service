@@ -49,7 +49,7 @@ public class Formatting {
             case PENDING_ISSUES:
                 return "Afventer rettelser";
             case PENDING_EXTERNAL:
-                return "Afventer eksterne opgaver";
+                return "Afventer metakompas";
             case APPROVED:
                 return "Godkendt";
             case PENDING_MEETING:
