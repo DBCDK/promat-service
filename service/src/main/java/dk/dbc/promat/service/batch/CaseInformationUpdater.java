@@ -128,6 +128,13 @@ public class CaseInformationUpdater {
                 promatCase.setStatus(CaseStatus.PENDING_EXPORT);
             }
 
+            // Check if the case has status 'PENDING_EXPORT' and the weekcode has changed to a later week
+            // We'll keep the faustnumber as we need it when the case again becomes ready for export
+            if( CaseStatus.PENDING_EXPORT == promatCase.getStatus() && !weekcodeMatchOrBefore(promatCase) ) {
+                LOGGER.info("Changing status PENDING_EXPORT on case {} back to APPROVED since weekcode {} is now a later week", promatCase.getId(), promatCase.getWeekCode());
+                promatCase.setStatus(CaseStatus.APPROVED);
+            }
+
             // Add all catalog codes to the case since they are needed by dataIO when creating the final review record(s)
             if( bibliographicInformation.getCatalogcodes() != null && bibliographicInformation.getCatalogcodes().size() > 0 ) {
                 LOGGER.info("Adding or updating catalog codes: {}", bibliographicInformation.getCatalogcodes());
