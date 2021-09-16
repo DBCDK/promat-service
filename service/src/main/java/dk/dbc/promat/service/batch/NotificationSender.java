@@ -34,7 +34,7 @@ public class NotificationSender {
 
     @Inject
     @ConfigProperty(name = "LU_MAILADDRESS", defaultValue = "lu@dbc.dk")
-    String replyaddAddress;
+    String replyToAddress;
 
     @Inject
     @RegistryType(type = MetricRegistry.Type.APPLICATION)
@@ -73,7 +73,7 @@ public class NotificationSender {
                     .withSubject(notification.getSubject())
                     .withBodyText(notification.getBodyText())
                     .withFromAddress(mailFrom)
-                    .withReplyToAddress(replyaddAddress)
+                    .withReplyToAddress(replyToAddress)
                     .withHeaders(
                             new Headers()
                                     .withHeader("Content-type", "text/HTML; charset=UTF-8").build()
