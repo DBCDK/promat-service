@@ -1,11 +1,9 @@
-/*
- * Copyright Dansk Bibliotekscenter a/s. Licensed under GNU GPLv3
- * See license text in LICENSE.txt
- */
-
 package dk.dbc.promat.service.templating.model.XmlCaseview;
 
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
+
+import java.util.List;
 
 @JsonPropertyOrder({"bkmeval", "brief", "description", "evaluation", "comparison", "recommendation", "age", "matlevel", "subjterm"})
 
@@ -25,7 +23,8 @@ public class XmlCaseviewData {
 
     private String age;
 
-    private XmlCaseviewMatlevels matlevel;
+    @JacksonXmlElementWrapper(useWrapping = false)
+    private List<String> matlevel;
 
     private XmlCaseviewSubjterms subjterm;
 
@@ -120,15 +119,15 @@ public class XmlCaseviewData {
         return this;
     }
 
-    public XmlCaseviewMatlevels getMatlevel() {
+    public List<String> getMatlevel() {
         return matlevel;
     }
 
-    public void setMatlevel(XmlCaseviewMatlevels matlevel) {
+    public void setMatlevel(List<String> matlevel) {
         this.matlevel = matlevel;
     }
 
-    public XmlCaseviewData withMatlevel(XmlCaseviewMatlevels matlevel) {
+    public XmlCaseviewData withMatlevel(List<String> matlevel) {
         this.matlevel = matlevel;
         return this;
     }

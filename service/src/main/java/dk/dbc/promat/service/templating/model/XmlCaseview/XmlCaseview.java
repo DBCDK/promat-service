@@ -126,7 +126,7 @@ public class XmlCaseview {
                         .withComparison(comparison)
                         .withRecommendation(recommendation)
                         .withAge(age)
-                        .withMatlevel(new XmlCaseviewMatlevels(requestedFaust, matlevels))
+                        .withMatlevel(matlevels)
                         .withSubjterm(new XmlCaseviewSubjterms(requestedFaust, subjterms)));
 
         return this;
