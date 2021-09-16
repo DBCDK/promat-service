@@ -1,8 +1,3 @@
-/*
- * Copyright Dansk Bibliotekscenter a/s. Licensed under GNU GPLv3
- * See license text in LICENSE.txt
- */
-
 package dk.dbc.promat.service.templating.model.XmlCaseview;
 
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
@@ -93,8 +88,13 @@ public class XmlCaseview {
         String comparison = GetTaskDataForFaust(requestedFaust, TaskFieldType.COMPARISON, promatCase.getTasks());
         String recommendation = GetTaskDataForFaust(requestedFaust, TaskFieldType.RECOMMENDATION, promatCase.getTasks());
         String age = GetTaskDataForFaust(requestedFaust, TaskFieldType.AGE, promatCase.getTasks());
-        String matlevel = GetTaskDataForFaust(requestedFaust, TaskFieldType.MATLEVEL, promatCase.getTasks());
-        List<String> subjterms = Arrays.asList(GetTaskDataForFaust(requestedFaust,TaskFieldType.TOPICS, promatCase.getTasks())
+        List<String> matlevels = Arrays.asList(GetTaskDataForFaust(requestedFaust, TaskFieldType.MATLEVEL, promatCase.getTasks())
+                .split("[;|,]"))
+                .stream()
+                .map(t -> t.trim())
+                .filter(t -> !t.isEmpty())
+                .collect(Collectors.toList());
+        List<String> subjterms = Arrays.asList(GetTaskDataForFaust(requestedFaust, TaskFieldType.TOPICS, promatCase.getTasks())
                 .split("[;|,]"))
                 .stream()
                 .map(t -> t.trim())
@@ -126,7 +126,7 @@ public class XmlCaseview {
                         .withComparison(comparison)
                         .withRecommendation(recommendation)
                         .withAge(age)
-                        .withMatlevel(matlevel)
+                        .withMatlevel(new XmlCaseviewMatlevels(requestedFaust, matlevels))
                         .withSubjterm(new XmlCaseviewSubjterms(requestedFaust, subjterms)));
 
         return this;
