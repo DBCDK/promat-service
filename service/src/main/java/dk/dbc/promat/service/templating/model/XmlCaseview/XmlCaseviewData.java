@@ -25,7 +25,7 @@ public class XmlCaseviewData {
 
     private String age;
 
-    private String matlevel;
+    private XmlCaseviewMatlevels matlevel;
 
     private XmlCaseviewSubjterms subjterm;
 
@@ -120,15 +120,15 @@ public class XmlCaseviewData {
         return this;
     }
 
-    public String getMatlevel() {
+    public XmlCaseviewMatlevels getMatlevel() {
         return matlevel;
     }
 
-    public void setMatlevel(String matlevel) {
+    public void setMatlevel(XmlCaseviewMatlevels matlevel) {
         this.matlevel = matlevel;
     }
 
-    public XmlCaseviewData withMatlevel(String matlevel) {
+    public XmlCaseviewData withMatlevel(XmlCaseviewMatlevels matlevel) {
         this.matlevel = matlevel;
         return this;
     }

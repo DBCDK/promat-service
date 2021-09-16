@@ -27,7 +27,10 @@
             <comparison>TEXT BEFORE &lt;t>48611435 Jeg tæller mine skridt&lt;t> TEXT BETWEEN &lt;t>48611435 Hest horse Pferd cheval love&lt;t> TEXT AFTER</comparison>
             <recommendation>RECOMMENDATION TEXT</recommendation>
             <age>AGE TEXT</age>
-            <matlevel>MATLEVEL TEXT</matlevel>
+            <matlevel faust="100002">
+                <level>MATLEVEL</level>
+                <level>TEXT</level>
+            </matlevel>
             <subjterm faust="100002">
                 <term>TOP IC_2</term>
                 <term>TOPIC_3</term>
