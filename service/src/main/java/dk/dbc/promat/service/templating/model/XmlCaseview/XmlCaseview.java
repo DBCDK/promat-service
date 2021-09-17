@@ -11,6 +11,7 @@ import dk.dbc.promat.service.templating.Formatting;
 import javax.xml.bind.annotation.XmlElement;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -87,17 +88,17 @@ public class XmlCaseview {
         String evaluation = GetTaskDataForFaust(requestedFaust, TaskFieldType.EVALUATION, promatCase.getTasks());
         String comparison = GetTaskDataForFaust(requestedFaust, TaskFieldType.COMPARISON, promatCase.getTasks());
         String recommendation = GetTaskDataForFaust(requestedFaust, TaskFieldType.RECOMMENDATION, promatCase.getTasks());
-        String age = GetTaskDataForFaust(requestedFaust, TaskFieldType.AGE, promatCase.getTasks());
+        String age = GetTaskDataForFaust(requestedFaust, TaskFieldType.AGE, promatCase.getTasks()).toLowerCase();
         List<String> matlevels = Arrays.asList(GetTaskDataForFaust(requestedFaust, TaskFieldType.MATLEVEL, promatCase.getTasks())
                 .split("[;|,]"))
                 .stream()
-                .map(t -> t.trim())
+                .map(t -> t.trim().toLowerCase())
                 .filter(t -> !t.isEmpty())
                 .collect(Collectors.toList());
         List<String> subjterms = Arrays.asList(GetTaskDataForFaust(requestedFaust, TaskFieldType.TOPICS, promatCase.getTasks())
                 .split("[;|,]"))
                 .stream()
-                .map(t -> t.trim())
+                .map(t -> t.trim().toLowerCase())
                 .filter(t -> !t.isEmpty())
                 .collect(Collectors.toList());
 
