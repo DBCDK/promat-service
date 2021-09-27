@@ -28,7 +28,7 @@ public class ContentLookUp {
 
     public Optional<String> lookUpContent(String faust) {
         final HttpResponse<InputStream> httpResponse;
-        final String fullTextLink = String.format(contentRepo, faust);;
+        final String fullTextLink = String.format(contentRepo, faust);
 
         try {
             LOGGER.info("Looking up ebook content via HEAD to {}", fullTextLink);

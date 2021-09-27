@@ -1199,6 +1199,28 @@ public class CasesIT extends ContainerTest {
     }
 
     @Test
+    void getFulltextForArbitraryFaust(@TempDir Path tempDir) throws PromatServiceConnectorException, IOException, InterruptedException {
+        final String faust = "394825339999999999";
+
+
+        var apiLink = promatServiceBaseUrl + String.format("/v1/api/cases/faust/%s/fulltext", faust);
+
+        var client = HttpClient.newBuilder()
+                .version(HttpClient.Version.HTTP_1_1)
+                .build();
+
+        var request = HttpRequest.newBuilder()
+                .uri(URI.create(apiLink))
+                .build();
+
+        final HttpResponse<Path> httpResponse = client.send(request,
+                HttpResponse.BodyHandlers.ofFileDownload(tempDir, WRITE, CREATE_NEW));
+
+        assertThat("file content", new String(Files.readAllBytes(httpResponse.body())),
+                is("epub data her\n"));
+    }
+
+    @Test
     void addDraftOrUpdateExistingCase() throws JsonProcessingException, PromatServiceConnectorException {
         final CaseRequest caseRequest = new CaseRequest()
                 .withPrimaryFaust("11111111")

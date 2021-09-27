@@ -30,7 +30,7 @@ public class FulltextHandler {
 
     private final String fulltextLink;
     private final HttpResponse<InputStream> httpResponse;
-    private String filename;
+    private final String filename;
 
     public FulltextHandler(String fulltextLink) {
         this.fulltextLink = fulltextLink;

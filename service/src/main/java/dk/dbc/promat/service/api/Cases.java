@@ -43,6 +43,7 @@ import dk.dbc.promat.service.templating.Renderer;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -103,6 +104,10 @@ public class Cases {
 
     @EJB
     Reminders reminders;
+
+    @Inject
+    @ConfigProperty(name = "EMATERIAL_CONTENT_REPO")
+    String contentRepo;
 
     // Default number of results when getting cases
     private static final int DEFAULT_CASES_LIMIT = 100;
@@ -316,6 +321,25 @@ public class Cases {
             }
 
             final FulltextHandler fulltextHandler = new FulltextHandler(promatCase.getFulltextLink());
+            final StreamingOutput streamingFulltext = fulltextHandler::getFulltext;
+            return Response.status(200)
+                    .header("Content-Disposition", String.format("attachment; filename=\"%s\"",
+                            fulltextHandler.getFilename()))
+                    .entity(streamingFulltext).build();
+        } catch(Exception exception) {
+            LOGGER.error("Caught exception: {}", exception.getMessage());
+            return ServiceErrorDto.Failed(exception.getMessage());
+        }
+    }
+
+    @GET
+    @Path("cases/faust/{faust}/fulltext")
+    @Produces(MediaType.APPLICATION_OCTET_STREAM)
+    public Response getFulltextForFaust(@PathParam("faust") final Integer faust) {
+        LOGGER.info("cases/faust/{}/fulltext", faust);
+
+        try {
+            final FulltextHandler fulltextHandler = new FulltextHandler(String.format(contentRepo, faust));
             final StreamingOutput streamingFulltext = fulltextHandler::getFulltext;
             return Response.status(200)
                     .header("Content-Disposition", String.format("attachment; filename=\"%s\"",

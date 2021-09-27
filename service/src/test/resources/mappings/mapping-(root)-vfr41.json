@@ -1,0 +1,22 @@
+{
+  "id" : "24d032d1-0652-33ac-baa8-f5f6eb36dc1a",
+  "request" : {
+    "url" : "/?faust=39482533",
+    "method" : "GET"
+  },
+  "response" : {
+    "status" : 200,
+    "bodyFileName" : "body-(root)-vfr41.txt",
+    "headers" : {
+      "Date" : "Mon, 27 Sep 2021 08:52:34 GMT",
+      "Server" : "Apache/2.4.38 (Debian)",
+      "Expires" : "Thu, 19 Nov 1981 08:52:00 GMT",
+      "Cache-Control" : "no-store, no-cache, must-revalidate",
+      "Pragma" : "no-cache",
+      "Content-Disposition" : "attachment;filename=\"Opdagerklubben_(4)__SnefrÃ¦serduellen.epub\"",
+      "Keep-Alive" : "timeout=5, max=100",
+      "Content-Type" : "application/epub+zip"
+    }
+  },
+  "uuid" : "24d032d1-0652-33ac-baa8-f5f6eb36dc1a"
+}
