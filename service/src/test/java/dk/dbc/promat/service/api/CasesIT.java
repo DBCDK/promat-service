@@ -1200,7 +1200,7 @@ public class CasesIT extends ContainerTest {
 
     @Test
     void getFulltextForArbitraryFaust(@TempDir Path tempDir) throws PromatServiceConnectorException, IOException, InterruptedException {
-        final String faust = "394825339999999999";
+        final String faust = "39482533";
 
 
         var apiLink = promatServiceBaseUrl + String.format("/v1/api/cases/faust/%s/fulltext", faust);
