@@ -932,6 +932,11 @@ public class ReviewersIT extends ContainerTest {
                 .stream()
                 .noneMatch(subjectNote -> subjectNote.getNote().contains("Some note to subject 1")));
 
+        assertThat("'Some note to subject 2' is still there", fetched.getSubjectNotes()
+                .stream()
+                .anyMatch(subjectNote -> subjectNote.getNote().contains("Some other note to subject 2")));
+
+
 
         // Put back initial subjects and subjectNotes, as to not wreck later tests.
         reviewerUpdateRequest
