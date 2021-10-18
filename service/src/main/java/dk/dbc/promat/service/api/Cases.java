@@ -555,10 +555,6 @@ public class Cases {
 
                     // This is EAN (barcode) or ISBN.
                     RecordsListDto faustList = (RecordsListDto) recordsResolver.resolveId(id);
-                    LOGGER.info("Resolved these fausts '{}' from this wildcard:{}",
-                            faustList.getRecords().stream().map(RecordDto::getFaust).collect(Collectors.joining(",")),
-                            id
-                            );
                     fausts.addAll(faustList.getRecords().stream().
                             map(RecordDto::getFaust).collect(Collectors.toList()));
                 }
