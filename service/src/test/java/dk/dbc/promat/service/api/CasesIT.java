@@ -2227,11 +2227,7 @@ public class CasesIT extends ContainerTest {
         // Query by isbn 9788764432589: Expected is at least the case just created.
         response = getResponse("v1/api/cases", Map.of("id", "9788764432589"));
         cases = mapper.readValue(response.readEntity(String.class), CaseSummaryList.class);
-        try {
-            Thread.sleep(20);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+       
         assertThat(cases.getNumFound(), is(greaterThanOrEqualTo(1)));
         assertThat("The newly created first case with this isbn is one of them",
                 cases.getCases().stream().map(PromatCase::getId).collect(Collectors.toList()).contains(created.getId()));
