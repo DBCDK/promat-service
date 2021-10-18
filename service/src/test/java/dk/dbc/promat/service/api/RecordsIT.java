@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory;
 import javax.ws.rs.core.Response;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.core.Is.is;
@@ -29,7 +30,7 @@ public class RecordsIT extends ContainerTest {
         assertThat("status code", response.getStatus(), is(200));
         RecordsListDto resolved = mapper.readValue(response.readEntity(String.class), RecordsListDto.class);
 
-        assertThat("results", resolved.getNumFound(), is(20));
+        assertThat("results", resolved.getNumFound(), greaterThanOrEqualTo(1));
     }
 
     @Test
@@ -38,8 +39,7 @@ public class RecordsIT extends ContainerTest {
         Response response = getResponse("v1/api/records/9788764432589");
         assertThat("status code", response.getStatus(), is(200));
         RecordsListDto resolved = mapper.readValue(response.readEntity(String.class), RecordsListDto.class);
-
-        assertThat("results", resolved.getNumFound(), is(20));
+        assertThat("results", resolved.getNumFound(), greaterThanOrEqualTo(1));
     }
 
     @Test

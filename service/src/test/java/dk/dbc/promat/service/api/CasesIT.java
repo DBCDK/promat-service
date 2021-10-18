@@ -2166,27 +2166,28 @@ public class CasesIT extends ContainerTest {
 
         // Create a new case
         CaseRequest dto = new CaseRequest()
-                .withTitle("Title for 24699773")
-                .withDetails("Details for 24699773")
-                .withPrimaryFaust("24699773")
+                .withTitle("Title for 27100104")
+                .withDetails("Details for 27100104")
+                .withPrimaryFaust("27100104")
                 .withEditor(10)
                 .withCreator(10)
                 .withReviewer(1)
                 .withSubjects(Arrays.asList(3, 4))
                 .withDeadline("2021-07-30")
                 .withMaterialType(MaterialType.BOOK)
-                .withPublisher("Publisher for 24699773")
+                .withPublisher("Publisher for 27100104")
                 .withTasks(Arrays.asList(
                         new TaskDto()
                                 .withTaskType(TaskType.GROUP_1_LESS_THAN_100_PAGES)
                                 .withTaskFieldType(TaskFieldType.BRIEF)
-                                .withTargetFausts(Collections.singletonList("24699773")),
+                                .withTargetFausts(Collections.singletonList("27100104")),
                         new TaskDto()
                                 .withTaskType(TaskType.GROUP_1_LESS_THAN_100_PAGES)
                                 .withTaskFieldType(TaskFieldType.METAKOMPAS)
-                                .withTargetFausts(Collections.singletonList("24699773"))));
+                                .withTargetFausts(Collections.singletonList("27100104"))));
 
         Response response = postResponse("v1/api/cases", dto);
+
         PromatCase created = mapper.readValue(response.readEntity(String.class), PromatCase.class);
         assertThat("status code", response.getStatus(), is(201));
 
@@ -2217,7 +2218,7 @@ public class CasesIT extends ContainerTest {
         assertThat("status code", response.getStatus(), is(201));
 
         // Query by id with faust 24699773: Expected is at least the case just created.
-        response = getResponse("v1/api/cases", Map.of("id", 24699773));
+        response = getResponse("v1/api/cases", Map.of("id", 27100104));
         CaseSummaryList cases = mapper.readValue(response.readEntity(String.class), CaseSummaryList.class);
         assertThat(cases.getNumFound(), is(greaterThanOrEqualTo(1)));
         assertThat("The newly created first case with this faust is one of them",
@@ -2226,6 +2227,11 @@ public class CasesIT extends ContainerTest {
         // Query by isbn 9788764432589: Expected is at least the case just created.
         response = getResponse("v1/api/cases", Map.of("id", "9788764432589"));
         cases = mapper.readValue(response.readEntity(String.class), CaseSummaryList.class);
+        try {
+            Thread.sleep(20);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
         assertThat(cases.getNumFound(), is(greaterThanOrEqualTo(1)));
         assertThat("The newly created first case with this isbn is one of them",
                 cases.getCases().stream().map(PromatCase::getId).collect(Collectors.toList()).contains(created.getId()));
@@ -2246,7 +2252,7 @@ public class CasesIT extends ContainerTest {
                         .containsAll(List.of(created_2.getId(), created.getId())));
 
         // Query by publisher: Expected is only the first.
-        response = getResponse("v1/api/cases", Map.of("publisher", "24699773"));
+        response = getResponse("v1/api/cases", Map.of("publisher", "27100104"));
         cases = mapper.readValue(response.readEntity(String.class), CaseSummaryList.class);
         List<Integer> caseIds = cases.getCases().stream().map(PromatCase::getId).collect(Collectors.toList());
         assertThat(cases.getNumFound(), is(greaterThanOrEqualTo(1)));
