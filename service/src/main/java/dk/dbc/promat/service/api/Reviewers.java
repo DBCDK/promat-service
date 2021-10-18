@@ -17,6 +17,7 @@ import dk.dbc.promat.service.persistence.Notification;
 import dk.dbc.promat.service.persistence.PromatEntityManager;
 import dk.dbc.promat.service.persistence.Reviewer;
 import dk.dbc.promat.service.persistence.ReviewerView;
+import dk.dbc.promat.service.persistence.Subject;
 import dk.dbc.promat.service.templating.NotificationFactory;
 import dk.dbc.promat.service.templating.model.ReviewerDataChanged;
 
@@ -283,7 +284,7 @@ public class Reviewers {
             if(reviewerRequest.getSubjects() != null) {
 
                 // If subjects were removed, make sure that associated notes are also removed.
-                reviewer.setSubjectNotes(repository.resolveSubjectNotes(reviewerRequest, reviewer.getSubjectNotes()));
+                reviewer.setSubjectNotes(repository.resolveSubjectNotes(reviewerRequest.getSubjects(), reviewer.getSubjectNotes()));
                 reviewer.setSubjects(repository.resolveSubjects(reviewerRequest.getSubjects()));
             }
             if(reviewerRequest.getSubjectNotes() != null) {
@@ -293,7 +294,12 @@ public class Reviewers {
                 if(reviewerRequest.getSubjects() != null) {
                     reviewer.setSubjectNotes(repository.checkSubjectNotes(reviewerRequest.getSubjectNotes(), reviewerRequest.getSubjects()));
                 } else {
-                    reviewer.setSubjectNotes(repository.resolveSubjectNotes(reviewerRequest, reviewerRequest.getSubjectNotes()));
+
+                    // Validate against existing subjects instead.
+                    reviewer.setSubjectNotes(
+                            repository.resolveSubjectNotes(
+                                    reviewer.getSubjects().stream().map(Subject::getId).collect(Collectors.toList()),
+                                    reviewerRequest.getSubjectNotes()));
                 }
             }
             if(reviewerRequest.getCapacity() != null) {

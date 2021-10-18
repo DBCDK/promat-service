@@ -93,13 +93,13 @@ public class Repository {
         return subjects;
     }
 
-    public List<SubjectNote> resolveSubjectNotes(ReviewerRequest reviewerRequest, Collection<SubjectNote> subjectNotes) {
-        if(subjectNotes == null || reviewerRequest.getSubjects() == null) {
+    public List<SubjectNote> resolveSubjectNotes(List<Integer> subjects, Collection<SubjectNote> subjectNotes) {
+        if(subjectNotes == null || subjects == null) {
             return List.of();
         }
         return subjectNotes
                 .stream()
-                .filter(subjectNote -> reviewerRequest.getSubjects().contains(subjectNote.getSubjectId()))
+                .filter(subjectNote -> subjects.contains(subjectNote.getSubjectId()))
                 .collect(Collectors.toList());
     }
 
