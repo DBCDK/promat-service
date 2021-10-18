@@ -12,14 +12,11 @@ import dk.dbc.promat.service.Repository;
 import dk.dbc.promat.service.dto.ReviewerList;
 import dk.dbc.promat.service.dto.ReviewerRequest;
 import dk.dbc.promat.service.dto.ReviewerWithWorkloads;
-import dk.dbc.promat.service.dto.ServiceErrorCode;
 import dk.dbc.promat.service.dto.ServiceErrorDto;
 import dk.dbc.promat.service.persistence.Notification;
 import dk.dbc.promat.service.persistence.PromatEntityManager;
 import dk.dbc.promat.service.persistence.Reviewer;
 import dk.dbc.promat.service.persistence.ReviewerView;
-import dk.dbc.promat.service.persistence.Subject;
-import dk.dbc.promat.service.persistence.SubjectNote;
 import dk.dbc.promat.service.templating.NotificationFactory;
 import dk.dbc.promat.service.templating.model.ReviewerDataChanged;
 
@@ -284,26 +281,21 @@ public class Reviewers {
                 reviewer.setPrivatePhone(reviewerRequest.getPrivatePhone());
             }
             if(reviewerRequest.getSubjects() != null) {
+
+                // If subjects were removed, make sure that associated notes are also removed.
+                reviewer.setSubjectNotes(repository.resolveSubjectNotes(reviewerRequest, reviewer.getSubjectNotes()));
                 reviewer.setSubjects(repository.resolveSubjects(reviewerRequest.getSubjects()));
             }
             if(reviewerRequest.getSubjectNotes() != null) {
-                reviewer.setSubjectNotes(repository.checkSubjectNotes(reviewerRequest.getSubjectNotes(),
-                        reviewer.getSubjects().stream().map(Subject::getId).collect(Collectors.toList())));
-            }
 
-            // If some subjects were removed, check that some subjectNotes were not left "dangling"
-            if (reviewerRequest.getSubjects() != null) {
-                if (!reviewerRequest.getSubjects().containsAll(
-                        reviewer.getSubjectNotes().stream().map(SubjectNote::getSubjectId).collect(Collectors.toList())
-                )) {
-                    throw new ServiceErrorException("Attempt to remove some subjects, when subjectNodes to them still exist.")
-                            .withHttpStatus(400)
-                            .withCode(ServiceErrorCode.INVALID_REQUEST)
-                            .withCause("Delete not allowed")
-                            .withDetails(String.format("Not all 'subjectNotes' were removed before setting (ids) %s", reviewerRequest.getSubjects()));
+                // If both subjects and subjectnotes were changed, make sure that the supplied subjectnotes refer to
+                // subjects present in the new subjectlist.
+                if(reviewerRequest.getSubjects() != null) {
+                    reviewer.setSubjectNotes(repository.checkSubjectNotes(reviewerRequest.getSubjectNotes(), reviewerRequest.getSubjects()));
+                } else {
+                    reviewer.setSubjectNotes(repository.resolveSubjectNotes(reviewerRequest, reviewerRequest.getSubjectNotes()));
                 }
             }
-
             if(reviewerRequest.getCapacity() != null) {
                 reviewer.setCapacity(reviewerRequest.getCapacity());
             }

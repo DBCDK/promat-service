@@ -921,10 +921,17 @@ public class ReviewersIT extends ContainerTest {
         response = putResponse("v1/api/reviewers/6", reviewerUpdateRequest, "1-2-3-4-5");
         assertThat("response status", response.getStatus(), is(400));
 
-        // Check that a subject cannot be removed, without first removing any related notes.
-        reviewerUpdateRequest.withSubjectNotes(null).withSubjects(List.of());
+
+        // Check that if we delete a subject (1) that has a related note, this note is also removed.
+        reviewerUpdateRequest.withSubjectNotes(null).withSubjects(List.of(2));
         response = putResponse("v1/api/reviewers/6", reviewerUpdateRequest, "1-2-3-4-5");
-        assertThat("response status", response.getStatus(), is(400));
+        assertThat("resonse status", response.getStatus(), is(200));
+        fetched = mapper.readValue(response.readEntity(String.class), Reviewer.class);
+
+        assertThat("no 'Some note to subject 1'", fetched.getSubjectNotes()
+                .stream()
+                .noneMatch(subjectNote -> subjectNote.getNote().contains("Some note to subject 1")));
+
 
         // Put back initial subjects and subjectNotes, as to not wreck later tests.
         reviewerUpdateRequest

@@ -6,6 +6,7 @@
 package dk.dbc.promat.service;
 
 import dk.dbc.promat.service.api.ServiceErrorException;
+import dk.dbc.promat.service.dto.ReviewerRequest;
 import dk.dbc.promat.service.dto.ServiceErrorCode;
 
 import javax.ejb.Stateless;
@@ -14,6 +15,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.LockModeType;
 import javax.persistence.Query;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -89,6 +91,16 @@ public class Repository {
             subjects.add(subject);
         }
         return subjects;
+    }
+
+    public List<SubjectNote> resolveSubjectNotes(ReviewerRequest reviewerRequest, Collection<SubjectNote> subjectNotes) {
+        if(subjectNotes == null || reviewerRequest.getSubjects() == null) {
+            return List.of();
+        }
+        return subjectNotes
+                .stream()
+                .filter(subjectNote -> reviewerRequest.getSubjects().contains(subjectNote.getSubjectId()))
+                .collect(Collectors.toList());
     }
 
     public List<SubjectNote> checkSubjectNotes(List<SubjectNote> subjectNotes, List<Integer> reviewerSubjectIds) throws ServiceErrorException {
