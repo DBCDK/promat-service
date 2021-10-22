@@ -1,0 +1,181 @@
+#!/bin/bash
+
+if [ ! "$(docker images | grep dbc-postgres-13)" ];
+then
+  echo "### Pulling dbc-postgres-13 image ###"
+  docker pull docker.dbc.dk/dbc-postgres-13:latest
+fi
+
+# Setup a docker network
+echo ""
+echo "### Creating docker network ###"
+docker network create promat-network
+
+echo ""
+echo "### Starting local postgresql ###"
+docker run -d --rm --name postgresql \
+  -e POSTGRES_PASSWORD=promattest \
+  -e POSTGRES_USER=promat \
+  -e POSTGRES_DB=promattest \
+  -p 5432:5432 \
+  --net promat-network \
+  docker.dbc.dk/dbc-postgres-13:latest
+
+echo ""
+echo "### Waiting for local postgresql to become available ###"
+attempts=0
+max_attempts=60
+until pg_isready -h localhost -p 5432 &> /dev/null; do
+  if [[ ${attempts} -eq ${max_attempts} ]]; then
+      break
+  fi
+
+  printf '.'
+  attempts=$(($attempts+1))
+  sleep 0.5
+done
+
+echo ""
+echo "### Status for local postgresql ###"
+if ! pg_isready -h localhost -p 5432 &> /dev/null;
+then
+  echo "Local postgresql did not become available"
+  exit
+fi
+pg_isready -h localhost -p 5432
+
+# Load testdata into the database
+# (dbc-postgress only runs *.sh, not .sql and .pgdump as stated in the documentation"
+if [ -z ${PROMAT_DB_DUMP} ];
+then
+  echo "### [Note: To preload a database dump, set PROMAT_DB_DUMP to the filename of the dump]"
+else
+  echo ""
+  echo "### Loading database dump ###"
+  PGPASSWORD=promattest psql -h localhost -U promat -d promattest -a -v ON_ERROR_STOP=on -f ${PROMAT_DB_DUMP} &> db.logs
+  if [ $? -ne 0 ];
+  then
+    echo "### WARNING: One or more scripts failed to load  ###"
+    echo "###                                              ###"
+    echo "### Press any key to continue..                  ###"
+    read -n 1 -s -r
+  fi
+fi
+
+# Provide reasonable defaults for local testing of the service
+export PROMAT_DB_URL='promat:promattest@postgresql:5432/promattest'
+export CULR_SERVICE_URL=${CULR_SERVICE_URL:-https://culr.addi.dk/1.4/CulrWebService}
+if [ -z ${CULR_SERVICE_USER_ID} ] || [ -z ${CULR_SERVICE_PASSWORD} ];
+then
+  echo ""
+  echo "### [Note: If you need access to the /users/{culrid}/role endpoint, please set CULR credentials] ###"
+  echo "### '''                                                                                          ###"
+  echo "###   export CULR_SERVICE_USER_ID=...                                                            ###"
+  echo "###   export CULR_SERVICE_PASSWORD=...                                                           ###"
+  echo "### '''                                                                                          ###"
+fi
+export CULR_SERVICE_USER_ID=${CULR_SERVICE_USER_ID:-'xyz'}
+export CULR_SERVICE_PASSWORD=${CULR_SERVICE_PASSWORD:-'abc'}
+export OPENSEARCH_SERVICE_URL=${OPENSEARCH_SERVICE_URL:-'http://opensearch-5-2-dbckat-service.cisterne.svc.cloud.dbc.dk/b3.5_5.2/'}
+export OPENSEARCH_PROFILE=${OPENSEARCH_PROFILE:-'dbckat'}
+export OPENSEARCH_AGENCY=${OPENSEARCH_AGENCY:-'010100'}
+export OPENSEARCH_REPOSITORY=${OPENSEARCH_REPOSITORY:-'rawrepo_basis'}
+export WORK_PRESENTATION_SERVICE_URL=${WORK_PRESENTATION_SERVICE_URL:-'http://work-presentation-service.cisterne.svc.cloud.dbc.dk/api/'}
+export WORK_PRESENTATION_PROFILE=${WORK_PRESENTATION_PROFILE:-'test'}
+export PROMAT_CLUSTER_NAME=${PROMAT_CLUSTER_NAME:-'promattest.cluster'}
+if [ -z ${MAIL_HOST} ] || [ -z ${MAIL_USER} ] || [ -z ${MAIL_FROM} ];
+then
+  echo ""
+  echo "### [Note: If you need mail capabilities, please set MAIL credentials] ###"
+  echo "### '''                                                                ###"
+  echo "###   export MAIL_HOST=...                                             ###"
+  echo "###   export MAIL_USER=...                                             ###"
+  echo "###   export MAIL_FROM=...                                             ###"
+  echo "### '''                                                                ###"
+fi
+export MAIL_HOST=${MAIL_HOST:-'none'}
+export MAIL_USER=${MAIL_USER:-'none'}
+export MAIL_FROM=${MAIL_FROM:-'none'}
+export PROMAT_AGENCY_ID=${PROMAT_AGENCY_ID:-'191977'}
+export OPENFORMAT_SERVICE_URL=${OPENFORMAT_SERVICE_URL:-'http://openformat-php-master.frontend-prod.svc.cloud.dbc.dk/'}
+export LU_MAILADDRESS=${LU_MAILADDRESS:-'promat-gui-aaaadjsmda6dkoc33u62545hvy@dbcdk.slack.com'}
+export MP_OPENAPI_SERVERS='http://localhost:${promat_service_port}/v1/api'
+export OPENAPI_UI_CONTEXTROOT='http://localhost:${promat_service_port}'
+export OPENNUMBERROLL_SERVICE_URL=${OPENNUMBERROLL_SERVICE_URL:-'https://opennumberroll.addi.dk/1.1/'}
+export OPENNUMBERROLL_NUMBERROLLNAME=${OPENNUMBERROLL_NUMBERROLLNAME:-'faust'}
+export ENABLE_REMINDERS='false'
+export EMATERIAL_CONTENT_REPO='http://promat.dbc.dk/eVALU/get.php?faust=%s'
+if [ -z ${OAUTH2_CLIENT_ID} ] || [ -z ${OAUTH2_CLIENT_SECRET} ] || [ -z ${OAUTH2_INTROSPECTION_URL} ];
+then
+  echo ""
+  echo "### [Note: If you need access to authorized endpoints, please set OAUTH credentials] ###"
+  echo "### '''                                                                              ###"
+  echo "###   export OAUTH2_CLIENT_ID=...                                                    ###"
+  echo "###   export OAUTH2_CLIENT_SECRET=...                                                ###"
+  echo "###   export OAUTH2_INTROSPECTION_URL=...                                            ###"
+  echo "### '''                                                                              ###"
+fi
+export OAUTH2_CLIENT_ID=${OAUTH2_CLIENT_ID:-'abc'}
+export OAUTH2_CLIENT_SECRET=${OAUTH2_CLIENT_SECRET:-'xyz'}
+export OAUTH2_INTROSPECTION_URL=${OAUTH2_INTROSPECTION_URL:-'http://localhost'}
+
+# Start the local promat service container
+echo ""
+./start --net promat-network
+
+# Wait for user to quit
+echo "### Base url:         http://localhost:8080/v1/api/             ###"
+echo "### OpenAPI document: http://localhost:8080/openapi/            ###"
+echo "### OpenAPI browser:  http://localhost:8080/v1/api/openapi-ui   ###"
+echo "###                                                             ###"
+echo "### Press 'p' to open psql on the promat database               ###"
+echo "### Press 'o' to open the openapi browser                       ###"
+echo "### Press 'l' to show the service logs                          ###"
+echo "### Press 'q' to stop the service                               ###"
+while true;
+do
+  read -n 1 -s -r key
+  if [[ $key = 'p' ]];
+  then
+    PGPASSWORD=promattest psql -h localhost -U promat -d promattest
+    echo "###                                                             ###"
+    echo "### Back again..                                                ###"
+  fi
+  if [[ $key = 'o' ]];
+  then
+    xdg-open http://localhost:8080/v1/api/openapi-ui
+  fi
+  if [[ $key = 'l' ]];
+  then
+    docker logs $(docker ps | grep promat | cut -d ' ' -f 1) | less
+  fi
+  if [[ $key = "q" ]];
+  then
+      echo "###                                                             ###"
+      echo "### About to stop..!  press q again to quit                     ###"
+    read -n 1 -s -r key
+    if [[ $key = "q" ]];
+    then
+      break
+    else
+      echo "### Alrighty..  lets keep playing                               ###"
+    fi
+  fi
+done
+
+# Stop the service
+echo ""
+./stop
+
+# Stop the database
+echo ""
+echo "### Stopping local postgresql ###"
+docker stop postgresql
+
+# Remove network
+echo ""
+echo "### Remove docker network###"
+docker network rm promat-network
+
+echo ""
+echo "### All done ###"
