@@ -83,7 +83,7 @@ export OPENSEARCH_REPOSITORY=${OPENSEARCH_REPOSITORY:-'rawrepo_basis'}
 export WORK_PRESENTATION_SERVICE_URL=${WORK_PRESENTATION_SERVICE_URL:-'http://work-presentation-service.cisterne.svc.cloud.dbc.dk/api/'}
 export WORK_PRESENTATION_PROFILE=${WORK_PRESENTATION_PROFILE:-'test'}
 export PROMAT_CLUSTER_NAME=${PROMAT_CLUSTER_NAME:-'promattest.cluster'}
-if [ -z ${MAIL_HOST} ] || [ -z ${MAIL_USER} ] || [ -z ${MAIL_FROM} ];
+if [ -z ${MAIL_HOST} ] || [ -z ${MAIL_USER} ] || [ -z ${MAIL_FROM} ] || [ -z ${LU_MAILADDRESS} ];
 then
   echo ""
   echo "### [Note: If you need mail capabilities, please set MAIL credentials] ###"
@@ -91,14 +91,15 @@ then
   echo "###   export MAIL_HOST=...                                             ###"
   echo "###   export MAIL_USER=...                                             ###"
   echo "###   export MAIL_FROM=...                                             ###"
+  echo "###   export LU_MAILADDRESS=...                                        ###"
   echo "### '''                                                                ###"
 fi
 export MAIL_HOST=${MAIL_HOST:-'none'}
 export MAIL_USER=${MAIL_USER:-'none'}
 export MAIL_FROM=${MAIL_FROM:-'none'}
+export LU_MAILADDRESS=${LU_MAILADDRESS:-'none'}
 export PROMAT_AGENCY_ID=${PROMAT_AGENCY_ID:-'191977'}
 export OPENFORMAT_SERVICE_URL=${OPENFORMAT_SERVICE_URL:-'http://openformat-php-master.frontend-prod.svc.cloud.dbc.dk/'}
-export LU_MAILADDRESS=${LU_MAILADDRESS:-'promat-gui-aaaadjsmda6dkoc33u62545hvy@dbcdk.slack.com'}
 export MP_OPENAPI_SERVERS='http://localhost:${promat_service_port}/v1/api'
 export OPENAPI_UI_CONTEXTROOT='http://localhost:${promat_service_port}'
 export OPENNUMBERROLL_SERVICE_URL=${OPENNUMBERROLL_SERVICE_URL:-'https://opennumberroll.addi.dk/1.1/'}
