@@ -58,14 +58,17 @@ public class ScheduledCaseInformationUpdater {
 
                 try {
                     List<PromatCase> casesForUpdate = getCasesForUpdate();
-                    if(casesForUpdate != null && casesForUpdate.size() > 0) {
-                        for(PromatCase promatCase : casesForUpdate) {
+                    if (casesForUpdate != null && casesForUpdate.size() > 0) {
+                        for (PromatCase promatCase : casesForUpdate) {
                             LOGGER.info("Updating case with id {}", promatCase.getId());
                             caseInformationUpdater.updateCaseInformation(promatCase);
                         }
                     }
 
                     entityManager.flush();
+                } catch(Exception e) {
+                    LOGGER.error("Caught exception {}:{} when trying to update cases", e.getCause(), e.getMessage());
+                    LOGGER.info("Exception stacktrace: {}", e.getStackTrace());
                 } finally {
                     updateLock.unlock();
                 }

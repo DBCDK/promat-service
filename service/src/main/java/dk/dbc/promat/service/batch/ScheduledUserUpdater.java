@@ -62,14 +62,14 @@ public class ScheduledUserUpdater {
                     List<Editor> inactiveEditors = getInactiveEditors();
                     List<Reviewer> inactiveReviewers = getInactiveReviewers();
 
-                    if( inactiveEditors != null && inactiveEditors.size() > 0 ) {
+                    if (inactiveEditors != null && inactiveEditors.size() > 0) {
                         for (Editor editor : inactiveEditors) {
                             LOGGER.info("Updating inactive editor with id {}", editor.getId());
                             userUpdater.deactivateEditor(editor);
                         }
                     }
 
-                    if( inactiveReviewers != null && inactiveReviewers.size() > 0 ) {
+                    if (inactiveReviewers != null && inactiveReviewers.size() > 0) {
                         for (Reviewer reviewer : inactiveReviewers) {
                             LOGGER.info("Updating inactive reviewer with id {}", reviewer.getId());
                             userUpdater.deactivateReviewer(reviewer);
@@ -77,6 +77,9 @@ public class ScheduledUserUpdater {
                     }
 
                     entityManager.flush();
+                } catch(Exception e) {
+                    LOGGER.error("Caught exception {}:{} when trying to update users", e.getCause(), e.getMessage());
+                    LOGGER.info("Exception stacktrace: {}", e.getStackTrace());
                 } finally {
                     updateLock.unlock();
                 }
