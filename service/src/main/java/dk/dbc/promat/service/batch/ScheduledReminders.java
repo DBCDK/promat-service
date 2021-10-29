@@ -44,12 +44,20 @@ public class ScheduledReminders {
             //  In the intermediary period, where old and new versions of promat are running
             //  side by side, we might risk mails being sent from here on "stale" cases,
             //  already handled in old promat.
-            if ("true".equals(ENABLE_REMINDERS.toLowerCase())) {
-                reminders.processReminders();
-            } else {
-                LOGGER.info("Reminders batch is currently switched off '{}'. To reenable set env var ENABLE_REMINDERS to true.", ENABLE_REMINDERS);
+            try {
+                if ("true".equals(ENABLE_REMINDERS.toLowerCase())) {
+                    reminders.processReminders();
+                } else {
+                    LOGGER.info("Reminders batch is currently switched off '{}'. To reenable set env var ENABLE_REMINDERS to true.", ENABLE_REMINDERS);
+                }
             }
-            lock.unlock();
+            catch(Exception e) {
+                LOGGER.error("Caught exception {}:{} when trying to process reminders", e.getCause(), e.getMessage());
+                LOGGER.info("Exception stacktrace: {}", e.getStackTrace());
+            }
+            finally {
+                lock.unlock();
+            }
         }
     }
 }
