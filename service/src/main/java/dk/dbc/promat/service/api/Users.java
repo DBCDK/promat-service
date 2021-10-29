@@ -12,6 +12,7 @@ import dk.dbc.promat.service.dto.UserRole;
 import dk.dbc.promat.service.persistence.PromatEntityManager;
 import dk.dbc.promat.service.persistence.PromatUser;
 
+import javax.annotation.security.RolesAllowed;
 import javax.ejb.Stateless;
 import javax.inject.Inject;
 import javax.persistence.EntityManager;
@@ -38,6 +39,7 @@ public class Users {
     @GET
     @Path("{culrId}/role")
     @Produces({MediaType.APPLICATION_JSON})
+    @RolesAllowed({"authenticated-user"})
     public Response getUserRole(@PathParam("culrId") String culrId) throws CulrConnectorException {
         final TypedQuery<UserRole> query = entityManager.createNamedQuery(PromatUser.GET_USER_ROLE, UserRole.class);
         query.setParameter(1, culrId);

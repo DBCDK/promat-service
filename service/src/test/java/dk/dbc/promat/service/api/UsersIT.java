@@ -20,7 +20,7 @@ class UsersIT extends ContainerTest  {
 
     @Test
     void resolveReviewer() throws JsonProcessingException {
-        final Response response = getResponse("v1/api/users/41/role");
+        final Response response = getResponse("v1/api/users/41/role", "1-2-3-4-5");
         assertThat("response status", response.getStatus(), is(200));
 
         final UserRole userRole = mapper.readValue(response.readEntity(String.class), UserRole.class);
@@ -29,7 +29,7 @@ class UsersIT extends ContainerTest  {
 
     @Test
     void resolveEditor() throws JsonProcessingException {
-        final Response response = getResponse("v1/api/users/51/role");
+        final Response response = getResponse("v1/api/users/51/role", "1-2-3-4-5");
         assertThat("response status", response.getStatus(), is(200));
 
         final UserRole userRole = mapper.readValue(response.readEntity(String.class), UserRole.class);
