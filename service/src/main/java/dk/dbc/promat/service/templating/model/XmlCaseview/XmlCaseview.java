@@ -11,7 +11,6 @@ import dk.dbc.promat.service.templating.Formatting;
 import javax.xml.bind.annotation.XmlElement;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Locale;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -73,7 +72,7 @@ public class XmlCaseview {
 
         // Return task data, if a task was found
         if(task.isPresent()) {
-            return task.get().getData();
+            return task.get().getData() != null ? task.get().getData() : "";
         }
 
         // No data was found. This is not an error - it is totally plausible that fields does not exist
@@ -81,7 +80,6 @@ public class XmlCaseview {
     }
 
     public XmlCaseview from(String hostname, String requestedFaust, PromatCase promatCase) throws ServiceErrorException {
-
         String bkmeval = GetTaskDataForFaust(requestedFaust, TaskFieldType.BKM, promatCase.getTasks());
         String brief = GetTaskDataForFaust(requestedFaust, TaskFieldType.BRIEF, promatCase.getTasks());
         String description = GetTaskDataForFaust(requestedFaust, TaskFieldType.DESCRIPTION, promatCase.getTasks());
@@ -101,7 +99,6 @@ public class XmlCaseview {
                 .map(t -> t.trim().toLowerCase())
                 .filter(t -> !t.isEmpty())
                 .collect(Collectors.toList());
-
         caseviewResponse = new XmlCaseviewResponse()
                 .withServer(hostname)
                 .withRequestArg(new XmlCaseviewRequestArg()
