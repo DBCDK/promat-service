@@ -1,0 +1,5 @@
+echo "### Stopping dmat service docker ###"
+
+source "$(realpath $(dirname "${0}")/..)/scripts/common"
+
+docker rm -f ${DOCKER_REPOSITORY}:devel || exit 1

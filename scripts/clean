@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+
+source "$(realpath $(dirname "${0}")/..)/scripts/common"
+
+mvn clean
+docker rm -f ${DOCKER_REPOSITORY}:devel &>/dev/null || true
+exit 0
