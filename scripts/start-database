@@ -3,7 +3,7 @@
 source "$(realpath $(dirname "${0}")/..)/scripts/common"
 
 docker run -ti --rm --name "${DOCKER_NAME}-database" \
-  -e "POSTGRES_DB=promattest" \
+  -e "POSTGRES_DB=${USER}" \
   -e "POSTGRES_USER=${USER}" \
   -e "POSTGRES_PASSWORD=${USER}" \
   -e "LOG_FORMAT=${LOG_FORMAT}" \
