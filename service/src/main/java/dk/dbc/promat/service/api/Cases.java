@@ -1206,7 +1206,7 @@ public class Cases {
         // Todo: Here we should use a set of standard phrases, something that is still in the future
         String text = "";
         if( promatCase.getTasks().stream().anyMatch(t -> t.getTaskFieldType() == TaskFieldType.METAKOMPAS) ) {
-            text += "Du bedes tildele metadata via <a href=\"https://metakompas.dk\">https://metakompas.dk</a>";
+            text += " Du bedes tildele metadata til Læsekompasset via <a href=\"https://metakompas.dk\">https://metakompas.dk</a>";
         }
         if( promatCase.getTasks().stream().anyMatch(t -> t.getTaskFieldType() == TaskFieldType.BKM) ) {
             text += (text.length() > 0 ? "\n\n" : "");
