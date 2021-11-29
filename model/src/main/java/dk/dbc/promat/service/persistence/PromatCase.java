@@ -125,8 +125,8 @@ public class PromatCase {
             "                                                 on t.id = ct.task_id" +
             "                                              where (c.primaryFaust = :faust" +
             "                                                 or function('JsonbContainsFromString', t.targetFausts, :faust))" +
-            "                                                and c.status not in (dk.dbc.promat.service.persistence.CaseStatus.CLOSED, " +
-            "                                                                     dk.dbc.promat.service.persistence.CaseStatus.DELETED)";
+            "                                                and c.status not in (dk.dbc.promat.service.persistence.CaseStatus.DELETED)" +
+            "                                              order by c.id desc";
 
     public static final String LIST_CASE_BY_FAUST_NAME =
             "PromatCase.list.case.by.faust";

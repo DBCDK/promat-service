@@ -1499,6 +1499,42 @@ public class CasesIT extends ContainerTest {
     }
 
     @Test
+    public void testDbckatHtmlViewOfPrimaryFaustClosedBKM() throws IOException, PromatServiceConnectorException {
+
+        CaseRequest dto = new CaseRequest()
+                .withTitle("Title for 90001234")
+                .withDetails("Details for 90001234")
+                .withPrimaryFaust("90001234")
+                .withEditor(10)
+                .withSubjects(Arrays.asList(3, 4))
+                .withDeadline("2021-04-01")
+                .withMaterialType(MaterialType.BOOK)
+                .withTasks(Arrays.asList(
+                        new TaskDto()
+                                .withTaskType(TaskType.GROUP_1_LESS_THAN_100_PAGES)
+                                .withTaskFieldType(TaskFieldType.BRIEF)
+                                .withTargetFausts(List.of("90001234")),
+                        new TaskDto()
+                                .withTaskType(TaskType.GROUP_1_LESS_THAN_100_PAGES)
+                                .withTaskFieldType(TaskFieldType.BKM)
+                                .withTargetFausts(List.of("90001234"))
+                ));
+        Response response = postResponse("v1/api/cases", dto);
+        assertThat("status code", response.getStatus(), is(201));
+        PromatCase aCase = mapper.readValue(response.readEntity(String.class), PromatCase.class);
+
+        // Casewiew available since the case has status 'CREATED', expect no exception
+        promatServiceConnector.getCaseviewWithOverride("90001234", "HTML"); // Uses query parameter ?override=true
+
+        // Close the case
+        dto = new CaseRequest().withStatus(CaseStatus.CLOSED);
+        response = postResponse("v1/api/cases/" + aCase.getId(), dto);
+
+        // Casewiew still available when the case has status 'CLOSED', expect no exception
+        promatServiceConnector.getCaseviewWithOverride("90001234", "HTML"); // Uses query parameter ?override=true
+    }
+
+    @Test
     public void testMaterialsFilterQuery() throws PromatServiceConnectorException, JsonProcessingException {
         // Create a BOOK case
         CaseRequest dto = new CaseRequest()
@@ -2537,7 +2573,7 @@ public class CasesIT extends ContainerTest {
         assertThat("found case A", found.getCases().stream().anyMatch(c -> c.getTitle().equals("CASE A")));
         assertThat("found case B", found.getCases().stream().anyMatch(c -> c.getTitle().equals("CASE B")));
 
-        // Caseview (html/xml) of faust 5004522 can only find case B and does not explode
+        // Caseview (html/xml) of faust 5004522 finds case B and does not explode
         String actual = promatServiceConnector.getCaseview("5004522", "HTML", true, StandardCharsets.ISO_8859_1);
         assertThat("got caseview", actual.contains("CASE B"));
 

@@ -367,6 +367,9 @@ public class Cases {
         LOGGER.info("cases/{}/{}?override={}", faust, format, override);
 
         try {
+            // Fetch matching cases. All cases that contains the faustnumber will be found, but we
+            // only return the first match (which, due to sort DESC is the newest case.. NOT the last case to
+            // have its status changed, should that be the case, but the last case created)
             TypedQuery query = entityManager.createNamedQuery(PromatCase.GET_CASE_BY_FAUST_NAME, PromatCase.class);
             query.setParameter("faust", faust);
             List<PromatCase> cases = query.getResultList();
@@ -374,10 +377,6 @@ public class Cases {
                 LOGGER.info("No case with faust {}", faust);
                 return ServiceErrorDto.NotFound("No case with this primary- or relatedfaust or no case in required states",
                         String.format("No case with primary- or relatedfaust %s or in required states exists", faust));
-            }
-            if (cases.size() > 1) {
-                LOGGER.error("Too many cases with faust {} ({} cases)", faust, cases.size());
-                return ServiceErrorDto.Failed(String.format("Too many cases with primary- or relatedfaust %s exists", faust));
             }
             if (cases.get(0).getTasks() == null || cases.get(0).getTasks().size() == 0) {
                 LOGGER.error("Case with faust {} has no tasks", faust);
