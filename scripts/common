@@ -1,0 +1,79 @@
+#!/usr/bin/env bash
+
+set -e
+
+getMyIP() {
+    local _ip _line
+    while IFS=$': \t' read -a _line ;do
+        [ -z "${_line%inet}" ] &&
+           _ip=${_line[${#_line[1]}>4?1:2]} &&
+           [ "${_ip#127.0.0.1}" ] && echo $_ip && return 0
+      done< <(LANG=C /sbin/ifconfig)
+}
+
+# build and test run values
+PORT=${PORT:-8080}
+DB_PORT=${DB_PORT:-5432}
+DOCKER_NAMESPACE=docker-io.dbc.dk
+DOCKER_NAME=promat-service
+DOCKER_REPOSITORY=${DOCKER_NAMESPACE}/${DOCKER_NAME}
+
+# sample app values
+PROMAT_DB_URL=${PROMAT_DB_URL:-"${USER}:${USER}@$(getMyIP):${DB_PORT}/${USER}"}
+CULR_SERVICE_URL=${CULR_SERVICE_URL:-"none"}
+CULR_SERVICE_USER_ID=${CULR_SERVICE_USER_ID:-"none"}
+CULR_SERVICE_PASSWORD=${CULR_SERVICE_PASSWORD:-"none"}
+OPENSEARCH_SERVICE_URL=${OPENSEARCH_SERVICE_URL}
+OPENSEARCH_PROFILE=${OPENSEARCH_PROFILE}
+OPENSEARCH_AGENCY=${OPENSEARCH_AGENCY}
+OPENSEARCH_REPOSITORY=${OPENSEARCH_REPOSITORY}
+WORK_PRESENTATION_SERVICE_URL=${WORK_PRESENTATION_SERVICE_URL}
+WORK_PRESENTATION_PROFILE=${WORK_PRESENTATION_PROFILE}
+PROMAT_CLUSTER_NAME=${PROMAT_CLUSTER_NAME:-"promatcluster"}
+MAIL_HOST=${MAIL_HOST:-"none"}
+MAIL_USER=${MAIL_USER:-"none"}
+MAIL_FROM=${MAIL_FROM:-"none"}
+PROMAT_AGENCY_ID=${PROMAT_AGENCY_ID}
+OPENFORMAT_SERVICE_URL=${OPENFORMAT_SERVICE_URL}
+LU_MAILADDRESS=${LU_MAILADDRESS:-"none"}
+MP_OPENAPI_SERVERS="http://$(getMyIP):${PORT}/v1/api"
+OPENAPI_UI_CONTEXTROOT="http://$(getMyIP):${PORT}"
+OPENNUMBERROLL_SERVICE_URL=${OPENNUMBERROLL_SERVICE_URL:-https:'//opennumberroll.addi.dk/1.1/'}
+OPENNUMBERROLL_NUMBERROLLNAME=${OPENNUMBERROLL_NUMBERROLLNAME:-'faust'}
+ENABLE_REMINDERS=${ENABLE_REMINDERS}
+EMATERIAL_CONTENT_REPO=${EMATERIAL_CONTENT_REPO}
+OAUTH2_CLIENT_ID=${OAUTH2_CLIENT_ID:-"dummy-client-id"}
+OAUTH2_CLIENT_SECRET=${OAUTH2_CLIENT_SECRET:-"dummy-client-secret"}
+OAUTH2_INTROSPECTION_URL=${OAUTH2_INTROSPECTION_URL:-"none"}
+
+# base image mandatory values
+JAVA_MAX_HEAP_SIZE=${JAVA_MAX_HEAP_SIZE:-2G}
+LOG_FORMAT=${LOG_FORMAT:-text}
+
+# Lets color a bit. This is clearly a waste of time... (setup in load function).
+_NOCOLOR=
+_ERROR_COLOR=
+_INFO_COLOR=
+function info() {
+  echo "$(date +"%T.%N") ${_INFO_COLOR}INFO :${_NOCOLOR}" "$@"
+}
+
+function debug() {
+  echo "$(date +"%T.%N") DEBUG:" "$@"
+}
+
+function error() {
+  echo "$(date +"%T.%N") ${_ERROR_COLOR}ERROR:${_NOCOLOR}" "$@"
+}
+
+function die() {
+  error "$@"
+  exit 1
+}
+
+# If tty output, lets put some colors on.
+if [ -t 1 ] ; then
+  _INFO_COLOR=$(tput setaf 2)  # Green
+  _ERROR_COLOR=$(tput setaf 1)
+  _NOCOLOR=$(tput sgr0)
+fi

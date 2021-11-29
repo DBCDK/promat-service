@@ -1,3 +1,0 @@
-echo "### Stopping promat service docker ###"
-
-docker rm -f promat-service || exit 1
