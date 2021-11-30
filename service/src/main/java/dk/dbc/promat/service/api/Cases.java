@@ -869,6 +869,15 @@ public class Cases {
                     }
                 }
 
+                // If status is changing from any inactive state, back to CREATED or ASSIGNED,
+                // then check that any faustnumber on the case is not in use on any active case
+                if( (existing.getStatus() == CaseStatus.CLOSED ||
+                        existing.getStatus() == CaseStatus.DELETED ||
+                        existing.getStatus() == CaseStatus.REVERTED) &&
+                        (status == CaseStatus.CREATED || status == CaseStatus.ASSIGNED)) {
+                    checkValidFaustNumbersOnExisting(existing);
+                }
+
                 existing.setStatus(status);
 
                 // If status changed to PENDING_EXPORT, the case must be enriched with a new faustnumber
@@ -1178,6 +1187,37 @@ public class Cases {
         }
     }
 
+    private void checkValidFaustNumbersOnExisting(PromatCase existing) throws ServiceErrorException {
+
+        // Check that no existing case exists with the same primary or related faustnumber
+        // as the given primary faustnumber and a state other than CLOSED or DONE
+        if(!Faustnumbers.checkNoOpenCaseWithFaust(entityManager, existing.getId(), existing.getPrimaryFaust())) {
+            LOGGER.info("Case with primary or related Faust {} and state <> CLOSED|DONE exists", existing.getPrimaryFaust());
+            throw new ServiceErrorException(String.format("Case with primary or related faust %s and status not DONE or CLOSED exists", existing.getPrimaryFaust()))
+                    .withHttpStatus(409)
+                    .withCode(ServiceErrorCode.FAUST_IN_USE)
+                    .withCause("Faustnumber is in use")
+                    .withDetails(String.format("Case with primary or related faust %s and status not DONE or CLOSED exists", existing.getPrimaryFaust()));
+        }
+
+        // Check that no existing case exists with the same primary or related faustnumber
+        // as the given faustnumbers on any task, and a state other than CLOSED or DONE
+        if( existing.getTasks() != null) {
+            for(PromatTask task : existing.getTasks()) {
+                if(task.getTargetFausts() != null) {
+                    if(!Faustnumbers.checkNoOpenCaseWithFaust(entityManager, existing.getId(), task.getTargetFausts().toArray(String[]::new))) {
+                        LOGGER.info("Case contains a task with one or more targetFaust {} used by other active cases", task.getTargetFausts());
+                        throw new ServiceErrorException(String.format("Case contains tasks with one or more targetfausts %s used by other active cases", task.getTargetFausts()))
+                                .withHttpStatus(409)
+                                .withCode(ServiceErrorCode.FAUST_IN_USE)
+                                .withCause("Faustnumber is in use")
+                                .withDetails(String.format("Case contains tasks with one or more targetfausts %s used by other active cases", task.getTargetFausts()));
+                    }
+                }
+            }
+        }
+    }
+
     private void notifyOnReviewerChanged(PromatCase promatCase)
             throws NotificationFactory.ValidateException, OpenFormatConnectorException {
 
@@ -1271,8 +1311,8 @@ public class Cases {
                 if (existing.getReviewer() != null && REVIEWER_CHANGE_ALLOWED_STATES.contains(existing.getStatus())) {
                     return CaseStatus.ASSIGNED;
                 } else {
-                    throw new ServiceErrorException("Not allowed to set status ASSIGNED when case is not in CREATED, REJECTED or nor reviewer is set")
-                            .withDetails("Attempt to set status of case to ASSIGNED when case is not in status CREATED, REJECTED or there is no reviewer set")
+                    throw new ServiceErrorException("Not allowed to set status ASSIGNED when case is not in status CREATED, REJECTED, ASSIGNED, PENDING_ISSUES or no reviewer is set")
+                            .withDetails("Attempt to set status of case to ASSIGNED when case is not in status CREATED, REJECTED, ASSIGNED, PENDING_ISSUES or there is no reviewer set")
                             .withHttpStatus(400)
                             .withCode(ServiceErrorCode.INVALID_REQUEST);
                 }
