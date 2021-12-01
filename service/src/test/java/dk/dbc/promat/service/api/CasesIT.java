@@ -2661,4 +2661,147 @@ public class CasesIT extends ContainerTest {
         response = postResponse("v1/api/cases/6", dto);
         assertThat("status code", response.getStatus(), is(200));
     }
+
+    @Test
+    public void testRevertedCaseIsInactive() throws JsonProcessingException {
+
+        // Create first case
+        CaseRequest requestDto = new CaseRequest()
+                .withTitle("Title for 90005678")
+                .withDetails("Details for 90005678")
+                .withPrimaryFaust("90005678")
+                .withEditor(10)
+                .withReviewer(1)
+                .withSubjects(Arrays.asList(3, 4))
+                .withDeadline("2021-03-30")
+                .withMaterialType(MaterialType.BOOK);
+        Response response = postResponse("v1/api/cases", requestDto);
+        assertThat("status code", response.getStatus(), is(201));
+        PromatCase firstCase = mapper.readValue(response.readEntity(String.class), PromatCase.class);
+
+        // Send case to approval
+        requestDto = new CaseRequest().withStatus(CaseStatus.PENDING_APPROVAL);
+        assertThat("status code", postResponse("v1/api/cases/" + firstCase.getId(), requestDto).getStatus(), is(200));
+
+        // Approve the case
+        requestDto = new CaseRequest().withStatus(CaseStatus.APPROVED);
+        assertThat("status code", postResponse("v1/api/cases/" + firstCase.getId(), requestDto).getStatus(), is(200));
+
+        // Move to PENDING_EXPORT
+        requestDto = new CaseRequest().withStatus(CaseStatus.PENDING_EXPORT);
+        assertThat("status code", postResponse("v1/api/cases/" + firstCase.getId(), requestDto).getStatus(), is(200));
+
+        // Move to EXPORTED
+        requestDto = new CaseRequest().withStatus(CaseStatus.EXPORTED);
+        assertThat("status code", postResponse("v1/api/cases/" + firstCase.getId(), requestDto).getStatus(), is(200));
+
+        // Move to PENDING_REVERT
+        requestDto = new CaseRequest().withStatus(CaseStatus.PENDING_REVERT);
+        assertThat("status code", postResponse("v1/api/cases/" + firstCase.getId(), requestDto).getStatus(), is(200));
+
+        // Move to REVERTED
+        requestDto = new CaseRequest().withStatus(CaseStatus.REVERTED);
+        assertThat("status code", postResponse("v1/api/cases/" + firstCase.getId(), requestDto).getStatus(), is(200));
+
+        // Create a new case, reusing the primary faust of the first case
+        requestDto = new CaseRequest()
+                .withTitle("New title for 90005678")
+                .withDetails("New details for 90005678")
+                .withPrimaryFaust("90005678")
+                .withEditor(10)
+                .withReviewer(1)
+                .withSubjects(Arrays.asList(3, 4))
+                .withDeadline("2021-03-30")
+                .withMaterialType(MaterialType.BOOK);
+
+        response = postResponse("v1/api/cases", requestDto);
+        assertThat("status code", response.getStatus(), is(201));
+        PromatCase secondCase = mapper.readValue(response.readEntity(String.class), PromatCase.class);
+
+        // Make sure that the first case can not be reactivated (since the faustnumber is now in use)
+        requestDto = new CaseRequest().withStatus(CaseStatus.CREATED);
+        assertThat("status code", postResponse("v1/api/cases/" + firstCase.getId(), requestDto).getStatus(), is(409));
+
+        // Close the first case
+        requestDto = new CaseRequest().withStatus(CaseStatus.CLOSED);
+        assertThat("status code", postResponse("v1/api/cases/" + firstCase.getId(), requestDto).getStatus(), is(200));
+
+        // First case can still not be reactivated
+        requestDto = new CaseRequest().withStatus(CaseStatus.CREATED);
+        assertThat("status code", postResponse("v1/api/cases/" + firstCase.getId(), requestDto).getStatus(), is(409));
+
+        // Delete the first case
+        assertThat("status code", deleteResponse("v1/api/cases/" + firstCase.getId()).getStatus(), is(200));
+
+        // Even now, the first case can not be reactivated
+        requestDto = new CaseRequest().withStatus(CaseStatus.CREATED);
+        assertThat("status code", postResponse("v1/api/cases/" + firstCase.getId(), requestDto).getStatus(), is(409));
+
+        // Delete the second case (cleanup)
+        assertThat("status code", deleteResponse("v1/api/cases/" + secondCase.getId()).getStatus(), is(200));
+    }
+
+    @Test
+    public void testInactiveCaseCanBeReactivated() throws JsonProcessingException {
+
+        // Create case
+        CaseRequest requestDto = new CaseRequest()
+                .withTitle("Title for 90009012")
+                .withDetails("Details for 90009012")
+                .withPrimaryFaust("90009012")
+                .withEditor(10)
+                .withReviewer(1)
+                .withSubjects(Arrays.asList(3, 4))
+                .withDeadline("2021-03-30")
+                .withMaterialType(MaterialType.BOOK);
+        Response response = postResponse("v1/api/cases", requestDto);
+        assertThat("status code", response.getStatus(), is(201));
+        PromatCase aCase = mapper.readValue(response.readEntity(String.class), PromatCase.class);
+
+        // Send case to approval
+        requestDto = new CaseRequest().withStatus(CaseStatus.PENDING_APPROVAL);
+        assertThat("status code", postResponse("v1/api/cases/" + aCase.getId(), requestDto).getStatus(), is(200));
+
+        // Approve the case
+        requestDto = new CaseRequest().withStatus(CaseStatus.APPROVED);
+        assertThat("status code", postResponse("v1/api/cases/" + aCase.getId(), requestDto).getStatus(), is(200));
+
+        // Move to PENDING_EXPORT
+        requestDto = new CaseRequest().withStatus(CaseStatus.PENDING_EXPORT);
+        assertThat("status code", postResponse("v1/api/cases/" + aCase.getId(), requestDto).getStatus(), is(200));
+
+        // Move to EXPORTED
+        requestDto = new CaseRequest().withStatus(CaseStatus.EXPORTED);
+        assertThat("status code", postResponse("v1/api/cases/" + aCase.getId(), requestDto).getStatus(), is(200));
+
+        // Move to PENDING_REVERT
+        requestDto = new CaseRequest().withStatus(CaseStatus.PENDING_REVERT);
+        assertThat("status code", postResponse("v1/api/cases/" + aCase.getId(), requestDto).getStatus(), is(200));
+
+        // Move to REVERTED
+        requestDto = new CaseRequest().withStatus(CaseStatus.REVERTED);
+        assertThat("status code", postResponse("v1/api/cases/" + aCase.getId(), requestDto).getStatus(), is(200));
+
+        // Reactivate the case
+        requestDto = new CaseRequest().withStatus(CaseStatus.CREATED);
+        assertThat("status code", postResponse("v1/api/cases/" + aCase.getId(), requestDto).getStatus(), is(200));
+
+        // Close the case
+        requestDto = new CaseRequest().withStatus(CaseStatus.CLOSED);
+        assertThat("status code", postResponse("v1/api/cases/" + aCase.getId(), requestDto).getStatus(), is(200));
+
+        // Reactivate the case
+        requestDto = new CaseRequest().withStatus(CaseStatus.CREATED);
+        assertThat("status code", postResponse("v1/api/cases/" + aCase.getId(), requestDto).getStatus(), is(200));
+
+        // Delete the case
+        assertThat("status code", deleteResponse("v1/api/cases/" + aCase.getId()).getStatus(), is(200));
+
+        // Reactivate the case
+        requestDto = new CaseRequest().withStatus(CaseStatus.CREATED);
+        assertThat("status code", postResponse("v1/api/cases/" + aCase.getId(), requestDto).getStatus(), is(200));
+
+        // Delete the case (final cleanup)
+        assertThat("status code", deleteResponse("v1/api/cases/" + aCase.getId()).getStatus(), is(200));
+    }
 }
