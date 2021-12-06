@@ -61,7 +61,7 @@ public class NotificationFactory {
     String LU_MAILADDRESS;
 
     @Inject
-    @ConfigProperty(name = "CC_MAILADDRESS", defaultValue = "")
+    @ConfigProperty(name = "CC_MAILADDRESS", defaultValue = "-")
     String CC_MAILADDRESS;
 
     private final Renderer renderer = new Renderer();
@@ -206,7 +206,7 @@ public class NotificationFactory {
             throw new ValidateException("Email address for reviewer '%s', and private email " +
                     "addresses cannot both be unassigned.");
         }
-        if (CC_MAILADDRESS != null && !CC_MAILADDRESS.isBlank()) {
+        if (CC_MAILADDRESS != null && !CC_MAILADDRESS.isBlank() && !CC_MAILADDRESS.equals("-")) {
             addresses.add(CC_MAILADDRESS);
         }
         return String.join(",", addresses);
