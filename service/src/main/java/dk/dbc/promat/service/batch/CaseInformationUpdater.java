@@ -6,6 +6,7 @@
 package dk.dbc.promat.service.batch;
 
 import dk.dbc.connector.openformat.OpenFormatConnectorException;
+import dk.dbc.promat.service.Dates;
 import dk.dbc.promat.service.api.BibliographicInformation;
 import dk.dbc.promat.service.api.FulltextHandler;
 import dk.dbc.promat.service.api.OpenFormatHandler;
@@ -18,6 +19,7 @@ import dk.dbc.promat.service.util.PromatTaskUtils;
 import dk.dbc.promat.service.Repository;
 
 import java.time.LocalDate;
+import java.time.Month;
 import java.util.ArrayList;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.metrics.ConcurrentGauge;
@@ -61,6 +63,8 @@ public class CaseInformationUpdater {
     @Inject
     ContentLookUp contentLookUp;
 
+    @EJB
+    Dates dates;
 
     static final Metadata openformatTimerMetadata = Metadata.builder()
             .withName("promat_service_caseinformationupdater_openformat_timer")
@@ -203,7 +207,7 @@ public class CaseInformationUpdater {
                 LOGGER.info("Updating metakompas for fausts: '{}' ==> '{}' of case with id {}. Taskid is '{}'",
                         fausts, METAKOMPASDATA_PRESENT, promatCase.getId(), task.getId());
                 task.setData(METAKOMPASDATA_PRESENT);
-                task.setApproved(LocalDate.now());
+                task.setApproved(dates.getCurrentDate());
             }
         }
     }
@@ -233,18 +237,31 @@ public class CaseInformationUpdater {
     }
 
     private Boolean weekcodeMatchOrBefore(PromatCase promatCase) {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyw", new Locale("da", "DK"));
+        DateTimeFormatter yearWeekFormatter = DateTimeFormatter.ofPattern("yyyyww", new Locale("da", "DK"));
+        DateTimeFormatter weekFormatter = DateTimeFormatter.ofPattern("ww", new Locale("da", "DK"));
 
-        LocalDate date = LocalDate.now();
-        LOGGER.info("Today is {} weekcode {}", date, date.format(formatter));
+        LocalDate date = dates.getCurrentDate();
+        LOGGER.info("Today is {} weekcode {}", date, date.format(yearWeekFormatter));
 
         // We want to promote cases with next weeks weekcode (effectively current weekcode by friday = shiftday)
         date = date.plusWeeks(1);
-        LOGGER.info("Next week is {} weekcode {}", date, date.format(formatter));
+        LOGGER.info("Next week is {} weekcode {}", date, date.format(yearWeekFormatter));
 
-        // Get todays weekcode
-        String todaysWeekcode = date.format(formatter);
+        // Get todays (of next week) weekcode.
+        String todaysWeekcode = date.format(yearWeekFormatter);
         Integer today = Integer.parseInt(todaysWeekcode);
+
+        // In years where the last week of the year "spills over" into the new year, such as 2021/2022,
+        // then the weekcode as returned by the formatter will be '202252' for the first few dates belonging to
+        // the old year's week.
+        String todaysWeek = date.format(weekFormatter);
+        Integer week = Integer.parseInt(todaysWeek);
+        if( date.getMonth() == Month.JANUARY && week >= 52 ) {
+            // 202252 - 100 = 202152
+            LOGGER.info("Shifting year-part of weekcode one year backwards due to overlapping weeknumber for early january dates");
+            today -= 100;
+            LOGGER.info("Today is {} weekcode(adjusted) {}", date, today);
+        }
 
         // Do not use trimmedWeekcode, it is set by the db on update, and the entity
         // might not have been commited before we get to this line
