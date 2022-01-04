@@ -63,7 +63,7 @@ public class CaseInformationUpdater {
     @Inject
     ContentLookUp contentLookUp;
 
-    @EJB
+    @Inject
     Dates dates;
 
     static final Metadata openformatTimerMetadata = Metadata.builder()
