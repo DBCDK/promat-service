@@ -1444,10 +1444,10 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
 
         // Create a case
         CaseRequest dto = new CaseRequest()
-                .withPrimaryFaust("53000304")
-                .withTitle("Title for 53000304")
+                .withPrimaryFaust("53000303")
+                .withTitle("Title for 53000303")
                 .withWeekCode("BKM202203") // weekcode in the future
-                .withDetails("Details for 53000304")
+                .withDetails("Details for 53000303")
                 .withMaterialType(MaterialType.BOOK)
                 .withDeadline("2021-12-29")
                 .withCreator(10)
@@ -1456,7 +1456,7 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
                 .withTasks(Arrays.asList(new TaskDto()
                         .withTaskType(TaskType.GROUP_1_LESS_THAN_100_PAGES)
                         .withTaskFieldType(TaskFieldType.BRIEF)
-                        .withTargetFausts(Arrays.asList("53000304"))
+                        .withTargetFausts(Arrays.asList("53000303"))
                 ));
 
         Response response = postResponse("v1/api/cases", dto);
@@ -1558,10 +1558,10 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
 
         // Create a case
         CaseRequest dto = new CaseRequest()
-                .withPrimaryFaust("53000303")
-                .withTitle("Title for 53000303")
+                .withPrimaryFaust("53000305")
+                .withTitle("Title for 53000305")
                 .withWeekCode("BKM202203")
-                .withDetails("Details for 53000303")
+                .withDetails("Details for 53000305")
                 .withMaterialType(MaterialType.BOOK)
                 .withDeadline("2021-12-29")
                 .withCreator(10)
@@ -1570,7 +1570,7 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
                 .withTasks(Arrays.asList(new TaskDto()
                         .withTaskType(TaskType.GROUP_1_LESS_THAN_100_PAGES)
                         .withTaskFieldType(TaskFieldType.BRIEF)
-                        .withTargetFausts(Arrays.asList("53000303"))
+                        .withTargetFausts(Arrays.asList("53000305"))
                 ));
 
         Response response = postResponse("v1/api/cases", dto);
@@ -1610,7 +1610,5 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
         response = deleteResponse("v1/api/cases/" + created.getId());
         assertThat("status code", response.getStatus(), is(200));
     }
-
-
 
 }
