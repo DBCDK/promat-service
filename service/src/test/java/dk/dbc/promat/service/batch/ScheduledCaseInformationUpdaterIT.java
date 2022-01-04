@@ -1543,8 +1543,6 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
         upd.caseInformationUpdater.dates = mockedDates;
         when(mockedDates.getCurrentDate()).thenReturn(LocalDate.parse("2022-01-02"));
 
-        // BKM is next shiftday (friday this week) so case must be moved to status PENDING_EXPORT
-
         persistenceContext.run(() -> upd.caseInformationUpdater.updateCaseInformation(created));
         assertThat("status", created.getStatus(), is(CaseStatus.PENDING_EXPORT));
 
@@ -1602,6 +1600,174 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
         when(mockedDates.getCurrentDate()).thenReturn(LocalDate.parse("2022-01-03"));
 
         // BKM is next shiftday (friday this week) so case must be moved to status PENDING_EXPORT
+
+        persistenceContext.run(() -> upd.caseInformationUpdater.updateCaseInformation(created));
+        assertThat("status", created.getStatus(), is(CaseStatus.PENDING_EXPORT));
+
+        // Delete the case so that we dont mess up payments and dataio-export tests
+        response = deleteResponse("v1/api/cases/" + created.getId());
+        assertThat("status code", response.getStatus(), is(200));
+    }
+
+    @Test
+    public void testUpdateCaseWithWeekcodeLastWeekOf2026() throws OpenFormatConnectorException, JsonProcessingException, OpennumberRollConnectorException {
+
+        // Create a case
+        CaseRequest dto = new CaseRequest()
+                .withPrimaryFaust("53000306")
+                .withTitle("Title for 53000306")
+                .withWeekCode("BKM202703")
+                .withDetails("Details for 53000306")
+                .withMaterialType(MaterialType.BOOK)
+                .withDeadline("2021-12-29")
+                .withCreator(10)
+                .withEditor(10)
+                .withReviewer(1)
+                .withTasks(Arrays.asList(new TaskDto()
+                        .withTaskType(TaskType.GROUP_1_LESS_THAN_100_PAGES)
+                        .withTaskFieldType(TaskFieldType.BRIEF)
+                        .withTargetFausts(Arrays.asList("53000306"))
+                ));
+
+        Response response = postResponse("v1/api/cases", dto);
+        assertThat("status code", response.getStatus(), is(201));
+        PromatCase created = mapper.readValue(response.readEntity(String.class), PromatCase.class);
+
+        ScheduledCaseInformationUpdater upd = new ScheduledCaseInformationUpdater();
+        upd.caseInformationUpdater = new CaseInformationUpdater();
+        upd.caseInformationUpdater.metricRegistry = metricRegistry;
+        upd.entityManager = entityManager;
+        upd.serverRole = ServerRole.PRIMARY;
+        OpenFormatHandler mockedHandler = mock(OpenFormatHandler.class);
+        upd.caseInformationUpdater.openFormatHandler = mockedHandler;
+        Repository mockedRepository = mock(Repository.class);
+        upd.caseInformationUpdater.repository = mockedRepository;
+
+        created.setStatus(CaseStatus.APPROVED);
+        when(mockedHandler.format(anyString()))
+                .thenReturn(new BibliographicInformation()
+                        .withCatalogcodes(Arrays.asList("BKM202653" , "ACC202703")));
+        doAnswer(answer -> {
+            PromatCase existing = ((PromatCase) answer.getArgument(0));
+            existing.getTasks().stream().forEach(t -> t.setRecordId("123456789"));
+            return null;
+        }).when(mockedRepository).assignFaustnumber(any(PromatCase.class));
+
+        Dates mockedDates = mock(Dates.class);
+        upd.caseInformationUpdater.dates = mockedDates;
+        when(mockedDates.getCurrentDate()).thenReturn(LocalDate.parse("2026-12-27"));
+
+        persistenceContext.run(() -> upd.caseInformationUpdater.updateCaseInformation(created));
+        assertThat("status", created.getStatus(), is(CaseStatus.PENDING_EXPORT));
+
+        // Delete the case so that we dont mess up payments and dataio-export tests
+        response = deleteResponse("v1/api/cases/" + created.getId());
+        assertThat("status code", response.getStatus(), is(200));
+    }
+
+    @Test
+    public void testUpdateCaseWithWeekcodeFirstWeekOf2027() throws OpenFormatConnectorException, JsonProcessingException, OpennumberRollConnectorException {
+
+        // Create a case
+        CaseRequest dto = new CaseRequest()
+                .withPrimaryFaust("53000307")
+                .withTitle("Title for 53000307")
+                .withWeekCode("BKM202703")
+                .withDetails("Details for 53000307")
+                .withMaterialType(MaterialType.BOOK)
+                .withDeadline("2021-12-29")
+                .withCreator(10)
+                .withEditor(10)
+                .withReviewer(1)
+                .withTasks(Arrays.asList(new TaskDto()
+                        .withTaskType(TaskType.GROUP_1_LESS_THAN_100_PAGES)
+                        .withTaskFieldType(TaskFieldType.BRIEF)
+                        .withTargetFausts(Arrays.asList("53000307"))
+                ));
+
+        Response response = postResponse("v1/api/cases", dto);
+        assertThat("status code", response.getStatus(), is(201));
+        PromatCase created = mapper.readValue(response.readEntity(String.class), PromatCase.class);
+
+        ScheduledCaseInformationUpdater upd = new ScheduledCaseInformationUpdater();
+        upd.caseInformationUpdater = new CaseInformationUpdater();
+        upd.caseInformationUpdater.metricRegistry = metricRegistry;
+        upd.entityManager = entityManager;
+        upd.serverRole = ServerRole.PRIMARY;
+        OpenFormatHandler mockedHandler = mock(OpenFormatHandler.class);
+        upd.caseInformationUpdater.openFormatHandler = mockedHandler;
+        Repository mockedRepository = mock(Repository.class);
+        upd.caseInformationUpdater.repository = mockedRepository;
+
+        created.setStatus(CaseStatus.APPROVED);
+        when(mockedHandler.format(anyString()))
+                .thenReturn(new BibliographicInformation()
+                        .withCatalogcodes(Arrays.asList("BKM202701" , "ACC202203")));
+        doAnswer(answer -> {
+            PromatCase existing = ((PromatCase) answer.getArgument(0));
+            existing.getTasks().stream().forEach(t -> t.setRecordId("123456789"));
+            return null;
+        }).when(mockedRepository).assignFaustnumber(any(PromatCase.class));
+
+        Dates mockedDates = mock(Dates.class);
+        upd.caseInformationUpdater.dates = mockedDates;
+        when(mockedDates.getCurrentDate()).thenReturn(LocalDate.parse("2027-01-02"));
+
+        persistenceContext.run(() -> upd.caseInformationUpdater.updateCaseInformation(created));
+        assertThat("status", created.getStatus(), is(CaseStatus.PENDING_EXPORT));
+
+        // Delete the case so that we dont mess up payments and dataio-export tests
+        response = deleteResponse("v1/api/cases/" + created.getId());
+        assertThat("status code", response.getStatus(), is(200));
+    }
+
+    @Test
+    public void testUpdateCaseWithWeekcodeSecondWeekOf2027() throws OpenFormatConnectorException, JsonProcessingException, OpennumberRollConnectorException {
+
+        // Create a case
+        CaseRequest dto = new CaseRequest()
+                .withPrimaryFaust("53000308")
+                .withTitle("Title for 53000308")
+                .withWeekCode("BKM202703")
+                .withDetails("Details for 53000308")
+                .withMaterialType(MaterialType.BOOK)
+                .withDeadline("2021-12-29")
+                .withCreator(10)
+                .withEditor(10)
+                .withReviewer(1)
+                .withTasks(Arrays.asList(new TaskDto()
+                        .withTaskType(TaskType.GROUP_1_LESS_THAN_100_PAGES)
+                        .withTaskFieldType(TaskFieldType.BRIEF)
+                        .withTargetFausts(Arrays.asList("53000308"))
+                ));
+
+        Response response = postResponse("v1/api/cases", dto);
+        assertThat("status code", response.getStatus(), is(201));
+        PromatCase created = mapper.readValue(response.readEntity(String.class), PromatCase.class);
+
+        ScheduledCaseInformationUpdater upd = new ScheduledCaseInformationUpdater();
+        upd.caseInformationUpdater = new CaseInformationUpdater();
+        upd.caseInformationUpdater.metricRegistry = metricRegistry;
+        upd.entityManager = entityManager;
+        upd.serverRole = ServerRole.PRIMARY;
+        OpenFormatHandler mockedHandler = mock(OpenFormatHandler.class);
+        upd.caseInformationUpdater.openFormatHandler = mockedHandler;
+        Repository mockedRepository = mock(Repository.class);
+        upd.caseInformationUpdater.repository = mockedRepository;
+
+        created.setStatus(CaseStatus.APPROVED);
+        when(mockedHandler.format(anyString()))
+                .thenReturn(new BibliographicInformation()
+                        .withCatalogcodes(Arrays.asList("BKM202702" , "ACC202203")));
+        doAnswer(answer -> {
+            PromatCase existing = ((PromatCase) answer.getArgument(0));
+            existing.getTasks().stream().forEach(t -> t.setRecordId("123456789"));
+            return null;
+        }).when(mockedRepository).assignFaustnumber(any(PromatCase.class));
+
+        Dates mockedDates = mock(Dates.class);
+        upd.caseInformationUpdater.dates = mockedDates;
+        when(mockedDates.getCurrentDate()).thenReturn(LocalDate.parse("2027-01-04"));
 
         persistenceContext.run(() -> upd.caseInformationUpdater.updateCaseInformation(created));
         assertThat("status", created.getStatus(), is(CaseStatus.PENDING_EXPORT));
