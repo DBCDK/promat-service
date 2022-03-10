@@ -14,6 +14,7 @@ import dk.dbc.promat.service.batch.ContentLookUp;
 import dk.dbc.promat.service.batch.Reminders;
 import dk.dbc.promat.service.dto.CaseRequest;
 import dk.dbc.promat.service.dto.CaseSummaryList;
+import dk.dbc.promat.service.dto.CreateStatusDto;
 import dk.dbc.promat.service.dto.CriteriaOperator;
 import dk.dbc.promat.service.dto.Dto;
 import dk.dbc.promat.service.dto.ListCasesParams;
@@ -357,6 +358,22 @@ public class Cases {
     public Response getViewWithOverride(@PathParam("format") @DefaultValue("HTML") final ClassviewFormat format, @PathParam("faust") final String faust) {
         LOGGER.info("cases/{}/override/{}", faust, format);
         return getView(format, faust, true);
+    }
+
+    @GET
+    @Path("cases/active/{faust}")
+    @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_HTML, MediaType.TEXT_XML})
+    public Response getFaustActive(@PathParam("faust") final String faust) {
+        LOGGER.info("cases/active/{}", faust);
+
+        try {
+            CreateStatusDto dto = new CreateStatusDto().withCreateStatus(Faustnumbers.checkNoOpenCaseWithFaust(entityManager, faust));
+                return Response.status(200)
+                        .entity(dto).build();
+        } catch (Exception exception) {
+            LOGGER.error("Caught exception: {}", exception.getMessage());
+            return ServiceErrorDto.Failed(exception.getMessage());
+        }
     }
 
     @GET

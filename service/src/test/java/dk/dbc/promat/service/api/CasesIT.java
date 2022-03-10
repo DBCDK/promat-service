@@ -7,6 +7,8 @@ package dk.dbc.promat.service.api;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import dk.dbc.promat.service.ContainerTest;
+import dk.dbc.promat.service.dto.CreateStatus;
+import dk.dbc.promat.service.dto.CreateStatusDto;
 import dk.dbc.promat.service.dto.ListCasesParams;
 import dk.dbc.promat.service.connector.PromatServiceConnectorException;
 import dk.dbc.promat.service.connector.PromatServiceConnectorUnexpectedStatusCodeException;
@@ -2803,5 +2805,87 @@ public class CasesIT extends ContainerTest {
 
         // Delete the case (final cleanup)
         assertThat("status code", deleteResponse("v1/api/cases/" + aCase.getId()).getStatus(), is(200));
+    }
+
+    @Test
+    public void testFaustActiveEndpoint() throws JsonProcessingException {
+        // Setup
+        // Create case
+        CreateStatusDto createStatusDto;
+
+        CaseRequest requestDto = new CaseRequest()
+                .withTitle("Title for 00000001")
+                .withDetails("Details for 00000001")
+                .withPrimaryFaust("00000001")
+                .withEditor(10)
+                .withReviewer(1)
+                .withSubjects(Arrays.asList(3, 4))
+                .withDeadline("2022-03-30")
+                .withMaterialType(MaterialType.BOOK);
+        Response response = postResponse("v1/api/cases", requestDto);
+        assertThat("status code", response.getStatus(), is(201));
+        PromatCase aCase = mapper.readValue(response.readEntity(String.class), PromatCase.class);
+
+        // Test
+        response = getResponse("v1/api/cases/active/"+aCase.getPrimaryFaust());
+        assertThat("status code", response.getStatus(), is(200));
+        createStatusDto = mapper.readValue(response.readEntity(String.class), CreateStatusDto.class);
+        assertThat("createStatus", createStatusDto.getCreateStatus(), is(CreateStatus.IN_ACTIVE_CASE));
+
+        // Send case to approval
+        requestDto = new CaseRequest().withStatus(CaseStatus.PENDING_APPROVAL);
+        assertThat("status code", postResponse("v1/api/cases/" + aCase.getId(), requestDto).getStatus(), is(200));
+
+        // Approve the case
+        requestDto = new CaseRequest().withStatus(CaseStatus.APPROVED);
+        assertThat("status code", postResponse("v1/api/cases/" + aCase.getId(), requestDto).getStatus(), is(200));
+
+        // Move to PENDING_EXPORT
+        requestDto = new CaseRequest().withStatus(CaseStatus.PENDING_EXPORT);
+        assertThat("status code", postResponse("v1/api/cases/" + aCase.getId(), requestDto).getStatus(), is(200));
+
+        // Move to EXPORTED
+        requestDto = new CaseRequest().withStatus(CaseStatus.EXPORTED);
+        assertThat("status code", postResponse("v1/api/cases/" + aCase.getId(), requestDto).getStatus(), is(200));
+
+        // Move to PENDING_REVERT
+        requestDto = new CaseRequest().withStatus(CaseStatus.PENDING_REVERT);
+        assertThat("status code", postResponse("v1/api/cases/" + aCase.getId(), requestDto).getStatus(), is(200));
+
+        // Test IN_ACTIVE_CASE
+        response = getResponse("v1/api/cases/active/"+aCase.getPrimaryFaust());
+        assertThat("status code", response.getStatus(), is(200));
+        createStatusDto = mapper.readValue(response.readEntity(String.class), CreateStatusDto.class);
+        assertThat("createStatus", createStatusDto.getCreateStatus(), is(CreateStatus.IN_ACTIVE_CASE));
+
+        // Move to REVERTED
+        requestDto = new CaseRequest().withStatus(CaseStatus.REVERTED);
+        assertThat("status code", postResponse("v1/api/cases/" + aCase.getId(), requestDto).getStatus(), is(200));
+
+        // Test READY_FOR_CREATION
+        response = getResponse("v1/api/cases/active/"+aCase.getPrimaryFaust());
+        assertThat("status code", response.getStatus(), is(200));
+        createStatusDto = mapper.readValue(response.readEntity(String.class), CreateStatusDto.class);
+        assertThat("createStatus", createStatusDto.getCreateStatus(), is(CreateStatus.READY_FOR_CREATION));
+
+        // Reactivate the case
+        requestDto = new CaseRequest().withStatus(CaseStatus.CREATED);
+        assertThat("status code", postResponse("v1/api/cases/" + aCase.getId(), requestDto).getStatus(), is(200));
+
+        // Test IN_ACTIVE_CASE
+        response = getResponse("v1/api/cases/active/"+aCase.getPrimaryFaust());
+        assertThat("status code", response.getStatus(), is(200));
+        createStatusDto = mapper.readValue(response.readEntity(String.class), CreateStatusDto.class);
+        assertThat("createStatus", createStatusDto.getCreateStatus(), is(CreateStatus.IN_ACTIVE_CASE));
+
+        // Close the case
+        requestDto = new CaseRequest().withStatus(CaseStatus.CLOSED);
+        assertThat("status code", postResponse("v1/api/cases/" + aCase.getId(), requestDto).getStatus(), is(200));
+
+        // Test READY_FOR_CREATION
+        response = getResponse("v1/api/cases/active/"+aCase.getPrimaryFaust());
+        assertThat("status code", response.getStatus(), is(200));
+        createStatusDto = mapper.readValue(response.readEntity(String.class), CreateStatusDto.class);
+        assertThat("createStatus", createStatusDto.getCreateStatus(), is(CreateStatus.READY_FOR_CREATION));
     }
 }
