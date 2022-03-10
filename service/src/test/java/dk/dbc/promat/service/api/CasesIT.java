@@ -2827,7 +2827,7 @@ public class CasesIT extends ContainerTest {
         PromatCase aCase = mapper.readValue(response.readEntity(String.class), PromatCase.class);
 
         // Test
-        response = getResponse("v1/api/cases/active/"+aCase.getPrimaryFaust());
+        response = getResponse("v1/api/cases/active/" + aCase.getPrimaryFaust());
         assertThat("status code", response.getStatus(), is(200));
         createStatusDto = mapper.readValue(response.readEntity(String.class), CreateStatusDto.class);
         assertThat("createStatus", createStatusDto.getCreateStatus(), is(CreateStatus.IN_ACTIVE_CASE));
@@ -2853,7 +2853,7 @@ public class CasesIT extends ContainerTest {
         assertThat("status code", postResponse("v1/api/cases/" + aCase.getId(), requestDto).getStatus(), is(200));
 
         // Test IN_ACTIVE_CASE
-        response = getResponse("v1/api/cases/active/"+aCase.getPrimaryFaust());
+        response = getResponse("v1/api/cases/active/" + aCase.getPrimaryFaust());
         assertThat("status code", response.getStatus(), is(200));
         createStatusDto = mapper.readValue(response.readEntity(String.class), CreateStatusDto.class);
         assertThat("createStatus", createStatusDto.getCreateStatus(), is(CreateStatus.IN_ACTIVE_CASE));
@@ -2863,7 +2863,7 @@ public class CasesIT extends ContainerTest {
         assertThat("status code", postResponse("v1/api/cases/" + aCase.getId(), requestDto).getStatus(), is(200));
 
         // Test READY_FOR_CREATION
-        response = getResponse("v1/api/cases/active/"+aCase.getPrimaryFaust());
+        response = getResponse("v1/api/cases/active/" + aCase.getPrimaryFaust());
         assertThat("status code", response.getStatus(), is(200));
         createStatusDto = mapper.readValue(response.readEntity(String.class), CreateStatusDto.class);
         assertThat("createStatus", createStatusDto.getCreateStatus(), is(CreateStatus.READY_FOR_CREATION));
@@ -2873,7 +2873,7 @@ public class CasesIT extends ContainerTest {
         assertThat("status code", postResponse("v1/api/cases/" + aCase.getId(), requestDto).getStatus(), is(200));
 
         // Test IN_ACTIVE_CASE
-        response = getResponse("v1/api/cases/active/"+aCase.getPrimaryFaust());
+        response = getResponse("v1/api/cases/active/" + aCase.getPrimaryFaust());
         assertThat("status code", response.getStatus(), is(200));
         createStatusDto = mapper.readValue(response.readEntity(String.class), CreateStatusDto.class);
         assertThat("createStatus", createStatusDto.getCreateStatus(), is(CreateStatus.IN_ACTIVE_CASE));
@@ -2883,9 +2883,12 @@ public class CasesIT extends ContainerTest {
         assertThat("status code", postResponse("v1/api/cases/" + aCase.getId(), requestDto).getStatus(), is(200));
 
         // Test READY_FOR_CREATION
-        response = getResponse("v1/api/cases/active/"+aCase.getPrimaryFaust());
+        response = getResponse("v1/api/cases/active/" + aCase.getPrimaryFaust());
         assertThat("status code", response.getStatus(), is(200));
         createStatusDto = mapper.readValue(response.readEntity(String.class), CreateStatusDto.class);
         assertThat("createStatus", createStatusDto.getCreateStatus(), is(CreateStatus.READY_FOR_CREATION));
+
+        // Delete the case (final cleanup)
+        assertThat("status code", deleteResponse("v1/api/cases/" + aCase.getId()).getStatus(), is(200));
     }
 }

@@ -367,7 +367,8 @@ public class Cases {
         LOGGER.info("cases/active/{}", faust);
 
         try {
-            CreateStatusDto dto = new CreateStatusDto().withCreateStatus(Faustnumbers.checkNoOpenCaseWithFaust(entityManager, faust));
+            CreateStatusDto dto = new CreateStatusDto()
+                    .withCreateStatus(Faustnumbers.checkNoOpenCaseWithFaust(entityManager, faust));
                 return Response.status(200)
                         .entity(dto).build();
         } catch (Exception exception) {

@@ -11,8 +11,8 @@ public class CreateStatusDto {
         this.createStatus = createStatus;
     }
 
-    public CreateStatusDto withCreateStatus(boolean bool) {
-        return this.withCreateStatus(bool ? CreateStatus.READY_FOR_CREATION : CreateStatus.IN_ACTIVE_CASE);
+    public CreateStatusDto withCreateStatus(boolean notFound) {
+        return this.withCreateStatus(notFound ? CreateStatus.READY_FOR_CREATION : CreateStatus.IN_ACTIVE_CASE);
     }
 
     public CreateStatusDto withCreateStatus(CreateStatus createStatus) {
@@ -20,4 +20,10 @@ public class CreateStatusDto {
         return this;
     }
 
+    @Override
+    public String toString() {
+        return "CreateStatusDto{" +
+                "createStatus=" + createStatus +
+                '}';
+    }
 }
