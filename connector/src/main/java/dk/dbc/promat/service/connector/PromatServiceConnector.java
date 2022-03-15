@@ -170,6 +170,17 @@ public class PromatServiceConnector {
         return new String(view, charset);
     }
 
+
+    public PromatCase createDraft(CaseRequest caseRequest) throws PromatServiceConnectorException {
+        final HttpPost httpPost = new HttpPost(failSafeHttpClient)
+                .withBaseUrl(baseUrl)
+                .withPathElements("drafts")
+                .withJsonData(caseRequest);
+        final Response response = httpPost.execute();
+        assertResponseStatus(response, Response.Status.CREATED);
+        return readResponseEntity(response, PromatCase.class);
+    }
+
     private void assertResponseStatus(Response response, Response.Status... expectedStatus)
             throws PromatServiceConnectorException {
         final Response.Status actualStatus =
