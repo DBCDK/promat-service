@@ -1230,10 +1230,9 @@ public class CasesIT extends ContainerTest {
                 .withMaterialType(MaterialType.BOOK)
                 .withFulltextLink("link");
 
-        final Response caseCreatedResponse = postResponse("v1/api/drafts", caseRequest);
-        assertThat("case created status code", caseCreatedResponse.getStatus(), is(201));
 
-        final PromatCase caseCreated = mapper.readValue(caseCreatedResponse.readEntity(String.class), PromatCase.class);
+        final PromatCase caseCreated = promatServiceConnector.createDraft(caseRequest);
+
         assertThat("case created", promatServiceConnector.getCase(caseCreated.getId()).getTitle(),
                 is(caseRequest.getTitle()));
 
