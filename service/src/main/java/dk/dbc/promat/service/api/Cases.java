@@ -362,7 +362,7 @@ public class Cases {
 
     @GET
     @Path("cases/active/{faust}")
-    @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_HTML, MediaType.TEXT_XML})
+    @Produces({MediaType.APPLICATION_JSON})
     public Response getFaustActive(@PathParam("faust") final String faust) {
         LOGGER.info("cases/active/{}", faust);
 
