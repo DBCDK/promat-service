@@ -590,6 +590,35 @@ paths:
               schema:
                 $ref: '#/components/schemas/ServiceError'
 
+  /cases/active/{faust}:
+    get:
+      tags:
+        - cases
+      summary: Returns creation status of record with given faust.
+      operationId: getFaustActive
+      parameters:
+        - in: path
+          name: faust
+          required: true
+          schema:
+            type: integer
+            description: Faust number
+      responses:
+        '200':
+          description: succesful operation
+        '404':
+          description: No material found for this faust.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '500':
+          description: Failed to retrieve fulltext
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+
   /cases/faust/{faust}/fulltext:
     get:
       tags:
