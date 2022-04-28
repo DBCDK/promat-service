@@ -64,7 +64,7 @@ pipeline {
       }
 			steps {
 				script {
-					def image = docker.build("${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_VERSION}", "-f src/main/docker/Dockerfile .")
+					def image = docker.build("${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_VERSION}", "-f service/src/main/docker/Dockerfile .")
 					image.push()
 				}
 			}
