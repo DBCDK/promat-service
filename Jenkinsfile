@@ -12,8 +12,6 @@ pipeline {
 
   environment {
 		GITLAB_PRIVATE_TOKEN = credentials("metascrum-gitlab-api-token")
-    DOCKER_IMAGE_NAME = "docker-metascrum.artifacts.dbccloud.dk/promat-service"
-    DOCKER_IMAGE_VERSION = "${env.BRANCH_NAME}-${env.BUILD_NUMBER}"
 	}
 
 	triggers {
@@ -64,7 +62,7 @@ pipeline {
       }
 			steps {
 				script {
-					def image = docker.build("${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_VERSION}", "-f service/src/main/docker/Dockerfile .")
+					docker.image("docker-io.dbc.dk/promat-service:${env.BRANCH_NAME}-${env.BUILD_NUMBER}").push()
 					image.push()
 				}
 			}
@@ -74,7 +72,7 @@ pipeline {
 			agent {
 				docker {
 					label workerNode
-					image "docker-dbc.artifacts.dbccloud.dk/build-env:latest"
+					image "docker.dbc.dk/build-env:latest"
 					alwaysPull true
 				}
 			}
