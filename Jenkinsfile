@@ -54,7 +54,7 @@ pipeline {
             }
 			steps {
 				script {
-					docker.image("docker-io.artifacts.dbccloud.dk/promat-service:${env.BRANCH_NAME}-${env.BUILD_NUMBER}").push()
+					docker.image("docker-metascrum.artifacts.dbccloud.dk/promat-service:${env.BRANCH_NAME}-${env.BUILD_NUMBER}").push()
 				}
 			}
 		}
