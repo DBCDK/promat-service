@@ -63,7 +63,6 @@ pipeline {
 			steps {
 				script {
 					docker.image("docker-io.dbc.dk/promat-service:${env.BRANCH_NAME}-${env.BUILD_NUMBER}").push()
-					image.push()
 				}
 			}
 		}
