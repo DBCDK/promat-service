@@ -54,15 +54,15 @@ pipeline {
             }
 			steps {
 				script {
-					docker.image("docker-io.dbc.dk/promat-service:${env.BRANCH_NAME}-${env.BUILD_NUMBER}").push()
+					docker.image("docker-io.artifacts.dbccloud.dk/promat-service:${env.BRANCH_NAME}-${env.BUILD_NUMBER}").push()
 				}
 			}
 		}
-        stage("bump docker tag in promat-service-secrets") {
+    stage("bump docker tag in promat-service-secrets") {
 			agent {
 				docker {
 					label workerNode
-					image "docker.dbc.dk/build-env:latest"
+					image "docker-dbc.artifacts.dbccloud.dk/build-env:latest"
 					alwaysPull true
 				}
 			}
@@ -72,20 +72,20 @@ pipeline {
 			steps {
 				script {
 					sh """  
-                        set-new-version services/promat-service.yml ${env.GITLAB_PRIVATE_TOKEN} metascrum/promat-service-secrets  ${env.BRANCH_NAME}-${env.BUILD_NUMBER} -b staging
-                    """
+              set-new-version services/promat-service.yml ${env.GITLAB_PRIVATE_TOKEN} metascrum/promat-service-secrets  ${env.BRANCH_NAME}-${env.BUILD_NUMBER} -b staging
+          """
 				}
 			}
 		}
-        stage("deploy to maven repository") {
-            when {
-                 branch "master"
-            }
-            steps {
-                sh """
-                    mvn deploy -Dmaven.test.skip=true -am -pl model -pl connector
-                """
-            }
-        }
+    stage("deploy to maven repository") {
+      when {
+        branch "master"
+      }
+      steps {
+        sh """
+            mvn deploy -Dmaven.test.skip=true -am -pl model -pl connector
+        """
+      }
     }
+  }
 }
