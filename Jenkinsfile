@@ -4,28 +4,37 @@ def workerNode = "devel10"
 
 pipeline {
 	agent {label workerNode}
+
 	tools {
 		jdk 'jdk11'
 		maven 'Maven 3'
 	}
-    environment {
+
+  environment {
 		GITLAB_PRIVATE_TOKEN = credentials("metascrum-gitlab-api-token")
+    DOCKER_IMAGE_NAME = "docker-metascrum.artifacts.dbccloud.dk/promat-service"
+    DOCKER_IMAGE_VERSION = "${env.BRANCH_NAME}-${env.BUILD_NUMBER}"
 	}
+
 	triggers {
 		upstream(upstreamProjects: "Docker-payara5-bump-trigger",
             threshold: hudson.model.Result.SUCCESS)
 	}
+
 	options {
 		timestamps()
 		disableConcurrentBuilds()
 	}
+
 	stages {
+
 		stage("clear workspace") {
 			steps {
 				deleteDir()
 				checkout scm
 			}
 		}
+
 		stage("verify") {
 			steps {
 				sh "mvn -D sourcepath=src/main/java verify pmd:pmd javadoc:aggregate"
@@ -48,16 +57,19 @@ pipeline {
 				}
 			}
 		}
+
 		stage("docker push") {
 			when {
-                branch "master"
-            }
+        branch "master"
+      }
 			steps {
 				script {
-					docker.image("docker-metascrum.artifacts.dbccloud.dk/promat-service:${env.BRANCH_NAME}-${env.BUILD_NUMBER}").push()
+					def image = docker.build("${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_VERSION}").push()
+					image.push()
 				}
 			}
 		}
+
     stage("bump docker tag in promat-service-secrets") {
 			agent {
 				docker {
@@ -77,6 +89,7 @@ pipeline {
 				}
 			}
 		}
+
     stage("deploy to maven repository") {
       when {
         branch "master"
@@ -87,5 +100,6 @@ pipeline {
         """
       }
     }
+
   }
 }
