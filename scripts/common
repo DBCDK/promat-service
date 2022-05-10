@@ -14,7 +14,7 @@ getMyIP() {
 # build and test run values
 PORT=${PORT:-8080}
 DB_PORT=${DB_PORT:-5432}
-DOCKER_NAMESPACE=docker-io.dbc.dk
+DOCKER_NAMESPACE=docker-metascrum.artifacts.dbccloud.dk
 DOCKER_NAME=promat-service
 DOCKER_REPOSITORY=${DOCKER_NAMESPACE}/${DOCKER_NAME}
 

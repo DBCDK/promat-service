@@ -10,7 +10,7 @@ pipeline {
 		maven 'Maven 3'
 	}
 
-  environment {
+    environment {
 		GITLAB_PRIVATE_TOKEN = credentials("metascrum-gitlab-api-token")
 	}
 
@@ -25,7 +25,6 @@ pipeline {
 	}
 
 	stages {
-
 		stage("clear workspace") {
 			steps {
 				deleteDir()
@@ -58,45 +57,44 @@ pipeline {
 
 		stage("docker push") {
 			when {
-        branch "master"
-      }
+                branch "master"
+            }
 			steps {
 				script {
-					docker.image("docker-io.dbc.dk/promat-service:${env.BRANCH_NAME}-${env.BUILD_NUMBER}").push()
+					docker.image("docker-metascrum.artifacts.dbccloud.dk/promat-service:${env.BRANCH_NAME}-${env.BUILD_NUMBER}").push()
 				}
 			}
 		}
 
-    stage("bump docker tag in promat-service-secrets") {
-			agent {
-				docker {
-					label workerNode
-					image "docker.dbc.dk/build-env:latest"
-					alwaysPull true
-				}
-			}
-			when {
-				branch "master"
-			}
-			steps {
-				script {
-					sh """  
-              set-new-version services/promat-service.yml ${env.GITLAB_PRIVATE_TOKEN} metascrum/promat-service-secrets  ${env.BRANCH_NAME}-${env.BUILD_NUMBER} -b staging
-          """
-				}
-			}
-		}
+        stage("bump docker tag in promat-service-secrets") {
+            agent {
+                docker {
+                    label workerNode
+                    image "docker-dbc.artifacts.dbccloud.dk/build-env:latest"
+                    alwaysPull true
+                }
+            }
+            when {
+                branch "master"
+            }
+            steps {
+                script {
+                    sh """
+                        set-new-version services/promat-service.yml ${env.GITLAB_PRIVATE_TOKEN} metascrum/promat-service-secrets  ${env.BRANCH_NAME}-${env.BUILD_NUMBER} -b staging
+                    """
+                }
+            }
+        }
 
-    stage("deploy to maven repository") {
-      when {
-        branch "master"
-      }
-      steps {
-        sh """
-            mvn deploy -Dmaven.test.skip=true -am -pl model -pl connector
-        """
-      }
+        stage("deploy to maven repository") {
+            when {
+                branch "master"
+            }
+            steps {
+                sh """
+                    mvn deploy -Dmaven.test.skip=true -am -pl model -pl connector
+                """
+            }
+        }
     }
-
-  }
 }
