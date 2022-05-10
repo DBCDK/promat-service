@@ -23,14 +23,7 @@ import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.output.Slf4jLogConsumer;
 import org.testcontainers.containers.wait.strategy.Wait;
 
-import javax.net.ssl.HttpsURLConnection;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.X509TrustManager;
 import javax.ws.rs.core.Response;
-import java.security.KeyManagementException;
-import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
-import java.security.cert.X509Certificate;
 import java.time.Duration;
 import java.util.Map;
 
@@ -102,7 +95,7 @@ public abstract class ContainerTest extends IntegrationTest {
     protected static final PromatServiceConnector promatServiceConnector;
 
     static {
-        promatServiceContainer = new GenericContainer("docker-io.dbc.dk/promat-service:devel")
+        promatServiceContainer = new GenericContainer("docker-metascrum.artifacts.dbccloud.dk/promat-service:devel")
                 .withLogConsumer(new Slf4jLogConsumer(LOGGER))
                 .withEnv("JAVA_MAX_HEAP_SIZE", "2G")
                 .withEnv("LOG_FORMAT", "text")
