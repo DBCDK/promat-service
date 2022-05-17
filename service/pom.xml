@@ -73,7 +73,7 @@
     <dependency>
       <groupId>dk.dbc</groupId>
       <artifactId>culr-connector</artifactId>
-      <version>1.1-SNAPSHOT</version>
+      <version>1.2-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>dk.dbc</groupId>
