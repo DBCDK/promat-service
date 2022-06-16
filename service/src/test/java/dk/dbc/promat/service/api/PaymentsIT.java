@@ -5,32 +5,32 @@
 
 package dk.dbc.promat.service.api;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import dk.dbc.promat.service.ContainerTest;
-import dk.dbc.promat.service.connector.PromatServiceConnectorException;
-import dk.dbc.promat.service.dto.CaseRequest;
-import dk.dbc.promat.service.dto.PaymentList;
-import dk.dbc.promat.service.dto.ServiceErrorCode;
-import dk.dbc.promat.service.dto.ServiceErrorDto;
-import dk.dbc.promat.service.persistence.CaseStatus;
-import dk.dbc.promat.service.persistence.PromatCase;
-import org.junit.jupiter.api.MethodOrderer;
-import org.junit.jupiter.api.Order;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestMethodOrder;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+ import com.fasterxml.jackson.core.JsonProcessingException;
+ import dk.dbc.promat.service.ContainerTest;
+ import dk.dbc.promat.service.connector.PromatServiceConnectorException;
+ import dk.dbc.promat.service.dto.CaseRequest;
+ import dk.dbc.promat.service.dto.PaymentList;
+ import dk.dbc.promat.service.dto.ServiceErrorCode;
+ import dk.dbc.promat.service.dto.ServiceErrorDto;
+ import dk.dbc.promat.service.persistence.CaseStatus;
+ import dk.dbc.promat.service.persistence.PromatCase;
+ import org.junit.jupiter.api.MethodOrderer;
+ import org.junit.jupiter.api.Order;
+ import org.junit.jupiter.api.Test;
+ import org.junit.jupiter.api.TestMethodOrder;
+ import org.slf4j.Logger;
+ import org.slf4j.LoggerFactory;
 
-import javax.ws.rs.core.Response;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
+ import javax.ws.rs.core.Response;
+ import java.time.LocalDateTime;
+ import java.time.format.DateTimeFormatter;
+ import java.util.List;
+ import java.util.Map;
+ import java.util.stream.Collectors;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.core.Is.is;
-import static org.hamcrest.Matchers.greaterThanOrEqualTo;
+ import static org.hamcrest.MatcherAssert.assertThat;
+ import static org.hamcrest.Matchers.greaterThanOrEqualTo;
+ import static org.hamcrest.core.Is.is;
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class PaymentsIT  extends ContainerTest {
@@ -100,7 +100,7 @@ public class PaymentsIT  extends ContainerTest {
         assertThat("status code", response.getStatus(), is(200));
 
         String csv = response.readEntity(String.class);
-        assertThat("number of lines", csv.lines().count(), is(34L));  // 1 header + 33 paymentlines
+        assertThat("number of lines", csv.lines().count(), is(35L));  // 1 header + 33 paymentlines
     }
 
     // This test needs to run after test that depends on the state of the preloaded cases
@@ -111,7 +111,7 @@ public class PaymentsIT  extends ContainerTest {
         assertThat("status code", response.getStatus(), is(200));
 
         PaymentList payments = mapper.readValue(response.readEntity(String.class), PaymentList.class);
-        assertThat("number of paymentlines", payments.getPayments().size(), is(33));
+        assertThat("number of paymentlines", payments.getPayments().size(), is(34));
     }
 
     // This test needs to run after test that depends on the state of the preloaded cases
@@ -122,7 +122,7 @@ public class PaymentsIT  extends ContainerTest {
         assertThat("status code", response.getStatus(), is(200));
 
         String csv = response.readEntity(String.class);
-        assertThat("number of lines", csv.lines().count(), is(34L));  // 1 header + 33 paymentlines
+        assertThat("number of lines", csv.lines().count(), is(35L));  // 1 header + 33 paymentlines
 
         verifyPaymentCsv(csv);
     }
@@ -137,7 +137,7 @@ public class PaymentsIT  extends ContainerTest {
         assertThat("status code", response.getStatus(), is(200));
 
         String csv = response.readEntity(String.class);
-        assertThat("number of lines", csv.lines().count(), is(34L));  // 1 header + 33 paymentlines
+        assertThat("number of lines", csv.lines().count(), is(35L));  // 1 header + 33 paymentlines
 
         // Now check that all pending payments has been payed
         response = getResponse("v1/api/payments/preview", Map.of("format","CSV"));
@@ -176,7 +176,7 @@ public class PaymentsIT  extends ContainerTest {
         assertThat("status code", response.getStatus(), is(200));
 
         String csv = response.readEntity(String.class);
-        assertThat("number of lines", csv.lines().count(), is(34L));  // 1 header + 33 paymentlines
+        assertThat("number of lines", csv.lines().count(), is(35L));  // 1 header + 33 paymentlines
 
         verifyPaymentCsv(csv);
     }
@@ -219,7 +219,8 @@ public class PaymentsIT  extends ContainerTest {
                 "mm-dd-åååå;123;1956;1;1001190,1001191 Case 20;Hans Hansen\n" +
                 "mm-dd-åååå;123;1960;1;1001190,1001191 Kort om, +1 Case 20;Hans Hansen\n" +
                 "mm-dd-åååå;123;1956;1;38529633,38529668 Case 20;Hans Hansen\n" +
-                "mm-dd-åååå;123;1960;1;38529633,38529668 Kort om, +1 Case 20;Hans Hansen\n")
+                "mm-dd-åååå;123;1960;1;38529633,38529668 Kort om, +1 Case 20;Hans Hansen\n" +
+                "mm-dd-åååå;123;1988;1;38529633,38529668 Case 20;Hans Hansen\n")
                         .replace("mm-dd-åååå", LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd-MM-yyyy")));
         LOGGER.info("Expected CSV output is:\n{}", expected);
 

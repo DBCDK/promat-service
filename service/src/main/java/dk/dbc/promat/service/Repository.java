@@ -5,23 +5,10 @@
 
 package dk.dbc.promat.service;
 
-import dk.dbc.promat.service.api.ServiceErrorException;
-import dk.dbc.promat.service.dto.ReviewerRequest;
-import dk.dbc.promat.service.dto.ServiceErrorCode;
-
-import javax.ejb.Stateless;
-import javax.inject.Inject;
-import javax.persistence.EntityManager;
-import javax.persistence.LockModeType;
-import javax.persistence.Query;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.stream.Collectors;
-
 import dk.dbc.opennumberroll.OpennumberRollConnector;
 import dk.dbc.opennumberroll.OpennumberRollConnectorException;
+import dk.dbc.promat.service.api.ServiceErrorException;
+import dk.dbc.promat.service.dto.ServiceErrorCode;
 import dk.dbc.promat.service.persistence.PayCategory;
 import dk.dbc.promat.service.persistence.PromatCase;
 import dk.dbc.promat.service.persistence.PromatEntityManager;
@@ -33,6 +20,17 @@ import dk.dbc.promat.service.persistence.TaskType;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.ejb.Stateless;
+import javax.inject.Inject;
+import javax.persistence.EntityManager;
+import javax.persistence.LockModeType;
+import javax.persistence.Query;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Stateless
 public class Repository {
@@ -86,7 +84,7 @@ public class Repository {
                         .withHttpStatus(400)
                         .withCode(ServiceErrorCode.INVALID_REQUEST)
                         .withCause("No such subject")
-                        .withDetails(String.format("Field 'subject' contains id {} which does not exist", subjectId));
+                        .withDetails("Field 'subject' contains id " + subjectId + " which does not exist");
             }
             subjects.add(subject);
         }
@@ -121,60 +119,11 @@ public class Repository {
     }
 
     public static PayCategory getPayCategoryForTaskFieldTypeOfTaskType(TaskType taskType, TaskFieldType taskFieldType) throws ServiceErrorException {
-        switch(taskFieldType) {
-            case BRIEF:
-                return PayCategory.BRIEF;
-            case METAKOMPAS:
-                return PayCategory.METAKOMPAS;
-            case BKM:
-                return PayCategory.BKM;
-            case EXPRESS:
-                return PayCategory.EXPRESS;
-            default: {
-                return getPayCategoryForTaskType(taskType);
-            }
-        }
+        return taskFieldType.getPaymentCategory(taskType);
     }
 
-    public static PayCategory getPayCategoryForTaskType(TaskType taskType) throws ServiceErrorException {
-        switch(taskType) {
-
-            case GROUP_1_LESS_THAN_100_PAGES:
-                return PayCategory.GROUP_1_LESS_THAN_100_PAGES;
-            case GROUP_2_100_UPTO_199_PAGES:
-                return PayCategory.GROUP_2_100_UPTO_199_PAGES;
-            case GROUP_3_200_UPTO_499_PAGES:
-                return PayCategory.GROUP_3_200_UPTO_499_PAGES;
-            case GROUP_4_500_OR_MORE_PAGES:
-                return PayCategory.GROUP_4_500_OR_MORE_PAGES;
-
-            case MOVIES_GR_1:
-                return PayCategory.MOVIES_GR_1;
-            case MOVIES_GR_2:
-                return PayCategory.MOVIES_GR_2;
-            case MOVIES_GR_3:
-                return PayCategory.MOVIES_GR_3;
-
-            case MULTIMEDIA_FEE:
-                return PayCategory.MULTIMEDIA_FEE;
-            case MULTIMEDIA_FEE_GR2:
-                return PayCategory.MULTIMEDIA_FEE_GR2;
-
-            case MOVIE_NON_FICTION_GR1:
-                return PayCategory.MOVIE_NON_FICTION_GR1;
-            case MOVIE_NON_FICTION_GR2:
-                return PayCategory.MOVIE_NON_FICTION_GR2;
-            case MOVIE_NON_FICTION_GR3:
-                return PayCategory.MOVIE_NON_FICTION_GR3;
-
-            case NONE:
-                return PayCategory.NONE;
-        }
-
-        throw new ServiceErrorException("Bad PayCategory")
-                .withDetails(String.format("Invalid TaskType %s when determining paycategory for TaskType", taskType))
-                .withCode(ServiceErrorCode.INVALID_REQUEST)
-                .withHttpStatus(400);
+    public static PayCategory getPayCategoryForTaskType(TaskType taskType) {
+        return taskType.payCategory;
     }
 
     public void assignFaustnumber(PromatCase existing) throws OpennumberRollConnectorException {

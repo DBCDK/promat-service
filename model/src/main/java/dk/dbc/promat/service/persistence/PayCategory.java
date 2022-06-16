@@ -7,6 +7,8 @@ public enum PayCategory {
 
     METAKOMPAS("1987"),
 
+    BUGGI("1988"),
+
     BKM("1962"),
 
     GROUP_1_LESS_THAN_100_PAGES("1956"),
