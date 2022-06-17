@@ -38,12 +38,8 @@ import dk.dbc.promat.service.persistence.Subject;
 import dk.dbc.promat.service.persistence.TaskFieldType;
 import dk.dbc.promat.service.templating.CaseviewXmlTransformer;
 import dk.dbc.promat.service.templating.NotificationFactory;
-import dk.dbc.promat.service.templating.model.AssignReviewer;
 import dk.dbc.promat.service.templating.Renderer;
-
-import java.time.LocalDateTime;
-import java.util.Optional;
-
+import dk.dbc.promat.service.templating.model.AssignReviewer;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -72,15 +68,19 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.StreamingOutput;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Stateless
 @Path("")
@@ -388,7 +388,7 @@ public class Cases {
             // Fetch matching cases. All cases that contains the faustnumber will be found, but we
             // only return the first match (which, due to sort DESC is the newest case.. NOT the last case to
             // have its status changed, should that be the case, but the last case created)
-            TypedQuery query = entityManager.createNamedQuery(PromatCase.GET_CASE_BY_FAUST_NAME, PromatCase.class);
+            TypedQuery<PromatCase> query = entityManager.createNamedQuery(PromatCase.GET_CASE_BY_FAUST_NAME, PromatCase.class);
             query.setParameter("faust", faust);
             List<PromatCase> cases = query.getResultList();
             if (cases == null || cases.size() == 0) {
@@ -396,7 +396,7 @@ public class Cases {
                 return ServiceErrorDto.NotFound("No case with this primary- or relatedfaust or no case in required states",
                         String.format("No case with primary- or relatedfaust %s or in required states exists", faust));
             }
-            if (cases.get(0).getTasks() == null || cases.get(0).getTasks().size() == 0) {
+            if (cases.get(0).getTasks() == null || cases.get(0).getTasks().isEmpty()) {
                 LOGGER.error("Case with faust {} has no tasks", faust);
                 return ServiceErrorDto.NotFound("Case has no tasks",
                         String.format("Case with primary- or relatedfaust %s has no tasks", faust));
@@ -413,17 +413,16 @@ public class Cases {
             }
 
             // Extract related faustnumbers found in the 'targetFaust' field
-            var targetFausts = new ArrayList<>();
-            for( PromatTask task : cases.get(0).getTasks() ) {
-                targetFausts.addAll(task.getTargetFausts());
-            }
-            targetFausts.add(cases.get(0).getPrimaryFaust());
-            var relatedFausts = targetFausts.stream().distinct().collect(Collectors.toList());
-
+            Stream<String> caseFausts = cases.get(0).getTasks().stream()
+                    .map(PromatTask::getTargetFausts)
+                    .flatMap(Collection::stream);
             // Remove the faustnumber that was requested since it will appear above the
             // list of brief notes for the related fausts in the view (disregarding which
             // is actually the primary faust for the case)
-            relatedFausts.remove(faust);
+            List<String> relatedFausts = Stream.concat(caseFausts, Stream.of(cases.get(0).getPrimaryFaust()))
+                    .filter(f -> !faust.equals(f))
+                    .distinct()
+                    .collect(Collectors.toList());
 
             Renderer renderer = new Renderer();
             Map<String, Object> models = new HashMap<>();
@@ -444,7 +443,7 @@ public class Cases {
                             .header("Content-Type", "text/xml; charset=ISO-8859-1")
                             .entity(transformed).build();
                 default:
-                    return ServiceErrorDto.Failed(String.format("No handling of CaseviewFormat.", format));
+                    return ServiceErrorDto.Failed("No handling of CaseviewFormat " + format);
             }
         } catch(Exception exception) {
             LOGGER.error("Caught exception: {}", exception.getMessage());
@@ -583,7 +582,7 @@ public class Cases {
                     caseIds.addAll(query.getResultList().stream().map(PromatCase::getId).collect(Collectors.toList()));
                 }
 
-                if (caseIds.size() > 0) {
+                if (!caseIds.isEmpty()) {
                     final CriteriaBuilder.In<Integer> inIdsClause = builder.in(root.get("id"));
 
                     // Now set caseid, one by one.
@@ -715,7 +714,7 @@ public class Cases {
         }
 
         // Combine all where clauses together with AND and add them to the query
-        if (allPredicates.size() > 0) {
+        if (!allPredicates.isEmpty()) {
             Predicate finalPredicate = builder.and(allPredicates.toArray(Predicate[]::new));
             criteriaQuery.where(finalPredicate);
         }
@@ -747,7 +746,7 @@ public class Cases {
             for( PromatCase c : caseList.getCases() ) {
 
                 // There must be tasks on the case for the export to be valid
-                if( c.getTasks() == null || c.getTasks().size() == 0 ) {
+                if( c.getTasks() == null || c.getTasks().isEmpty() ) {
                     LOGGER.info("Removing case {} since it has no tasks", c.getId());
                     casesToRemove.add(c.getId());
                     continue;
@@ -1146,7 +1145,7 @@ public class Cases {
     private List<PromatTask> createTasks(String primaryFaust, List<TaskDto> taskDtos) throws ServiceErrorException {
         ArrayList<PromatTask> tasks = new ArrayList<>();
 
-        if( taskDtos != null && taskDtos.size() > 0) {
+        if( taskDtos != null && !taskDtos.isEmpty()) {
             for(TaskDto task : taskDtos) {
                 validateTaskDto(task);
 
@@ -1164,7 +1163,7 @@ public class Cases {
     }
 
     private void validateTaskDto(TaskDto dto) throws ServiceErrorException {
-        if(dto.getTaskType() == null || dto.getTaskFieldType() == null || dto.getTargetFausts() == null || dto.getTargetFausts().size() == 0) {
+        if(dto.getTaskType() == null || dto.getTaskFieldType() == null || dto.getTargetFausts() == null || dto.getTargetFausts().isEmpty()) {
             LOGGER.info("Task dto is missing the taskType and/or taskFieldType field");
             throw new ServiceErrorException("Task dto is missing the taskType and/or taskFieldType field")
                     .withCause("Missing required field(s) in the request data")
@@ -1261,30 +1260,31 @@ public class Cases {
 
         // Create message text
         // Todo: Here we should use a set of standard phrases, something that is still in the future
-        String text = "";
+        List<String> messages = new ArrayList<>();
         if( promatCase.getTasks().stream().anyMatch(t -> t.getTaskFieldType() == TaskFieldType.METAKOMPAS) ) {
-            text += " Du bedes tildele metadata til Læsekompasset via <a href=\"https://metakompas.dk\">https://metakompas.dk</a>";
+            messages.add(" Du bedes tildele metadata til Læsekompasset via <a href=\"https://metakompas.dk\">https://metakompas.dk</a>");
+        }
+        if( promatCase.getTasks().stream().anyMatch(t -> t.getTaskFieldType() == TaskFieldType.METAKOMPAS) ) {
+            messages.add(" Du bedes tildele metadata til Buggi via <a href=\"https://metakompas.dk\">https://metakompas.dk</a>");
         }
         if( promatCase.getTasks().stream().anyMatch(t -> t.getTaskFieldType() == TaskFieldType.BKM) ) {
-            text += (text.length() > 0 ? "\n\n" : "");
-            text += "Du bedes udarbejde en vurdering af om materialet er biblioteksrelevant inden du udfylder anmeldelsen";
+            messages.add("Du bedes udarbejde en vurdering af om materialet er biblioteksrelevant inden du udfylder anmeldelsen");
         }
         if( promatCase.getTasks().stream().anyMatch(t -> t.getTaskFieldType() == TaskFieldType.EXPRESS) ) {
-            text += (text.length() > 0 ? "\n\n" : "");
-            text += "Anmeldelsen haster og bedes udarbejdet hurtigst muligt\n\n";
+            messages.add("Anmeldelsen haster og bedes udarbejdet hurtigst muligt\n\n");
         }
         if( promatCase.getNote() != null && !promatCase.getNote().isBlank() ) {
-            text += (text.length() > 0 ? "\n\n" : "");
-            text += promatCase.getNote();
+            messages.add(promatCase.getNote());
         }
-        if( text.isBlank() ) {
+        if( messages.isEmpty() ) {
             return;
         }
+
 
         repository.getExclusiveAccessToTable(PromatMessage.TABLE_NAME);
 
         PromatMessage promatMessage = new PromatMessage()
-                .withMessageText(text)
+                .withMessageText(String.join("\n\n", messages))
                 .withCaseId(promatCase.getId())
                 .withAuthor(PromatMessage.Author.fromPromatUser(promatUser))
                 .withDirection(PromatMessage.Direction.EDITOR_TO_REVIEWER)
@@ -1361,10 +1361,9 @@ public class Cases {
                     return CaseStatus.APPROVED;
                 }
 
-                // Check if the case should go to PENDING_EXTERNAL to wait for metakompas topics, or can be approved now
-                if (existing.getTasks().stream()
-                        .filter(task -> task.getTaskFieldType() == TaskFieldType.METAKOMPAS && task.getApproved() == null)
-                        .count() != 0) {
+                // Check if the case should go to PENDING_EXTERNAL to wait for metakompas and buggi topics, or can be approved now
+                List<TaskFieldType> pendingExternal = List.of(TaskFieldType.METAKOMPAS, TaskFieldType.BUGGI);
+                if (existing.getTasks().stream().anyMatch(task -> task.getApproved() == null && pendingExternal.contains(task.getTaskFieldType()))) {
                     return CaseStatus.PENDING_EXTERNAL;
                 } else {
                     return CaseStatus.APPROVED;

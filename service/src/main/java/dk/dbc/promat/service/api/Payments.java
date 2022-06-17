@@ -35,10 +35,12 @@ import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Stateless
 @Path("")
@@ -209,7 +211,7 @@ public class Payments {
             // Check that all tasks has been approved before starting payment, unless the case
             // has status PENDING_CLOSE where it is expected that only the BKM task has been approved
             if ( promatCase.getStatus() != CaseStatus.PENDING_CLOSE && promatCase.getStatus() != CaseStatus.CLOSED &&
-                    promatCase.getTasks().stream().filter(t -> t.getApproved() == null).count() > 0) {
+                    promatCase.getTasks().stream().anyMatch(t -> t.getApproved() == null)) {
                 LOGGER.error(String.format("Case id %d has task(s) that has not been approved allthough the case has status APPROVED or better", promatCase.getId()));
                 throw new ServiceErrorException("Case ready for payment has not-approved tasks")
                         .withHttpStatus(500)
@@ -249,6 +251,7 @@ public class Payments {
                             }
                             break;
                         case METAKOMPAS:
+                        case BUGGI:
                         case BKM:
                             // These fields is payed by quantity
                             casePayCategories.add(task.getPayCategory());
@@ -314,7 +317,7 @@ public class Payments {
             // status to closed.
             if (execute) {
                 if(promatCase.getStatus() == CaseStatus.PENDING_CLOSE) {
-                    LOGGER.info("Changing status of case {} to CLOSED due to BKM assessment requesting case being closed");
+                    LOGGER.info("Changing status of case {} to CLOSED due to BKM assessment requesting case being closed", promatCase.getId());
                     promatCase.setStatus(CaseStatus.CLOSED);
                 }
             }
@@ -372,14 +375,8 @@ public class Payments {
     }
 
     private String getFaustList(PromatCase promatCase) {
-        List<String> fausts = new ArrayList<>();
-        fausts.add(promatCase.getPrimaryFaust());
-
-        for( PromatTask task : promatCase.getTasks() ) {
-            fausts.addAll(task.getTargetFausts());
-        }
-
-        return fausts.stream()
+        Stream<String> caseFausts = promatCase.getTasks().stream().map(PromatTask::getTargetFausts).flatMap(Collection::stream);
+        return Stream.concat(Stream.of(promatCase.getPrimaryFaust()), caseFausts)
                 .distinct()
                 .sorted()
                 .collect(Collectors.joining(","));

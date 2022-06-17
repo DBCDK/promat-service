@@ -459,7 +459,8 @@ values  (1201, 'GROUP_1_LESS_THAN_100_PAGES', 'BRIEF',          '2021-01-13', 'B
         (1206, 'GROUP_1_LESS_THAN_100_PAGES', 'RECOMMENDATION', '2021-01-13', 'GROUP_1_LESS_THAN_100_PAGES', '2021-01-13', NULL, 'data', '["38529668", "38529633"]'),
         (1207, 'GROUP_1_LESS_THAN_100_PAGES', 'AGE',            '2021-01-13', 'GROUP_1_LESS_THAN_100_PAGES', '2021-01-13', NULL, 'data', '["38529668", "38529633"]'),
         (1208, 'GROUP_1_LESS_THAN_100_PAGES', 'TOPICS',         '2021-01-13', 'GROUP_1_LESS_THAN_100_PAGES', '2021-01-13', NULL, 'data', '["38529668"]'),
-        (1209, 'GROUP_1_LESS_THAN_100_PAGES', 'TOPICS',         '2021-01-13', 'GROUP_1_LESS_THAN_100_PAGES', '2021-01-13', NULL, 'data', '["38529633"]');
+        (1209, 'GROUP_1_LESS_THAN_100_PAGES', 'TOPICS',         '2021-01-13', 'GROUP_1_LESS_THAN_100_PAGES', '2021-01-13', NULL, 'data', '["38529633"]'),
+        (1210, 'GROUP_1_LESS_THAN_100_PAGES', 'BUGGI',          '2021-01-13', 'BUGGI',                       '2021-01-13', NULL, 'data', '["38529633"]');
 
 insert into casetasks(case_id, task_id)
 values (1200, 1201),
@@ -470,6 +471,7 @@ values (1200, 1201),
        (1200, 1206),
        (1200, 1207),
        (1200, 1208),
-       (1200, 1209);
+       (1200, 1209),
+       (1200, 1210);
 
 
