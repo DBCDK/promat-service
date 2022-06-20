@@ -1258,33 +1258,10 @@ public class Cases {
         }
         PromatUser promatUser =  entityManager.find(Editor.class, promatCase.getEditor().getId());
 
-        // Create message text
-        // Todo: Here we should use a set of standard phrases, something that is still in the future
-        List<String> messages = new ArrayList<>();
-        if( promatCase.getTasks().stream().anyMatch(t -> t.getTaskFieldType() == TaskFieldType.METAKOMPAS) ) {
-            messages.add(" Du bedes tildele metadata til Læsekompasset via <a href=\"https://metakompas.dk\">https://metakompas.dk</a>");
-        }
-        if( promatCase.getTasks().stream().anyMatch(t -> t.getTaskFieldType() == TaskFieldType.METAKOMPAS) ) {
-            messages.add(" Du bedes tildele metadata til Buggi via <a href=\"https://metakompas.dk\">https://metakompas.dk</a>");
-        }
-        if( promatCase.getTasks().stream().anyMatch(t -> t.getTaskFieldType() == TaskFieldType.BKM) ) {
-            messages.add("Du bedes udarbejde en vurdering af om materialet er biblioteksrelevant inden du udfylder anmeldelsen");
-        }
-        if( promatCase.getTasks().stream().anyMatch(t -> t.getTaskFieldType() == TaskFieldType.EXPRESS) ) {
-            messages.add("Anmeldelsen haster og bedes udarbejdet hurtigst muligt\n\n");
-        }
-        if( promatCase.getNote() != null && !promatCase.getNote().isBlank() ) {
-            messages.add(promatCase.getNote());
-        }
-        if( messages.isEmpty() ) {
-            return;
-        }
-
-
         repository.getExclusiveAccessToTable(PromatMessage.TABLE_NAME);
 
         PromatMessage promatMessage = new PromatMessage()
-                .withMessageText(String.join("\n\n", messages))
+                .withMessageText(promatCase.getNote())
                 .withCaseId(promatCase.getId())
                 .withAuthor(PromatMessage.Author.fromPromatUser(promatUser))
                 .withDirection(PromatMessage.Direction.EDITOR_TO_REVIEWER)
