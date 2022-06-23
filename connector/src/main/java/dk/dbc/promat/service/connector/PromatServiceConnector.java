@@ -13,6 +13,7 @@ import dk.dbc.promat.service.dto.CaseRequest;
 import dk.dbc.promat.service.dto.CaseSummaryList;
 import dk.dbc.promat.service.dto.ListCasesParams;
 import dk.dbc.promat.service.dto.ServiceErrorDto;
+import dk.dbc.promat.service.dto.TagList;
 import dk.dbc.promat.service.persistence.PromatCase;
 import net.jodah.failsafe.RetryPolicy;
 
@@ -178,6 +179,16 @@ public class PromatServiceConnector {
                 .withJsonData(caseRequest);
         final Response response = httpPost.execute();
         assertResponseStatus(response, Response.Status.CREATED);
+        return readResponseEntity(response, PromatCase.class);
+    }
+
+    public PromatCase approveBuggiTask(int pid, TagList tags) throws PromatServiceConnectorException {
+        HttpPost httpPost = new HttpPost(failSafeHttpClient)
+                .withBaseUrl(baseUrl)
+                .withPathElements("cases", Integer.toString(pid), "buggi")
+                .withJsonData(tags);
+        Response response = httpPost.execute();
+        assertResponseStatus(response, Response.Status.OK, Response.Status.NOT_MODIFIED);
         return readResponseEntity(response, PromatCase.class);
     }
 

@@ -30,6 +30,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Stateless
@@ -50,9 +51,10 @@ public class Repository {
     /**
      * Locks a single entity for exclusive access.
      * This is a blocking operation.
+     *
      * @param entityClass class of the entity
-     * @param primaryKey the primary key of the entity
-     * @param <T> the type
+     * @param primaryKey  the primary key of the entity
+     * @param <T>         the type
      * @return locked entity
      */
     public <T> T getExclusiveAccessToEntity(Class<T> entityClass, Object primaryKey) {
@@ -92,7 +94,7 @@ public class Repository {
     }
 
     public List<SubjectNote> resolveSubjectNotes(List<Integer> subjects, Collection<SubjectNote> subjectNotes) {
-        if(subjectNotes == null || subjects == null) {
+        if (subjectNotes == null || subjects == null) {
             return List.of();
         }
         return subjectNotes
@@ -127,15 +129,14 @@ public class Repository {
     }
 
     public void assignFaustnumber(PromatCase existing) throws OpennumberRollConnectorException {
-        for(PromatTask task : existing.getTasks().stream()
+        List<PromatTask> tasks = existing.getTasks().stream()
                 .filter(task -> task.getTaskFieldType() == TaskFieldType.BRIEF)
-                .collect(Collectors.toList())) {
-            if( task.getRecordId() == null || task.getRecordId().isEmpty() ) {
-                OpennumberRollConnector.Params params = new OpennumberRollConnector.Params();
-                params.withRollName(openNumberrollRollName);
-                task.setRecordId(opennumberRollConnector.getId(params));
-                LOGGER.info("Assigned new faustnumber {} to task with id {} on case with id {}", task.getRecordId(), task.getRecordId(), existing.getId());
-            }
+                .filter(task -> Objects.isNull(task.getRecordId()) || task.getRecordId().isEmpty())
+                .collect(Collectors.toList());
+        for (PromatTask task : tasks) {
+            OpennumberRollConnector.Params params = new OpennumberRollConnector.Params().withRollName(openNumberrollRollName);
+            task.setRecordId(opennumberRollConnector.getId(params));
+            LOGGER.info("Assigned new faustnumber {} to task with id {} on case with id {}", task.getRecordId(), task.getRecordId(), existing.getId());
         }
     }
 }

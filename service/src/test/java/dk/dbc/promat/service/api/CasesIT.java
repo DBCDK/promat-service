@@ -7,14 +7,15 @@ package dk.dbc.promat.service.api;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import dk.dbc.promat.service.ContainerTest;
-import dk.dbc.promat.service.dto.CreateStatus;
-import dk.dbc.promat.service.dto.CreateStatusDto;
-import dk.dbc.promat.service.dto.ListCasesParams;
 import dk.dbc.promat.service.connector.PromatServiceConnectorException;
 import dk.dbc.promat.service.connector.PromatServiceConnectorUnexpectedStatusCodeException;
 import dk.dbc.promat.service.dto.CaseRequest;
 import dk.dbc.promat.service.dto.CaseSummaryList;
+import dk.dbc.promat.service.dto.CreateStatus;
+import dk.dbc.promat.service.dto.CreateStatusDto;
 import dk.dbc.promat.service.dto.CriteriaOperator;
+import dk.dbc.promat.service.dto.ListCasesParams;
+import dk.dbc.promat.service.dto.TagList;
 import dk.dbc.promat.service.dto.TaskDto;
 import dk.dbc.promat.service.persistence.CaseStatus;
 import dk.dbc.promat.service.persistence.MaterialType;
@@ -26,7 +27,11 @@ import dk.dbc.promat.service.persistence.TaskFieldType;
 import dk.dbc.promat.service.persistence.TaskType;
 import org.hamcrest.core.IsNull;
 import org.jsoup.Jsoup;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.MethodOrderer;
+import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestMethodOrder;
 import org.junit.jupiter.api.io.TempDir;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,6 +48,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -51,10 +57,16 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 
 import static java.nio.file.StandardOpenOption.CREATE_NEW;
 import static java.nio.file.StandardOpenOption.WRITE;
+import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
+import static javax.ws.rs.core.Response.Status.CONFLICT;
+import static javax.ws.rs.core.Response.Status.CREATED;
+import static javax.ws.rs.core.Response.Status.NOT_FOUND;
+import static javax.ws.rs.core.Response.Status.NOT_MODIFIED;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.not;
@@ -63,6 +75,7 @@ import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThrows;
 
+@SuppressWarnings("resource")
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class CasesIT extends ContainerTest {
     private static final Logger LOGGER = LoggerFactory.getLogger(CasesIT.class);
@@ -85,12 +98,9 @@ public class CasesIT extends ContainerTest {
 
         // materialType set
         dto.setMaterialType(MaterialType.BOOK);
-        Response response = postResponse("v1/api/cases", dto);
-        assertThat("status code", response.getStatus(), is(201));
+        PromatCase created = postAndAssert("v1/api/cases", dto, PromatCase.class, CREATED);
 
         // Check that the returned object has title, primary faust and materialtype set
-        String obj = response.readEntity(String.class);
-        PromatCase created = mapper.readValue(obj, PromatCase.class);
         assertThat("primary faust", created.getPrimaryFaust(), is("11001111"));
         assertThat("title", created.getTitle(), is("Title for 11001111"));
         assertThat("materialType", created.getMaterialType(), is(MaterialType.BOOK));
@@ -110,11 +120,11 @@ public class CasesIT extends ContainerTest {
         // New case with primary faust 002222 which exists as related faust
         dto.setPrimaryFaust("002222");
         dto.setTitle("New title for 002222");
-        assertThat("status code", postResponse("v1/api/cases", dto).getStatus(), is(409));
+        postAndAssert("v1/api/cases", dto, CONFLICT);
 
         // New case with primary faust 2004444 and related faust 2005555 (all is good)
         dto.setPrimaryFaust("2004444");
-        assertThat("status code", postResponse("v1/api/cases", dto).getStatus(), is(201));
+        postAndAssert("v1/api/cases", dto, CREATED);
     }
 
     @Test
@@ -132,11 +142,8 @@ public class CasesIT extends ContainerTest {
                 .withDeadline("2021-01-15")
                 .withSubjects(Arrays.asList(3, 4));
 
-        Response response = postResponse("v1/api/cases", dto);
-        assertThat("status code", response.getStatus(), is(201));
+        PromatCase created = postAndAssert("v1/api/cases", dto, PromatCase.class, CREATED);
 
-        String obj = response.readEntity(String.class);
-        PromatCase created = mapper.readValue(obj, PromatCase.class);
         assertThat("primary faust", created.getPrimaryFaust(), is("3001111"));
         assertThat("title", created.getTitle(), is("Title for 3001111"));
         assertThat("materialType", created.getMaterialType(), is(MaterialType.BOOK));
@@ -151,8 +158,8 @@ public class CasesIT extends ContainerTest {
         List<Integer> actual = created.getSubjects()
                 .stream()
                 .sorted(Comparator.comparingInt(Subject::getId))
-                .map(s -> s.getId()).collect(Collectors.toList());
-        List<Integer> expected = new ArrayList<Integer>();
+                .map(Subject::getId).collect(Collectors.toList());
+        List<Integer> expected = new ArrayList<>();
         expected.add(3);
         expected.add(4);
         assertThat("subject ids", actual.equals(expected), is(true) );
@@ -170,11 +177,7 @@ public class CasesIT extends ContainerTest {
                 .withDeadline("2020-04-12")
                 .withStatus(CaseStatus.CREATED);
 
-        Response response = postResponse("v1/api/cases", dto);
-        assertThat("status code", response.getStatus(), is(201));
-
-        String obj = response.readEntity(String.class);
-        PromatCase created = mapper.readValue(obj, PromatCase.class);
+        PromatCase created = postAndAssert("v1/api/cases", dto, PromatCase.class, CREATED);
 
         assertThat("primaryFaust", created.getPrimaryFaust(), is("4001111"));
         assertThat("title", created.getTitle(), is("Title for 4001111"));
@@ -215,11 +218,11 @@ public class CasesIT extends ContainerTest {
                         new TaskDto()
                                 .withTaskType(TaskType.GROUP_1_LESS_THAN_100_PAGES)
                                 .withTaskFieldType(TaskFieldType.BRIEF)
-                                .withTargetFausts(Arrays.asList("6001111")),
+                                .withTargetFausts(List.of("6001111")),
                         new TaskDto()
                                 .withTaskType(TaskType.GROUP_1_LESS_THAN_100_PAGES)
                                 .withTaskFieldType(TaskFieldType.BRIEF)
-                                .withTargetFausts(Arrays.asList(new String[] {"6002222", "6004444"}))
+                                .withTargetFausts(List.of("6002222", "6004444"))
                 ));
 
         Response response = postResponse("v1/api/cases", dto);
@@ -237,7 +240,7 @@ public class CasesIT extends ContainerTest {
         assertThat("task 1 created", created.getTasks().get(0).getCreated(), is(LocalDate.now()));
         assertThat("task 1 approved", created.getTasks().get(0).getApproved(), is(IsNull.nullValue()));
         assertThat("task 1 payed", created.getTasks().get(0).getPayed(), is(IsNull.nullValue()));
-        assertThat("task 1 targetFausts", created.getTasks().get(0).getTargetFausts(), is(Arrays.asList("6001111")));
+        assertThat("task 1 targetFausts", created.getTasks().get(0).getTargetFausts(), is(List.of("6001111")));
 
         // Check the second created task
         assertThat("task 2 type", created.getTasks().get(1).getTaskType(), is(TaskType.GROUP_1_LESS_THAN_100_PAGES));
@@ -249,9 +252,8 @@ public class CasesIT extends ContainerTest {
         assertThat("task 2 targetFausts", created.getTasks().get(1).getTargetFausts(), is(IsNull.notNullValue()));
         assertThat("task 2 targetFausts size", created.getTasks().get(1).getTargetFausts().size(), is(2));
         assertThat("task 2 targetFausts contains", created.getTasks().get(1).getTargetFausts()
-                        .stream().sorted().collect(Collectors.toList()).toString(),
-                is(Arrays.asList(new String [] {"6002222", "6004444"})
-                        .stream().sorted().collect(Collectors.toList()).toString()));
+                        .stream().sorted().collect(Collectors.toList()),
+                is(List.of("6002222", "6004444")));
 
         // Get the case we created
         response = getResponse("v1/api/cases/" + created.getId().toString());
@@ -1536,6 +1538,62 @@ public class CasesIT extends ContainerTest {
     }
 
     @Test
+    public void testBuggiApproval() throws IOException, PromatServiceConnectorException {
+        TagList tags = new TagList("hest");
+        assertPromatThrows(NOT_FOUND, () -> promatServiceConnector.approveBuggiTask(12121212, tags));
+
+        CaseRequest noBuggiReq = makeRequest("92001234", new TaskDto()
+                .withTaskFieldType(TaskFieldType.BKM)
+                .withTaskType(TaskType.GROUP_1_LESS_THAN_100_PAGES));
+        PromatCase noBuggiCase = postAndAssert("v1/api/cases", noBuggiReq, PromatCase.class, CREATED);
+        assertPromatThrows(BAD_REQUEST, () -> promatServiceConnector.approveBuggiTask(noBuggiCase.getId(), tags));
+        deleteResponse("v1/api/cases/" + noBuggiCase.getId());
+
+        CaseRequest cr = makeRequest("93001234", new TaskDto()
+                .withTaskFieldType(TaskFieldType.BUGGI)
+                .withTaskType(TaskType.GROUP_1_LESS_THAN_100_PAGES));
+        PromatCase aCase = postAndAssert("v1/api/cases", cr, PromatCase.class, CREATED);
+
+        PromatCase updatedCase = promatServiceConnector.approveBuggiTask(aCase.getId(), tags);
+        boolean buggyApproved = updatedCase.getTasks().stream()
+                .filter(t -> t.getTaskFieldType() == TaskFieldType.BUGGI)
+                .anyMatch(t -> t.getApproved() != null);
+        Assertions.assertTrue(buggyApproved, "Buggi task should be approved");
+
+        deleteResponse("v1/api/cases/" + updatedCase.getId());
+
+        postAndAssert("v1/api/cases/" + aCase.getId() + "/buggi", "{'tags': ['hest', 'ko']}"
+                .replace('\'', '"'), NOT_MODIFIED);
+    }
+
+    private void assertPromatThrows(Response.Status status, Callable<PromatCase> callable) {
+        try {
+            callable.call();
+        } catch (PromatServiceConnectorUnexpectedStatusCodeException pe) {
+          Assertions.assertEquals(status.getStatusCode(), pe.getStatusCode(),
+                  "Client was expected to throw an exception containing status code " + status);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private CaseRequest makeRequest(String faust, TaskDto... tasks) {
+        return new CaseRequest()
+                .withTitle("Title for " + faust)
+                .withDetails("Details for " + faust)
+                .withPrimaryFaust(faust)
+                .withEditor(10)
+                .withSubjects(Arrays.asList(3, 4))
+                .withDeadline(LocalDate.now().plus(10, ChronoUnit.DAYS).toString())
+                .withMaterialType(MaterialType.BOOK)
+                .withTasks(Arrays.stream(tasks).map(t -> t.withTargetFausts(List.of(faust))).collect(Collectors.toList()));
+    }
+
+    private void assertStatus(Response response, Response.Status status) {
+        Assertions.assertEquals(status, response.getStatusInfo().toEnum());
+    }
+
+    @Test
     public void testMaterialsFilterQuery() throws PromatServiceConnectorException, JsonProcessingException {
         // Create a BOOK case
         CaseRequest dto = new CaseRequest()
@@ -1778,6 +1836,7 @@ public class CasesIT extends ContainerTest {
                 .withPrimaryFaust("21001111")
                 .withEditor(10)
                 .withReviewer(1)
+                .withNote("hej")
                 .withSubjects(Arrays.asList(3, 4))
                 .withDeadline("2021-03-30")
                 .withMaterialType(MaterialType.BOOK);
@@ -1833,6 +1892,7 @@ public class CasesIT extends ContainerTest {
                 .withReviewer(1)
                 .withSubjects(Arrays.asList(3, 4))
                 .withDeadline("2021-03-30")
+                .withNote("hej")
                 .withMaterialType(MaterialType.BOOK)
                 .withTasks(Arrays.asList(new TaskDto()
                     .withTaskType(TaskType.GROUP_1_LESS_THAN_100_PAGES)

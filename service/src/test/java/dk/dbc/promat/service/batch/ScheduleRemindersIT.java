@@ -14,16 +14,17 @@ import dk.dbc.promat.service.persistence.TaskFieldType;
 import dk.dbc.promat.service.persistence.TaskType;
 import dk.dbc.promat.service.templating.Formatting;
 import dk.dbc.promat.service.templating.NotificationFactoryIT;
-import java.time.LocalDate;
-import java.util.Arrays;
-import java.util.List;
-import java.util.stream.Collectors;
-import javax.ws.rs.core.Response;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.ws.rs.core.Response;
+import java.time.LocalDate;
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
@@ -38,7 +39,7 @@ public class ScheduleRemindersIT extends ContainerTest {
 
     @BeforeAll
     public static void startWiremock() {
-        wiremockHost =wireMockServer.baseUrl();
+        wiremockHost = wireMockServer.baseUrl();
     }
 
     @BeforeEach

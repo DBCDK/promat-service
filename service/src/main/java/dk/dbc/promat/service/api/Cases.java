@@ -22,6 +22,7 @@ import dk.dbc.promat.service.dto.RecordDto;
 import dk.dbc.promat.service.dto.RecordsListDto;
 import dk.dbc.promat.service.dto.ServiceErrorCode;
 import dk.dbc.promat.service.dto.ServiceErrorDto;
+import dk.dbc.promat.service.dto.TagList;
 import dk.dbc.promat.service.dto.TaskDto;
 import dk.dbc.promat.service.persistence.CaseStatus;
 import dk.dbc.promat.service.persistence.CaseView;
@@ -64,6 +65,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.StreamingOutput;
@@ -73,6 +75,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -81,6 +84,9 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import static javax.ws.rs.core.Response.Status.NOT_FOUND;
+import static javax.ws.rs.core.Response.Status.NOT_MODIFIED;
 
 @Stateless
 @Path("")
@@ -114,20 +120,20 @@ public class Cases {
     private static final int DEFAULT_CASES_LIMIT = 100;
 
     // Set of allowed states when changing reviewer
-    private static final Set<CaseStatus> REVIEWER_CHANGE_ALLOWED_STATES =
-            Set.of(
+    private static final Set<CaseStatus> REVIEWER_CHANGE_ALLOWED_STATES = EnumSet.of(
                     CaseStatus.CREATED,
                     CaseStatus.REJECTED,
                     CaseStatus.ASSIGNED,
                     CaseStatus.PENDING_ISSUES);
+    Set<CaseStatus> INVALID_BUGGI_APPROVAL_STATES = EnumSet.of(CaseStatus.CLOSED, CaseStatus.DELETED);
 
     // Set of allowed states when approving tasks
     private static final Set<CaseStatus> APPROVE_TASKS_ALLOWED_STATES =
-            Set.of(CaseStatus.PENDING_EXTERNAL, CaseStatus.APPROVED);
+            EnumSet.of(CaseStatus.PENDING_EXTERNAL, CaseStatus.APPROVED);
 
     // Set of allowed states when returning a case back to the reviewer for corrections.
     private static final Set<CaseStatus> PENDING_ISSUES_CHANGE_ALLOWED_STATES =
-            Set.of(
+            EnumSet.of(
                     CaseStatus.PENDING_EXTERNAL,
                     CaseStatus.APPROVED,
                     CaseStatus.PENDING_EXPORT,
@@ -263,14 +269,14 @@ public class Cases {
 
             // 201 CREATED
             LOGGER.info("Created new case for primaryFaust {}", entity.getPrimaryFaust());
-            return Response.status(201)
+            return Response.status(Response.Status.CREATED)
                     .entity(asSummary(entity))
                     .build();
         } catch(ServiceErrorException serviceErrorException) {
             LOGGER.info("Received serviceErrorException while creating the case: {}", serviceErrorException.getMessage());
             return Response.status(serviceErrorException.getHttpStatus()).entity(serviceErrorException.getServiceErrorDto()).build();
         } catch(Exception exception) {
-            LOGGER.error("Caught unexpected exception: {} of type {}", exception.getMessage(), exception.toString());
+            LOGGER.error("Caught unexpected exception:", exception);
             return ServiceErrorDto.Failed(exception.getMessage());
         }
     }
@@ -299,7 +305,7 @@ public class Cases {
 
             return Response.status(200).entity(asCase(requested)).build();
         } catch(Exception exception) {
-            LOGGER.error("Caught exception: {}", exception.getMessage());
+            LOGGER.error("Caught exception:", exception);
             return ServiceErrorDto.Failed(exception.getMessage());
         }
     }
@@ -328,7 +334,7 @@ public class Cases {
                             fulltextHandler.getFilename()))
                     .entity(streamingFulltext).build();
         } catch(Exception exception) {
-            LOGGER.error("Caught exception: {}", exception.getMessage());
+            LOGGER.error("Caught exception:", exception);
             return ServiceErrorDto.Failed(exception.getMessage());
         }
     }
@@ -347,7 +353,7 @@ public class Cases {
                             fulltextHandler.getFilename()))
                     .entity(streamingFulltext).build();
         } catch(Exception exception) {
-            LOGGER.error("Caught exception: {}", exception.getMessage());
+            LOGGER.error("Caught exception:", exception);
             return ServiceErrorDto.Failed(exception.getMessage());
         }
     }
@@ -372,7 +378,7 @@ public class Cases {
                 return Response.status(200)
                         .entity(dto).build();
         } catch (Exception exception) {
-            LOGGER.error("Caught exception: {}", exception.getMessage());
+            LOGGER.error("Caught exception:", exception);
             return ServiceErrorDto.Failed(exception.getMessage());
         }
     }
@@ -446,7 +452,7 @@ public class Cases {
                     return ServiceErrorDto.Failed("No handling of CaseviewFormat " + format);
             }
         } catch(Exception exception) {
-            LOGGER.error("Caught exception: {}", exception.getMessage());
+            LOGGER.error("Caught exception:", exception);
             return ServiceErrorDto.Failed(exception.getMessage());
         }
     }
@@ -517,15 +523,40 @@ public class Cases {
         } catch (ServiceErrorException e) {
             return Response.status(e.getHttpStatus()).entity(e.getServiceErrorDto()).build();
         } catch(Exception exception) {
-            LOGGER.error("Caught exception: {}", exception.getMessage());
+            LOGGER.error("Caught exception:", exception);
             return ServiceErrorDto.Failed(exception.getMessage());
         }
+    }
+
+    @POST
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("cases/{pid}/buggi")
+    public Response approveBuggiTask(@PathParam("pid") Integer pid, TagList tagList) throws JsonProcessingException {
+        LOGGER.debug("Buggi task approved for {}", pid);
+        PromatCase promatCase = entityManager.find(PromatCase.class, pid);
+        if(promatCase == null) {
+            LOGGER.warn("Pid {} was not found for request Buggi task approval", pid);
+            return Response.status(NOT_FOUND).entity(new ServiceErrorDto().withCode(ServiceErrorCode.FAILED)).build();
+        }
+        if(INVALID_BUGGI_APPROVAL_STATES.contains(promatCase.getStatus())) {
+            return Response.status(NOT_MODIFIED).entity(Entity.json(promatCase)).build();
+        }
+        return promatCase.getTasks().stream()
+                .filter(t -> t.getTaskFieldType() == TaskFieldType.BUGGI)
+                .map(t -> approveBuggiTask(t, tagList))
+                .reduce((t1, t2) -> t1)
+                .map(t -> Response.ok().entity(asSummary(promatCase)).build())
+                .orElse(Response.status(Response.Status.BAD_REQUEST)
+                        .entity(new ServiceErrorDto().withCode(ServiceErrorCode.FAILED)
+                                .withCause("Promat case contains no buggi task"))
+                        .build());
     }
 
     public CaseSummaryList listCases(ListCasesParams params) throws ServiceErrorException {
         // Initialize query and criteriabuilder
         final CriteriaBuilder builder = entityManager.getCriteriaBuilder();
-        final CriteriaQuery criteriaQuery = builder.createQuery();
+        final CriteriaQuery<PromatCase> criteriaQuery = builder.createQuery(PromatCase.class);
 
         // Create query root
         final Root<PromatCase> root = criteriaQuery.from(PromatCase.class);
@@ -934,7 +965,7 @@ public class Cases {
             entityManager.detach(existing);
             return Response.status(serviceErrorException.getHttpStatus()).entity(serviceErrorException.getServiceErrorDto()).build();
         } catch(Exception exception) {
-            LOGGER.error("Caught exception: {}", exception.getMessage());
+            LOGGER.error("Caught exception:", exception);
 
             // Updating the case went wrong for some other reason. All changes must be rolled back.
             // SO detach case from entitymanager, and thereby in effect do a rollback.
@@ -994,7 +1025,7 @@ public class Cases {
             LOGGER.info("Received serviceErrorException while mapping entities: {}", serviceErrorException.getMessage());
             return Response.status(serviceErrorException.getHttpStatus()).entity(serviceErrorException.getServiceErrorDto()).build();
         } catch(Exception exception) {
-            LOGGER.error("Caught exception: {}", exception.getMessage());
+            LOGGER.error("Caught exception:", exception);
             return ServiceErrorDto.Failed(exception.getMessage());
         }
     }
@@ -1204,6 +1235,15 @@ public class Cases {
         }
     }
 
+    private PromatTask approveBuggiTask(PromatTask t, TagList tags) {
+        if(t.getApproved() == null) {
+            LOGGER.info("Updated approve date on task {}", t.getId());
+            t.setApproved(LocalDate.now());
+        }
+        t.setData(String.join(", ", tags.getTags()));
+        return t;
+    }
+
     private void checkValidFaustNumbersOnExisting(PromatCase existing) throws ServiceErrorException {
 
         // Check that no existing case exists with the same primary or related faustnumber
@@ -1256,6 +1296,10 @@ public class Cases {
                     .withHttpStatus(400)
                     .withDetails("Editor can not be null when creating an initial message");
         }
+        if(promatCase.getNote() == null || promatCase.getNote().isBlank()) {
+            return;
+        }
+
         PromatUser promatUser =  entityManager.find(Editor.class, promatCase.getEditor().getId());
 
         repository.getExclusiveAccessToTable(PromatMessage.TABLE_NAME);
@@ -1426,15 +1470,23 @@ public class Cases {
         return query.getResultList().size() > 0;
     }
 
-    private <T> String asSummary(T entity) throws JsonProcessingException {
+    private <T> String asSummary(T entity) {
         final ObjectMapper objectMapper = new JsonMapperProvider().getObjectMapper();
-        return objectMapper.writerWithView(CaseView.Summary.class)
-                .writeValueAsString(entity);
+        try {
+            return objectMapper.writerWithView(CaseView.Summary.class)
+                    .writeValueAsString(entity);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
     }
 
-    private <T> String asCase(T entity) throws JsonProcessingException {
+    private <T> String asCase(T entity) {
         final ObjectMapper objectMapper = new JsonMapperProvider().getObjectMapper();
-        return objectMapper.writerWithView(CaseView.Case.class)
-                .writeValueAsString(entity);
+        try {
+            return objectMapper.writerWithView(CaseView.Case.class)
+                    .writeValueAsString(entity);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
     }
 }
