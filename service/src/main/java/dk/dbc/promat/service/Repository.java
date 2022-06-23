@@ -30,7 +30,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Stateless
@@ -131,7 +130,7 @@ public class Repository {
     public void assignFaustnumber(PromatCase existing) throws OpennumberRollConnectorException {
         List<PromatTask> tasks = existing.getTasks().stream()
                 .filter(task -> task.getTaskFieldType() == TaskFieldType.BRIEF)
-                .filter(task -> Objects.isNull(task.getRecordId()) || task.getRecordId().isEmpty())
+                .filter(task -> task.getRecordId() == null || task.getRecordId().isEmpty())
                 .collect(Collectors.toList());
         for (PromatTask task : tasks) {
             OpennumberRollConnector.Params params = new OpennumberRollConnector.Params().withRollName(openNumberrollRollName);
