@@ -633,7 +633,7 @@ public class CasesIT extends ContainerTest {
         PromatTask bkmTask = fetched.getTasks().stream()
                 .filter(task -> task.getTaskFieldType().equals(TaskFieldType.BKM))
                 .findFirst()
-                .get();
+                .orElseThrow();
         assertThat("not approved", bkmTask.getApproved(), is(nullValue()));
 
         // Change status to PENDING_CLOSE
@@ -647,7 +647,7 @@ public class CasesIT extends ContainerTest {
         bkmTask = updated.getTasks().stream()
                 .filter(task -> task.getTaskFieldType().equals(TaskFieldType.BKM))
                 .findFirst()
-                .get();
+                .orElseThrow();
         assertThat("approved", bkmTask.getApproved(), is(notNullValue()));
 
         // And make sure that no other task has been approved
@@ -1045,7 +1045,7 @@ public class CasesIT extends ContainerTest {
         assertThat("status", updated.getStatus(), is(CaseStatus.PENDING_EXTERNAL));
         assertThat("approved", updated.getTasks().stream().filter(task -> task.getApproved() != null).count(), is(3L));
         assertThat("approved", updated.getTasks().stream().filter(task -> task.getTaskFieldType() == TaskFieldType.METAKOMPAS)
-                .findFirst().get().getApproved(), is(nullValue()));
+                .findFirst().orElseThrow().getApproved(), is(nullValue()));
 
         // Delete the case so that we dont mess up payments tests
         response = deleteResponse("v1/api/cases/15");
@@ -2185,7 +2185,7 @@ public class CasesIT extends ContainerTest {
         assertThat("case status", updated.getStatus(), is(CaseStatus.PENDING_EXTERNAL));
         assertThat("approved", updated.getTasks().stream()
                 .filter(t -> t.getTaskFieldType() == TaskFieldType.METAKOMPAS)
-                .findFirst().get()
+                .findFirst().orElseThrow()
                 .getApproved(), is(nullValue()));
 
         // Move case to APPROVED from PENDING_EXTERNAL to bypass waiting for metakompas topics to be added
@@ -2199,7 +2199,7 @@ public class CasesIT extends ContainerTest {
         assertThat("case status", updated.getStatus(), is(CaseStatus.APPROVED));
         assertThat("approved", updated.getTasks().stream()
                 .filter(t -> t.getTaskFieldType() == TaskFieldType.METAKOMPAS)
-                .findFirst().get()
+                .findFirst().orElseThrow()
                 .getApproved(), is(notNullValue()));
 
         // Delete the case

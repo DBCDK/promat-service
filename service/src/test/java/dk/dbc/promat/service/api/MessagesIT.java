@@ -335,7 +335,7 @@ public class MessagesIT extends ContainerTest {
         // Check that we have the correct text in the message and the direction is correct
         assertThat("Message contains note", getMessageList(aCase)
                 .getPromatMessages().stream()
-                .findFirst().get()
+                .findFirst().orElseThrow()
                 .getMessageText().equals(caseNote));
 
         // Cleanup
@@ -396,7 +396,7 @@ public class MessagesIT extends ContainerTest {
         // Check that we have the correct text in the message
         assertThat("Message contains note", getMessageList(aCase)
                 .getPromatMessages().stream()
-                .findFirst().get()
+                .findFirst().orElseThrow()
                 .getMessageText().equals(caseNote));
 
         // Cleanup
@@ -441,15 +441,15 @@ public class MessagesIT extends ContainerTest {
         // Check that we have the correct text in the message and the direction is correct
         LOGGER.info(getMessageList(aCase)
                 .getPromatMessages().stream()
-                .findFirst().get()
+                .findFirst().orElseThrow()
                 .getMessageText());
         assertThat("Message contains note", getMessageList(aCase)
                 .getPromatMessages().stream()
-                .findFirst().get()
+                .findFirst().orElseThrow()
                 .getMessageText().equals(caseNote));
 
         Integer onlyMessageId = getMessageList(aCase).getPromatMessages().stream()
-                .findFirst().get().getId();
+                .findFirst().orElseThrow().getId();
 
         // Reassign the case
         dto.setReviewer(ANOTHER_REVIEWER_ID);
@@ -470,7 +470,7 @@ public class MessagesIT extends ContainerTest {
         // And that it is the same message as previous
         assertThat("same message", getMessageList(aCase)
                 .getPromatMessages().stream()
-                .findFirst().get()
+                .findFirst().orElseThrow()
                 .getId(), is(onlyMessageId));
 
         // Cleanup
@@ -540,7 +540,7 @@ public class MessagesIT extends ContainerTest {
         // Check that the message body is not blank
         assertThat("Message contains note", getMessageList(aCase)
                 .getPromatMessages().stream()
-                .findFirst().get()
+                .findFirst().orElseThrow()
                 .getMessageText().isEmpty(), is(false));
 
         // Cleanup

@@ -67,11 +67,11 @@ public class TasksIT extends ContainerTest {
         PromatTask taskWithPrimaryTargetFaust = createdCase.getTasks().stream()
                 .filter(task -> task.getTargetFausts() != null && task.getTargetFausts().size() != 0)
                 .filter(task -> task.getTargetFausts().contains("31001111"))
-                .findFirst().get();
+                .findFirst().orElseThrow();
         PromatTask taskWithRelatedTargetFaust = createdCase.getTasks().stream()
                 .filter(task -> task.getTargetFausts() != null && task.getTargetFausts().size() != 0)
                 .filter(task -> task.getTargetFausts().contains("31003333"))
-                .findFirst().get();
+                .findFirst().orElseThrow();
         assertThat("has task with primary targetFaust", taskWithPrimaryTargetFaust, is(notNullValue()));
         assertThat("has task with related targetFaust", taskWithRelatedTargetFaust, is(notNullValue()));
 

@@ -8,7 +8,6 @@ package dk.dbc.promat.service.batch;
 import dk.dbc.promat.service.cluster.ServerRole;
 import dk.dbc.promat.service.persistence.Editor;
 import dk.dbc.promat.service.persistence.PromatEntityManager;
-import dk.dbc.promat.service.persistence.PromatUser;
 import dk.dbc.promat.service.persistence.Reviewer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -79,7 +78,7 @@ public class ScheduledUserUpdater {
                     entityManager.flush();
                 } catch(Exception e) {
                     LOGGER.error("Caught exception {}:{} when trying to update users", e.getCause(), e.getMessage());
-                    LOGGER.info("Exception stacktrace: {}", e.getStackTrace());
+                    LOGGER.info("Exception: {}", e);
                 } finally {
                     updateLock.unlock();
                 }

@@ -11,12 +11,6 @@ import dk.dbc.promat.service.IntegrationTest;
 import dk.dbc.promat.service.cluster.ServerRole;
 import dk.dbc.promat.service.persistence.Notification;
 import dk.dbc.promat.service.persistence.NotificationStatus;
-import java.util.List;
-import java.util.Properties;
-import javax.mail.Message;
-import javax.mail.MessagingException;
-import javax.mail.Session;
-import javax.persistence.TypedQuery;
 import org.eclipse.microprofile.metrics.ConcurrentGauge;
 import org.eclipse.microprofile.metrics.Counter;
 import org.eclipse.microprofile.metrics.Metadata;
@@ -25,12 +19,18 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.jvnet.mock_javamail.Mailbox;
 
+import javax.mail.Message;
+import javax.mail.MessagingException;
+import javax.mail.Session;
+import javax.persistence.TypedQuery;
+import java.util.List;
+import java.util.Properties;
+
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
-
+import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-import static org.mockito.Mockito.any;
 
 public class ScheduledNotificationSenderIT extends IntegrationTest {
     static MailManager mailManager;
@@ -62,7 +62,6 @@ public class ScheduledNotificationSenderIT extends IntegrationTest {
         NotificationSender notificationSender = new NotificationSender();
         scheduledNotificationSender.notificationSender = notificationSender;
         scheduledNotificationSender.notificationSender.mailManager = mailManager;
-        scheduledNotificationSender.entityManager = entityManager;
         scheduledNotificationSender.notificationSender.metricRegistry = metricRegistry;
         persistenceContext.run(()->scheduledNotificationSender.processNotifications());
 

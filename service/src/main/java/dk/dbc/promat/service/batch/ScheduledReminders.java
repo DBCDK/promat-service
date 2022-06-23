@@ -1,17 +1,17 @@
 package dk.dbc.promat.service.batch;
 
 import dk.dbc.promat.service.cluster.ServerRole;
-import java.util.Locale;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import javax.ejb.EJB;
 import javax.ejb.Schedule;
 import javax.ejb.Singleton;
 import javax.ejb.Startup;
 import javax.inject.Inject;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 
 @Startup
@@ -53,7 +53,7 @@ public class ScheduledReminders {
             }
             catch(Exception e) {
                 LOGGER.error("Caught exception {}:{} when trying to process reminders", e.getCause(), e.getMessage());
-                LOGGER.info("Exception stacktrace: {}", e.getStackTrace());
+                LOGGER.info("Exception: ", e);
             }
             finally {
                 lock.unlock();

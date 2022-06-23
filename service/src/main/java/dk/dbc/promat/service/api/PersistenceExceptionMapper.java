@@ -34,7 +34,7 @@ public class PersistenceExceptionMapper implements ExceptionMapper<PersistenceEx
             if (throwable instanceof PSQLException) {
                 final PSQLException psqlException = (PSQLException) throwable;
                 final ServerErrorMessage serverErrorMessage = psqlException.getServerErrorMessage();
-                return Optional.ofNullable(serverErrorMessage.getSQLState());
+                return Optional.ofNullable(serverErrorMessage).map(ServerErrorMessage::getSQLState);
             }
         }
         return Optional.empty();
