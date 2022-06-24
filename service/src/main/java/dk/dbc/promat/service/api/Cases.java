@@ -532,7 +532,7 @@ public class Cases {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Path("cases/{pid}/buggi")
-    public Response approveBuggiTask(@PathParam("pid") Integer pid, TagList tagList) throws JsonProcessingException {
+    public Response setApproveBuggiTask(@PathParam("pid") Integer pid, TagList tagList) throws JsonProcessingException {
         LOGGER.debug("Buggi task approved for {}", pid);
         PromatCase promatCase = entityManager.find(PromatCase.class, pid);
         if(promatCase == null) {
@@ -544,7 +544,7 @@ public class Cases {
         }
         return promatCase.getTasks().stream()
                 .filter(t -> t.getTaskFieldType() == TaskFieldType.BUGGI)
-                .map(t -> approveBuggiTask(t, tagList))
+                .map(t -> setApproveBuggiTask(t, tagList))
                 .reduce((t1, t2) -> t1)
                 .map(t -> Response.ok().entity(asSummary(promatCase)).build())
                 .orElse(Response.status(Response.Status.BAD_REQUEST)
@@ -1235,7 +1235,7 @@ public class Cases {
         }
     }
 
-    private PromatTask approveBuggiTask(PromatTask t, TagList tags) {
+    private PromatTask setApproveBuggiTask(PromatTask t, TagList tags) {
         if(t.getApproved() == null) {
             LOGGER.info("Updated approve date on task {}", t.getId());
             t.setApproved(LocalDate.now());
