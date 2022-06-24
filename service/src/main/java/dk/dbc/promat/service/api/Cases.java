@@ -562,19 +562,6 @@ public class Cases {
                         .build());
     }
 
-    private PromatCase findBuggyCase(String faust) {
-        try {
-            CaseSummaryList list = listCases(new ListCasesParams().withFaust(faust));
-            return list.getCases().stream()
-                    .filter(c -> c.getTasks().stream().anyMatch(t -> t.getTargetFausts().contains(faust)
-                            && t.getTaskFieldType() == TaskFieldType.BUGGI))
-                    .filter(c -> !INVALID_BUGGI_APPROVAL_STATES.contains(c.getStatus()))
-                    .findFirst()
-                    .orElse(null);
-        } catch (ServiceErrorException e) {
-            throw new RuntimeException(e);
-        }
-    }
 
     public CaseSummaryList listCases(ListCasesParams params) throws ServiceErrorException {
         // Initialize query and criteriabuilder
@@ -1194,6 +1181,20 @@ public class Cases {
                     .withHttpStatus(400);
         }
         return editor;
+    }
+
+    private PromatCase findBuggyCase(String faust) {
+        try {
+            CaseSummaryList list = listCases(new ListCasesParams().withFaust(faust));
+            return list.getCases().stream()
+                    .filter(c -> c.getTasks().stream().anyMatch(t -> t.getTargetFausts().contains(faust)
+                            && t.getTaskFieldType() == TaskFieldType.BUGGI))
+                    .filter(c -> !INVALID_BUGGI_APPROVAL_STATES.contains(c.getStatus()))
+                    .findFirst()
+                    .orElse(null);
+        } catch (ServiceErrorException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private List<PromatTask> createTasks(String primaryFaust, List<TaskDto> taskDtos) throws ServiceErrorException {
