@@ -182,10 +182,10 @@ public class PromatServiceConnector {
         return readResponseEntity(response, PromatCase.class);
     }
 
-    public PromatCase approveBuggiTask(int pid, TagList tags) throws PromatServiceConnectorException {
+    public PromatCase approveBuggiTask(String pid, TagList tags) throws PromatServiceConnectorException {
         HttpPost httpPost = new HttpPost(failSafeHttpClient)
                 .withBaseUrl(baseUrl)
-                .withPathElements("cases", Integer.toString(pid), "buggi")
+                .withPathElements("cases", pid, "buggi")
                 .withJsonData(tags);
         Response response = httpPost.execute();
         assertResponseStatus(response, Response.Status.OK, Response.Status.NOT_MODIFIED);

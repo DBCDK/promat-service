@@ -66,7 +66,6 @@ import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
 import static javax.ws.rs.core.Response.Status.CONFLICT;
 import static javax.ws.rs.core.Response.Status.CREATED;
 import static javax.ws.rs.core.Response.Status.NOT_FOUND;
-import static javax.ws.rs.core.Response.Status.NOT_MODIFIED;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.not;
@@ -1539,22 +1538,24 @@ public class CasesIT extends ContainerTest {
 
     @Test
     public void testBuggiApproval() throws IOException, PromatServiceConnectorException {
+        String pidPreamble = "870170-BASIS:";
         TagList tags = new TagList("hest");
-        assertPromatThrows(NOT_FOUND, () -> promatServiceConnector.approveBuggiTask(12121212, tags));
+        assertPromatThrows(NOT_FOUND, () -> promatServiceConnector.approveBuggiTask(pidPreamble + "12345678", tags));
 
         CaseRequest noBuggiReq = makeRequest("92001234", new TaskDto()
                 .withTaskFieldType(TaskFieldType.BKM)
                 .withTaskType(TaskType.GROUP_1_LESS_THAN_100_PAGES));
         PromatCase noBuggiCase = postAndAssert("v1/api/cases", noBuggiReq, PromatCase.class, CREATED);
-        assertPromatThrows(BAD_REQUEST, () -> promatServiceConnector.approveBuggiTask(noBuggiCase.getId(), tags));
+        assertPromatThrows(NOT_FOUND, () -> promatServiceConnector.approveBuggiTask(pidPreamble + noBuggiCase.getPrimaryFaust(), tags));
         deleteResponse("v1/api/cases/" + noBuggiCase.getId());
 
         CaseRequest cr = makeRequest("93001234", new TaskDto()
                 .withTaskFieldType(TaskFieldType.BUGGI)
+                .withTargetFausts(List.of())
                 .withTaskType(TaskType.GROUP_1_LESS_THAN_100_PAGES));
         PromatCase aCase = postAndAssert("v1/api/cases", cr, PromatCase.class, CREATED);
 
-        PromatCase updatedCase = promatServiceConnector.approveBuggiTask(aCase.getId(), tags);
+        PromatCase updatedCase = promatServiceConnector.approveBuggiTask(pidPreamble + aCase.getPrimaryFaust(), tags);
         boolean buggyApproved = updatedCase.getTasks().stream()
                 .filter(t -> t.getTaskFieldType() == TaskFieldType.BUGGI)
                 .anyMatch(t -> t.getApproved() != null);
@@ -1562,8 +1563,8 @@ public class CasesIT extends ContainerTest {
 
         deleteResponse("v1/api/cases/" + updatedCase.getId());
 
-        postAndAssert("v1/api/cases/" + aCase.getId() + "/buggi", "{'tags': ['hest', 'ko']}"
-                .replace('\'', '"'), NOT_MODIFIED);
+        postAndAssert("v1/api/cases/" + aCase.getPrimaryFaust() + "/buggi", "{'tags': ['hest', 'ko']}"
+                .replace('\'', '"'), BAD_REQUEST);
     }
 
     private void assertPromatThrows(Response.Status status, Callable<PromatCase> callable) {

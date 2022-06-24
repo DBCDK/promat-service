@@ -65,7 +65,6 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
-import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.StreamingOutput;
@@ -82,16 +81,19 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
 import static javax.ws.rs.core.Response.Status.NOT_FOUND;
-import static javax.ws.rs.core.Response.Status.NOT_MODIFIED;
 
 @Stateless
 @Path("")
 public class Cases {
     private static final Logger LOGGER = LoggerFactory.getLogger(Cases.class);
+    private static final Pattern PID_PATTERN = Pattern.compile(".*:(?<faust>\\d+)");
 
     @Inject
     @PromatEntityManager
@@ -125,7 +127,7 @@ public class Cases {
                     CaseStatus.REJECTED,
                     CaseStatus.ASSIGNED,
                     CaseStatus.PENDING_ISSUES);
-    Set<CaseStatus> INVALID_BUGGI_APPROVAL_STATES = EnumSet.of(CaseStatus.CLOSED, CaseStatus.DELETED);
+    Set<CaseStatus> INVALID_BUGGI_APPROVAL_STATES = EnumSet.of(CaseStatus.CLOSED, CaseStatus.DELETED, CaseStatus.REVERTED);
 
     // Set of allowed states when approving tasks
     private static final Set<CaseStatus> APPROVE_TASKS_ALLOWED_STATES =
@@ -532,15 +534,21 @@ public class Cases {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Path("cases/{pid}/buggi")
-    public Response setApproveBuggiTask(@PathParam("pid") Integer pid, TagList tagList) throws JsonProcessingException {
-        LOGGER.debug("Buggi task approved for {}", pid);
-        PromatCase promatCase = entityManager.find(PromatCase.class, pid);
+    public Response approveBuggiTask(@PathParam("pid") String pid, TagList tagList) throws JsonProcessingException {
+        String faust;
+        ObjectMapper mapper = new ObjectMapper();
+        Matcher matcher = PID_PATTERN.matcher(pid);
+        if(matcher.matches()) {
+            faust = matcher.group("faust");
+        } else {
+            ServiceErrorDto error = new ServiceErrorDto().withCode(ServiceErrorCode.FAILED).withCause("Request parameter is not a valid PID");
+            return Response.status(BAD_REQUEST).type(MediaType.APPLICATION_JSON_TYPE).entity(mapper.writeValueAsString(error)).build();
+        }
+        LOGGER.debug("Buggi task request approval for {}", pid);
+        PromatCase promatCase = findBuggyCase(faust);
         if(promatCase == null) {
             LOGGER.warn("Pid {} was not found for request Buggi task approval", pid);
-            return Response.status(NOT_FOUND).entity(new ServiceErrorDto().withCode(ServiceErrorCode.FAILED)).build();
-        }
-        if(INVALID_BUGGI_APPROVAL_STATES.contains(promatCase.getStatus())) {
-            return Response.status(NOT_MODIFIED).entity(Entity.json(promatCase)).build();
+            return Response.status(NOT_FOUND).type(MediaType.APPLICATION_JSON_TYPE).entity(mapper.writeValueAsString(new ServiceErrorDto().withCode(ServiceErrorCode.FAILED))).build();
         }
         return promatCase.getTasks().stream()
                 .filter(t -> t.getTaskFieldType() == TaskFieldType.BUGGI)
@@ -548,9 +556,24 @@ public class Cases {
                 .reduce((t1, t2) -> t1)
                 .map(t -> Response.ok().entity(asSummary(promatCase)).build())
                 .orElse(Response.status(Response.Status.BAD_REQUEST)
-                        .entity(new ServiceErrorDto().withCode(ServiceErrorCode.FAILED)
-                                .withCause("Promat case contains no buggi task"))
+                        .type(MediaType.APPLICATION_JSON_TYPE)
+                        .entity(mapper.writeValueAsString(new ServiceErrorDto().withCode(ServiceErrorCode.FAILED)
+                                .withCause("Promat case contains no buggi task")))
                         .build());
+    }
+
+    private PromatCase findBuggyCase(String faust) {
+        try {
+            CaseSummaryList list = listCases(new ListCasesParams().withFaust(faust));
+            return list.getCases().stream()
+                    .filter(c -> c.getTasks().stream().anyMatch(t -> t.getTargetFausts().contains(faust)
+                            && t.getTaskFieldType() == TaskFieldType.BUGGI))
+                    .filter(c -> !INVALID_BUGGI_APPROVAL_STATES.contains(c.getStatus()))
+                    .findFirst()
+                    .orElse(null);
+        } catch (ServiceErrorException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public CaseSummaryList listCases(ListCasesParams params) throws ServiceErrorException {
@@ -1047,7 +1070,7 @@ public class Cases {
     }
 
     @POST
-    @Path(("cases/{id}/processreminder"))
+    @Path("cases/{id}/processreminder")
     @Produces(MediaType.APPLICATION_JSON)
     @JsonView({CaseView.Case.class})
     public Response processReminder(@PathParam("id") final Integer id) throws JsonProcessingException {
