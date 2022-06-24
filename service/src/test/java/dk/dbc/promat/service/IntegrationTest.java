@@ -11,12 +11,6 @@ import dk.dbc.httpclient.HttpClient;
 import dk.dbc.httpclient.HttpGet;
 import dk.dbc.promat.service.db.DatabaseMigrator;
 import dk.dbc.promat.service.persistence.Notification;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Collectors;
-import javax.persistence.TypedQuery;
 import org.junit.jupiter.api.BeforeAll;
 import org.postgresql.ds.PGSimpleDataSource;
 import org.slf4j.Logger;
@@ -25,6 +19,7 @@ import org.slf4j.LoggerFactory;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
+import javax.persistence.TypedQuery;
 import javax.sql.DataSource;
 import javax.ws.rs.core.Response;
 import java.io.File;
@@ -33,11 +28,16 @@ import java.io.UncheckedIOException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import static org.eclipse.persistence.config.PersistenceUnitProperties.JDBC_DRIVER;
 import static org.eclipse.persistence.config.PersistenceUnitProperties.JDBC_PASSWORD;
@@ -50,7 +50,7 @@ public class IntegrationTest {
     protected static final HttpClient httpClient;
     protected static EntityManager entityManager;
     private static boolean setupDone;
-    protected static String genericOpenFormatResult;
+    protected static final String genericOpenFormatResult = makeGenericOpenFormatResult();
 
     static {
         httpClient = HttpClient.create(HttpClient.newClient());
@@ -97,6 +97,7 @@ public class IntegrationTest {
         return response.readEntity(String.class);
     }
 
+    @SuppressWarnings("ConstantConditions")
     @BeforeAll
     public static void setUp() throws SQLException, IOException, URISyntaxException {
         if (!setupDone) {
@@ -113,15 +114,18 @@ public class IntegrationTest {
             entityManager = createEntityManager(getDataSource(),
                     "promatITPU");
             LOGGER.info("..Populating database tables done");
-            LOGGER.info("..Getting data for generic openformat response");
-            genericOpenFormatResult = Files.readString(
-                    Path.of(IntegrationTest.class.getResource("/__files/body-openformat-generic.json")
-                            .getPath()));
-            LOGGER.info("..Done");
             LOGGER.info("Setup done!");
             setupDone = true;
         } else {
             LOGGER.info("No setup stuff to do. Already done.");
+        }
+    }
+
+    private static String makeGenericOpenFormatResult() {
+        try {
+            return Files.readString(Path.of(IntegrationTest.class.getResource("/__files/body-openformat-generic.json").getPath()));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
 

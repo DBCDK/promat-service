@@ -16,6 +16,7 @@ import dk.dbc.httpclient.HttpPut;
 import dk.dbc.promat.service.api.JsonMapperProvider;
 import dk.dbc.promat.service.connector.PromatServiceConnector;
 import dk.dbc.promat.service.connector.PromatServiceConnectorFactory;
+import org.junit.jupiter.api.Assertions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.Testcontainers;
@@ -67,7 +68,7 @@ public abstract class ContainerTest extends IntegrationTest {
         wireMockServer.stubFor(requestMatching(request ->
                 MatchResult.of(
                         request.queryParameter("access_token").isPresent() &&
-                        request.queryParameter("access_token").containsValue("1-2-3-4-5")
+                                request.queryParameter("access_token").containsValue("1-2-3-4-5")
                 ))
                 .willReturn(ResponseDefinitionBuilder
                         .responseDefinition()
@@ -171,12 +172,25 @@ public abstract class ContainerTest extends IntegrationTest {
         return postResponse(path, body, null);
     }
 
+
+    public <T> String postAndAssert(String path, T body, Response.Status expectedStatus) {
+        return postAndAssert(path, body, String.class, expectedStatus);
+    }
+
+    public <T, R> R postAndAssert(String path, T body, Class<R> responseClass, Response.Status expectedStatus) {
+        try (Response response = postResponse(path, body)) {
+            Assertions.assertEquals(expectedStatus, response.getStatusInfo().toEnum(), "Response to call " + path
+                    + " was expected to be: " + expectedStatus);
+            return response.readEntity(responseClass);
+        }
+    }
+
     public <T> Response postResponse(String path, T body, String authToken) {
         HttpPost httpPost = new HttpPost(httpClient)
                 .withBaseUrl(promatServiceBaseUrl)
                 .withPathElements(path)
                 .withData(body, "application/json");
-        if( authToken != null ) {
+        if (authToken != null) {
             httpPost.getHeaders().put("Authorization", "Bearer " + authToken);
         }
         return httpClient.execute(httpPost);
@@ -190,7 +204,7 @@ public abstract class ContainerTest extends IntegrationTest {
         if (queryParameter != null) {
             httpPut.getQueryParameters().putAll(queryParameter);
         }
-        if( authToken != null ) {
+        if (authToken != null) {
             httpPut.getHeaders().put("Authorization", "Bearer " + authToken);
         }
         return httpClient.execute(httpPut);

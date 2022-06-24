@@ -68,7 +68,7 @@ public class ScheduledCaseInformationUpdater {
                     entityManager.flush();
                 } catch(Exception e) {
                     LOGGER.error("Caught exception {}:{} when trying to update cases", e.getCause(), e.getMessage());
-                    LOGGER.info("Exception stacktrace: {}", e.getStackTrace());
+                    LOGGER.info("Exception: ", e);
                 } finally {
                     updateLock.unlock();
                 }

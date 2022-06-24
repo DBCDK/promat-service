@@ -17,10 +17,6 @@ import dk.dbc.promat.service.persistence.MaterialType;
 import dk.dbc.promat.service.persistence.Notification;
 import dk.dbc.promat.service.persistence.PromatCase;
 import dk.dbc.promat.service.persistence.PromatMessage;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-
 import dk.dbc.promat.service.persistence.TaskFieldType;
 import dk.dbc.promat.service.persistence.TaskType;
 import org.junit.jupiter.api.MethodOrderer;
@@ -31,6 +27,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.ws.rs.core.Response;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
 
@@ -336,7 +335,7 @@ public class MessagesIT extends ContainerTest {
         // Check that we have the correct text in the message and the direction is correct
         assertThat("Message contains note", getMessageList(aCase)
                 .getPromatMessages().stream()
-                .findFirst().get()
+                .findFirst().orElseThrow()
                 .getMessageText().equals(caseNote));
 
         // Cleanup
@@ -397,7 +396,7 @@ public class MessagesIT extends ContainerTest {
         // Check that we have the correct text in the message
         assertThat("Message contains note", getMessageList(aCase)
                 .getPromatMessages().stream()
-                .findFirst().get()
+                .findFirst().orElseThrow()
                 .getMessageText().equals(caseNote));
 
         // Cleanup
@@ -442,15 +441,15 @@ public class MessagesIT extends ContainerTest {
         // Check that we have the correct text in the message and the direction is correct
         LOGGER.info(getMessageList(aCase)
                 .getPromatMessages().stream()
-                .findFirst().get()
+                .findFirst().orElseThrow()
                 .getMessageText());
         assertThat("Message contains note", getMessageList(aCase)
                 .getPromatMessages().stream()
-                .findFirst().get()
+                .findFirst().orElseThrow()
                 .getMessageText().equals(caseNote));
 
         Integer onlyMessageId = getMessageList(aCase).getPromatMessages().stream()
-                .findFirst().get().getId();
+                .findFirst().orElseThrow().getId();
 
         // Reassign the case
         dto.setReviewer(ANOTHER_REVIEWER_ID);
@@ -471,7 +470,7 @@ public class MessagesIT extends ContainerTest {
         // And that it is the same message as previous
         assertThat("same message", getMessageList(aCase)
                 .getPromatMessages().stream()
-                .findFirst().get()
+                .findFirst().orElseThrow()
                 .getId(), is(onlyMessageId));
 
         // Cleanup
@@ -492,6 +491,7 @@ public class MessagesIT extends ContainerTest {
                 .withEditor(EDITOR_ID)
                 .withDeadline("2021-08-28")
                 .withSubjects(Arrays.asList(3, 4))
+                .withNote("hej")
                 .withTasks(Arrays.asList(
                         new TaskDto()
                                 .withTaskType(TaskType.GROUP_1_LESS_THAN_100_PAGES)
@@ -540,7 +540,7 @@ public class MessagesIT extends ContainerTest {
         // Check that the message body is not blank
         assertThat("Message contains note", getMessageList(aCase)
                 .getPromatMessages().stream()
-                .findFirst().get()
+                .findFirst().orElseThrow()
                 .getMessageText().isEmpty(), is(false));
 
         // Cleanup

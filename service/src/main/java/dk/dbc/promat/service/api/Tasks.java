@@ -54,7 +54,7 @@ public class Tasks {
             PromatTask existing = entityManager.find(PromatTask.class, id);
             if( existing == null ) {
                 LOGGER.info("No such task {}", id);
-                return ServiceErrorDto.NotFound("No such task", String.format("Task with id {} does not exist", id));
+                return ServiceErrorDto.NotFound("No such task", String.format("Task with id %s does not exist", id));
             }
 
             // Find the case to which the stated task belongs
@@ -112,7 +112,7 @@ public class Tasks {
             PromatTask task = caseOfTask.getTasks().stream()
                     .filter(t -> t.getId() == id)
                     .findFirst()
-                    .get();
+                    .orElse(null);
             if( task == null ) {
                 // This is highly unexpected!. If we got a case, we must be able to find the task in the list of tasks
                 LOGGER.error("No such task {} allthough we did resolve the case of this task", id);

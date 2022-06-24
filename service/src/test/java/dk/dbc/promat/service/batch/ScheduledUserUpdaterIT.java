@@ -9,30 +9,14 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import dk.dbc.commons.persistence.TransactionScopedPersistenceContext;
 import dk.dbc.connector.openformat.OpenFormatConnectorException;
-import dk.dbc.connector.openformat.OpenFormatConnectorFactory;
-import dk.dbc.opennumberroll.OpennumberRollConnectorException;
 import dk.dbc.promat.service.ContainerTest;
-import dk.dbc.promat.service.Repository;
-import dk.dbc.promat.service.api.BibliographicInformation;
-import dk.dbc.promat.service.api.OpenFormatHandler;
 import dk.dbc.promat.service.cluster.ServerRole;
-import dk.dbc.promat.service.dto.CaseRequest;
-import dk.dbc.promat.service.dto.TaskDto;
-import dk.dbc.promat.service.persistence.Address;
-import dk.dbc.promat.service.persistence.CaseStatus;
 import dk.dbc.promat.service.persistence.Editor;
-import dk.dbc.promat.service.persistence.MaterialType;
-import dk.dbc.promat.service.persistence.PromatCase;
-import dk.dbc.promat.service.persistence.PromatTask;
-import dk.dbc.promat.service.persistence.PromatUser;
 import dk.dbc.promat.service.persistence.Reviewer;
-import dk.dbc.promat.service.persistence.TaskFieldType;
-import dk.dbc.promat.service.persistence.TaskType;
 import dk.dbc.promat.service.util.PromatTaskUtils;
 import org.eclipse.microprofile.metrics.ConcurrentGauge;
 import org.eclipse.microprofile.metrics.Metadata;
 import org.eclipse.microprofile.metrics.MetricRegistry;
-import org.eclipse.microprofile.metrics.SimpleTimer;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -40,42 +24,20 @@ import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.persistence.TypedQuery;
-import javax.ws.rs.core.Response;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.time.Instant;
-import java.time.LocalDate;
-import java.time.Year;
 import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
-import java.time.temporal.ChronoUnit;
-import java.time.temporal.TemporalUnit;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Optional;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.configureFor;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options;
-import static org.hamcrest.CoreMatchers.anyOf;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.core.Is.is;
-import static org.mockito.AdditionalMatchers.not;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -133,7 +95,7 @@ public class ScheduledUserUpdaterIT extends ContainerTest {
         Instant inactive = ZonedDateTime.now().minusYears(5).plusDays(1).toInstant();
         allReviewersBeforeUpdate.stream()
                 .filter(r -> r.getId() == 15)
-                .findFirst().get()
+                .findFirst().orElseThrow()
                 .setActiveChanged(Date.from(inactive));
 
         // Verify user state before running the update
@@ -190,7 +152,7 @@ public class ScheduledUserUpdaterIT extends ContainerTest {
         // both work address and private address has 'selected' set to false)
         Reviewer updated = allReviewersAfterUpdate.stream()
                 .filter(r -> r.getId() == 9)
-                .findFirst().get();
+                .findFirst().orElseThrow();
         assertThat("email cleared", updated.getEmail().equals(""));
         assertThat("private email cleared", updated.getPrivateEmail().equals(""));
         assertThat("phone cleared", updated.getPhone().equals(""));

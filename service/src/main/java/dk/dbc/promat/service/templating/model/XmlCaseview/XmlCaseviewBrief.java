@@ -20,7 +20,7 @@ public class XmlCaseviewBrief {
     public XmlCaseviewBrief() {}
 
     public XmlCaseviewBrief(String requestedFaust, String text) {
-        this.faust = faust;
+        this.faust = requestedFaust;
         this.text = text;
     }
 
