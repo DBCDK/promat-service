@@ -544,7 +544,7 @@ public class Cases {
             ServiceErrorDto error = new ServiceErrorDto().withCode(ServiceErrorCode.FAILED).withCause("Request parameter is not a valid PID");
             return Response.status(BAD_REQUEST).type(MediaType.APPLICATION_JSON_TYPE).entity(mapper.writeValueAsString(error)).build();
         }
-        LOGGER.debug("Buggi task request approval for {}", pid);
+        LOGGER.info("Buggi task request approval for {}", pid);
         PromatCase promatCase = findBuggyCase(faust);
         if(promatCase == null) {
             LOGGER.warn("Pid {} was not found for request Buggi task approval", pid);
