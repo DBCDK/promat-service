@@ -15,6 +15,7 @@ import dk.dbc.promat.service.dto.CreateStatus;
 import dk.dbc.promat.service.dto.CreateStatusDto;
 import dk.dbc.promat.service.dto.CriteriaOperator;
 import dk.dbc.promat.service.dto.ListCasesParams;
+import dk.dbc.promat.service.dto.Tag;
 import dk.dbc.promat.service.dto.TagList;
 import dk.dbc.promat.service.dto.TaskDto;
 import dk.dbc.promat.service.persistence.CaseStatus;
@@ -1539,7 +1540,7 @@ public class CasesIT extends ContainerTest {
     @Test
     public void testBuggiApproval() throws IOException, PromatServiceConnectorException {
         String pidPreamble = "870170-BASIS:";
-        TagList tags = new TagList("hest");
+        TagList tags = new TagList(new Tag("hest", 1));
         assertPromatThrows(NOT_FOUND, () -> promatServiceConnector.approveBuggiTask(pidPreamble + "12345678", tags));
 
         CaseRequest noBuggiReq = makeRequest("92001234", new TaskDto()
