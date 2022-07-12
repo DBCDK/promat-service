@@ -22,6 +22,7 @@ import dk.dbc.promat.service.dto.RecordDto;
 import dk.dbc.promat.service.dto.RecordsListDto;
 import dk.dbc.promat.service.dto.ServiceErrorCode;
 import dk.dbc.promat.service.dto.ServiceErrorDto;
+import dk.dbc.promat.service.dto.Tag;
 import dk.dbc.promat.service.dto.TagList;
 import dk.dbc.promat.service.dto.TaskDto;
 import dk.dbc.promat.service.persistence.CaseStatus;
@@ -1264,7 +1265,8 @@ public class Cases {
             LOGGER.info("Updated approve date on task {}", t.getId());
             t.setApproved(LocalDate.now());
         }
-        t.setData(String.join(", ", tags.getTags()));
+        String tagString = tags.getTags().stream().map(Tag::toString).collect(Collectors.joining("\n"));
+        t.setData(tagString);
         return t;
     }
 
