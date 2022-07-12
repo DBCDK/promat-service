@@ -14,10 +14,10 @@ import dk.dbc.promat.service.persistence.MaterialType;
 import dk.dbc.promat.service.persistence.PromatCase;
 import dk.dbc.promat.service.persistence.PromatEntityManager;
 import dk.dbc.promat.service.persistence.PromatTask;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.ejb.Stateless;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.persistence.EntityManager;
@@ -41,15 +41,11 @@ import static dk.dbc.promat.service.persistence.CaseStatus.DELETED;
 import static dk.dbc.promat.service.persistence.CaseStatus.EXPORTED;
 import static dk.dbc.promat.service.persistence.CaseStatus.valueOf;
 
-@ApplicationScoped
+@Stateless
 public class CaseSearch {
     private static final Logger LOGGER = LoggerFactory.getLogger(CaseSearch.class);
     // Default number of results when getting cases
     private static final int DEFAULT_CASES_LIMIT = 100;
-    @ConfigProperty
-    private String solrUrl;
-
-//    private HttpSolrClient solrClient;
 
     @Inject
     @PromatEntityManager
@@ -57,20 +53,6 @@ public class CaseSearch {
 
     @Inject
     RecordsResolver recordsResolver;
-
-    @SuppressWarnings("unused")
-    public CaseSearch() {
-    }
-
-//    public CaseSearch(String solrUrl) {
-//        this.solrUrl = solrUrl;
-//        solrClient = new HttpSolrClient.Builder(solrUrl).withConnectionTimeout(500).withSocketTimeout(2000).build();
-//    }
-
-//    @PostConstruct
-//    public void init() {
-//        solrClient = new HttpSolrClient.Builder(solrUrl).withConnectionTimeout(500).withSocketTimeout(2000).build();
-//    }
 
     public CaseSummaryList listCases(ListCasesParams params) throws ServiceErrorException {
         // Initialize query and criteriabuilder
