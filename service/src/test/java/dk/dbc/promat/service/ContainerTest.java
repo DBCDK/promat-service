@@ -36,11 +36,108 @@ import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options
 public abstract class ContainerTest extends IntegrationTest {
     private static final Logger LOGGER = LoggerFactory.getLogger(ContainerTest.class);
     protected static final ObjectMapper mapper = new JsonMapperProvider().getObjectMapper();
+    protected static WireMockServer wireMockServer = makeWireMockServer();
+    protected static final GenericContainer<?> promatServiceContainer = makePromatServiceContainer();
+    protected static final String promatServiceBaseUrl = "http://" + promatServiceContainer.getContainerIpAddress() +
+            ":" + promatServiceContainer.getMappedPort(8080);
+    protected static final PromatServiceConnector promatServiceConnector  = PromatServiceConnectorFactory.create(promatServiceBaseUrl + "/v1/api");
 
-    protected static WireMockServer wireMockServer;
+    public <T> T get(String path, Class<T> tClass) {
+        try (Response response = getResponse(path)) {
+            return response.readEntity(tClass);
+        }
+    }
 
-    static {
-        wireMockServer = new WireMockServer(options().dynamicPort());
+    public Response getResponse(String path) {
+        return new HttpGet(httpClient)
+                .withBaseUrl(promatServiceBaseUrl)
+                .withPathElements(path)
+                .execute();
+    }
+
+    public Response getResponse(String path, String authToken) {
+        return new HttpGet(httpClient)
+                .withBaseUrl(promatServiceBaseUrl)
+                .withPathElements(path)
+                .withHeader("Authorization", "Bearer " + authToken)
+                .execute();
+    }
+
+    public Response getResponse(String path, Map<String, Object> queryParameter) {
+        HttpGet httpGet = new HttpGet(httpClient)
+                .withBaseUrl(promatServiceBaseUrl)
+                .withPathElements(path);
+
+        httpGet.getQueryParameters().putAll(queryParameter);
+
+        return httpGet.execute();
+    }
+
+    public <T> Response postResponse(String path, T body) {
+        return postResponse(path, body, null);
+    }
+
+
+    @SuppressWarnings("UnusedReturnValue")
+    public <T> String postAndAssert(String path, T body, Response.Status expectedStatus) {
+        return postAndAssert(path, body, String.class, expectedStatus);
+    }
+
+    public <T, R> R postAndAssert(String path, T body, Class<R> responseClass, Response.Status expectedStatus) {
+        try (Response response = postResponse(path, body)) {
+            Assertions.assertEquals(expectedStatus, response.getStatusInfo().toEnum(), "Response to call " + path
+                    + " was expected to be: " + expectedStatus);
+            return response.readEntity(responseClass);
+        }
+    }
+
+    public <T> Response postResponse(String path, T body, String authToken) {
+        HttpPost httpPost = new HttpPost(httpClient)
+                .withBaseUrl(promatServiceBaseUrl)
+                .withPathElements(path)
+                .withData(body, "application/json");
+        if (authToken != null) {
+            httpPost.getHeaders().put("Authorization", "Bearer " + authToken);
+        }
+        return httpClient.execute(httpPost);
+    }
+
+    public <T> Response putResponse(String path, T body, Map<String, Object> queryParameter, String authToken) {
+        HttpPut httpPut = new HttpPut(httpClient)
+                .withBaseUrl(promatServiceBaseUrl)
+                .withPathElements(path)
+                .withData(body, "application/json");
+        if (queryParameter != null) {
+            httpPut.getQueryParameters().putAll(queryParameter);
+        }
+        if (authToken != null) {
+            httpPut.getHeaders().put("Authorization", "Bearer " + authToken);
+        }
+        return httpClient.execute(httpPut);
+    }
+
+    public <T> Response putResponse(String path, T body, String authToken) {
+        return putResponse(path, body, null, authToken);
+    }
+
+    public <T> Response putResponse(String path, T body) {
+        return putResponse(path, body, null, null);
+    }
+
+    @SuppressWarnings("unused")
+    public <T> Response deleteResponse(String path) {
+        HttpDelete httpDelete = new HttpDelete(httpClient)
+                .withBaseUrl(promatServiceBaseUrl)
+                .withPathElements(path);
+        return httpClient.execute(httpDelete);
+    }
+
+    public static String getWiremockUrl(String path) {
+        return "http://host.testcontainers.internal:" + wireMockServer.port() + path;
+    }
+
+    private static WireMockServer makeWireMockServer() {
+        WireMockServer wireMockServer = new WireMockServer(options().dynamicPort());
 
         // Add a "catch-all" for openformat requests.
         // All openformat requests will return the same json.
@@ -87,21 +184,19 @@ public abstract class ContainerTest extends IntegrationTest {
         wireMockServer.start();
         configureFor("localhost", wireMockServer.port());
         Testcontainers.exposeHostPorts(wireMockServer.port());
-        Testcontainers.exposeHostPorts(pg.getPort());
         LOGGER.info("Wiremock server at port:{}", wireMockServer.port());
+        return wireMockServer;
     }
 
-    protected static final GenericContainer promatServiceContainer;
-    protected static final String promatServiceBaseUrl;
-    protected static final PromatServiceConnector promatServiceConnector;
-
-    static {
-        promatServiceContainer = new GenericContainer("docker-metascrum.artifacts.dbccloud.dk/promat-service:devel")
+    private static GenericContainer<?> makePromatServiceContainer() {
+        String javaHome = System.getProperty("java.home");
+        @SuppressWarnings("resource")
+        GenericContainer<?> container = new GenericContainer<>("docker-metascrum.artifacts.dbccloud.dk/promat-service:devel")
                 .withLogConsumer(new Slf4jLogConsumer(LOGGER))
                 .withEnv("JAVA_MAX_HEAP_SIZE", "2G")
                 .withEnv("LOG_FORMAT", "text")
                 .withEnv("PROMAT_DB_URL", String.format("postgres:@host.testcontainers.internal:%s/postgres",
-                        pg.getPort()))
+                        promatDBContainer.getHostPort()))
                 .withEnv("CULR_SERVICE_URL", "http://host.testcontainers.internal:" + wireMockServer.port() + "/1.4/CulrWebService")
                 .withEnv("CULR_SERVICE_USER_ID", "connector")
                 .withEnv("CULR_SERVICE_PASSWORD", "connector-pass")
@@ -129,103 +224,7 @@ public abstract class ContainerTest extends IntegrationTest {
                 .withExposedPorts(8080)
                 .waitingFor(Wait.forHttp("/openapi"))
                 .withStartupTimeout(Duration.ofMinutes(2));
-        promatServiceContainer.start();
-        promatServiceBaseUrl = "http://" + promatServiceContainer.getContainerIpAddress() +
-                ":" + promatServiceContainer.getMappedPort(8080);
-        promatServiceConnector = PromatServiceConnectorFactory.create(promatServiceBaseUrl + "/v1/api");
-    }
-
-    public <T> T get(String path, Class<T> tClass) {
-        return new HttpGet(httpClient)
-                .withBaseUrl(promatServiceBaseUrl)
-                .withPathElements(path)
-                .execute()
-                .readEntity(tClass);
-    }
-
-    public Response getResponse(String path) {
-        return new HttpGet(httpClient)
-                .withBaseUrl(promatServiceBaseUrl)
-                .withPathElements(path)
-                .execute();
-    }
-
-    public Response getResponse(String path, String authToken) {
-        return new HttpGet(httpClient)
-                .withBaseUrl(promatServiceBaseUrl)
-                .withPathElements(path)
-                .withHeader("Authorization", "Bearer " + authToken)
-                .execute();
-    }
-
-    public Response getResponse(String path, Map<String, Object> queryParameter) {
-        HttpGet httpGet = new HttpGet(httpClient)
-                .withBaseUrl(promatServiceBaseUrl)
-                .withPathElements(path);
-
-        httpGet.getQueryParameters().putAll(queryParameter);
-
-        return httpGet.execute();
-    }
-
-    public <T> Response postResponse(String path, T body) {
-        return postResponse(path, body, null);
-    }
-
-
-    public <T> String postAndAssert(String path, T body, Response.Status expectedStatus) {
-        return postAndAssert(path, body, String.class, expectedStatus);
-    }
-
-    public <T, R> R postAndAssert(String path, T body, Class<R> responseClass, Response.Status expectedStatus) {
-        try (Response response = postResponse(path, body)) {
-            Assertions.assertEquals(expectedStatus, response.getStatusInfo().toEnum(), "Response to call " + path
-                    + " was expected to be: " + expectedStatus);
-            return response.readEntity(responseClass);
-        }
-    }
-
-    public <T> Response postResponse(String path, T body, String authToken) {
-        HttpPost httpPost = new HttpPost(httpClient)
-                .withBaseUrl(promatServiceBaseUrl)
-                .withPathElements(path)
-                .withData(body, "application/json");
-        if (authToken != null) {
-            httpPost.getHeaders().put("Authorization", "Bearer " + authToken);
-        }
-        return httpClient.execute(httpPost);
-    }
-
-    public <T> Response putResponse(String path, T body, Map<String, Object> queryParameter, String authToken) {
-        HttpPut httpPut = new HttpPut(httpClient)
-                .withBaseUrl(promatServiceBaseUrl)
-                .withPathElements(path)
-                .withData(body, "application/json");
-        if (queryParameter != null) {
-            httpPut.getQueryParameters().putAll(queryParameter);
-        }
-        if (authToken != null) {
-            httpPut.getHeaders().put("Authorization", "Bearer " + authToken);
-        }
-        return httpClient.execute(httpPut);
-    }
-
-    public <T> Response putResponse(String path, T body, String authToken) {
-        return putResponse(path, body, null, authToken);
-    }
-
-    public <T> Response putResponse(String path, T body) {
-        return putResponse(path, body, null, null);
-    }
-
-    public <T> Response deleteResponse(String path) {
-        HttpDelete httpDelete = new HttpDelete(httpClient)
-                .withBaseUrl(promatServiceBaseUrl)
-                .withPathElements(path);
-        return httpClient.execute(httpDelete);
-    }
-
-    public static String getWiremockUrl(String path) {
-        return "http://host.testcontainers.internal:" + wireMockServer.port() + path;
+        container.start();
+        return container;
     }
 }
