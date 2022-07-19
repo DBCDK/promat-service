@@ -18,7 +18,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.ejb.Stateless;
-import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.persistence.EntityManager;
 import javax.persistence.TypedQuery;
@@ -68,25 +67,20 @@ public class CaseSearch {
         // List of all predicates to be AND'ed together on the final query
         List<Predicate> allPredicates = new ArrayList<>();
 
-        // Get case with given primary or related
         callConditionally(params::getFaust, f ->  makeFaustPredicate(f, builder, root)).ifPresent(allPredicates::add);
-
-        // Search by faust, ean (barcode) or isbn.
         callConditionally(params::getId, id -> makeIdPredicates(id, builder, root)).ifPresent(allPredicates::add);
 
-        // Get cases with given set of statuses
-        Predicate statusPredicate = callConditionally(params::getStatus, s -> makeStatusPredicate(s, builder, root))
-                .orElse(builder.notEqual(root.get("status"), DELETED));
+        Predicate statusPredicate = callConditionally(params::getStatus, s -> makeStatusPredicate(s, builder, root)).orElse(builder.notEqual(root.get("status"), DELETED));
         allPredicates.add(statusPredicate);
 
         // Get cases with given reviewer
         callConditionally(params::getReviewer, r -> builder.equal(root.get("reviewer").get("id"), r)).ifPresent(allPredicates::add);
 
         // Get cases with given editor
-        callConditionally(params::getEditor, e -> builder.equal(root.get("editor").get("id"), e)).ifPresent(allPredicates::add);
+        callConditionally(params::getEditor,  e -> builder.equal(root.get("editor").get("id"), e)).ifPresent(allPredicates::add);
 
         // Get cases with given creator
-        callConditionally(params::getCreator, creator -> builder.equal(root.get("creator").get("id"), creator));
+        callConditionally(params::getCreator, creator -> builder.equal(root.get("creator").get("id"), creator)).ifPresent(allPredicates::add);
 
         // Get cases with a title that matches (entire, or part of) the given title
         callConditionally(params::getTitle, title -> makeTitlePredicate(title, builder, root)).ifPresent(allPredicates::add);
@@ -112,20 +106,13 @@ public class CaseSearch {
         // Publisher parameter
         callConditionally(params::getPublisher, publisher -> builder.like(root.get("publisher"), builder.literal("%" + publisher + "%"))).ifPresent(allPredicates::add);
 
-        // Combine all where clauses together with AND and add them to the query
+        // Combine all where clauses together with "AND" and add them to the query
         if (!allPredicates.isEmpty()) {
             Predicate finalPredicate = builder.and(allPredicates.toArray(Predicate[]::new));
             criteriaQuery.where(finalPredicate);
         }
 
-
-        // Add ordering
-        ListCasesParams.Order order = params.getOrder();
-        if (order == ListCasesParams.Order.DESCENDING) {
-            criteriaQuery.orderBy(builder.desc(root.get("id")));
-        } else {
-            criteriaQuery.orderBy(builder.asc(root.get("id")));
-        }
+        criteriaQuery.orderBy(params.getOrder() == ListCasesParams.Order.DESCENDING ? builder.desc(root.get("id")) : builder.asc(root.get("id")));
 
         // Add limits
         TypedQuery<PromatCase> query = entityManager.createQuery(criteriaQuery);
@@ -141,7 +128,7 @@ public class CaseSearch {
         if (params.getFormat() == ListCasesParams.Format.EXPORT) {
             List<PromatCase> exports = caseList.getCases().stream().filter(PromatCase::isValidForExport).collect(Collectors.toList());
             caseList.setCases(exports);
-            LOGGER.info("Caselist now has {} cases", caseList.getCases().size());
+            LOGGER.info("CaseList now has {} cases", caseList.getCases().size());
         }
 
         // Set final number of cases and return the list
@@ -149,6 +136,7 @@ public class CaseSearch {
         return caseList;
     }
 
+    // Search by faust, ean (barcode) or isbn.
     private Predicate makeIdPredicates(String id, CriteriaBuilder builder, Root<PromatCase> root) throws ServiceErrorException {
         try {
             Set<String> fausts;
@@ -163,7 +151,7 @@ public class CaseSearch {
                 RecordsListDto faustList = (RecordsListDto) recordsResolver.resolveId(id);
                 fausts = faustList.getRecords().stream().map(RecordDto::getFaust).collect(Collectors.toSet());
             }
-            // Fetch all caseids
+            // Fetch all caseIds
             for (String f : fausts) {
                 TypedQuery<PromatCase> query = entityManager.createNamedQuery(PromatCase.LIST_CASE_BY_FAUST_NAME, PromatCase.class);
                 query.setParameter("faust", f);
@@ -188,27 +176,7 @@ public class CaseSearch {
     private Predicate makeTitlePredicate(String title, CriteriaBuilder builder, Root<PromatCase> root) {
         return builder.like(builder.lower(root.get("title")), builder.literal("%" + title.toLowerCase() + "%"));
 
-//        try {
-//            List<String> fausts = faustSearch(title);
-//            return makeFaustListPredicate(fausts, builder, root);
-//        } catch (SolrServerException e) {
-//            throw new ServiceErrorException("Solr got angry while searching for " + title + ", message: " + e.getMessage());
-//        } catch (IOException e) {
-//            throw new ServiceErrorException("Threw an io exception while searching for " + title + ", message: " + e.getMessage());
-//        }
     }
-
-//    private Predicate makeFaustListPredicate(List<String> fausts, CriteriaBuilder builder, Root<PromatCase> root) {
-//        TypedQuery<PromatCase> query = entityManager.createNamedQuery(PromatCase.LIST_CASE_BY_FAUST_NAME, PromatCase.class);
-//        CriteriaBuilder.In<Integer> inIdsClause = builder.in(root.get("id"));
-//        fausts.stream()
-//                .map(f -> query.setParameter("faust", f))
-//                .map(TypedQuery::getResultList)
-//                .flatMap(Collection::stream)
-//                .map(PromatCase::getId)
-//                .forEach(inIdsClause::value);
-//        return inIdsClause;
-//    }
 
     private Predicate makeMaterialsPredicate(String materials, CriteriaBuilder builder, Root<PromatCase> root) throws ServiceErrorException {
         List<Predicate> materialsPredicates = new ArrayList<>();
@@ -229,8 +197,9 @@ public class CaseSearch {
         return builder.or(weekCodePredicate, codesPredicate);
     }
 
+    // Get cases with given set of statuses
     private Predicate makeStatusPredicate(String status, CriteriaBuilder builder, Root<PromatCase> root) throws ServiceErrorException {
-        // Allthough jax.rs actually supports having multiple get arguments with the same name
+        // Although jax.rs actually supports having multiple get arguments with the same name
         // "?status=CREATED&status=ASSIGNED" this is not a safe implementation since other
         // frameworks (React/NextJS or others) may have difficulties handling this. So instead
         // a list of statuses is expected to be given as a comma separated list
@@ -247,23 +216,7 @@ public class CaseSearch {
         return builder.or(statusPredicates.toArray(Predicate[]::new));
     }
 
-    private <P> Optional<Predicate> callConditionally(Supplier<P> supplier, ServiceCall<P, Predicate> service) throws ServiceErrorException {
-        P p = supplier.get();
-        if(p != null) {
-            if((p instanceof String && ((String) p).isBlank())) {
-                return Optional.empty();
-            } else if (p instanceof Integer && ((Integer) p) > 0) {
-                return Optional.empty();
-            }
-            return Optional.of(service.call(p));
-        }
-        return Optional.empty();
-    }
-
-    public interface ServiceCall<T, R> {
-        R call(T t) throws ServiceErrorException;
-    }
-
+    // Get case with given primary or related
     private Predicate makeFaustPredicate(String faust, CriteriaBuilder builder, Root<PromatCase> root) {
         Join<PromatCase, PromatTask> tasks = root.join("tasks", JoinType.LEFT);
         Predicate primaryFaustPredicate = builder.equal(root.get("primaryFaust"), builder.literal(faust));
@@ -278,13 +231,23 @@ public class CaseSearch {
         return builder.and(faustPredicate, statusPredicate);
     }
 
-//    public List<String> faustSearch(String title) throws SolrServerException, IOException {
-//        SolrQuery query = new SolrQuery("term.ti:" + title)
-//                .addFilterQuery("marc.001b:870976", "scan.kk:acc*")
-//                .setRows(100)
-//                .addSort("sort.001d", SolrQuery.ORDER.desc);
-//        query.set("fl", "marc.001a");
-//        QueryResponse response = solrClient.query(query);
-//        return response.getResults().stream().flatMap(s -> s.values().stream()).map(Object::toString).collect(Collectors.toList());
-//    }
+    private <P> Optional<Predicate> callConditionally(Supplier<P> supplier, ServiceCall<P, Predicate> service) throws ServiceErrorException {
+        P p = supplier.get();
+        if(!isEmpty(p)) return Optional.of(service.call(p));
+        return Optional.empty();
+    }
+
+    private boolean isEmpty(Object o) {
+        if(o == null) {
+            return true;
+        }
+        if((o instanceof String && ((String) o).isBlank())) {
+            return true;
+        }
+        return o instanceof Integer && ((Integer) o) < 1;
+    }
+
+    public interface ServiceCall<T, R> {
+        R call(T t) throws ServiceErrorException;
+    }
 }

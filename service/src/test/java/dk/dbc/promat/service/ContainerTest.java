@@ -189,14 +189,14 @@ public abstract class ContainerTest extends IntegrationTest {
     }
 
     private static GenericContainer<?> makePromatServiceContainer() {
-        String javaHome = System.getProperty("java.home");
         @SuppressWarnings("resource")
         GenericContainer<?> container = new GenericContainer<>("docker-metascrum.artifacts.dbccloud.dk/promat-service:devel")
                 .withLogConsumer(new Slf4jLogConsumer(LOGGER))
                 .withEnv("JAVA_MAX_HEAP_SIZE", "2G")
                 .withEnv("LOG_FORMAT", "text")
-                .withEnv("PROMAT_DB_URL", String.format("postgres:@host.testcontainers.internal:%s/postgres",
-                        promatDBContainer.getHostPort()))
+                //- name: PROMAT_DB_URL
+                //          value: promat:14XQWHfrfxWI@db.promat-v13.stg.dbc.dk:5432/promat_db
+                .withEnv("PROMAT_DB_URL", promatDBContainer.getPayaraDockerJdbcUrl())
                 .withEnv("CULR_SERVICE_URL", "http://host.testcontainers.internal:" + wireMockServer.port() + "/1.4/CulrWebService")
                 .withEnv("CULR_SERVICE_USER_ID", "connector")
                 .withEnv("CULR_SERVICE_PASSWORD", "connector-pass")
