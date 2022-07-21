@@ -28,7 +28,6 @@ import dk.dbc.promat.service.dto.TaskDto;
 import dk.dbc.promat.service.persistence.CaseStatus;
 import dk.dbc.promat.service.persistence.CaseView;
 import dk.dbc.promat.service.persistence.Editor;
-import dk.dbc.promat.service.persistence.MaterialType;
 import dk.dbc.promat.service.persistence.Notification;
 import dk.dbc.promat.service.persistence.PromatCase;
 import dk.dbc.promat.service.persistence.PromatEntityManager;
@@ -38,6 +37,7 @@ import dk.dbc.promat.service.persistence.PromatUser;
 import dk.dbc.promat.service.persistence.Reviewer;
 import dk.dbc.promat.service.persistence.Subject;
 import dk.dbc.promat.service.persistence.TaskFieldType;
+import dk.dbc.promat.service.service.CaseSearch;
 import dk.dbc.promat.service.templating.CaseviewXmlTransformer;
 import dk.dbc.promat.service.templating.NotificationFactory;
 import dk.dbc.promat.service.templating.Renderer;
@@ -51,12 +51,6 @@ import javax.ejb.Stateless;
 import javax.inject.Inject;
 import javax.persistence.EntityManager;
 import javax.persistence.TypedQuery;
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Join;
-import javax.persistence.criteria.JoinType;
-import javax.persistence.criteria.Predicate;
-import javax.persistence.criteria.Root;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
@@ -118,9 +112,9 @@ public class Cases {
     @Inject
     @ConfigProperty(name = "EMATERIAL_CONTENT_REPO")
     String contentRepo;
-
-    // Default number of results when getting cases
-    private static final int DEFAULT_CASES_LIMIT = 100;
+    
+    @EJB
+    CaseSearch caseSearch;
 
     // Set of allowed states when changing reviewer
     private static final Set<CaseStatus> REVIEWER_CHANGE_ALLOWED_STATES = EnumSet.of(
@@ -507,7 +501,7 @@ public class Cases {
 
         // Select and return cases
         try {
-            final CaseSummaryList caseList = listCases(listCasesParams);
+            final CaseSummaryList caseList = caseSearch.listCases(listCasesParams);
 
             // Set the "are there new Messages?" pins for reviewer and editor.
             caseList.getCases().forEach(promatCase -> {
@@ -546,7 +540,7 @@ public class Cases {
             return Response.status(BAD_REQUEST).type(MediaType.APPLICATION_JSON_TYPE).entity(mapper.writeValueAsString(error)).build();
         }
         LOGGER.info("Buggi task request approval for {}", pid);
-        PromatCase promatCase = findBuggyCase(faust);
+        PromatCase promatCase = findBuggiCase(faust);
         if(promatCase == null) {
             LOGGER.warn("Pid {} was not found for request Buggi task approval", pid);
             return Response.status(NOT_FOUND).type(MediaType.APPLICATION_JSON_TYPE).entity(mapper.writeValueAsString(new ServiceErrorDto().withCode(ServiceErrorCode.FAILED))).build();
@@ -561,264 +555,6 @@ public class Cases {
                         .entity(mapper.writeValueAsString(new ServiceErrorDto().withCode(ServiceErrorCode.FAILED)
                                 .withCause("Promat case contains no buggi task")))
                         .build());
-    }
-
-
-    public CaseSummaryList listCases(ListCasesParams params) throws ServiceErrorException {
-        // Initialize query and criteriabuilder
-        final CriteriaBuilder builder = entityManager.getCriteriaBuilder();
-        final CriteriaQuery<PromatCase> criteriaQuery = builder.createQuery(PromatCase.class);
-
-        // Create query root
-        final Root<PromatCase> root = criteriaQuery.from(PromatCase.class);
-
-        // Setup join with tasks
-        final Join<PromatCase, PromatTask> tasks = root.join("tasks", JoinType.LEFT);
-        criteriaQuery.distinct(true);
-
-        // Select ...
-        criteriaQuery.select(root);
-
-        // List of all predicates to be AND'ed together on the final query
-        final List<Predicate> allPredicates = new ArrayList<>();
-
-        // Get case with given primary or related
-        final String faust = params.getFaust();
-        if (faust != null && !faust.isBlank()) {
-            final Predicate primaryFaustPredicat = builder.equal(root.get("primaryFaust"), builder.literal(faust));
-            final Predicate relatedFaustsPredicat = builder.isTrue(builder.function("JsonbContainsFromString", Boolean.class, tasks.get("targetFausts"), builder.literal(faust)));
-            final Predicate faustPredicate = builder.or(primaryFaustPredicat, relatedFaustsPredicat);
-
-            // And status not CLOSED or DONE
-            final CriteriaBuilder.In<CaseStatus> inClause = builder.in(root.get("status"));
-            inClause.value(CaseStatus.CLOSED);
-            inClause.value(CaseStatus.EXPORTED);
-            inClause.value(CaseStatus.DELETED);
-            Predicate statusPredicate = builder.not(inClause);
-
-            allPredicates.add(builder.and(faustPredicate, statusPredicate));
-        }
-
-        // Search by faust, ean (barcode) or isbn.
-        String id = params.getId();
-        if (id != null && !id.isBlank()) {
-            try {
-                Set<String> fausts = new HashSet<>();
-                Set<Integer> caseIds = new HashSet<>();
-
-                // Is this a faust?
-                if (id.length()<10) {
-                    fausts.add(id);
-                } else {
-
-                    // This is EAN (barcode) or ISBN.
-                    RecordsListDto faustList = (RecordsListDto) recordsResolver.resolveId(id);
-                    fausts.addAll(faustList.getRecords().stream().
-                            map(RecordDto::getFaust).collect(Collectors.toList()));
-                }
-                // Fetch all caseids
-                for (String f : fausts) {
-                    TypedQuery<PromatCase> query =
-                            entityManager.createNamedQuery(PromatCase.LIST_CASE_BY_FAUST_NAME, PromatCase.class);
-                    query.setParameter("faust", f);
-                    caseIds.addAll(query.getResultList().stream().map(PromatCase::getId).collect(Collectors.toList()));
-                }
-
-                if (!caseIds.isEmpty()) {
-                    final CriteriaBuilder.In<Integer> inIdsClause = builder.in(root.get("id"));
-
-                    // Now set caseid, one by one.
-                    for (Integer cid : caseIds) {
-                        inIdsClause.value(cid);
-                    }
-                    Predicate inIdsPredicate = builder.and(inIdsClause);
-                    allPredicates.add(inIdsPredicate);
-                } else {
-                    return new CaseSummaryList().withNumFound(0);
-                }
-
-            } catch (Exception e) {
-                LOGGER.error("Lookup caseids from faust/isbn/ean failed:{}", e.getMessage());
-                return new CaseSummaryList().withNumFound(0);
-            }
-        }
-
-        // Get cases with given set of statuses
-        final String status = params.getStatus();
-        if (status != null && !status.isBlank()) {
-            // Allthough jax.rs actually supports having multiple get arguments with the same name
-            // "?status=CREATED&status=ASSIGNED" this is not a safe implementation since other
-            // frameworks (React/NextJS or others) may have difficulties handling this. So instead
-            // a list of statuses is expected to be given as a comma separated list
-
-            final List<Predicate> statusPredicates = new ArrayList<>();
-            for (String oneStatus : status.split(",")) {
-                try {
-                    statusPredicates.add(builder.equal(root.get("status"), CaseStatus.valueOf(oneStatus)));
-                } catch (IllegalArgumentException ex) {
-                    final ServiceErrorDto error = new ServiceErrorDto()
-                            .withCode(ServiceErrorCode.INVALID_REQUEST)
-                            .withCause("Invalid case status")
-                            .withDetails(String.format("Unknown case status: %s", oneStatus));
-                    throw new ServiceErrorException(error.getCause()).withHttpStatus(400);
-                }
-            }
-            allPredicates.add(builder.or(statusPredicates.toArray(Predicate[]::new)));
-        } else {
-            // If no status specified: Set a status "not" deleted predicate
-            allPredicates.add(builder.notEqual(root.get("status"), CaseStatus.DELETED));
-        }
-
-        // Get cases with given reviewer
-        final Integer reviewer = params.getReviewer();
-        if (reviewer != null && reviewer > 0) {
-            allPredicates.add(builder.equal(root.get("reviewer").get("id"), reviewer));
-        }
-
-        // Get cases with given editor
-        final Integer editor = params.getEditor();
-        if (editor != null && editor > 0) {
-            allPredicates.add(builder.equal(root.get("editor").get("id"), editor));
-        }
-
-        // Get cases with given creator
-        final Integer creator = params.getCreator();
-        if (creator != null && creator > 0) {
-            allPredicates.add(builder.equal(root.get("creator").get("id"), creator));
-        }
-
-        // Get cases with a title that matches (entire, or part of) the given title
-        final String title = params.getTitle();
-        if (title != null && !title.isBlank()) {
-            allPredicates.add(builder
-                    .like(builder
-                            .lower(root
-                                    .get("title")), builder.literal("%" + title.toLowerCase() + "%")));
-        }
-
-        // Get cases with an author that matches (entire, or part of) the given author
-        final String author = params.getAuthor();
-        if (author != null && !author.isBlank()) {
-            allPredicates.add(builder
-                    .like(builder
-                            .lower(root
-                                    .get("author")), builder.literal("%" + author.toLowerCase() + "%")));
-        }
-
-        final String trimmedWeekcode = params.getTrimmedWeekcode();
-        if (trimmedWeekcode != null && !trimmedWeekcode.isBlank()) {
-            allPredicates.add(PredicateFactory.fromBinaryOperator(params.getTrimmedWeekcodeOperator(),
-                    root.get("trimmedWeekCode"), trimmedWeekcode, builder));
-        }
-
-        final String weekCode = params.getWeekCode();
-        if (weekCode != null && !weekCode.isBlank()) {
-            final Predicate weekCodePredicate = builder.equal(builder.lower(root.get("weekCode")), weekCode.toLowerCase());
-            final Predicate codesPredicate = builder.isTrue(builder.function("JsonbContainsFromString", Boolean.class, root.get("codes"), builder.upper(builder.literal(weekCode))));
-
-            allPredicates.add(builder.or(weekCodePredicate, codesPredicate));
-        }
-
-        // Get cases with these (commaseparated) materials
-        final String materials = params.getMaterials();
-        if (materials != null && !materials.isBlank()) {
-            final List<Predicate> materialsPredicates = new ArrayList<>();
-            for (String oneMaterial : materials.split(",")) {
-                try {
-                    materialsPredicates.add(builder.equal(root.get("materialType"), MaterialType.valueOf(oneMaterial)));
-                } catch (IllegalArgumentException ex) {
-                    final ServiceErrorDto error = new ServiceErrorDto()
-                            .withCode(ServiceErrorCode.INVALID_REQUEST)
-                            .withCause("Invalid material type")
-                            .withDetails(String.format("Unknown material: %s", oneMaterial));
-                    throw new ServiceErrorException(error.getCause()).withHttpStatus(400);
-                }
-            }
-            allPredicates.add(builder.or(materialsPredicates.toArray(Predicate[]::new)));
-        }
-
-        // If a starting id has been given, add this
-        final Integer from = params.getFrom();
-        if (from != null) {
-            allPredicates.add(builder.gt(root.get("id"), builder.literal(from)));
-        }
-
-        // If an ending id has been given, add this
-        final Integer to = params.getTo();
-        if (to != null) {
-            allPredicates.add(builder.lt(root.get("id"), builder.literal(to)));
-        }
-
-        // Publisher parameter
-        final String publisher = params.getPublisher();
-        if (publisher != null) {
-            allPredicates.add(builder.like(root.get("publisher"), builder.literal("%"+publisher+"%")));
-        }
-
-        // Combine all where clauses together with AND and add them to the query
-        if (!allPredicates.isEmpty()) {
-            Predicate finalPredicate = builder.and(allPredicates.toArray(Predicate[]::new));
-            criteriaQuery.where(finalPredicate);
-        }
-
-
-        // Add ordering
-        ListCasesParams.Order order = params.getOrder();
-        if( order == ListCasesParams.Order.DESCENDING ) {
-            criteriaQuery.orderBy(builder.desc(root.get("id")));
-        } else {
-            criteriaQuery.orderBy(builder.asc(root.get("id")));
-        }
-
-        // Add limits
-        final TypedQuery<PromatCase> query = entityManager.createQuery(criteriaQuery);
-        query.setMaxResults(params.getLimit() == null ? DEFAULT_CASES_LIMIT : params.getLimit());
-
-        // Execute the query
-        // TODO: 12/01/2021 Rename CaseSummaryList to CaseList
-        final CaseSummaryList caseList = new CaseSummaryList();
-        caseList.getCases().addAll(query.getResultList());
-
-        // If requested format is EXPORT, then it is not allowed to return cases without a faustnumber.
-        // We cannot check for this in the query directly, so instead remove offending results
-        if( params.getFormat() == ListCasesParams.Format.EXPORT ) {
-            LOGGER.info("Export format requested, removing cases without faustnumber from {} total cases",
-                    caseList.getCases().size());
-             ArrayList<Integer> casesToRemove = new ArrayList<>();
-            for( PromatCase c : caseList.getCases() ) {
-
-                // There must be tasks on the case for the export to be valid
-                if( c.getTasks() == null || c.getTasks().isEmpty() ) {
-                    LOGGER.info("Removing case {} since it has no tasks", c.getId());
-                    casesToRemove.add(c.getId());
-                    continue;
-                }
-
-                // There must be a BRIEF task for the export to be valid
-                if( c.getTasks().stream().noneMatch(t -> t.getTaskFieldType() == TaskFieldType.BRIEF)) {
-                    LOGGER.info("Removing case {} since it has no BRIEF task", c.getId());
-                    casesToRemove.add(c.getId());
-                    continue;
-                }
-
-                // All BRIEF tasks must have a faustnumber
-                if( !c.getTasks().stream()
-                        .filter(t -> t.getTaskFieldType() == TaskFieldType.BRIEF)
-                        .allMatch(t -> t.getRecordId() != null && !t.getRecordId().isEmpty()) ) {
-                    LOGGER.info("Removing case {} since it has no faustnumber on one or more BRIEF tasks", c.getId());
-                    casesToRemove.add(c.getId());
-                }
-            }
-
-            LOGGER.info("Has {} cases to remove from the list of {} cases", casesToRemove.size(),
-                    caseList.getCases().size());
-            caseList.getCases().removeIf(c -> casesToRemove.contains(c.getId()));
-            LOGGER.info("Caselist now has {} cases", caseList.getCases().size());
-        }
-
-        // Set final number of cases and return the list
-        caseList.setNumFound(caseList.getCases().size());
-        return caseList;
     }
 
 
@@ -1103,7 +839,7 @@ public class Cases {
             // Lookup existing open cases...
             final String faust = relatedRecord.getFaust();
             if (faust != null && !faust.isBlank()) {
-                final CaseSummaryList caseList = listCases(new ListCasesParams()
+                final CaseSummaryList caseList = caseSearch.listCases(new ListCasesParams()
                         .withFaust(relatedRecord.getFaust()));
                 if (caseList.getNumFound() > 0) {
                     existingCases.addAll(caseList.getCases());
@@ -1184,9 +920,9 @@ public class Cases {
         return editor;
     }
 
-    private PromatCase findBuggyCase(String faust) {
+    private PromatCase findBuggiCase(String faust) {
         try {
-            CaseSummaryList list = listCases(new ListCasesParams().withFaust(faust));
+            CaseSummaryList list = caseSearch.listCases(new ListCasesParams().withFaust(faust));
             return list.getCases().stream()
                     .filter(c -> c.getTasks().stream().anyMatch(t -> t.getTargetFausts().contains(faust)
                             && t.getTaskFieldType() == TaskFieldType.BUGGI))

@@ -20,8 +20,6 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
-import javax.persistence.NamedNativeQueries;
-import javax.persistence.NamedNativeQuery;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
@@ -29,10 +27,10 @@ import javax.persistence.OneToOne;
 import javax.persistence.OrderBy;
 import javax.persistence.PrePersist;
 import javax.persistence.PreUpdate;
+import javax.persistence.Transient;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Objects;
-import javax.persistence.Transient;
 
 @NamedQueries({
         @NamedQuery(
@@ -258,6 +256,14 @@ public class PromatCase {
 
     @JsonIgnore
     private Boolean keepEditor = false;
+
+    @JsonIgnore
+    public boolean isValidForExport() {
+        return tasks != null
+                && !tasks.isEmpty()
+                && tasks.stream().anyMatch(t -> t.getTaskFieldType() == TaskFieldType.BRIEF)
+                && tasks.stream().filter(t -> t.getTaskFieldType() == TaskFieldType.BRIEF).allMatch(PromatTask::hasValidRecordId);
+    }
 
     public Integer getId() {
         return id;

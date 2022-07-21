@@ -45,7 +45,6 @@ public class ScheduleRemindersIT extends ContainerTest {
     @BeforeEach
     public void setup() {
         persistenceContext = new TransactionScopedPersistenceContext(entityManager);
-
     }
 
     @Test

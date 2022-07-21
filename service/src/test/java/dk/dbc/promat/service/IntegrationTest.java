@@ -5,14 +5,13 @@
 
 package dk.dbc.promat.service;
 
-import com.opentable.db.postgres.embedded.EmbeddedPostgres;
 import dk.dbc.commons.jdbc.util.JDBCUtil;
+import dk.dbc.commons.testcontainers.postgres.DBCPostgreSQLContainer;
 import dk.dbc.httpclient.HttpClient;
 import dk.dbc.httpclient.HttpGet;
 import dk.dbc.promat.service.db.DatabaseMigrator;
 import dk.dbc.promat.service.persistence.Notification;
 import org.junit.jupiter.api.BeforeAll;
-import org.postgresql.ds.PGSimpleDataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,19 +23,17 @@ import javax.sql.DataSource;
 import javax.ws.rs.core.Response;
 import java.io.File;
 import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import static org.eclipse.persistence.config.PersistenceUnitProperties.JDBC_DRIVER;
@@ -44,9 +41,11 @@ import static org.eclipse.persistence.config.PersistenceUnitProperties.JDBC_PASS
 import static org.eclipse.persistence.config.PersistenceUnitProperties.JDBC_URL;
 import static org.eclipse.persistence.config.PersistenceUnitProperties.JDBC_USER;
 
+@SuppressWarnings("SameParameterValue")
 public class IntegrationTest {
     private static final Logger LOGGER = LoggerFactory.getLogger(IntegrationTest.class);
-    static final EmbeddedPostgres pg = pgStart();
+    static final DBCPostgreSQLContainer promatDBContainer = makeDBContainer();
+
     protected static final HttpClient httpClient;
     protected static EntityManager entityManager;
     private static boolean setupDone;
@@ -55,35 +54,7 @@ public class IntegrationTest {
     static {
         httpClient = HttpClient.create(HttpClient.newClient());
         LOGGER.info("Postres url is:{}", String.format("postgres:@host.testcontainers.internal:%s/postgres",
-                pg.getPort()));
-    }
-
-    private static EmbeddedPostgres pgStart() {
-        try {
-            return EmbeddedPostgres.start();
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        }
-    }
-
-    private static PGSimpleDataSource getDataSource() {
-        final PGSimpleDataSource datasource = new PGSimpleDataSource();
-        datasource.setURL( pg.getJdbcUrl("postgres", "postgres"));
-        datasource.setUser("postgres");
-        datasource.setPassword("");
-        return datasource;
-    }
-
-    protected static Connection connectToPromatDB() {
-        try {
-            Class.forName("org.postgresql.Driver");
-            final String dbUrl = String.format("jdbc:postgresql://localhost:%s/postgres", pg.getPort());
-            final Connection connection = DriverManager.getConnection(dbUrl, "postgres", "");
-            connection.setAutoCommit(true);
-            return connection;
-        } catch (ClassNotFoundException | SQLException e) {
-            throw new RuntimeException(e);
-        }
+                promatDBContainer.getHostPort()));
     }
 
     protected static void executeScript(Connection connection, URL script) throws IOException, SQLException, URISyntaxException {
@@ -91,10 +62,9 @@ public class IntegrationTest {
     }
 
     public String get(String uri) {
-        final Response response = new HttpGet(httpClient)
-                .withBaseUrl(uri)
-                .execute();
-        return response.readEntity(String.class);
+        try(Response response = new HttpGet(httpClient).withBaseUrl(uri).execute()) {
+            return response.readEntity(String.class);
+        }
     }
 
     @SuppressWarnings("ConstantConditions")
@@ -103,16 +73,14 @@ public class IntegrationTest {
         if (!setupDone) {
             LOGGER.info("Doing various setup stuff");
             LOGGER.info("..Populating database for test");
-            DataSource dataSource = getDataSource();
-            migrate(dataSource);
-            Connection connection = connectToPromatDB();
+            migrate(promatDBContainer.datasource());
+            Connection connection = promatDBContainer.createConnection();
             executeScript(connection, IntegrationTest.class.getResource("/dk/dbc/promat/service/db/subjectsdump.sql"));
             executeScript(connection, IntegrationTest.class.getResource("/dk/dbc/promat/service/db/promatusers.sql"));
             executeScript(connection, IntegrationTest.class.getResource("/dk/dbc/promat/service/db/promatcases.sql"));
             executeScript(connection, IntegrationTest.class.getResource("/dk/dbc/promat/service/db/notification.sql"));
             executeScript(connection, IntegrationTest.class.getResource("/dk/dbc/promat/service/db/payments.sql"));
-            entityManager = createEntityManager(getDataSource(),
-                    "promatITPU");
+            entityManager = createEntityManager(promatDBContainer, "promatITPU");
             LOGGER.info("..Populating database tables done");
             LOGGER.info("Setup done!");
             setupDone = true;
@@ -123,22 +91,21 @@ public class IntegrationTest {
 
     private static String makeGenericOpenFormatResult() {
         try {
-            return Files.readString(Path.of(IntegrationTest.class.getResource("/__files/body-openformat-generic.json").getPath()));
+            URL url = Objects.requireNonNull(IntegrationTest.class.getResource("/__files/body-openformat-generic.json"));
+            return Files.readString(Path.of(url.getPath()));
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
-    private static EntityManager createEntityManager(
-            PGSimpleDataSource dataSource, String persistenceUnitName) {
-        Map<String, String> entityManagerProperties = new HashMap<>();
-        entityManagerProperties.put(JDBC_USER, dataSource.getUser());
-        entityManagerProperties.put(JDBC_PASSWORD, dataSource.getPassword());
-        entityManagerProperties.put(JDBC_URL, dataSource.getUrl());
-        entityManagerProperties.put(JDBC_DRIVER, "org.postgresql.Driver");
-        entityManagerProperties.put("eclipselink.logging.level", "FINE");
-        EntityManagerFactory factory = Persistence.createEntityManagerFactory(persistenceUnitName,
-                entityManagerProperties);
+    private static EntityManager createEntityManager(DBCPostgreSQLContainer dbContainer, String persistenceUnitName) {
+        Map<String, String> entityManagerProperties = Map.of(
+                JDBC_USER, dbContainer.getUsername(),
+                JDBC_PASSWORD, dbContainer.getPassword(),
+                JDBC_URL, dbContainer.getJdbcUrl(),
+                JDBC_DRIVER, "org.postgresql.Driver",
+                "eclipselink.logging.level", "FINE");
+        EntityManagerFactory factory = Persistence.createEntityManagerFactory(persistenceUnitName, entityManagerProperties);
         return factory.createEntityManager(entityManagerProperties);
     }
 
@@ -152,7 +119,7 @@ public class IntegrationTest {
                 .createQuery("SELECT notification " +
                         "FROM Notification notification ORDER BY notification.id", Notification.class);
         List<Notification> allNotifications = query.getResultList();
-        List<Notification> notifications = new ArrayList<>();
+        List<Notification> notifications;
         if (subjectWildcard != null) {
             notifications = allNotifications.stream().filter(notification ->
                     notification.getSubject().contains(subjectWildcard)).collect(Collectors.toList());
@@ -168,6 +135,14 @@ public class IntegrationTest {
 
     public List<Notification> getNotifications() {
         return getNotifications(null, null);
+    }
+
+    private static DBCPostgreSQLContainer makeDBContainer() {
+        DBCPostgreSQLContainer container = new DBCPostgreSQLContainer().withReuse(false);
+        container.start();
+        container.exposeHostPort();
+        LOGGER.info("Postgres url is:{}", container.getDockerJdbcUrl());
+        return container;
     }
 
 }

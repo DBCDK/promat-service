@@ -5,7 +5,6 @@
 
 package dk.dbc.promat.service.persistence;
 
-import com.fasterxml.jackson.annotation.JsonView;
 import dk.dbc.commons.jpa.converter.StringListToJsonArrayConverter;
 
 import javax.persistence.Column;
@@ -187,6 +186,10 @@ public class PromatTask {
 
     public void setRecordId(String recordId) {
         this.recordId = recordId;
+    }
+
+    public boolean hasValidRecordId() {
+        return recordId != null && !recordId.isEmpty();
     }
 
     public PromatTask withRecordId(String recordId) {
