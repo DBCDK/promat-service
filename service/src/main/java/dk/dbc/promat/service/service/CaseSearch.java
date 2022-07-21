@@ -233,8 +233,7 @@ public class CaseSearch {
 
     private <P> Optional<Predicate> callConditionally(Supplier<P> supplier, ServiceCall<P, Predicate> service) throws ServiceErrorException {
         P p = supplier.get();
-        if(!isEmpty(p)) return Optional.of(service.call(p));
-        return Optional.empty();
+        return isEmpty(p) ? Optional.empty() : Optional.of(service.call(p));
     }
 
     private boolean isEmpty(Object o) {

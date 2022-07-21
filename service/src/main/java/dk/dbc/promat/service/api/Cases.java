@@ -539,7 +539,7 @@ public class Cases {
             return Response.status(BAD_REQUEST).type(MediaType.APPLICATION_JSON_TYPE).entity(mapper.writeValueAsString(error)).build();
         }
         LOGGER.info("Buggi task request approval for {}", pid);
-        PromatCase promatCase = findBuggyCase(faust);
+        PromatCase promatCase = findBuggiCase(faust);
         if(promatCase == null) {
             LOGGER.warn("Pid {} was not found for request Buggi task approval", pid);
             return Response.status(NOT_FOUND).type(MediaType.APPLICATION_JSON_TYPE).entity(mapper.writeValueAsString(new ServiceErrorDto().withCode(ServiceErrorCode.FAILED))).build();
@@ -919,7 +919,7 @@ public class Cases {
         return editor;
     }
 
-    private PromatCase findBuggyCase(String faust) {
+    private PromatCase findBuggiCase(String faust) {
         try {
             CaseSummaryList list = caseSearch.listCases(new ListCasesParams().withFaust(faust));
             return list.getCases().stream()
