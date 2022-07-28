@@ -62,7 +62,7 @@ public class Reviewer extends PromatUser {
             "SUM(CASE WHEN (pc.deadline BETWEEN ?1 AND ?2) THEN 1 ELSE 0 END) AS weekWorkload," +
             "SUM(CASE WHEN (pc.deadline BETWEEN ?3 AND ?4) THEN 1 ELSE 0 END) AS weekBeforeWorkload," +
             "SUM(CASE WHEN (pc.deadline BETWEEN ?5 AND ?6) THEN 1 ELSE 0 END) AS weekAfterWorkload " +
-            "FROM promatuser pu LEFT JOIN promatcase pc ON pc.reviewer_id=pu.id AND pc.status = 'ASSIGNED' AND pc.deadline BETWEEN ?7 AND ?8 " +
+            "FROM promatuser pu LEFT JOIN promatcase pc ON pc.reviewer_id=pu.id AND pc.status not in ('CREATED', 'DELETED', 'REJECTED', 'PENDING_CLOSE') AND pc.deadline BETWEEN ?7 AND ?8 " +
             "WHERE pu.role='REVIEWER' " +
             "GROUP BY pu.id";
 

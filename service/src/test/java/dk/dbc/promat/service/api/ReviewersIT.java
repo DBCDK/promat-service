@@ -15,12 +15,14 @@ import dk.dbc.promat.service.dto.ServiceErrorCode;
 import dk.dbc.promat.service.dto.ServiceErrorDto;
 import dk.dbc.promat.service.persistence.Address;
 import dk.dbc.promat.service.persistence.Notification;
+import dk.dbc.promat.service.persistence.PromatUser;
 import dk.dbc.promat.service.persistence.Reviewer;
 import dk.dbc.promat.service.persistence.ReviewerView;
 import dk.dbc.promat.service.persistence.Subject;
 import dk.dbc.promat.service.persistence.SubjectNote;
 import dk.dbc.promat.service.templating.Formatting;
 import org.checkerframework.checker.units.qual.A;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
@@ -28,6 +30,7 @@ import org.junit.jupiter.api.TestMethodOrder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.Response;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
@@ -38,7 +41,9 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
+import static java.util.Map.entry;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -223,86 +228,20 @@ public class ReviewersIT extends ContainerTest {
     @Test
     @Order(1)
     public void listReviewersWithWorkloads() throws JsonProcessingException {
-        final ReviewerWithWorkloads reviewer1 = new ReviewerWithWorkloads()
+        Response response = getResponse("v1/api/reviewers", Map.of("deadline", "2020-12-01"));
+        ReviewerList<ReviewerWithWorkloads> reviewers = response.readEntity(new GenericType<>() {});
+        Map<Integer, Integer> workload = reviewers.getReviewers().stream().collect(Collectors.toUnmodifiableMap(PromatUser::getId, r -> (int)r.getWeekAfterWorkload()));
+        Map<Integer, Integer> expected = Map.ofEntries(entry(1, 3), entry(2, 0), entry(3, 0), entry(4, 0),
+                entry(5, 0), entry(6, 0), entry(7, 0), entry(8, 0), entry(9, 0), entry(15, 0));
+        Assertions.assertEquals(expected, workload, "Week after workload should match our expectations");
+        ReviewerWithWorkloads expected1 = new ReviewerWithWorkloads()
                 .withWeekWorkload(0)
                 .withWeekBeforeWorkload(0)
-                .withWeekAfterWorkload(1);
-        loadReviewer1(reviewer1, ReviewerView.Summary.class);
-
-        final ReviewerWithWorkloads reviewer2 = new ReviewerWithWorkloads()
-                .withWeekWorkload(0)
-                .withWeekBeforeWorkload(0)
-                .withWeekAfterWorkload(0);
-        loadReviewer2(reviewer2, ReviewerView.Summary.class);
-
-        final ReviewerWithWorkloads reviewer3 = new ReviewerWithWorkloads()
-                .withWeekWorkload(0)
-                .withWeekBeforeWorkload(0)
-                .withWeekAfterWorkload(0);
-        loadReviewer3(reviewer3, ReviewerView.Summary.class);
-
-        final ReviewerWithWorkloads reviewer4 = new ReviewerWithWorkloads()
-                .withWeekWorkload(0)
-                .withWeekBeforeWorkload(0)
-                .withWeekAfterWorkload(0);
-        loadReviewer4(reviewer4, ReviewerView.Summary.class);
-
-        final ReviewerWithWorkloads reviewer5 = new ReviewerWithWorkloads()
-                .withWeekWorkload(0)
-                .withWeekBeforeWorkload(0)
-                .withWeekAfterWorkload(0);
-        loadReviewer5(reviewer5, ReviewerView.Summary.class);
-
-        final ReviewerWithWorkloads reviewer6 = new ReviewerWithWorkloads()
-                .withWeekWorkload(0)
-                .withWeekBeforeWorkload(0)
-                .withWeekAfterWorkload(0);
-        loadReviewer6(reviewer6, ReviewerView.Summary.class);
-
-        final ReviewerWithWorkloads reviewer7 = new ReviewerWithWorkloads()
-                .withWeekWorkload(0)
-                .withWeekBeforeWorkload(0)
-                .withWeekAfterWorkload(0);
-        loadReviewer7(reviewer7, ReviewerView.Summary.class);
-
-        final ReviewerWithWorkloads reviewer8 = new ReviewerWithWorkloads()
-                .withWeekWorkload(0)
-                .withWeekBeforeWorkload(0)
-                .withWeekAfterWorkload(0);
-        loadReviewer8(reviewer8, ReviewerView.Summary.class);
-
-        final ReviewerWithWorkloads reviewer9 = new ReviewerWithWorkloads()
-                .withWeekWorkload(0)
-                .withWeekBeforeWorkload(0)
-                .withWeekAfterWorkload(0);
-        loadReviewer9(reviewer9, ReviewerView.Summary.class);
-
-        final ReviewerWithWorkloads reviewer15 = new ReviewerWithWorkloads()
-                .withWeekWorkload(0)
-                .withWeekBeforeWorkload(0)
-                .withWeekAfterWorkload(0);
-        loadReviewer15(reviewer15, ReviewerView.Summary.class);
-
-        final ReviewerList<ReviewerWithWorkloads> expected = new ReviewerList<ReviewerWithWorkloads>()
-                .withReviewers(List.of(reviewer1, reviewer2, reviewer3, reviewer4, reviewer5, reviewer6, reviewer7,
-                        reviewer8, reviewer9, reviewer15));
-
-        final Response response = getResponse("v1/api/reviewers",
-                Map.of("deadline", "2020-12-01"));
-
-        final ReviewerList<ReviewerWithWorkloads> actual = mapper.readValue(
-                response.readEntity(String.class), new TypeReference<>() {});
-
-        // The activeChanged stamp may differ on some reviewers since they have been updated by
-        // other tests, so we need to reset the stamp to a known value before comparing with
-        // hardcoded expected results
-        for( Reviewer reviewer: actual.getReviewers() ) {
-            reviewer.setActiveChanged(Date.from(Instant.ofEpochSecond(1629900636)));
-            reviewer.setDeactivated(null);
-        }
-
-        assertThat("List of reviewers is just 'Hans Hansen', 'Ole Olsen', 'Peter Petersen', 'kirsten kirstensen' and 'Boe Boesen'",
-                actual, is(expected));
+                .withWeekAfterWorkload(3);
+        loadReviewer1(expected1, ReviewerView.Summary.class);
+        ReviewerWithWorkloads reviewer1 = reviewers.getReviewers().stream().filter(r -> r.getId() == 1).findFirst().orElse(null);
+        reviewer1.withActiveChanged(expected1.getActiveChanged()).withDeactivated(expected1.getDeactivated());
+        Assertions.assertEquals(expected1, reviewer1, "Assert that reviewer with id 1");
     }
 
     @Test
