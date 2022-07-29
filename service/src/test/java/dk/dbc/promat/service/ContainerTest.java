@@ -23,10 +23,14 @@ import org.testcontainers.Testcontainers;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.output.Slf4jLogConsumer;
 import org.testcontainers.containers.wait.strategy.Wait;
+import org.testcontainers.utility.MountableFile;
 
 import javax.ws.rs.core.Response;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.time.Duration;
 import java.util.Map;
+import java.util.function.Function;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.configureFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.requestMatching;
@@ -136,6 +140,31 @@ public abstract class ContainerTest extends IntegrationTest {
         return "http://host.testcontainers.internal:" + wireMockServer.port() + path;
     }
 
+    private static boolean isContainerDebugging() {
+        return !getDebuggingHost().isEmpty();
+    }
+
+    private static String getDebuggingHost() {
+        try {
+            String port = getSysVar("CONTAINER_DEBUG_PORT", System::getenv, System::getProperty);
+            return port == null ? "" : InetAddress.getLocalHost().getHostAddress() + ":" + port;
+        } catch (UnknownHostException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @SafeVarargs
+    @SuppressWarnings("SameParameterValue")
+    private static String getSysVar(String name, Function<String, String>... functions) {
+        for (Function<String, String> function : functions) {
+            String value = function.apply(name);
+            if(value != null && !value.isBlank()) {
+                return value.trim();
+            }
+        }
+        return null;
+    }
+
     private static WireMockServer makeWireMockServer() {
         WireMockServer wireMockServer = new WireMockServer(options().dynamicPort());
 
@@ -157,7 +186,7 @@ public abstract class ContainerTest extends IntegrationTest {
                         .withHeader("Content-Type", "application/json")
                         .withBody(genericOpenFormatResult)));
 
-        // Add two catch-all responses for AdgangsPlatformen's introspect endpoint.
+        // Add two catch-all responses for AdgangsPlatformens introspect endpoint.
         // ...
         // It is not possible to record the request/response using an external wiremock
         // unless ssl certificate validation is disabled for the service application.
@@ -194,8 +223,6 @@ public abstract class ContainerTest extends IntegrationTest {
                 .withLogConsumer(new Slf4jLogConsumer(LOGGER))
                 .withEnv("JAVA_MAX_HEAP_SIZE", "2G")
                 .withEnv("LOG_FORMAT", "text")
-                //- name: PROMAT_DB_URL
-                //          value: promat:14XQWHfrfxWI@db.promat-v13.stg.dbc.dk:5432/promat_db
                 .withEnv("PROMAT_DB_URL", promatDBContainer.getPayaraDockerJdbcUrl())
                 .withEnv("CULR_SERVICE_URL", "http://host.testcontainers.internal:" + wireMockServer.port() + "/1.4/CulrWebService")
                 .withEnv("CULR_SERVICE_USER_ID", "connector")
@@ -224,6 +251,12 @@ public abstract class ContainerTest extends IntegrationTest {
                 .withExposedPorts(8080)
                 .waitingFor(Wait.forHttp("/openapi"))
                 .withStartupTimeout(Duration.ofMinutes(2));
+        if(isContainerDebugging()) {
+            container.withEnv("REMOTE_DEBUGGING_HOST", getDebuggingHost())
+                    .withEnv("OAUTH2_INTROSPECTION_URL", "http://host.testcontainers.internal:" + wireMockServer.port())
+                    .withCopyFileToContainer(MountableFile.forClasspathResource("start-payara.sh", Integer.valueOf("777", 8)), "/opt/payara5/scripts/start-payara.sh");
+
+        }
         container.start();
         return container;
     }

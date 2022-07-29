@@ -253,4 +253,13 @@
 
     </plugins>
   </build>
+  <profiles>
+    <profile>
+      <!-- Please start your debugger in listening mode with auto restart, before running maven with this profile -->
+      <id>TestContainerDebug</id>
+      <properties>
+        <CONTAINER_DEBUG_PORT>5005</CONTAINER_DEBUG_PORT>
+      </properties>
+    </profile>
+  </profiles>
 </project>
