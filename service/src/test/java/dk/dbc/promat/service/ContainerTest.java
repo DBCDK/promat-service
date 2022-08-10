@@ -250,7 +250,7 @@ public abstract class ContainerTest extends IntegrationTest {
                 .withEnv("OAUTH2_INTROSPECTION_URL", "http://host.testcontainers.internal:" + wireMockServer.port())
                 .withExposedPorts(8080)
                 .waitingFor(Wait.forHttp("/openapi"))
-                .withStartupTimeout(Duration.ofMinutes(2))
+                .withStartupTimeout(Duration.ofMinutes(2));
         if(isContainerDebugging()) {
             container.withEnv("REMOTE_DEBUGGING_HOST", getDebuggingHost())
                     .withCopyFileToContainer(MountableFile.forClasspathResource("start-payara.sh", Integer.valueOf("777", 8)), "/opt/payara5/scripts/start-payara.sh");
