@@ -60,7 +60,7 @@ public class RendererTest {
                             .withEmail("kreste@krestense.dk"));
 
     @BeforeAll
-    private static void startWiremock() throws OpenFormatConnectorException {
+    public static void startWiremock() throws OpenFormatConnectorException {
         wireMockServer = new WireMockServer(options().dynamicPort());
         wireMockServer.start();
 
@@ -72,7 +72,7 @@ public class RendererTest {
     }
 
     @AfterAll
-    private static void stopWiremock() {
+    public static void stopWiremock() {
         wireMockServer.stop();
     }
 
