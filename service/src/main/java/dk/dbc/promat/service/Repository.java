@@ -34,7 +34,7 @@ import java.util.stream.Collectors;
 
 @Stateless
 public class Repository {
-    TESTprivate static final Logger LOGGER = LoggerFactory.getLogger(Repository.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(Repository.class);
 
     @Inject
     @PromatEntityManager
