@@ -73,13 +73,8 @@
     <dependency>
       <groupId>dk.dbc</groupId>
       <artifactId>culr-connector</artifactId>
-      <version>1.2-SNAPSHOT</version>
+      <version>1.3-SNAPSHOT</version>
     </dependency>
-<!--    <dependency>-->
-<!--      <groupId>org.apache.solr</groupId>-->
-<!--      <artifactId>solr-solrj</artifactId>-->
-<!--      <version>8.1.0</version>-->
-<!--    </dependency>-->
     <dependency>
       <groupId>dk.dbc</groupId>
       <artifactId>opensearch-connector</artifactId>
@@ -167,7 +162,7 @@
     <dependency>
       <groupId>dk.dbc</groupId>
       <artifactId>dbc-commons-rs-auth</artifactId>
-      <version>1.1-SNAPSHOT</version>
+      <version>1.3-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>dk.dbc</groupId>
