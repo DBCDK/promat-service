@@ -959,7 +959,7 @@ public class CasesIT extends ContainerTest {
                 .withTaskType(TaskType.GROUP_1_LESS_THAN_100_PAGES)
                 .withTaskFieldType(TaskFieldType.BUGGI)
                 .withTargetFausts(List.of("66666666"));
-        TaskDto responseTask2 = postAndAssert("v1/api/cases/" + created.getId() + "/tasks", dupTask, TaskDto.class, NOT_MODIFIED);
+        TaskDto responseTask2 = postAndAssert("v1/api/cases/" + created.getId() + "/tasks", dupTask, TaskDto.class, OK);
         Assertions.assertEquals(responseTask1, responseTask2, "Duplicate task post should be ignored");
     }
 

@@ -765,7 +765,7 @@ public class Cases {
             if(dto.getTaskFieldType().onceOnlyPerCase) {
                 PromatTask existingTask = promatCase.getTasks().stream().filter(t -> t.getTaskFieldType() == dto.getTaskFieldType()).findFirst().orElse(null);
                 if(existingTask != null) {
-                    return Response.notModified().entity(existingTask).build();
+                    return Response.ok().entity(existingTask).build();
                 }
             }
 
