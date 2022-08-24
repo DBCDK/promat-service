@@ -67,6 +67,7 @@ import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
 import static javax.ws.rs.core.Response.Status.CONFLICT;
 import static javax.ws.rs.core.Response.Status.CREATED;
 import static javax.ws.rs.core.Response.Status.NOT_FOUND;
+import static javax.ws.rs.core.Response.Status.OK;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.not;
@@ -937,6 +938,28 @@ public class CasesIT extends ContainerTest {
         // Add Targetfaust
         taskDto.setTargetFausts(Arrays.asList("16001111"));
         assertThat("status code", postResponse("v1/api/cases/" + created.getId() + "/tasks", taskDto).getStatus(), is(201));
+    }
+
+    @Test
+    public void testAddTaskWithDuplicateType() throws JsonProcessingException {
+        CaseRequest dto = new CaseRequest()
+                .withPrimaryFaust("26901111")
+                .withTitle("Title for 26901111")
+                .withDetails("Details for 26901111")
+                .withMaterialType(MaterialType.BOOK)
+                .withCreator(13);
+        PromatCase created = postAndAssert("v1/api/cases", dto, PromatCase.class, CREATED);
+        TaskDto taskDto = new TaskDto()
+                .withTaskType(TaskType.GROUP_1_LESS_THAN_100_PAGES)
+                .withTaskFieldType(TaskFieldType.BUGGI)
+                .withTargetFausts(List.of("15112222"));
+        TaskDto responseTask1 = postAndAssert("v1/api/cases/" + created.getId() + "/tasks", taskDto, TaskDto.class, CREATED);
+        TaskDto dupTask = new TaskDto()
+                .withTaskType(TaskType.GROUP_1_LESS_THAN_100_PAGES)
+                .withTaskFieldType(TaskFieldType.BUGGI)
+                .withTargetFausts(List.of("66666666"));
+        TaskDto responseTask2 = postAndAssert("v1/api/cases/" + created.getId() + "/tasks", dupTask, TaskDto.class, OK);
+        Assertions.assertEquals(responseTask1, responseTask2, "Duplicate task post should be ignored");
     }
 
     @Test

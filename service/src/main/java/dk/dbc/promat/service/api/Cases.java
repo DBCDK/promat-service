@@ -196,7 +196,7 @@ public class Cases {
             creator = resolveEditor(dto.getCreator());
 
             // Create tasks
-            tasks = createTasks(dto.getPrimaryFaust(), dto.getTasks());
+            tasks = createTasks(dto.getTasks());
 
         } catch(ServiceErrorException serviceErrorException) {
             LOGGER.info("Received serviceErrorException while mapping entities: {}", serviceErrorException.getMessage());
@@ -762,6 +762,13 @@ public class Cases {
                     .withPayCategory(Repository.getPayCategoryForTaskFieldTypeOfTaskType(dto.getTaskType(), dto.getTaskFieldType()))
                     .withTargetFausts(dto.getTargetFausts());
 
+            if(dto.getTaskFieldType().onceOnlyPerCase) {
+                PromatTask existingTask = promatCase.getTasks().stream().filter(t -> t.getTaskFieldType() == dto.getTaskFieldType()).findFirst().orElse(null);
+                if(existingTask != null) {
+                    return Response.ok().entity(existingTask).build();
+                }
+            }
+
             // Add the new task
             promatCase.getTasks().add(task);
 
@@ -797,7 +804,7 @@ public class Cases {
     @Path("cases/{id}/processreminder")
     @Produces(MediaType.APPLICATION_JSON)
     @JsonView({CaseView.Case.class})
-    public Response processReminder(@PathParam("id") final Integer id) throws JsonProcessingException {
+    public Response processReminder(@PathParam("id") final Integer id) {
         // Fetch the case
         PromatCase promatCase = entityManager.find(PromatCase.class, id);
         if(promatCase == null) {
@@ -934,7 +941,7 @@ public class Cases {
         }
     }
 
-    private List<PromatTask> createTasks(String primaryFaust, List<TaskDto> taskDtos) throws ServiceErrorException {
+    private List<PromatTask> createTasks(List<TaskDto> taskDtos) throws ServiceErrorException {
         ArrayList<PromatTask> tasks = new ArrayList<>();
 
         if( taskDtos != null && !taskDtos.isEmpty()) {
