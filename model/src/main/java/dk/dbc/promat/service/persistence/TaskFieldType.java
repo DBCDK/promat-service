@@ -16,7 +16,7 @@ public enum TaskFieldType {
     RECOMMENDATION,
     @Deprecated
     BIBLIOGRAPHIC, // Todo: Obsolete, remove when no tasks exists in the db with this taskfieldtype
-    TOPICS(true),
+    TOPICS(false),
     BKM(PayCategory.BKM, true),
     EXPRESS(PayCategory.EXPRESS, false),
     METAKOMPAS(PayCategory.METAKOMPAS, false),

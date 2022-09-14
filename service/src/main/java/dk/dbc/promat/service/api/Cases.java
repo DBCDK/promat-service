@@ -763,7 +763,9 @@ public class Cases {
                     .withTargetFausts(dto.getTargetFausts());
 
             if(dto.getTaskFieldType().onceOnlyPerCase) {
-                PromatTask existingTask = promatCase.getTasks().stream().filter(t -> t.getTaskFieldType() == dto.getTaskFieldType()).findFirst().orElse(null);
+                PromatTask existingTask = promatCase.getTasks().stream()
+                        .filter(t -> t.getTaskFieldType() == dto.getTaskFieldType())
+                        .findFirst().orElse(null);
                 if(existingTask != null) {
                     return Response.ok().entity(existingTask).build();
                 }
