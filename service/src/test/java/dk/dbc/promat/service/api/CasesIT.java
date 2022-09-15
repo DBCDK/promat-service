@@ -2975,4 +2975,45 @@ public class CasesIT extends ContainerTest {
         // Delete the case (final cleanup)
         assertThat("status code", deleteResponse("v1/api/cases/" + aCase.getId()).getStatus(), is(200));
     }
+
+    @Test
+    public void testSetCodes() throws IOException {
+
+        // Create case
+        CaseRequest requestDto = new CaseRequest()
+                .withTitle("Title for 90009013")
+                .withDetails("Details for 90009013")
+                .withPrimaryFaust("90009013")
+                .withEditor(10)
+                .withReviewer(1)
+                .withSubjects(Arrays.asList(3, 4))
+                .withDeadline("2022-09-30")
+                .withMaterialType(MaterialType.BOOK);
+        Response response = postResponse("v1/api/cases", requestDto);
+        assertThat("status code", response.getStatus(), is(201));
+        PromatCase aCase = mapper.readValue(response.readEntity(String.class), PromatCase.class);
+
+        // Check that codes is empty
+        assertThat("codes", aCase.getCodes(), is(nullValue()));
+
+        // Change codes
+        requestDto = new CaseRequest().withCodes(List.of("BKM202210", "ACC202208"));
+        assertThat("change codes", postResponse("v1/api/cases/" + aCase.getId(), requestDto).getStatus(), is(200));
+        PromatCase updated = get("v1/api/cases/" + aCase.getId(), PromatCase.class);
+        assertThat("not null", updated.getCodes(), is(notNullValue()));
+        assertThat("not empty", updated.getCodes().size(), is(2));
+        assertThat("contains", updated.getCodes().stream().anyMatch(c -> c.equals("BKM202210")));
+        assertThat("contains", updated.getCodes().stream().anyMatch(c -> c.equals("ACC202208")));
+
+        // Empty the list
+        requestDto = new CaseRequest().withCodes(List.of());
+        assertThat("change codes", postResponse("v1/api/cases/" + aCase.getId(), requestDto).getStatus(), is(200));
+        updated = get("v1/api/cases/" + aCase.getId(), PromatCase.class);
+        assertThat("not null", updated.getCodes(), is(notNullValue()));
+        assertThat("empty", updated.getCodes().size(), is(0));
+
+        // Delete the case
+        assertThat("status code", deleteResponse("v1/api/cases/" + aCase.getId()).getStatus(), is(200));
+    }
+
 }
