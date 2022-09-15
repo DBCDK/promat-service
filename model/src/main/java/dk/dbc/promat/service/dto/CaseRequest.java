@@ -83,6 +83,11 @@ public class CaseRequest implements Dto {
 
     private String reminderSent;
 
+    // Todo: This could/should be removed when DMatV2 e2e test is completed.  (See note in Cases.java@703 or thereabouts)
+    //       Do note that we specifically do NOT change the model version even though we have added a field. This
+    //       is to allow easy rollback if/when we remove the "hack" again
+    private List<String> codes;
+
     public String getTitle() {
         return title;
     }
@@ -324,6 +329,19 @@ public class CaseRequest implements Dto {
         return this;
     }
 
+    public List<String> getCodes() {
+        return codes;
+    }
+
+    public void setCodes(List<String> codes) {
+        this.codes = codes;
+    }
+
+    public CaseRequest withCodes(List<String> codes) {
+        this.codes = codes;
+        return this;
+    }
+
     @Override
     public String toString() {
         return "CaseRequestDto{" +
@@ -345,6 +363,7 @@ public class CaseRequest implements Dto {
                 ", note='" + note + '\'' +
                 ", fulltextLink='" + fulltextLink + '\'' +
                 ", reminderSent='" + reminderSent + '\'' +
+                ", codes=" + codes +
                 '}';
     }
 
@@ -410,6 +429,9 @@ public class CaseRequest implements Dto {
         if (fulltextLink != null ? !fulltextLink.equals(that.fulltextLink) : that.fulltextLink != null) {
             return false;
         }
+        if (codes != null ? !codes.equals(that.codes) : that.codes != null) {
+            return false;
+        }
         return reminderSent != null ? reminderSent.equals(that.reminderSent) : that.reminderSent == null;
     }
 
@@ -433,6 +455,7 @@ public class CaseRequest implements Dto {
         result = 31 * result + (note != null ? note.hashCode() : 0);
         result = 31 * result + (fulltextLink != null ? fulltextLink.hashCode() : 0);
         result = 31 * result + (reminderSent != null ? reminderSent.hashCode() : 0);
+        result = 31 * result + (codes != null ? codes.hashCode() : 0);
         return result;
     }
 }

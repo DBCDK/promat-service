@@ -700,6 +700,12 @@ public class Cases {
                 existing.setFulltextLink(dto.getFulltextLink());
             }
 
+            // Todo: This could/should be removed when e2e test of the new DMatV2 is completed
+            //       since we use it only to update the promatcase manually with weekcodes
+            if (dto.getCodes() != null) {
+                existing.setCodes(dto.getCodes());
+            }
+
             // Set the "are there new Messages?" pins for reviewer and editor
             existing.setNewMessagesToReviewer(areThereNewMessages(existing.getId(), PromatMessage.Direction.EDITOR_TO_REVIEWER));
             existing.setNewMessagesToEditor(areThereNewMessages(existing.getId(), PromatMessage.Direction.REVIEWER_TO_EDITOR));
