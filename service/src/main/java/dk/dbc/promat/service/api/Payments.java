@@ -34,6 +34,7 @@ import javax.ws.rs.core.Response;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
@@ -324,7 +325,7 @@ public class Payments {
         }
 
         // Add the payments and return the completed list
-        paymentList.setNumFound(paymentList.getNumFound());
+        paymentList.setNumFound(payments.size());
         paymentList.setPayments(payments);
         return paymentList;
     }
@@ -333,12 +334,12 @@ public class Payments {
         final TypedQuery<PromatCase> query;
         if (stamp == null) {
             query = entityManager.createNamedQuery(PromatCase.GET_CASES_FOR_PAYMENT_NAME, PromatCase.class);
-            paymentList.setStamp(LocalDateTime.parse(LocalDateTime.now()  // Trim last 3 digits in the timestamp (nanos)
-                    .format(DateTimeFormatter.ofPattern(TIMESTAMP_FORMAT)), DateTimeFormatter.ofPattern(TIMESTAMP_FORMAT)));
+            paymentList.setStamp(LocalDateTime.now().truncatedTo(ChronoUnit.MILLIS));
         } else {
             query = entityManager.createNamedQuery(PromatCase.GET_PAYED_CASES_NAME, PromatCase.class);
-            query.setParameter("stamp", LocalDateTime.parse(stamp, DateTimeFormatter.ofPattern(TIMESTAMP_FORMAT)));
-            paymentList.setStamp(LocalDateTime.parse(stamp, DateTimeFormatter.ofPattern(TIMESTAMP_FORMAT)));
+            LocalDateTime time = LocalDateTime.parse(stamp, DateTimeFormatter.ofPattern(TIMESTAMP_FORMAT));
+            query.setParameter("stamp", time);
+            paymentList.setStamp(time);
         }
         return query.getResultList();
     }

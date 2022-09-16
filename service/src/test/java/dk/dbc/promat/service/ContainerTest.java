@@ -221,6 +221,7 @@ public abstract class ContainerTest extends IntegrationTest {
         @SuppressWarnings("resource")
         GenericContainer<?> container = new GenericContainer<>("docker-metascrum.artifacts.dbccloud.dk/promat-service:devel")
                 .withLogConsumer(new Slf4jLogConsumer(LOGGER))
+                .withEnv("TZ", "Europe/Copenhagen")
                 .withEnv("JAVA_MAX_HEAP_SIZE", "2G")
                 .withEnv("LOG_FORMAT", "text")
                 .withEnv("PROMAT_DB_URL", promatDBContainer.getPayaraDockerJdbcUrl())
