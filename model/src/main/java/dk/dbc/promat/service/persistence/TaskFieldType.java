@@ -17,23 +17,23 @@ public enum TaskFieldType {
     @Deprecated
     BIBLIOGRAPHIC, // Todo: Obsolete, remove when no tasks exists in the db with this taskfieldtype
     TOPICS(false),
-    BKM(PayCategory.BKM, true, false),
-    EXPRESS(PayCategory.EXPRESS, false, false),
-    METAKOMPAS(PayCategory.METAKOMPAS, false, true),
+    BKM(PayCategory.BKM, true, true),
+    EXPRESS(PayCategory.EXPRESS, false, true),
+    METAKOMPAS(PayCategory.METAKOMPAS, false, false),
     @Deprecated
     GENRE, // Todo: Obsolete, remove when no tasks exists in the db with this taskfieldtype
     AGE(true),
     MATLEVEL(true),
-    BUGGI(PayCategory.BUGGI, false, true);
+    BUGGI(PayCategory.BUGGI, false, false);
 
     private final Function<TaskType, PayCategory> payment;
     public final boolean onceOnlyPerCase;
-    public final boolean externalTask;
+    public final boolean internalTask;
 
-    TaskFieldType(PayCategory paymentCategory, boolean onceOnlyPerCase, boolean externalTask) {
+    TaskFieldType(PayCategory paymentCategory, boolean onceOnlyPerCase, boolean internalTask) {
         this.payment = t -> paymentCategory;
         this.onceOnlyPerCase = onceOnlyPerCase;
-        this.externalTask = externalTask;
+        this.internalTask = internalTask;
     }
 
     TaskFieldType() {
@@ -43,7 +43,7 @@ public enum TaskFieldType {
     TaskFieldType(boolean onceOnlyPerCase) {
         payment = t -> t.payCategory;
         this.onceOnlyPerCase = onceOnlyPerCase;
-        this.externalTask = false;
+        this.internalTask = true;
     }
 
     public PayCategory getPaymentCategory(TaskType taskType) {
