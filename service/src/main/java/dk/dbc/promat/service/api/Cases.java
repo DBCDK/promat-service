@@ -1223,8 +1223,8 @@ public class Cases {
     }
 
     private void approveTasks(PromatCase existing, boolean allTasks) {
-        for (PromatTask task : new ArrayList<>(existing.getTasks())) {
-            if (task.getTaskFieldType() != TaskFieldType.METAKOMPAS || allTasks) {
+        for (PromatTask task : existing.getTasks()) {
+            if (task.getTaskFieldType().internalTask || allTasks) {
                 task.setApproved(LocalDate.now());
             }
         }
