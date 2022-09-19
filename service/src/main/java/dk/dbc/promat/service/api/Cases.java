@@ -124,6 +124,7 @@ public class Cases {
                     CaseStatus.PENDING_ISSUES);
     Set<CaseStatus> INVALID_BUGGI_APPROVAL_STATES = EnumSet.of(CaseStatus.CLOSED, CaseStatus.DELETED, CaseStatus.REVERTED);
 
+    private static final Set<TaskFieldType> EXTERNAL_TASKS = EnumSet.of(TaskFieldType.METAKOMPAS, TaskFieldType.BUGGI);
     // Set of allowed states when approving tasks
     private static final Set<CaseStatus> APPROVE_TASKS_ALLOWED_STATES =
             EnumSet.of(CaseStatus.PENDING_EXTERNAL, CaseStatus.APPROVED);
@@ -1224,7 +1225,7 @@ public class Cases {
 
     private void approveTasks(PromatCase existing, boolean allTasks) {
         for (PromatTask task : new ArrayList<>(existing.getTasks())) {
-            if (task.getTaskFieldType() != TaskFieldType.METAKOMPAS || allTasks) {
+            if (!EXTERNAL_TASKS.contains(task.getTaskFieldType()) || allTasks) {
                 task.setApproved(LocalDate.now());
             }
         }
