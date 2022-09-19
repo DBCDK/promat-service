@@ -9,7 +9,7 @@ import java.util.function.Function;
 
 @SuppressWarnings("SpellCheckingInspection")
 public enum TaskFieldType {
-    BRIEF(PayCategory.BRIEF, false, false),
+    BRIEF(PayCategory.BRIEF, false, true),
     DESCRIPTION,
     EVALUATION,
     COMPARISON,
