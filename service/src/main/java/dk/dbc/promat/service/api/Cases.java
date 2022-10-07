@@ -793,18 +793,21 @@ public class Cases {
     }
 
     @DELETE
-    @Path("cases/{id}")
-    public Response deleteCase(@PathParam("id") final Integer id) {
+    @Path("cases/{ids}")
+    public Response deleteCase(@PathParam("ids") final String ids) {
         repository.getExclusiveAccessToTable(PromatCase.TABLE_NAME);
+        List<Integer> idList = Arrays.stream(ids.split(",")).map(String::trim).filter(id -> !id.isEmpty()).map(Integer::valueOf).collect(Collectors.toList());
+        for (Integer id : idList) {
+            // Fetch the case
+            PromatCase promatCase = entityManager.find(PromatCase.class, id);
+            if(promatCase == null) {
+                LOGGER.info("No case with id {}", id);
+                return ServiceErrorDto.NotFound("No such case", String.format("No case with id %d exists", id));
+            }
 
-        // Fetch the case
-        PromatCase promatCase = entityManager.find(PromatCase.class, id);
-        if(promatCase == null) {
-            LOGGER.info("No case with id {}", id);
-            return ServiceErrorDto.NotFound("No such case", String.format("No case with id %d exists", id));
+            promatCase.setStatus(CaseStatus.DELETED);
+
         }
-
-        promatCase.setStatus(CaseStatus.DELETED);
         return Response.ok().build();
     }
 
