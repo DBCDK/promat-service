@@ -1104,21 +1104,21 @@ public class CasesIT extends ContainerTest {
 
         // Reviewer has done his job and sets the case in state PENDING_APPROVAL
         CaseRequest requestDto = new CaseRequest().withStatus(CaseStatus.PENDING_APPROVAL);
-        Response response = postResponse("v1/api/cases/17", requestDto);
-        assertThat("status code", response.getStatus(), is(200));
+        postAndAssert("v1/api/cases/17", requestDto, OK);
 
         // Editor approves the case and puts the case in state APPROVED
         requestDto.setStatus(CaseStatus.APPROVED);
-        response = postResponse("v1/api/cases/17", requestDto);
-        assertThat("status code", response.getStatus(), is(200));
-
         // Check that status is now APPROVED
-        PromatCase updated = mapper.readValue(response.readEntity(String.class), PromatCase.class);
+        PromatCase updated = postAndAssert("v1/api/cases/17", requestDto, PromatCase.class, OK);
         assertThat("status", updated.getStatus(), is(CaseStatus.APPROVED));
         assertThat("approved", updated.getTasks().stream().filter(task -> task.getApproved() != null).count(), is(2L));
 
+        PromatCase unapproved = postAndAssert("v1/api/cases/17", requestDto.withStatus(CaseStatus.PENDING_ISSUES), PromatCase.class, OK);
+        Assertions.assertEquals(CaseStatus.PENDING_ISSUES, unapproved.getStatus(), "Status should now be PENDING_ISSUES");
+        Assertions.assertTrue(unapproved.getTasks().stream().allMatch(t -> t.getApproved() == null), "All internal task approvals should be gone");
+
         // Delete the case so that we dont mess up payments tests
-        response = deleteResponse("v1/api/cases/17");
+        Response response = deleteResponse("v1/api/cases/17");
         assertThat("status code", response.getStatus(), is(200));
     }
 
@@ -1567,17 +1567,12 @@ public class CasesIT extends ContainerTest {
         TagList tags = new TagList(new Tag("hest", 1));
         assertPromatThrows(NOT_FOUND, () -> promatServiceConnector.approveBuggiTask(pidPreamble + "12345678", tags));
 
-        CaseRequest noBuggiReq = makeRequest("92001234", new TaskDto()
-                .withTaskFieldType(TaskFieldType.BKM)
-                .withTaskType(TaskType.GROUP_1_LESS_THAN_100_PAGES));
+        CaseRequest noBuggiReq = makeRequest("92001234", TaskFieldType.BKM);
         PromatCase noBuggiCase = postAndAssert("v1/api/cases", noBuggiReq, PromatCase.class, CREATED);
         assertPromatThrows(NOT_FOUND, () -> promatServiceConnector.approveBuggiTask(pidPreamble + noBuggiCase.getPrimaryFaust(), tags));
         deleteResponse("v1/api/cases/" + noBuggiCase.getId());
 
-        CaseRequest cr = makeRequest("93001234", new TaskDto()
-                .withTaskFieldType(TaskFieldType.BUGGI)
-                .withTargetFausts(List.of())
-                .withTaskType(TaskType.GROUP_1_LESS_THAN_100_PAGES));
+        CaseRequest cr = makeRequest("93001234", TaskFieldType.BUGGI);
         PromatCase aCase = postAndAssert("v1/api/cases", cr, PromatCase.class, CREATED);
 
         PromatCase updatedCase = promatServiceConnector.approveBuggiTask(pidPreamble + aCase.getPrimaryFaust(), tags);
@@ -1585,7 +1580,12 @@ public class CasesIT extends ContainerTest {
                 .filter(t -> t.getTaskFieldType() == TaskFieldType.BUGGI)
                 .anyMatch(t -> t.getApproved() != null);
         Assertions.assertTrue(buggyApproved, "Buggi task should be approved");
-
+        updatedCase = postAndAssert("v1/api/cases/" + updatedCase.getId(), new CaseRequest().withReviewer(8).withStatus(CaseStatus.ASSIGNED), PromatCase.class, OK);
+        updatedCase = postAndAssert("v1/api/cases/" + updatedCase.getId(), new CaseRequest().withStatus(CaseStatus.PENDING_APPROVAL), PromatCase.class, OK);
+        updatedCase = postAndAssert("v1/api/cases/" + updatedCase.getId(), new CaseRequest().withStatus(CaseStatus.APPROVED), PromatCase.class, OK);
+        PromatCase unapproved = postAndAssert("v1/api/cases/" + updatedCase.getId(), new CaseRequest().withStatus(CaseStatus.PENDING_ISSUES), PromatCase.class, OK);
+        Assertions.assertTrue(unapproved.getTasks().stream().filter(t -> !t.getTaskFieldType().internalTask).allMatch(t -> t.getApproved() != null),
+                "Approved external tasks should not be unapproved");
         deleteResponse("v1/api/cases/" + updatedCase.getId());
 
         postAndAssert("v1/api/cases/" + aCase.getPrimaryFaust() + "/buggi", "{'tags': ['hest', 'ko']}"
@@ -1603,7 +1603,7 @@ public class CasesIT extends ContainerTest {
         }
     }
 
-    private CaseRequest makeRequest(String faust, TaskDto... tasks) {
+    private CaseRequest makeRequest(String faust, TaskFieldType... tasks) {
         return new CaseRequest()
                 .withTitle("Title for " + faust)
                 .withDetails("Details for " + faust)
@@ -1612,7 +1612,9 @@ public class CasesIT extends ContainerTest {
                 .withSubjects(Arrays.asList(3, 4))
                 .withDeadline(LocalDate.now().plus(10, ChronoUnit.DAYS).toString())
                 .withMaterialType(MaterialType.BOOK)
-                .withTasks(Arrays.stream(tasks).map(t -> t.withTargetFausts(List.of(faust))).collect(Collectors.toList()));
+                .withTasks(Arrays.stream(tasks)
+                    .map(tf -> new TaskDto().withTaskFieldType(tf).withTaskType(TaskType.GROUP_1_LESS_THAN_100_PAGES).withTargetFausts(List.of(faust)))
+                    .collect(Collectors.toList()));
     }
 
     private void assertStatus(Response response, Response.Status status) {
