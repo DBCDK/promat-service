@@ -646,9 +646,14 @@ public class Cases {
 
                 // If status is changing from PENDING_EXTERNAL to APPROVED, any metakompas tasks
                 // should also be approved
-                if( existing.getStatus() == CaseStatus.PENDING_EXTERNAL && status == CaseStatus.APPROVED ) {
+                if( existing.in(CaseStatus.PENDING_EXTERNAL) && status == CaseStatus.APPROVED ) {
                     LOGGER.info("Promoting metakompas task on case {} to APPROVED prematurely by user request", existing.getId());
                     approveTasks(existing, true);
+                }
+
+                if(existing.in(CaseStatus.APPROVED, CaseStatus.PENDING_EXTERNAL, CaseStatus.PENDING_MEETING)
+                        && status.in(CaseStatus.PENDING_ISSUES)) {
+                    unApproveTasks(existing);
                 }
 
                 // If status is changing from PENDING_APPROVAL to PENDING_ISSUES, this means that an editor
@@ -656,7 +661,7 @@ public class Cases {
                 // The case should then be approved again by the same editor - not reassigned to a new editor
                 // in the next mornings 'distribute cases' operation, so the editor field should not be cleared
                 // during the night.
-                if( existing.getStatus() == CaseStatus.PENDING_APPROVAL && status == CaseStatus.PENDING_ISSUES ) {
+                if( existing.in(CaseStatus.PENDING_APPROVAL) && status.in(CaseStatus.PENDING_ISSUES)) {
                     if( existing.getEditor() != null ) {
                         existing.setKeepEditor(true);
                     } else {
@@ -666,10 +671,8 @@ public class Cases {
 
                 // If status is changing from any inactive state, back to CREATED or ASSIGNED,
                 // then check that any faustnumber on the case is not in use on any active case
-                if( (existing.getStatus() == CaseStatus.CLOSED ||
-                        existing.getStatus() == CaseStatus.DELETED ||
-                        existing.getStatus() == CaseStatus.REVERTED) &&
-                        (status == CaseStatus.CREATED || status == CaseStatus.ASSIGNED)) {
+                if((existing.in(CaseStatus.CLOSED, CaseStatus.DELETED, CaseStatus.REVERTED) &&
+                        status.in(CaseStatus.CREATED, CaseStatus.ASSIGNED))) {
                     checkValidFaustNumbersOnExisting(existing);
                 }
 
@@ -1150,7 +1153,7 @@ public class Cases {
                 return CaseStatus.PENDING_CLOSE;
 
             case APPROVED:
-                if (existing.getStatus() != CaseStatus.PENDING_APPROVAL && existing.getStatus() != CaseStatus.PENDING_EXTERNAL) {
+                if (!existing.in(CaseStatus.PENDING_APPROVAL, CaseStatus.PENDING_EXTERNAL)) {
                     throw new ServiceErrorException("Not allowed to set status APPROVED when case is not in PENDING_APPROVAL or PENDING_EXTERNAL")
                             .withDetails("Attempt to set status of case to APPROVED when case is not in status PENDING_APPROVAL or PENDING_EXTERNAL")
                             .withHttpStatus(400)
@@ -1190,7 +1193,7 @@ public class Cases {
                 return CaseStatus.PENDING_ISSUES;
 
             case PENDING_EXPORT:
-                if (existing.getStatus() != CaseStatus.EXPORTED && existing.getStatus() != CaseStatus.PENDING_MEETING && existing.getStatus() != CaseStatus.APPROVED ) {
+                if (!existing.in(CaseStatus.PENDING_MEETING, CaseStatus.APPROVED, CaseStatus.EXPORTED)) {
                     throw new ServiceErrorException("Not allowed to set status PENDING_EXPORT when case is not in EXPORTED, PENDING_MEETING or APPROVED")
                             .withDetails("Attempt to set status of case to PENDING_EXPORT when case is not in status EXPORTED, PENDING_MEETING or APPROVED")
                             .withHttpStatus(400)
@@ -1231,6 +1234,10 @@ public class Cases {
                 task.setApproved(LocalDate.now());
             }
         }
+    }
+
+    private void unApproveTasks(PromatCase existing) {
+        existing.getTasks().stream().filter(t -> t.getTaskFieldType().internalTask).forEach(t -> t.setApproved(null));
     }
 
     private void approveBkmTasks(PromatCase existing) {

@@ -29,6 +29,7 @@ import javax.persistence.PrePersist;
 import javax.persistence.PreUpdate;
 import javax.persistence.Transient;
 import java.time.LocalDate;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
@@ -355,6 +356,11 @@ public class PromatCase {
 
     public CaseStatus getStatus() {
         return status;
+    }
+
+    @JsonIgnore
+    public boolean in(CaseStatus... statuses) {
+        return Arrays.asList(statuses).contains(status);
     }
 
     public void setStatus(CaseStatus status) {

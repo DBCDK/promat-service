@@ -5,6 +5,8 @@
 
 package dk.dbc.promat.service.persistence;
 
+import java.util.Arrays;
+
 public enum CaseStatus {
 
     /*
@@ -169,5 +171,9 @@ public enum CaseStatus {
 
         REVIEWS WILL STAY IN THIS STATE UNLESS LATER CHANGED TO CREATED. AN ASSIGNED REVIEWER MUST BE REMOVED
     */
-    DELETED,
+    DELETED;
+
+    public boolean in(CaseStatus... caseStatuses) {
+        return Arrays.asList(caseStatuses).contains(this);
+    }
 }
