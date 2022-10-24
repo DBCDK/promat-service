@@ -1237,7 +1237,10 @@ public class Cases {
     }
 
     private void unApproveTasks(PromatCase existing) {
-        existing.getTasks().stream().filter(t -> t.getTaskFieldType().internalTask).forEach(t -> t.setApproved(null));
+        List<PromatTask> tasks = existing.getTasks().stream().filter(t -> t.getTaskFieldType().internalTask).collect(Collectors.toList());
+        String ids = tasks.stream().map(t -> Integer.toString(t.getId())).collect(Collectors.joining(", "));
+        LOGGER.info("Removing approval for case {} tasks {}", existing.getId(), ids);
+        tasks.forEach(t -> t.setApproved(null));
     }
 
     private void approveBkmTasks(PromatCase existing) {
