@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="ISO-8859-1" standalone="yes"?>
+<promat_xml_collection>
+    <response date="2022-10-24T10:34:30.718974">
+        <request_arg type="faustno">22436406</request_arg>
+    </response>
+    <case caseid="500706">
+        <case_metadata>
+            <deadline>2022-10-31</deadline>
+            <casestate>Afvist</casestate>
+            <user>Michelle Hoffmann</user>
+        </case_metadata>
+        <bib_metadata>
+            <title>Far!</title>
+            <author>Jacobsen, Steffen</author>
+            <publisher>Kbh., Høst, 1999</publisher>
+            <faust>22436406</faust>
+            <weekcode/>
+        </bib_metadata>
+        <data>
+            <bkmeval>Illustrationerne er af for ringe kvalitet ; Historien/plottet hænger ikke sammen</bkmeval>
+            <brief faust="22436406"/>
+            <subjterm faust="22436406"/>
+        </data>
+    </case>
+</promat_xml_collection>

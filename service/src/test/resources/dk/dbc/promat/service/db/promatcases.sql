@@ -1,4 +1,27 @@
--- existing cases
+-- data for testDbckatXmlViewMultipleBKMReasons test
+insert into promatcase( id, title, details, primaryFaust, relatedFausts, reviewer_id, created, deadline, assigned, status,
+                       materialtype, editor_id, weekcode, author, creator_id, publisher, trimmedWeekcode, fulltextlink, remindersent, codes, keepeditor)
+               values (500706, 'Far!', '', '22436406', '[]', 10001, '2022-10-20', '2022-10-31', '2022-10-20', 'REJECTED',
+                       'BOOK', 10, null, 'Jacobsen, Steffen', 13, 'Kbh., Høst, 1999', null, null, null, '["DBF199921", "SFD199921"]' , false );
+
+insert into promattask(id, tasktype, created, paycategory, approved, payed, data, targetfausts, taskfieldtype, recordid)
+ values (504433, 'GROUP_1_LESS_THAN_100_PAGES', '2022-10-20', 'BRIEF'                      , null, null, '', '["22436406"]', 'BRIEF'          , null),
+        (504434, 'GROUP_1_LESS_THAN_100_PAGES', '2022-10-20', 'GROUP_1_LESS_THAN_100_PAGES', null, null, '', '["22436406"]', 'EVALUATION'     , null),
+        (504435, 'GROUP_1_LESS_THAN_100_PAGES', '2022-10-20', 'GROUP_1_LESS_THAN_100_PAGES', null, null, '', '["22436406"]', 'DESCRIPTION'    , null),
+        (504436, 'GROUP_1_LESS_THAN_100_PAGES', '2022-10-20', 'GROUP_1_LESS_THAN_100_PAGES', null, null, '', '["22436406"]', 'DESCRIPTION'    , null),
+        (504437, 'GROUP_1_LESS_THAN_100_PAGES', '2022-10-20', 'GROUP_1_LESS_THAN_100_PAGES', null, null, '', '["22436406"]', 'DESCRIPTION'    , null),
+        (504438, 'GROUP_1_LESS_THAN_100_PAGES', '2022-10-20', 'BKM'                        , null, null,
+         'Illustrationerne er af for ringe kvalitet\nHistorien/plottet hænger ikke sammen' , '["22436406"]', 'BKM', '');
+
+insert into casetasks(task_id, case_id)
+values (504433, 500706),
+       (504434, 500706),
+       (504435, 500706),
+       (504436, 500706),
+       (504437, 500706),
+       (504438, 500706);
+
+-- data for other cases
 insert into promatcase(id, title, details, primaryFaust, relatedFausts, reviewer_id, editor_id, created, deadline, assigned, status, materialType, weekcode, trimmedWeekcode, creator_id, author, publisher, codes)
 values (1, 'Title for 001111', 'Details for 001111', '001111',    '[]', NULL, NULL, '2020-11-11', '2020-12-11', NULL,         'CREATED',          'BOOK',  'BKM202101', '202101', 13, '',                  '', '[]'),
        (2, 'Title for 004444', 'Details for 004444', '004444',    '[]', NULL, NULL, '2020-11-11', '2020-12-11', NULL,         'CREATED',          'MOVIE', 'DBF202049', '202049', 13, '',                  '', '[]'),

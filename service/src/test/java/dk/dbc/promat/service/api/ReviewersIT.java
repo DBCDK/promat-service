@@ -204,9 +204,12 @@ public class ReviewersIT extends ContainerTest {
         final Reviewer reviewer15 = new Reviewer();
         loadReviewer15(reviewer15, ReviewerView.Summary.class);
 
+        final Reviewer reviewer10001 = new Reviewer();
+        loadReviewer10001(reviewer10001, ReviewerView.Summary.class);
+
         final ReviewerList<Reviewer> expected = new ReviewerList<>()
                 .withReviewers(List.of(reviewer1, reviewer2, reviewer3, reviewer4, reviewer5, reviewer6, reviewer7,
-                        reviewer8, reviewer9, reviewer15));
+                        reviewer8, reviewer9, reviewer15, reviewer10001));
 
         final Response response = getResponse("v1/api/reviewers");
 
@@ -232,7 +235,7 @@ public class ReviewersIT extends ContainerTest {
         ReviewerList<ReviewerWithWorkloads> reviewers = response.readEntity(new GenericType<>() {});
         Map<Integer, Integer> workload = reviewers.getReviewers().stream().collect(Collectors.toUnmodifiableMap(PromatUser::getId, r -> (int)r.getWeekAfterWorkload()));
         Map<Integer, Integer> expected = Map.ofEntries(entry(1, 3), entry(2, 0), entry(3, 0), entry(4, 0),
-                entry(5, 0), entry(6, 0), entry(7, 0), entry(8, 0), entry(9, 0), entry(15, 0));
+                entry(5, 0), entry(6, 0), entry(7, 0), entry(8, 0), entry(9, 0), entry(15, 0), entry(10001, 0));
         Assertions.assertEquals(expected, workload, "Week after workload should match our expectations");
         ReviewerWithWorkloads expected1 = new ReviewerWithWorkloads()
                 .withWeekWorkload(0)
@@ -713,6 +716,34 @@ public class ReviewersIT extends ContainerTest {
         }
         reviewer.setActiveChanged(Date.from(Instant.ofEpochSecond(1629900636)));
     }
+
+    private void loadReviewer10001(Reviewer reviewer, Class view) {
+        reviewer.setId(10001);
+        reviewer.setActive(true);
+        reviewer.setFirstName("Michelle");
+        reviewer.setLastName("Hoffmann");
+        reviewer.setInstitution("Her");
+        reviewer.setPaycode(10001);
+        reviewer.setHiatusBegin(LocalDate.parse("2021-08-02"));
+        reviewer.setHiatusEnd(LocalDate.parse("2021-08-16"));
+        reviewer.setAccepts(List.of(
+                Reviewer.Accepts.BOOK));
+        reviewer.setSubjects(List.of());
+        reviewer.setNote("");
+        reviewer.setCapacity(null);
+        reviewer.setSubjectNotes(List.of());
+        if( view == ReviewerView.Reviewer.class) {
+            reviewer.setCulrId(null);
+            reviewer.setEmail(null);
+            reviewer.setAddress(null);
+            reviewer.setPhone(null);
+            reviewer.setPrivateEmail(null);
+            reviewer.setPrivateAddress(null);
+            reviewer.setPrivatePhone(null);
+        }
+        reviewer.setActiveChanged(Date.from(Instant.ofEpochSecond(1629900636)));
+    }
+
     private void loadReviewer15(Reviewer reviewer, Class view) {
         reviewer.setId(15);
         reviewer.setActive(false);

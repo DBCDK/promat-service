@@ -329,7 +329,7 @@ public class CasesIT extends ContainerTest {
         // Cases with status REJECTED
         fetched = promatServiceConnector.listCases(new ListCasesParams()
                 .withStatus(CaseStatus.REJECTED));
-        assertThat("Number of cases with status CREATED", fetched.getNumFound(), is(0));
+        assertThat("Number of cases with status CREATED", fetched.getNumFound(), is(1));
 
         // Cases with status CLOSED or EXPORTED
         fetched = promatServiceConnector.listCases(new ListCasesParams()
@@ -1433,6 +1433,21 @@ public class CasesIT extends ContainerTest {
         } catch(PromatServiceConnectorUnexpectedStatusCodeException e) {
             assertThat("must return 404 NOT FOUND", e.getStatusCode(), is(404));
         }
+    }
+
+    @Test
+    public void testDbckatXmlViewMultipleBKMReasons() throws IOException, PromatServiceConnectorException {
+
+        // Fetch the xml view for the primary faustnumber
+        String expected = new String(Files.readAllBytes(Path.of("src/test/resources/__files/case-view-for-id-500706-22436406.xml")), StandardCharsets.ISO_8859_1);
+        String actual = promatServiceConnector.getCaseview("22436406", "XML", true, StandardCharsets.ISO_8859_1);
+
+        // Not checking that the documents are strictly equal comparing xml output, but it does
+        // check that all text elements contains the correct information. Attributes is not
+        // checked, but they are not important (at least not for dbckat)
+        String expectedText = Jsoup.parse(expected, StandardCharsets.ISO_8859_1.name()).normalise().text();
+        String actualText = Jsoup.parse(actual).normalise().text();
+        assertThat("case view is correct", expectedText.equals(actualText));
     }
 
     @Test
