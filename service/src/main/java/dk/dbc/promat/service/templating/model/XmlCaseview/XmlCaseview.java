@@ -81,6 +81,7 @@ public class XmlCaseview {
 
     public XmlCaseview from(String hostname, String requestedFaust, PromatCase promatCase) throws ServiceErrorException {
         String bkmeval = GetTaskDataForFaust(requestedFaust, TaskFieldType.BKM, promatCase.getTasks());
+        bkmeval = bkmeval.replace("\\n", " ; ");
         String brief = GetTaskDataForFaust(requestedFaust, TaskFieldType.BRIEF, promatCase.getTasks());
         String description = GetTaskDataForFaust(requestedFaust, TaskFieldType.DESCRIPTION, promatCase.getTasks());
         String evaluation = GetTaskDataForFaust(requestedFaust, TaskFieldType.EVALUATION, promatCase.getTasks());

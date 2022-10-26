@@ -51,3 +51,12 @@ values  (8, 'REVIEWER', true, '88', 'Søren', 'Sørensen', 'soren@sorensen.dk', 
 insert into reviewersubjects(subject_id, reviewer_id) values(5,8);
 insert into reviewersubjects(subject_id, reviewer_id) values(5,9);
 insert into reviewersubjects(subject_id, reviewer_id) values(5,15);
+
+-- This reviewer is used for testDbckatXmlViewMultipleBKMReasons testing. Hands off.
+insert into promatuser(id, role, active, culrid, firstname, lastname,
+                       email, institution, paycode, hiatus_begin, hiatus_end,
+                       accepts, note, phone, capacity, privateSelected, activeChanged, deactivated)
+               values (10001, 'REVIEWER', true, '11f2b775-dc2c-42da-bf45-0f906039a931', 'Michelle', 'Hoffmann',
+                       'promat-gui-aaaadjsmda6dkoc33u62545hvy@dbcdk.slack.com,jbr@dbc.dk', 'Her', 10001, '2021-08-02', '2021-08-16',
+                       '["BOOK"]', '', '', null, null, CURRENT_TIMESTAMP, null);
+
