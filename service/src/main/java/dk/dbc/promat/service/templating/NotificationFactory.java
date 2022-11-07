@@ -26,11 +26,15 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import javax.ejb.Stateless;
 import javax.inject.Inject;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
@@ -179,34 +183,25 @@ public class NotificationFactory {
     }
 
     private List<String> collectFausts(PromatCase promatCase) {
-        Set<String> fausts = new HashSet<>(Set.of(promatCase.getPrimaryFaust()));
-        List<PromatTask> tasks = promatCase.getTasks();
-        if (tasks != null && !tasks.isEmpty()) {
-            for (PromatTask task : tasks) {
-                List<String> taskFausts = task.getTargetFausts();
-                if (taskFausts != null && !taskFausts.isEmpty()) {
-                    fausts.addAll(taskFausts);
-                }
-            }
-
+        String faust = promatCase.getPrimaryFaust();
+        if(promatCase.getTasks() != null) {
+            return Stream.concat(Stream.of(faust),
+                    promatCase.getTasks().stream()
+                            .map(PromatTask::getTargetFausts)
+                            .filter(Objects::nonNull)
+                            .flatMap(Collection::stream)
+            ).distinct().sorted().collect(Collectors.toList());
         }
-        return fausts.stream().sorted().collect(Collectors.toList());
+        return List.of(faust);
     }
 
     private String compileMailAddressesForReviewerMails(Reviewer reviewer) throws ValidateException {
-        List<String> addresses = new ArrayList<>();
-        if (reviewer.getEmail() != null && !reviewer.getEmail().isBlank()) {
-            addresses.add(reviewer.getEmail());
-        }
-        if (reviewer.getPrivateEmail() != null && !reviewer.getPrivateEmail().isBlank()) {
-            addresses.add(reviewer.getPrivateEmail());
-        }
-        
+        Predicate<String> isValid = s -> Objects.nonNull(s) && !s.isBlank() && !s.equals("-");
+        List<String> addresses = Stream.of(reviewer.getEmail(), reviewer.getPrivateEmail()).filter(isValid).collect(Collectors.toCollection(ArrayList::new));
         if (addresses.isEmpty()) {
-            throw new ValidateException("Email address for reviewer '%s', and private email " +
-                    "addresses cannot both be unassigned.");
+            throw new ValidateException("Email address for reviewer " + reviewer.getId() + ", and private email addresses cannot both be unassigned.");
         }
-        if (CC_MAILADDRESS != null && !CC_MAILADDRESS.isBlank() && !CC_MAILADDRESS.equals("-")) {
+        if (isValid.test(CC_MAILADDRESS)) {
             addresses.add(CC_MAILADDRESS);
         }
         return String.join(",", addresses);

@@ -84,11 +84,15 @@ public abstract class ContainerTest extends IntegrationTest {
 
     @SuppressWarnings("UnusedReturnValue")
     public <T> String postAndAssert(String path, T body, Response.Status expectedStatus) {
-        return postAndAssert(path, body, String.class, expectedStatus);
+        return postAndAssert(path, body, null, String.class, expectedStatus);
     }
 
     public <T, R> R postAndAssert(String path, T body, Class<R> responseClass, Response.Status expectedStatus) {
-        try (Response response = postResponse(path, body)) {
+        return postAndAssert(path, body, null, responseClass, expectedStatus);
+    }
+
+    public <T, R> R postAndAssert(String path, T body, String authToken, Class<R> responseClass, Response.Status expectedStatus) {
+        try (Response response = postResponse(path, body, authToken)) {
             Assertions.assertEquals(expectedStatus, response.getStatusInfo().toEnum(), "Response to call " + path
                     + " was expected to be: " + expectedStatus);
             return response.readEntity(responseClass);

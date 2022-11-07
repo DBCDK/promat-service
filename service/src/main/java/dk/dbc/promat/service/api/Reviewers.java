@@ -116,6 +116,11 @@ public class Reviewers {
                     "Field 'paycode' must be supplied when creating a new reviewer");
         }
 
+        if(reviewerRequest.getEmail() == null && reviewerRequest.getPrivateEmail() == null) {
+            return ServiceErrorDto.InvalidRequest("Missing required field in the request data",
+                    "Field 'email' or 'private email' must be supplied when creating a new reviewer");
+        }
+
         final String culrId;
         try {
             culrId = culrHandler.createCulrAccount(cprNumber, String.valueOf(paycode));
@@ -169,7 +174,7 @@ public class Reviewers {
         if (deadline == null) {
             final TypedQuery<Reviewer> query = entityManager.createNamedQuery(
                     Reviewer.GET_ALL_REVIEWERS_NAME, Reviewer.class);
-            ReviewerList listOfReviewers = new ReviewerList<>()
+            ReviewerList<Reviewer> listOfReviewers = new ReviewerList<>()
                     .withReviewers(query.getResultList());
             return Response.ok(objectMapper.writerWithView(ReviewerView.Summary.class).writeValueAsString(listOfReviewers))
                     .build();
