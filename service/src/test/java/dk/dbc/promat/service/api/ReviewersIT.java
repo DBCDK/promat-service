@@ -61,15 +61,23 @@ public class ReviewersIT extends ContainerTest {
                 .withLastName("Doe")
                 .withEmail("john@doe.com");
 
-        final Response response = postResponse("v1/api/reviewers", reviewerRequest, "1-2-3-4-5");
-        assertThat("response status", response.getStatus(), is(201));
+        Reviewer reviewer = postAndAssert("v1/api/reviewers", reviewerRequest, "1-2-3-4-5", Reviewer.class, Response.Status.CREATED);
 
-        final Reviewer reviewer = mapper.readValue(response.readEntity(String.class), Reviewer.class);
         assertThat("reviewer entity", reviewer.getCulrId(), is("8ed780d6-46eb-4706-a4dc-a59f412d16c0"));
 
         // Example log entry:
         // [docker-java-stream-2022862423] INFO dk.dbc.promat.service.ContainerTest - STDOUT: {"timestamp":"2021-08-04T23:41:34.661920+02:00","sys_event_type":"audit","client_ip":["172.17.0.1"],"app_name":"PROMAT","action":"CREATE","accessing_user":{"token":"1-2-3-4-5"},"owning_user":"6666/190976","PROMAT":{"Created new user":"reviewers","Response":"200"}}
         assertThat("auditlog entry", promatServiceContainer.getLogs().contains("{\"Created new user\":\"reviewers\",\"Response\":\"201\"}"));
+    }
+
+    @Test
+    void createReviewerWithoutEmail() {
+        ReviewerRequest reviewerRequest = new ReviewerRequest()
+                .withCprNumber("2407776666")
+                .withPaycode(6666)
+                .withFirstName("John")
+                .withLastName("Doe");
+        postAndAssert("v1/api/reviewers", reviewerRequest, "1-2-3-4-5", String.class, Response.Status.BAD_REQUEST);
     }
 
     @Test
