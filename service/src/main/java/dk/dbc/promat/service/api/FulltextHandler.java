@@ -5,6 +5,9 @@
 
 package dk.dbc.promat.service.api;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -22,6 +25,7 @@ import java.util.regex.Pattern;
  * This class is not thread safe.
  */
 public class FulltextHandler {
+    private static final Logger LOGGER = LoggerFactory.getLogger(FulltextHandler.class);
     static final int BUFFER_SIZE = 8192;
 
     private static final Pattern CONTENT_DISPOSITION_FILENAME_PATTERN = Pattern.compile(
@@ -33,9 +37,17 @@ public class FulltextHandler {
     private final String filename;
 
     public FulltextHandler(String fulltextLink) {
-        this.fulltextLink = fulltextLink;
+        LOGGER.info("New FulltextHandler with link: {}", fulltextLink);
+        if (fulltextLink.startsWith("http://dmat.dbc.dk")) {
+            LOGGER.info("Rewriting link from old dmat");
+            this.fulltextLink = fulltextLink.replace("http://dmat.dbc.dk", "http://service.dmat.dbc.dk");
+        } else {
+            this.fulltextLink = fulltextLink;
+        }
+        LOGGER.info("Using fulltextlink: {}", this.fulltextLink);
+
         var client = HttpClient.newBuilder()
-                .version(HttpClient.Version.HTTP_1_1).followRedirects(HttpClient.Redirect.ALWAYS)
+                .version(HttpClient.Version.HTTP_1_1)
                 .build();
 
         var request = HttpRequest.newBuilder()
