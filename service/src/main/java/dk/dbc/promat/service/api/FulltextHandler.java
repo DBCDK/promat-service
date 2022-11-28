@@ -54,13 +54,13 @@ public class FulltextHandler {
                 .build();
 
         var request = HttpRequest.newBuilder()
-                .uri(URI.create(fulltextLink))
+                .uri(URI.create(this.fulltextLink))
                 .build();
 
         try {
             httpResponse = client.send(request, HttpResponse.BodyHandlers.ofInputStream());
         } catch (IOException | InterruptedException e) {
-            throw new IllegalStateException("Unable to access " + fulltextLink, e);
+            throw new IllegalStateException("Unable to access " + this.fulltextLink, e);
         }
         filename = getFilenameFromResponseHeaders(httpResponse);
     }
