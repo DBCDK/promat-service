@@ -38,12 +38,11 @@ public class FulltextHandler {
 
     public FulltextHandler(String fulltextLink) {
 
-        // Todo: New dmat does not work, instead this handler just returns the url - to be fixed
-        // Todo: This is a temporary workaround 28/11-2022 HWHA
+        // Rewrite old style dmat links
         LOGGER.info("New FulltextHandler with link: {}", fulltextLink);
         if (fulltextLink.startsWith("http://dmat.dbc.dk")) {
             LOGGER.info("Rewriting link from old dmat");
-            this.fulltextLink = fulltextLink.replace("http://dmat.dbc.dk", "http://dmat.metascrum-prod.svc.cloud.dbc.dk");
+            this.fulltextLink = fulltextLink.replace("http://dmat.dbc.dk", "http://service.dmat.dbc.dk");
         } else {
             this.fulltextLink = fulltextLink;
         }
