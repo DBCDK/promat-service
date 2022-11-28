@@ -35,7 +35,7 @@ public class FulltextHandler {
     public FulltextHandler(String fulltextLink) {
         this.fulltextLink = fulltextLink;
         var client = HttpClient.newBuilder()
-                .version(HttpClient.Version.HTTP_1_1)
+                .version(HttpClient.Version.HTTP_1_1).followRedirects(HttpClient.Redirect.ALWAYS)
                 .build();
 
         var request = HttpRequest.newBuilder()
