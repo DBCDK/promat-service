@@ -545,8 +545,9 @@ public class Cases {
             LOGGER.warn("Pid {} was not found for request Buggi task approval", pid);
             return Response.status(NOT_FOUND).type(MediaType.APPLICATION_JSON_TYPE).entity(mapper.writeValueAsString(new ServiceErrorDto().withCode(ServiceErrorCode.FAILED))).build();
         }
+        // Todo: We lack a proper way to "store" the presence of BUGGI data, if the BUGGI task has more than one faust.
         return promatCase.getTasks().stream()
-                .filter(t -> t.getTaskFieldType() == TaskFieldType.BUGGI)
+                .filter(t -> t.getTaskFieldType() == TaskFieldType.BUGGI && t.getTargetFausts().contains(faust))
                 .map(t -> setApproveBuggiTask(t, tagList))
                 .reduce((t1, t2) -> t1)
                 .map(t -> Response.ok().entity(asSummary(promatCase)).build())
