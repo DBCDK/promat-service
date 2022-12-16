@@ -1607,6 +1607,70 @@ public class CasesIT extends ContainerTest {
                 .replace('\'', '"'), BAD_REQUEST);
     }
 
+    @Test
+    public void testCaseApprovalWithMoreThanOneBuggiTask() throws PromatServiceConnectorException {
+        String descriptor = "870170-BASIS:";
+        String firstFaust = "90001235";
+        String secondFaust = "90001236";
+        CaseRequest dto = new CaseRequest()
+                .withTitle("Title for " +firstFaust)
+                .withDetails("Details for "+firstFaust)
+                .withPrimaryFaust(firstFaust)
+                .withEditor(10)
+                .withSubjects(Arrays.asList(3, 4))
+                .withDeadline("2021-04-01")
+                .withMaterialType(MaterialType.BOOK)
+                .withTasks(Arrays.asList(
+                        new TaskDto()
+                                .withTaskType(TaskType.GROUP_1_LESS_THAN_100_PAGES)
+                                .withTaskFieldType(TaskFieldType.BRIEF)
+                                .withTargetFausts(List.of(firstFaust))
+                                .withData("Brief for " + firstFaust),
+                        new TaskDto()
+                                .withTaskType(TaskType.GROUP_1_LESS_THAN_100_PAGES)
+                                .withTaskFieldType(TaskFieldType.BRIEF)
+                                .withTargetFausts(List.of(secondFaust))
+                                .withData("Brief for " + secondFaust),
+                        new TaskDto()
+                                .withTaskType(TaskType.GROUP_1_LESS_THAN_100_PAGES)
+                                .withTaskFieldType(TaskFieldType.BKM)
+                                .withTargetFausts(List.of(firstFaust)),
+                        new TaskDto()
+                                .withTaskType(TaskType.GROUP_1_LESS_THAN_100_PAGES)
+                                .withTaskFieldType(TaskFieldType.BUGGI)
+                                .withTargetFausts(List.of(firstFaust)),
+                        new TaskDto()
+                                .withTaskType(TaskType.GROUP_1_LESS_THAN_100_PAGES)
+                                .withTaskFieldType(TaskFieldType.BUGGI)
+                                .withTargetFausts(List.of(secondFaust))
+                                ));
+        PromatCase aCase = postAndAssert("v1/api/cases", dto, PromatCase.class, CREATED);
+
+        // Register first faust, and ensure that case ends in 'PENDING_EXTERNAL' state, with only first buggi registered.
+        postAndAssert("v1/api/cases/" + aCase.getId(), new CaseRequest().withReviewer(8).withStatus(CaseStatus.ASSIGNED), PromatCase.class, OK);
+        postAndAssert("v1/api/cases/" + aCase.getId(), new CaseRequest().withStatus(CaseStatus.PENDING_APPROVAL), PromatCase.class, OK);
+        promatServiceConnector.approveBuggiTask(descriptor + firstFaust, new TagList(new Tag("some tag", 0)));
+        aCase = postAndAssert("v1/api/cases/" + aCase.getId(), new CaseRequest().withStatus(CaseStatus.APPROVED), PromatCase.class, OK);
+        assertThat("Status", aCase.getStatus(), is(CaseStatus.PENDING_EXTERNAL));
+        assertThat("Only first buggi registered",
+                aCase.getTasks().stream()
+                .filter(promatTask -> promatTask.getTaskFieldType() == TaskFieldType.BUGGI)
+                .filter(promatTask -> promatTask.getApproved() == null).count(),
+                is(1L));
+
+        // Approve from PENDING_EXTERNAL status with all buggi's now in place. Now result should be approved.
+        // And no open buggi's.
+        promatServiceConnector.approveBuggiTask(descriptor + secondFaust, new TagList(new Tag("some tag", 0)));
+        aCase = postAndAssert("v1/api/cases/" + aCase.getId(), new CaseRequest().withStatus(CaseStatus.APPROVED), PromatCase.class, OK);
+        assertThat("Status", aCase.getStatus(), is(CaseStatus.APPROVED));
+        assertThat("Both buggi tasks registered",
+                aCase.getTasks().stream()
+                        .filter(promatTask -> promatTask.getTaskFieldType() == TaskFieldType.BUGGI)
+                        .filter(promatTask -> promatTask.getApproved() == null).count(),
+                is(0L));
+        deleteResponse("v1/api/cases/" + aCase.getId());
+    }
+
     private void assertPromatThrows(Response.Status status, Callable<PromatCase> callable) {
         try {
             callable.call();
