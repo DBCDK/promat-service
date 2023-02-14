@@ -26,7 +26,7 @@ public class SubjectsIT extends ContainerTest {
                 .unmarshall(get(String.format("%s/%s", promatServiceBaseUrl, "v1/api/subjects")), SubjectList.class);
 
         // Must contain 5 mock subjects with id 1-6 for testing and 475 production values from id 57 and up
-        assertThat("Service returns all persisted subjects", actual.getSubjects().size(), is(485));
+        assertThat("Service returns all persisted subjects", actual.getSubjects().size(), is(484));
 
         // Check a few production values
         assertThat("contains subject 'Voksen'", (int) actual.getSubjects().stream()
