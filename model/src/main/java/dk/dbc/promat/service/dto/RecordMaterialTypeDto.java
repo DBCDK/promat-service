@@ -37,4 +37,12 @@ public class RecordMaterialTypeDto {
         this.specificType = specificType;
         return this;
     }
+
+    @Override
+    public String toString() {
+        return "RecordMaterialTypeDto{" +
+                "materialType=" + materialType +
+                ", specificType='" + specificType + '\'' +
+                '}';
+    }
 }

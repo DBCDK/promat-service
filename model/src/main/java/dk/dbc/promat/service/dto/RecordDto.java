@@ -68,4 +68,13 @@ public class RecordDto implements Dto {
     public int hashCode() {
         return Objects.hash(faust, isPrimary, types);
     }
+
+    @Override
+    public String toString() {
+        return "RecordDto{" +
+                "faust='" + faust + '\'' +
+                ", isPrimary=" + isPrimary +
+                ", types=" + types +
+                '}';
+    }
 }

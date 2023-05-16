@@ -26,6 +26,7 @@ import dk.dbc.promat.service.persistence.PromatTask;
 import dk.dbc.promat.service.persistence.Subject;
 import dk.dbc.promat.service.persistence.TaskFieldType;
 import dk.dbc.promat.service.persistence.TaskType;
+import org.eclipse.jetty.http.HttpStatus;
 import org.hamcrest.core.IsNull;
 import org.jsoup.Jsoup;
 import org.junit.jupiter.api.Assertions;
@@ -1249,36 +1250,25 @@ public class CasesIT extends ContainerTest {
     }
 
     @Test
-    void addDraftOrUpdateExistingCase() throws JsonProcessingException, PromatServiceConnectorException {
+    void addDraft() throws PromatServiceConnectorException {
         final CaseRequest caseRequest = new CaseRequest()
                 .withPrimaryFaust("11111111")
-                .withTitle("Title for draft - print")
+                .withTitle("Title for draft - new ebook")
                 .withMaterialType(MaterialType.BOOK)
                 .withFulltextLink("link");
 
-
         final PromatCase caseCreated = promatServiceConnector.createDraft(caseRequest);
-
         assertThat("case created", promatServiceConnector.getCase(caseCreated.getId()).getTitle(),
                 is(caseRequest.getTitle()));
 
-        final CaseRequest matchingCaseRequest = new CaseRequest()
-                .withPrimaryFaust("22222222")
-                .withTitle("Title for draft - ebook")
+        final CaseRequest newCaseRequest = new CaseRequest()
+                .withPrimaryFaust("11111111")
+                .withTitle("Title for draft - existing ebook")
                 .withMaterialType(MaterialType.BOOK)
-                .withFulltextLink("updated link");
+                .withFulltextLink("link");
 
-        final Response caseUpdatedResponse = postResponse("v1/api/drafts", matchingCaseRequest);
-        assertThat("case updated status code", caseUpdatedResponse.getStatus(), is(200));
-        assertThat("case updated",
-                mapper.readValue(caseUpdatedResponse.readEntity(String.class), PromatCase.class).getId(),
-                is(caseCreated.getId()));
-
-        final PromatCase caseUpdated = promatServiceConnector.getCase(caseCreated.getId());
-        assertThat("fulltext link updated", caseUpdated.getFulltextLink(),
-                is(matchingCaseRequest.getFulltextLink()));
-        assertThat("title not updated", caseUpdated.getTitle(),
-                is(caseCreated.getTitle()));
+        final Response caseUpdatedResponse = postResponse("v1/api/drafts", newCaseRequest);
+        assertThat("case exists status code", caseUpdatedResponse.getStatus(), is(HttpStatus.CONFLICT_409));
     }
 
     private PromatCase createCaseWithAuthorAndWeekCode(Integer someUniqueIdNumber, String author, String weekCode) {
@@ -2429,7 +2419,7 @@ public class CasesIT extends ContainerTest {
                 cases.getCases().stream().map(PromatCase::getId).collect(Collectors.toList()).contains(created.getId()));
 
         // Query by isbn 9788764432589: Expected is at least the case just created.
-        response = getResponse("v1/api/cases", Map.of("id", "9788764432589"));
+        response = getResponse("v1/api/cases", Map.of("id", "9788776073770"));
         cases = mapper.readValue(response.readEntity(String.class), CaseSummaryList.class);
        
         assertThat(cases.getNumFound(), is(greaterThanOrEqualTo(1)));
