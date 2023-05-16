@@ -62,8 +62,6 @@ public class RecordsResolver {
                     String sfa = searchObject.getCollection().getRecord().getDatafield("009").getSubfield("a").getValue();
                     String sfg = searchObject.getCollection().getRecord().getDatafield("009").getSubfield("g").getValue();
 
-                    LOGGER.info("faust={} agency={} sfa={} sfg={}", faust, agency, sfa, sfg);
-
                     if(!faust.isEmpty() && !agency.isEmpty()) {
                         LOGGER.info("Adding faust {} in agency {}", faust, agency);
                         relatedByWork.add(new RecordDto()
@@ -73,9 +71,8 @@ public class RecordsResolver {
                     }
                 }
             }
-            LOGGER.info("{}", relatedByWork);
 
-            LOGGER.info("Id resolved into a list of {} manifestations related by work", relatedByWork.size());
+            LOGGER.info("Id resolved into a list of {} manifestation", relatedByWork.size());
             return new RecordsListDto()
                     .withNumFound(relatedByWork.size())
                     .withRecords(relatedByWork);
