@@ -838,6 +838,7 @@ public class Cases {
     public Response addDraftOrUpdateExistingCase(CaseRequest caseRequest) throws Exception {
         LOGGER.info("POST /drafts: {}", caseRequest);
 
+        // Check for missing required information
         if (caseRequest.getPrimaryFaust() == null || caseRequest.getPrimaryFaust().isBlank()) {
             return ServiceErrorDto.InvalidRequest("Missing required field in the request data",
                     "Field 'primaryFaust' must be supplied when creating a new case draft");
@@ -847,65 +848,9 @@ public class Cases {
                     "Drafts cannot be created with an assigned reviewer");
         }
 
-        final Dto dto = recordsResolver.resolveId(caseRequest.getPrimaryFaust());
-        if (!(dto instanceof RecordsListDto)) {
-            return Response.status(400).entity(dto).build();
-        }
-
-        final RecordsListDto recordsList = (RecordsListDto) dto;
-        final List<RecordDto> relatedRecords = recordsList.getNumFound() == 0 ?
-                Collections.emptyList() : recordsList.getRecords();
-        final Set<PromatCase> existingCases = new HashSet<>();
-
-        for (RecordDto relatedRecord : relatedRecords) {
-            // Lookup existing open cases...
-            final String faust = relatedRecord.getFaust();
-            if (faust != null && !faust.isBlank()) {
-                final CaseSummaryList caseList = caseSearch.listCases(new ListCasesParams()
-                        .withFaust(relatedRecord.getFaust()));
-                if (caseList.getNumFound() > 0) {
-                    existingCases.addAll(caseList.getCases());
-                }
-            }
-        }
-
-        if (existingCases.isEmpty()) {
-            // No matching cases found, create new case draft...
-
-            // force case draft status to CREATED
-            caseRequest.setStatus(CaseStatus.CREATED);
-            return createCase(caseRequest);
-        }
-
-        if (existingCases.size() > 1) {
-            final ServiceErrorDto error = new ServiceErrorDto()
-                    .withCode(ServiceErrorCode.FAUST_IN_USE)
-                    .withCause(String.format("multiple case candidates found for faust number %s",
-                            caseRequest.getPrimaryFaust()))
-                    .withDetails(existingCases.stream()
-                            .map(PromatCase::getId)
-                            .collect(Collectors.toList())
-                            .toString());
-            return Response.status(409).entity(error).build();
-        }
-
-        // Update existing case...
-
-        repository.getExclusiveAccessToTable(PromatCase.TABLE_NAME);
-
-        final PromatCase existingCase = existingCases.iterator().next();
-
-        // Race condition check
-        if (!Faustnumbers.checkNoOpenCaseWithFaust(entityManager, existingCase.getId(), caseRequest.getPrimaryFaust())) {
-            return ServiceErrorDto.FaustInUse(String.format(
-                    "Case with faust number %s already exists", caseRequest.getPrimaryFaust()));
-        }
-
-        entityManager.refresh(existingCase);
-        existingCase.setFulltextLink(caseRequest.getFulltextLink());
-        LOGGER.info("Updated existing case {}", existingCase.getId());
-
-        return Response.status(200).entity(asSummary(existingCase)).build();
+        // force case draft status to CREATED
+        caseRequest.setStatus(CaseStatus.CREATED);
+        return createCase(caseRequest);
     }
 
     public Reviewer resolveReviewer(Integer reviewerId) throws ServiceErrorException {
