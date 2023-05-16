@@ -53,7 +53,7 @@ public class RecordsResolver {
             }
             LOGGER.info("Got {} opensearch results ", result.hitCount);
 
-            List<RecordDto> relatedByWork = new ArrayList<RecordDto>();
+            List<RecordDto> results = new ArrayList<RecordDto>();
             for(OpensearchSearchResult searchResult : result.getSearchResult()) {
                 for(OpensearchObject searchObject : searchResult.getCollection().getObject()) {
                     String faust = searchObject.getCollection().getRecord().getDatafield("001").getSubfield("a").getValue();
@@ -64,7 +64,7 @@ public class RecordsResolver {
 
                     if(!faust.isEmpty() && !agency.isEmpty()) {
                         LOGGER.info("Adding faust {} in agency {}", faust, agency);
-                        relatedByWork.add(new RecordDto()
+                        results.add(new RecordDto()
                                 .withFaust(faust)
                                 .withPrimary(faust.equals(id))
                                 .withTypes(List.of(mapRrType(sfa, sfg))));
@@ -72,10 +72,10 @@ public class RecordsResolver {
                 }
             }
 
-            LOGGER.info("Id resolved into a list of {} manifestation", relatedByWork.size());
+            LOGGER.info("Id resolved into a list of {} manifestation", results.size());
             return new RecordsListDto()
-                    .withNumFound(relatedByWork.size())
-                    .withRecords(relatedByWork);
+                    .withNumFound(results.size())
+                    .withRecords(results);
         } catch(OpensearchConnectorException opensearchConnectorException) {
             LOGGER.error("Caught OpensearchConnectorException: {}", opensearchConnectorException.getMessage());
             throw opensearchConnectorException;
