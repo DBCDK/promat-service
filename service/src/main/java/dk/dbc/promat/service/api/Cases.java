@@ -1,8 +1,3 @@
-/*
- * Copyright Dansk Bibliotekscenter a/s. Licensed under GPLv3
- * See license text in LICENSE.txt or at https://opensource.dbc.dk/licenses/gpl-3.0/
- */
-
 package dk.dbc.promat.service.api;
 
 import com.fasterxml.jackson.annotation.JsonView;
@@ -1051,18 +1046,18 @@ public class Cases {
                 return CaseStatus.CLOSED;
 
             case EXPORTED:
-                if (existing.getStatus() != CaseStatus.PENDING_EXPORT) {
-                    throw new ServiceErrorException("Not allowed to set status EXPORTED when case is not in PENDING_EXPORT")
-                            .withDetails("Attempt to set status of case to EXPORTED when case is not in status PENDING_EXPORT")
+                if (!existing.in(CaseStatus.PENDING_EXPORT, CaseStatus.PROCESSING)) {
+                    throw new ServiceErrorException("Not allowed to set status EXPORTED when case is not in PENDING_EXPORT or PROCESSING")
+                            .withDetails("Attempt to set status of case to EXPORTED when case is not in status PENDING_EXPORT or PROCESSING")
                             .withHttpStatus(400)
                             .withCode(ServiceErrorCode.INVALID_REQUEST);
                 }
                 return CaseStatus.EXPORTED;
 
             case REVERTED:
-                if (existing.getStatus() != CaseStatus.PENDING_REVERT) {
-                    throw new ServiceErrorException("Not allowed to set status REVERTED when case is not in pending revert")
-                            .withDetails("Attempt to set status of case to REVERTED when case is not in status PENDING_REVERT")
+                if (!existing.in(CaseStatus.PENDING_REVERT, CaseStatus.PROCESSING)) {
+                    throw new ServiceErrorException("Not allowed to set status REVERTED when case is not in PENDING_REVERT or PROCESSING")
+                            .withDetails("Attempt to set status of case to REVERTED when case is not in status PENDING_REVERT or PROCESSING")
                             .withHttpStatus(400)
                             .withCode(ServiceErrorCode.INVALID_REQUEST);
                 }
@@ -1139,9 +1134,9 @@ public class Cases {
                 return CaseStatus.PENDING_ISSUES;
 
             case PENDING_EXPORT:
-                if (!existing.in(CaseStatus.PENDING_MEETING, CaseStatus.APPROVED, CaseStatus.EXPORTED)) {
-                    throw new ServiceErrorException("Not allowed to set status PENDING_EXPORT when case is not in EXPORTED, PENDING_MEETING or APPROVED")
-                            .withDetails("Attempt to set status of case to PENDING_EXPORT when case is not in status EXPORTED, PENDING_MEETING or APPROVED")
+                if (!existing.in(CaseStatus.PENDING_MEETING, CaseStatus.APPROVED, CaseStatus.EXPORTED, CaseStatus.PROCESSING)) {
+                    throw new ServiceErrorException("Not allowed to set status PENDING_EXPORT when case is not in EXPORTED, PENDING_MEETING, APPROVED or PROCESSING")
+                            .withDetails("Attempt to set status of case to PENDING_EXPORT when case is not in status EXPORTED, PENDING_MEETING, APPROVED or PROCESSING")
                             .withHttpStatus(400)
                             .withCode(ServiceErrorCode.INVALID_REQUEST);
                 }
@@ -1157,13 +1152,22 @@ public class Cases {
                 return CaseStatus.PENDING_MEETING;
 
             case PENDING_REVERT:
-                if (existing.getStatus() != CaseStatus.EXPORTED) {
-                    throw new ServiceErrorException("Not allowed to set status PENDING_REVERT when case is not exported")
-                            .withDetails("Attempt to set status of case to PENDING_REVERT when case is not in status EXPORTED")
+                if (!existing.in(CaseStatus.EXPORTED, CaseStatus.PROCESSING)) {
+                    throw new ServiceErrorException("Not allowed to set status PENDING_REVERT when case is not in EXPORTED or PROCESSING")
+                            .withDetails("Attempt to set status of case to PENDING_REVERT when case is not in status EXPORTED or PROCESSING")
                             .withHttpStatus(400)
                             .withCode(ServiceErrorCode.INVALID_REQUEST);
                 }
                 return CaseStatus.PENDING_REVERT;
+
+            case PROCESSING:
+                if (!existing.in(CaseStatus.PENDING_EXPORT, CaseStatus.PENDING_REVERT)) {
+                    throw new ServiceErrorException("Not allowed to set status PROCESSING when case is not in PENDING_EXPORT or PENDING_REVERT")
+                            .withDetails("Attempt to set status of case to PROCESSING when case is not in status PENDING_EXPORT or PENDING_REVERT")
+                            .withHttpStatus(400)
+                            .withCode(ServiceErrorCode.INVALID_REQUEST);
+                }
+                return CaseStatus.PROCESSING;
 
             default:
                 throw new ServiceErrorException("Unknown or forbidden status")

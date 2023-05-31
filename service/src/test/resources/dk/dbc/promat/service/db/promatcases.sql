@@ -49,7 +49,8 @@ values (1, 'Title for 001111', 'Details for 001111', '001111',    '[]', NULL, NU
        (24, 'Title for 100006', 'Details for 100006', '100006',   '[]', 1,    10,   '2021-01-09', '2021-02-09', '2021-01-10', 'ASSIGNED',         'BOOK',  'BKM202104', '202104', 13, 'Author for 100000', 'Publisher for 100006', '["BKX202107"]'),
        (25, 'Title for 100007', 'Details for 100007', '100007',   '[]', 1,    10,   '2021-01-27', '2021-02-27', '2021-01-27', 'PENDING_EXPORT',   'BOOK',  null,        null,     13, '',                  '', '[]'),
        (26, 'Title for 100008', 'Details for 100008', '100008',   '[]', 1,    10,   '2021-01-27', '2021-02-27', '2021-01-27', 'PENDING_EXPORT',   'BOOK',  null,        null,     13, '',                  '', '[]'),
-       (27, 'Title for 100009', 'Details for 100009', '100009',   '[]', 1,    10, '  2021-01-27', '2021-02-27', '2021-01-27', 'PENDING_EXPORT',   'BOOK',  null,        null,     13, '',                  '', '[]');
+       (27, 'Title for 100009', 'Details for 100009', '100009',   '[]', 1,    10, '  2021-01-27', '2021-02-27', '2021-01-27', 'PENDING_EXPORT',   'BOOK',  null,        null,     13, '',                  '', '[]'),
+       (28, 'Title for 319997', 'Details for 319997', '319997',   '[]', 1,    10,   '2021-01-27', '2021-02-27', '2021-01-27', 'PENDING_EXPORT',   'BOOK',  null,        null,     13, '',                  '', '[]');
 
 insert into promattask(id, tasktype, taskfieldtype, created, paycategory, approved, payed, data, targetFausts)
 values  (1,  'GROUP_1_LESS_THAN_100_PAGES', 'DESCRIPTION',    '202-12-10', 'GROUP_1_LESS_THAN_100_PAGES', '2020-12-10',  NULL,         NULL,                           '["001111", "002222", "003333"]'),
@@ -110,7 +111,8 @@ insert into promattask(id, tasktype, taskfieldtype, created, paycategory, approv
 values  (49, 'GROUP_1_LESS_THAN_100_PAGES', 'BRIEF',          '2021-01-27', 'BRIEF',                       '2021-02-08', NULL, 'Ready to export, no faust', '["019997"]', NULL),
         (50, 'GROUP_1_LESS_THAN_100_PAGES', 'BRIEF',          '2021-01-27', 'BRIEF',                       '2021-02-08', NULL, 'Ready to export, with faust', '["100007"]', '123456789'),
         (51, 'GROUP_1_LESS_THAN_100_PAGES', 'DESCRIPTION',    '2021-01-27', 'GROUP_1_LESS_THAN_100_PAGES', '2021-02-08', NULL, 'Ready to export, no faust, not BRIEF', '["100008"]', NULL),
-        (52, 'GROUP_1_LESS_THAN_100_PAGES', 'DESCRIPTION',    '2021-01-27', 'GROUP_1_LESS_THAN_100_PAGES', '2021-02-08', NULL, 'Ready to export, with faust, not BRIEF', '["100009"]', '987654321');
+        (52, 'GROUP_1_LESS_THAN_100_PAGES', 'DESCRIPTION',    '2021-01-27', 'GROUP_1_LESS_THAN_100_PAGES', '2021-02-08', NULL, 'Ready to export, with faust, not BRIEF', '["100009"]', '987654321'),
+        (58, 'GROUP_1_LESS_THAN_100_PAGES', 'BRIEF',          '2021-01-27', 'BRIEF',                       '2021-02-08', NULL, 'Ready to export, no faust', '["319997"]', NULL);
 
 insert into casetasks(case_id, task_id)
 values (1, 1),
@@ -169,4 +171,5 @@ values (1, 1),
        (2, 54),
        (2, 55),
        (2, 56),
-       (2, 57);
+       (2, 57),
+       (28, 58);

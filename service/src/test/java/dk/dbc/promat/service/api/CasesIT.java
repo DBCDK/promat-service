@@ -1,8 +1,3 @@
-/*
- * Copyright Dansk Bibliotekscenter a/s. Licensed under GPLv3
- * See license text in LICENSE.txt or at https://opensource.dbc.dk/licenses/gpl-3.0/
- */
-
 package dk.dbc.promat.service.api;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -1342,6 +1337,26 @@ public class CasesIT extends ContainerTest {
     }
 
     @Test
+    public void testChangeStatusPendingExportToProcessingToExported() throws JsonProcessingException {
+
+        // Case is ready for export, the dataio-harvester will change status to PROCESSING
+        CaseRequest requestDto = new CaseRequest().withStatus(CaseStatus.PROCESSING);
+        Response response = postResponse("v1/api/cases/28", requestDto);
+        assertThat("status code", response.getStatus(), is(200));
+
+        PromatCase updated = mapper.readValue(response.readEntity(String.class), PromatCase.class);
+        assertThat("status", updated.getStatus(), is(CaseStatus.PROCESSING));
+
+        // When export is completed, the dataio-harvester will change status to EXPORTED
+        requestDto = new CaseRequest().withStatus(CaseStatus.EXPORTED);
+        response = postResponse("v1/api/cases/28", requestDto);
+        assertThat("status code", response.getStatus(), is(200));
+
+        updated = mapper.readValue(response.readEntity(String.class), PromatCase.class);
+        assertThat("status", updated.getStatus(), is(CaseStatus.EXPORTED));
+    }
+
+    @Test
     public void testDbcKatHtmlViewFaustNotFoundReturnsNotFound() throws PromatServiceConnectorException {
         try {
             promatServiceConnector.getCaseview("98765432123456789", "HTML");
@@ -1969,6 +1984,230 @@ public class CasesIT extends ContainerTest {
 
         // Move to REVERTED
         requestDto = new CaseRequest().withStatus(CaseStatus.REVERTED);
+        response = postResponse("v1/api/cases/" + created.getId(), requestDto);
+        assertThat("status code", response.getStatus(), is(200));
+
+        // Delete the case
+        response = deleteResponse("v1/api/cases/" + created.getId());
+        assertThat("status code", response.getStatus(), is(200));
+    }
+
+    @Test
+    public void testStatusFlowToExportedFromApprovedWithProcessing() throws JsonProcessingException {
+
+        // Create a new case
+        CaseRequest dto = new CaseRequest()
+                .withTitle("Title for 30001111")
+                .withDetails("Details for 30001111")
+                .withPrimaryFaust("30001111")
+                .withEditor(10)
+                .withReviewer(1)
+                .withSubjects(Arrays.asList(3, 4))
+                .withDeadline("2021-03-30")
+                .withMaterialType(MaterialType.BOOK);
+
+        Response response = postResponse("v1/api/cases", dto);
+        PromatCase created = mapper.readValue(response.readEntity(String.class), PromatCase.class);
+        assertThat("status code", response.getStatus(), is(201));
+
+        // Send case to approval
+        CaseRequest requestDto = new CaseRequest().withStatus(CaseStatus.PENDING_APPROVAL);
+        response = postResponse("v1/api/cases/" + created.getId(), requestDto);
+        assertThat("status code", response.getStatus(), is(200));
+
+        // Approve the case
+        requestDto = new CaseRequest().withStatus(CaseStatus.APPROVED);
+        response = postResponse("v1/api/cases/" + created.getId(), requestDto);
+        assertThat("status code", response.getStatus(), is(200));
+
+        // Move to PENDING_EXPORT
+        requestDto = new CaseRequest().withStatus(CaseStatus.PENDING_EXPORT);
+        response = postResponse("v1/api/cases/" + created.getId(), requestDto);
+        assertThat("status code", response.getStatus(), is(200));
+
+        // Move to PROCESSING
+        requestDto = new CaseRequest().withStatus(CaseStatus.PROCESSING);
+        response = postResponse("v1/api/cases/" + created.getId(), requestDto);
+        assertThat("status code", response.getStatus(), is(200));
+
+        // Move to EXPORTED
+        requestDto = new CaseRequest().withStatus(CaseStatus.EXPORTED);
+        response = postResponse("v1/api/cases/" + created.getId(), requestDto);
+        assertThat("status code", response.getStatus(), is(200));
+
+        // Delete the case
+        response = deleteResponse("v1/api/cases/" + created.getId());
+        assertThat("status code", response.getStatus(), is(200));
+    }
+
+    @Test
+    public void testStatusFlowToPendingRevertAndRevertedFromExportedWithProcessing() throws JsonProcessingException {
+
+        // Create a new case
+        CaseRequest dto = new CaseRequest()
+                .withTitle("Title for 32001111")
+                .withDetails("Details for 32001111")
+                .withPrimaryFaust("32001111")
+                .withEditor(10)
+                .withReviewer(1)
+                .withNote("hej")
+                .withSubjects(Arrays.asList(3, 4))
+                .withDeadline("2021-03-30")
+                .withMaterialType(MaterialType.BOOK);
+
+        Response response = postResponse("v1/api/cases", dto);
+        PromatCase created = mapper.readValue(response.readEntity(String.class), PromatCase.class);
+        assertThat("status code", response.getStatus(), is(201));
+
+        // Send case to approval
+        CaseRequest requestDto = new CaseRequest().withStatus(CaseStatus.PENDING_APPROVAL);
+        response = postResponse("v1/api/cases/" + created.getId(), requestDto);
+        assertThat("status code", response.getStatus(), is(200));
+
+        // Approve the case
+        requestDto = new CaseRequest().withStatus(CaseStatus.APPROVED);
+        response = postResponse("v1/api/cases/" + created.getId(), requestDto);
+        assertThat("status code", response.getStatus(), is(200));
+
+        // Move to PENDING_EXPORT
+        requestDto = new CaseRequest().withStatus(CaseStatus.PENDING_EXPORT);
+        response = postResponse("v1/api/cases/" + created.getId(), requestDto);
+        assertThat("status code", response.getStatus(), is(200));
+
+        // Move to PROCESSING
+        requestDto = new CaseRequest().withStatus(CaseStatus.PROCESSING);
+        response = postResponse("v1/api/cases/" + created.getId(), requestDto);
+        assertThat("status code", response.getStatus(), is(200));
+
+        // Move to EXPORTED
+        requestDto = new CaseRequest().withStatus(CaseStatus.EXPORTED);
+        response = postResponse("v1/api/cases/" + created.getId(), requestDto);
+        assertThat("status code", response.getStatus(), is(200));
+
+        // Move to PENDING_REVERT
+        requestDto = new CaseRequest().withStatus(CaseStatus.PENDING_REVERT);
+        response = postResponse("v1/api/cases/" + created.getId(), requestDto);
+        assertThat("status code", response.getStatus(), is(200));
+
+        // Move to PROCESSING
+        requestDto = new CaseRequest().withStatus(CaseStatus.PROCESSING);
+        response = postResponse("v1/api/cases/" + created.getId(), requestDto);
+        assertThat("status code", response.getStatus(), is(200));
+
+        // Move to REVERTED
+        requestDto = new CaseRequest().withStatus(CaseStatus.REVERTED);
+        response = postResponse("v1/api/cases/" + created.getId(), requestDto);
+        assertThat("status code", response.getStatus(), is(200));
+
+        // Delete the case
+        response = deleteResponse("v1/api/cases/" + created.getId());
+        assertThat("status code", response.getStatus(), is(200));
+    }
+
+    @Test
+    public void testStatusFlowToExportedFromApprovedWithProcessingAndError() throws JsonProcessingException {
+
+        // Create a new case
+        CaseRequest dto = new CaseRequest()
+                .withTitle("Title for 35001111")
+                .withDetails("Details for 35001111")
+                .withPrimaryFaust("35001111")
+                .withEditor(10)
+                .withReviewer(1)
+                .withSubjects(Arrays.asList(3, 4))
+                .withDeadline("2021-03-30")
+                .withMaterialType(MaterialType.BOOK);
+
+        Response response = postResponse("v1/api/cases", dto);
+        PromatCase created = mapper.readValue(response.readEntity(String.class), PromatCase.class);
+        assertThat("status code", response.getStatus(), is(201));
+
+        // Send case to approval
+        CaseRequest requestDto = new CaseRequest().withStatus(CaseStatus.PENDING_APPROVAL);
+        response = postResponse("v1/api/cases/" + created.getId(), requestDto);
+        assertThat("status code", response.getStatus(), is(200));
+
+        // Approve the case
+        requestDto = new CaseRequest().withStatus(CaseStatus.APPROVED);
+        response = postResponse("v1/api/cases/" + created.getId(), requestDto);
+        assertThat("status code", response.getStatus(), is(200));
+
+        // Move to PENDING_EXPORT
+        requestDto = new CaseRequest().withStatus(CaseStatus.PENDING_EXPORT);
+        response = postResponse("v1/api/cases/" + created.getId(), requestDto);
+        assertThat("status code", response.getStatus(), is(200));
+
+        // Move to PROCESSING
+        requestDto = new CaseRequest().withStatus(CaseStatus.PROCESSING);
+        response = postResponse("v1/api/cases/" + created.getId(), requestDto);
+        assertThat("status code", response.getStatus(), is(200));
+
+        // Error while creating job, so move back to PENDING_EXPORT
+        requestDto = new CaseRequest().withStatus(CaseStatus.PENDING_EXPORT);
+        response = postResponse("v1/api/cases/" + created.getId(), requestDto);
+        assertThat("status code", response.getStatus(), is(200));
+
+        // Delete the case
+        response = deleteResponse("v1/api/cases/" + created.getId());
+        assertThat("status code", response.getStatus(), is(200));
+    }
+
+    @Test
+    public void testStatusFlowToPendingRevertAndRevertedFromExportedWithProcessingAndError() throws JsonProcessingException {
+
+        // Create a new case
+        CaseRequest dto = new CaseRequest()
+                .withTitle("Title for 35001111")
+                .withDetails("Details for 35001111")
+                .withPrimaryFaust("35001111")
+                .withEditor(10)
+                .withReviewer(1)
+                .withNote("hej")
+                .withSubjects(Arrays.asList(3, 4))
+                .withDeadline("2021-03-30")
+                .withMaterialType(MaterialType.BOOK);
+
+        Response response = postResponse("v1/api/cases", dto);
+        PromatCase created = mapper.readValue(response.readEntity(String.class), PromatCase.class);
+        assertThat("status code", response.getStatus(), is(201));
+
+        // Send case to approval
+        CaseRequest requestDto = new CaseRequest().withStatus(CaseStatus.PENDING_APPROVAL);
+        response = postResponse("v1/api/cases/" + created.getId(), requestDto);
+        assertThat("status code", response.getStatus(), is(200));
+
+        // Approve the case
+        requestDto = new CaseRequest().withStatus(CaseStatus.APPROVED);
+        response = postResponse("v1/api/cases/" + created.getId(), requestDto);
+        assertThat("status code", response.getStatus(), is(200));
+
+        // Move to PENDING_EXPORT
+        requestDto = new CaseRequest().withStatus(CaseStatus.PENDING_EXPORT);
+        response = postResponse("v1/api/cases/" + created.getId(), requestDto);
+        assertThat("status code", response.getStatus(), is(200));
+
+        // Move to PROCESSING
+        requestDto = new CaseRequest().withStatus(CaseStatus.PROCESSING);
+        response = postResponse("v1/api/cases/" + created.getId(), requestDto);
+        assertThat("status code", response.getStatus(), is(200));
+
+        // Move to EXPORTED
+        requestDto = new CaseRequest().withStatus(CaseStatus.EXPORTED);
+        response = postResponse("v1/api/cases/" + created.getId(), requestDto);
+        assertThat("status code", response.getStatus(), is(200));
+
+        // Move to PENDING_REVERT
+        requestDto = new CaseRequest().withStatus(CaseStatus.PENDING_REVERT);
+        response = postResponse("v1/api/cases/" + created.getId(), requestDto);
+        assertThat("status code", response.getStatus(), is(200));
+
+        // Move to PROCESSING
+        requestDto = new CaseRequest().withStatus(CaseStatus.PROCESSING);
+        response = postResponse("v1/api/cases/" + created.getId(), requestDto);
+        assertThat("status code", response.getStatus(), is(200));
+
+        // Revert failed, so move back PENDING_REVERT
+        requestDto = new CaseRequest().withStatus(CaseStatus.PENDING_REVERT);
         response = postResponse("v1/api/cases/" + created.getId(), requestDto);
         assertThat("status code", response.getStatus(), is(200));
 
