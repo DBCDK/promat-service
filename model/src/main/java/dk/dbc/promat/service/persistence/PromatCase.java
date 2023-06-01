@@ -57,7 +57,10 @@ import java.util.Objects;
                 query = PromatCase.LIST_CASE_BY_FAUST_QUERY),
         @NamedQuery(
                 name = PromatCase.GET_CASES_FOR_REMINDERS_CHECK_NAME,
-                query = PromatCase.GET_CASES_FOR_REMINDERS_CHECK_QUERY)
+                query = PromatCase.GET_CASES_FOR_REMINDERS_CHECK_QUERY),
+        @NamedQuery(
+                name = PromatCase.GET_COUNT_OF_CASES_IN_PROCESSING_STATE_NAME,
+                query = PromatCase.GET_COUNT_OF_CASES_IN_PROCESSING_STATE_QUERY)
 })
 @Entity
 public class PromatCase {
@@ -146,6 +149,11 @@ public class PromatCase {
             "                                                          where c.status in (dk.dbc.promat.service.persistence.CaseStatus.ASSIGNED," +
             "                                                                             dk.dbc.promat.service.persistence.CaseStatus.PENDING_ISSUES)";
 
+    public static final String GET_COUNT_OF_CASES_IN_PROCESSING_STATE_NAME =
+            "PromatCase.get.count.of.cases.in.processing.state";
+    public static final String GET_COUNT_OF_CASES_IN_PROCESSING_STATE_QUERY = "select count(1)" +
+            "                                                  from PromatCase c" +
+            "                                                 where c.status = dk.dbc.promat.service.persistence.CaseStatus.PROCESSING";
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
