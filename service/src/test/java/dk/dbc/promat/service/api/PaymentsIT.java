@@ -1,8 +1,3 @@
- /*
- * Copyright Dansk Bibliotekscenter a/s. Licensed under GPLv3
- * See license text in LICENSE.txt or at https://opensource.dbc.dk/licenses/gpl-3.0/
- */
-
 package dk.dbc.promat.service.api;
 
  import com.fasterxml.jackson.core.JsonProcessingException;
@@ -100,7 +95,7 @@ public class PaymentsIT  extends ContainerTest {
         assertThat("status code", response.getStatus(), is(200));
 
         String csv = response.readEntity(String.class);
-        assertThat("number of lines", csv.lines().count(), is(35L));  // 1 header + 34 paymentlines
+        assertThat("number of lines", csv.lines().count(), is(36L));  // 1 header + 34 paymentlines
     }
 
     // This test needs to run after test that depends on the state of the preloaded cases
@@ -111,7 +106,7 @@ public class PaymentsIT  extends ContainerTest {
         assertThat("status code", response.getStatus(), is(200));
 
         PaymentList payments = mapper.readValue(response.readEntity(String.class), PaymentList.class);
-        assertThat("number of paymentlines", payments.getPayments().size(), is(34));
+        assertThat("number of paymentlines", payments.getPayments().size(), is(35));
     }
 
     // This test needs to run after test that depends on the state of the preloaded cases
@@ -122,7 +117,7 @@ public class PaymentsIT  extends ContainerTest {
         assertThat("status code", response.getStatus(), is(200));
 
         String csv = response.readEntity(String.class);
-        assertThat("number of lines", csv.lines().count(), is(35L));  // 1 header + 34 paymentlines
+        assertThat("number of lines", csv.lines().count(), is(36L));  // 1 header + 35 paymentlines
 
         verifyPaymentCsv(csv);
     }
@@ -137,7 +132,7 @@ public class PaymentsIT  extends ContainerTest {
         assertThat("status code", response.getStatus(), is(200));
 
         String csv = response.readEntity(String.class);
-        assertThat("number of lines", csv.lines().count(), is(35L));  // 1 header + 34 paymentlines
+        assertThat("number of lines", csv.lines().count(), is(36L));  // 1 header + 34 paymentlines
 
         // Now check that all pending payments has been payed
         response = getResponse("v1/api/payments/preview", Map.of("format","CSV"));
@@ -176,7 +171,7 @@ public class PaymentsIT  extends ContainerTest {
         assertThat("status code", response.getStatus(), is(200));
 
         String csv = response.readEntity(String.class);
-        assertThat("number of lines", csv.lines().count(), is(35L));  // 1 header + 34 paymentlines
+        assertThat("number of lines", csv.lines().count(), is(36L));  // 1 header + 35 paymentlines
 
         verifyPaymentCsv(csv);
     }
@@ -191,6 +186,7 @@ public class PaymentsIT  extends ContainerTest {
                 "mm-dd-åååå;123;1956;1;100007 Title for 100007;Hans Hansen\n" +
                 "mm-dd-åååå;123;1956;1;100008 Title for 100008;Hans Hansen\n" +
                 "mm-dd-åååå;123;1956;1;100009 Title for 100009;Hans Hansen\n" +
+                "mm-dd-åååå;123;1956;1;319997 Title for 319997;Hans Hansen\n" +
                 "mm-dd-åååå;123;1956;1;1001000 Case 1;Hans Hansen\n" +
                 "mm-dd-åååå;123;1956;1;1001010 Case 2;Hans Hansen\n" +
                 "mm-dd-åååå;123;1956;1;1001020 Case 3;Hans Hansen\n" +

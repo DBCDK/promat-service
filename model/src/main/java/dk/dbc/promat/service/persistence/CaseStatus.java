@@ -1,8 +1,3 @@
-/*
- * Copyright Dansk Bibliotekscenter a/s. Licensed under GPLv3
- * See license text in LICENSE.txt or at https://opensource.dbc.dk/licenses/gpl-3.0/
- */
-
 package dk.dbc.promat.service.persistence;
 
 import java.util.Arrays;
@@ -105,6 +100,16 @@ public enum CaseStatus {
     PENDING_EXPORT,
 
     /*
+        Review is being processed by DataIO for export
+
+        Transition from:    PENDING_EXPORT
+        Transition to:      EXPORTED, PENDING_EXPORT
+        Payable:            Yes
+        Visible in DBCKat   Yes
+    */
+    PROCESSING,
+
+    /*
         Review has been exported
 
         Transition from:    PENDING_EXPORT
@@ -119,7 +124,7 @@ public enum CaseStatus {
     /*
         Review has been exported but must be withdrawn and deleted in the datawell
 
-        Transition from:    EXPORTED
+        Transition from:    EXPORTED, PROCESSING
         Transition to:      REVERTED, PENDING_EXPORT
         Payable:            Yes
         Visible in DBCKat   Yes
@@ -129,7 +134,7 @@ public enum CaseStatus {
     /*
         Review has been deleted in the datawell
 
-        Transition from:    PENDING_REVERT
+        Transition from:    PENDING_REVERT, PROCESSING
         Transition to:      PENDING_ISSUES, PENDING_EXPORT (if we allow this)
         Payable:            Yes
         Visible in DBCKat   Yes
