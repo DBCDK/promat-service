@@ -779,6 +779,12 @@ public class Cases {
             // Add the new task
             promatCase.getTasks().add(task);
 
+            // Reset potential approved case in special cases METAKOMPAS and BUGGI.
+            if (List.of(TaskFieldType.METAKOMPAS, TaskFieldType.BUGGI).contains(task.getTaskFieldType()) &&
+                    promatCase.getStatus() == CaseStatus.APPROVED) {
+                promatCase.setStatus(CaseStatus.PENDING_EXTERNAL);
+            }
+
             return Response.status(201)
                     .entity(task)
                     .build();
