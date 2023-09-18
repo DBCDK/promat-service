@@ -5,7 +5,7 @@
 
 package dk.dbc.promat.service.api;
 
-import javax.ws.rs.ext.ParamConverter;
+import jakarta.ws.rs.ext.ParamConverter;
 import java.time.LocalDate;
 
 public class LocalDateConverter implements ParamConverter<LocalDate> {

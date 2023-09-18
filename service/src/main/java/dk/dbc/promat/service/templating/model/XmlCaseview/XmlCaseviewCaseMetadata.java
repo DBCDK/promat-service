@@ -1,15 +1,9 @@
-/*
- * Copyright Dansk Bibliotekscenter a/s. Licensed under GNU GPLv3
- * See license text in LICENSE.txt
- */
-
 package dk.dbc.promat.service.templating.model.XmlCaseview;
 
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import java.time.LocalDate;
 
 @JsonPropertyOrder({"deadline", "casestate", "user", "note"})
-
 public class XmlCaseviewCaseMetadata {
 
     private LocalDate deadline;

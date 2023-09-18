@@ -1,6 +1,6 @@
 #!groovy
 
-def workerNode = "devel10"
+def workerNode = "devel11"
 
 pipeline {
 	agent {label workerNode}
@@ -13,12 +13,9 @@ pipeline {
     environment {
 		GITLAB_PRIVATE_TOKEN = credentials("metascrum-gitlab-api-token")
 	}
-
-	triggers {
-		upstream(upstreamProjects: "Docker-payara5-bump-trigger",
-            threshold: hudson.model.Result.SUCCESS)
-	}
-
+  triggers {
+    upstream('/Docker-payara6-bump-trigger')
+  }
 	options {
 		timestamps()
 		disableConcurrentBuilds()
@@ -49,8 +46,8 @@ pipeline {
 					// spotbugs still has some outstanding issues with regard
 					// to analyzing Java 11 bytecode.
 
-					//def spotbugs = scanForIssues tool: [$class: 'SpotBugs'], pattern: '**/target/spotbugsXml.xml'
-					//publishIssues issues:[spotbugs]
+					def spotbugs = scanForIssues tool: [$class: 'SpotBugs'], pattern: '**/target/spotbugsXml.xml'
+					publishIssues issues:[spotbugs]
 				}
 			}
 		}

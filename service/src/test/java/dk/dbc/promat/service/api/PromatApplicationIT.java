@@ -9,7 +9,7 @@ import dk.dbc.httpclient.HttpGet;
 import dk.dbc.promat.service.ContainerTest;
 import org.junit.jupiter.api.Test;
 
-import javax.ws.rs.core.Response;
+import jakarta.ws.rs.core.Response;
 
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.is;

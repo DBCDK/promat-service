@@ -7,9 +7,9 @@ package dk.dbc.promat.service;
 
 import dk.dbc.promat.service.persistence.PromatEntityManager;
 
-import javax.enterprise.inject.Produces;
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
+import jakarta.enterprise.inject.Produces;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 
 /**
  * To obtain an {@link EntityManager} for the Promat database simply say

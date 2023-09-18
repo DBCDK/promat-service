@@ -1,8 +1,3 @@
-/*
- * Copyright Dansk Bibliotekscenter a/s. Licensed under GPLv3
- * See license text in LICENSE.txt or at https://opensource.dbc.dk/licenses/gpl-3.0/
- */
-
 package dk.dbc.promat.service.batch;
 
 import dk.dbc.mail.Headers;
@@ -10,12 +5,12 @@ import dk.dbc.mail.MailManager;
 import dk.dbc.promat.service.persistence.Notification;
 import dk.dbc.promat.service.persistence.NotificationStatus;
 import dk.dbc.promat.service.persistence.PromatEntityManager;
-import javax.ejb.Stateless;
-import javax.ejb.TransactionAttribute;
-import javax.ejb.TransactionAttributeType;
-import javax.inject.Inject;
-import javax.mail.MessagingException;
-import javax.persistence.EntityManager;
+import jakarta.ejb.Stateless;
+import jakarta.ejb.TransactionAttribute;
+import jakarta.ejb.TransactionAttributeType;
+import jakarta.inject.Inject;
+import jakarta.mail.MessagingException;
+import jakarta.persistence.EntityManager;
 
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.metrics.ConcurrentGauge;
@@ -81,8 +76,12 @@ public class NotificationSender {
                     .build().send();
             notification.setStatus(NotificationStatus.DONE);
             metricRegistry.counter(mailCounterMetadata).inc();
-        } catch (MessagingException e) {
-            LOGGER.error("Unable to send mail. Notification:{}",notification.toString());
+        } catch (jakarta.mail.MessagingException e) {
+            LOGGER.error("Unable to send mail due to MessagingException. Notification:{}",notification.toString());
+            notification.setStatus(NotificationStatus.ERROR);
+            metricRegistry.concurrentGauge(mailFailureGaugeMetadata).inc();
+        } catch (Exception e) {
+            LOGGER.error("Unable to send mail due to unexpected exception. Notification:{}",notification.toString());
             notification.setStatus(NotificationStatus.ERROR);
             metricRegistry.concurrentGauge(mailFailureGaugeMetadata).inc();
         }

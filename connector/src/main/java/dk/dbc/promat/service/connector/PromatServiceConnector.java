@@ -8,7 +8,6 @@ package dk.dbc.promat.service.connector;
 import dk.dbc.httpclient.FailSafeHttpClient;
 import dk.dbc.httpclient.HttpGet;
 import dk.dbc.httpclient.HttpPost;
-import dk.dbc.invariant.InvariantUtil;
 import dk.dbc.promat.service.dto.CaseRequest;
 import dk.dbc.promat.service.dto.CaseSummaryList;
 import dk.dbc.promat.service.dto.ListCasesParams;
@@ -17,9 +16,9 @@ import dk.dbc.promat.service.dto.TagList;
 import dk.dbc.promat.service.persistence.PromatCase;
 import net.jodah.failsafe.RetryPolicy;
 
-import javax.ws.rs.ProcessingException;
-import javax.ws.rs.client.Client;
-import javax.ws.rs.core.Response;
+import jakarta.ws.rs.ProcessingException;
+import jakarta.ws.rs.client.Client;
+import jakarta.ws.rs.core.Response;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
@@ -55,8 +54,12 @@ public class PromatServiceConnector {
     }
 
     public PromatServiceConnector(FailSafeHttpClient failSafeHttpClient, String promatServiceBaseUrl) {
-        this.failSafeHttpClient = InvariantUtil.checkNotNullOrThrow(failSafeHttpClient, "failSafeHttpClient");
-        this.baseUrl = InvariantUtil.checkNotNullNotEmptyOrThrow(promatServiceBaseUrl, "promatServiceBaseUrl");
+        if (failSafeHttpClient == null || promatServiceBaseUrl == null) {
+            throw new NullPointerException(String.format("No parameters is allowed to be null in call to PromatServiceConnector(%s, %s)",
+                    failSafeHttpClient == null ? "null" : failSafeHttpClient.toString(), promatServiceBaseUrl == null ? "null" : promatServiceBaseUrl));
+        }
+        this.failSafeHttpClient = failSafeHttpClient;
+        this.baseUrl = promatServiceBaseUrl;
     }
 
     public void close() {

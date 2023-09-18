@@ -7,7 +7,7 @@ package dk.dbc.promat.service.templating.model.XmlCaseview;
 
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlText;
 
-import javax.xml.bind.annotation.XmlAttribute;
+import jakarta.xml.bind.annotation.XmlAttribute;
 
 public class XmlCaseviewBrief {
 

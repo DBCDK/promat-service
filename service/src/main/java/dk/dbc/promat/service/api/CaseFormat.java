@@ -8,7 +8,7 @@ package dk.dbc.promat.service.api;
 import dk.dbc.promat.service.dto.ServiceErrorDto;
 import dk.dbc.promat.service.persistence.CaseView;
 
-import javax.ws.rs.WebApplicationException;
+import jakarta.ws.rs.WebApplicationException;
 
 public enum CaseFormat {
     EXPORT(CaseView.Export.class),

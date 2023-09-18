@@ -1,8 +1,3 @@
-/*
- * Copyright Dansk Bibliotekscenter a/s. Licensed under GPLv3
- * See license text in LICENSE.txt or at https://opensource.dbc.dk/licenses/gpl-3.0/
- */
-
 package dk.dbc.promat.service.batch;
 
 import dk.dbc.commons.persistence.TransactionScopedPersistenceContext;
@@ -19,10 +14,10 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.jvnet.mock_javamail.Mailbox;
 
-import javax.mail.Message;
-import javax.mail.MessagingException;
-import javax.mail.Session;
-import javax.persistence.TypedQuery;
+import jakarta.mail.Message;
+import jakarta.mail.MessagingException;
+import jakarta.mail.Session;
+import jakarta.persistence.TypedQuery;
 import java.util.List;
 import java.util.Properties;
 
@@ -55,15 +50,14 @@ public class ScheduledNotificationSenderIT extends IntegrationTest {
     }
 
     @Test
-    public void test_that_notifications_are_popped_and_sent() throws MessagingException {
+    public void test_that_notifications_are_popped_and_sent() throws MessagingException, InterruptedException {
         ScheduledNotificationSender scheduledNotificationSender = new ScheduledNotificationSender();
         scheduledNotificationSender.entityManager = entityManager;
         scheduledNotificationSender.serverRole = ServerRole.PRIMARY;
-        NotificationSender notificationSender = new NotificationSender();
-        scheduledNotificationSender.notificationSender = notificationSender;
+        scheduledNotificationSender.notificationSender = new NotificationSender();
         scheduledNotificationSender.notificationSender.mailManager = mailManager;
         scheduledNotificationSender.notificationSender.metricRegistry = metricRegistry;
-        persistenceContext.run(()->scheduledNotificationSender.processNotifications());
+        persistenceContext.run(scheduledNotificationSender::processNotifications);
 
         List<Message> inbox1 = Mailbox.get("test1@test.dk");
         assertThat("Test1 recieved a mail", inbox1.size(), is(1));

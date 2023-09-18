@@ -5,7 +5,7 @@
 
 package dk.dbc.promat.service.dto;
 
-import javax.ws.rs.core.Response;
+import jakarta.ws.rs.core.Response;
 
 public class ServiceErrorDto implements Dto {
 

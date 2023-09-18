@@ -7,7 +7,7 @@ package dk.dbc.promat.service.persistence;
 
 import dk.dbc.commons.jpa.converter.EnumConverter;
 
-import javax.persistence.Converter;
+import jakarta.persistence.Converter;
 
 @Converter
 public class RoleConverter extends EnumConverter<PromatUser.Role> {
