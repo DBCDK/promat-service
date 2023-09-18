@@ -32,23 +32,4 @@
     </dependency>
   </dependencies>
 
-  <build>
-    <plugins>
-      <!-- Even though the promat service is built with Java 11 target level,
-           this model module also needs to be usable by other older Java 8 services. -->
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-compiler-plugin</artifactId>
-        <version>3.8.0</version>
-        <configuration>
-          <source>${jdk.target.version}</source>
-          <target>${jdk.target.version}</target>
-          <testSource>${jdk.target.version}</testSource>
-          <testTarget>${jdk.target.version}</testTarget>
-          <showDeprecation>true</showDeprecation>
-          <showWarnings>true</showWarnings>
-        </configuration>
-      </plugin>
-    </plugins>
-  </build>
 </project>

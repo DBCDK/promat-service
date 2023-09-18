@@ -143,12 +143,8 @@ public abstract class ContainerTest extends IntegrationTest {
     }
 
     private static String getDebuggingHost() {
-        try {
-            String port = getSysVar("CONTAINER_DEBUG_PORT", System::getenv, System::getProperty);
-            return port == null ? "" : InetAddress.getLocalHost().getHostAddress() + ":" + port;
-        } catch (UnknownHostException e) {
-            throw new RuntimeException(e);
-        }
+        String debuggingHost = getSysVar("REMOTE_DEBUGGING_HOST", System::getenv, System::getProperty);
+        return debuggingHost == null ? "" : debuggingHost;
     }
 
     @SafeVarargs
