@@ -1,8 +1,3 @@
-/*
- * Copyright Dansk Bibliotekscenter a/s. Licensed under GPLv3
- * See license text in LICENSE.txt or at https://opensource.dbc.dk/licenses/gpl-3.0/
- */
-
 package dk.dbc.promat.service.db;
 
 import org.flywaydb.core.Flyway;
@@ -10,11 +5,11 @@ import org.flywaydb.core.api.MigrationInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.annotation.PostConstruct;
-import javax.annotation.Resource;
-import javax.ejb.EJBException;
-import javax.ejb.Singleton;
-import javax.ejb.Startup;
+import jakarta.annotation.PostConstruct;
+import jakarta.annotation.Resource;
+import jakarta.ejb.EJBException;
+import jakarta.ejb.Singleton;
+import jakarta.ejb.Startup;
 import javax.sql.DataSource;
 import java.sql.SQLException;
 

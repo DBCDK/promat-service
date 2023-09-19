@@ -1,6 +1,6 @@
 package dk.dbc.promat.service;
 
-import javax.ejb.Stateless;
+import jakarta.ejb.Stateless;
 import java.time.LocalDate;
 
 public class Dates {

@@ -1,6 +1,7 @@
 package dk.dbc.promat.service.templating.model.XmlCaseview;
 
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 import dk.dbc.promat.service.api.ServiceErrorException;
 import dk.dbc.promat.service.persistence.PromatCase;
@@ -8,7 +9,9 @@ import dk.dbc.promat.service.persistence.PromatTask;
 import dk.dbc.promat.service.persistence.TaskFieldType;
 import dk.dbc.promat.service.templating.Formatting;
 
-import javax.xml.bind.annotation.XmlElement;
+import jakarta.xml.bind.annotation.XmlElement;
+
+import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -103,7 +106,7 @@ public class XmlCaseview {
         caseviewResponse = new XmlCaseviewResponse()
                 .withServer(hostname)
                 .withRequestArg(new XmlCaseviewRequestArg()
-                .withFaustno(requestedFaust));
+                        .withFaustno(requestedFaust));
         caseviewCase = new XmlCaseviewCase()
                 .withCaseId(promatCase.getId())
                 .withCaseMetadata(new XmlCaseviewCaseMetadata()
@@ -127,7 +130,6 @@ public class XmlCaseview {
                         .withAge(age)
                         .withMatlevel(matlevels)
                         .withSubjterm(new XmlCaseviewSubjterms(requestedFaust, subjterms)));
-
         return this;
     }
 }

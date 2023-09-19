@@ -1,13 +1,9 @@
-/*
- * Copyright Dansk Bibliotekscenter a/s. Licensed under GNU GPLv3
- * See license text in LICENSE.txt
- */
-
 package dk.dbc.promat.service.templating.model.XmlCaseview;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlText;
-import javax.xml.bind.annotation.XmlAttribute;
+import jakarta.xml.bind.annotation.XmlAttribute;
+import jakarta.xml.bind.annotation.XmlValue;
 
 public class XmlCaseviewRequestArg {
 

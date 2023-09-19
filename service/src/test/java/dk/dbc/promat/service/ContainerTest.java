@@ -1,8 +1,3 @@
-/*
- * Copyright Dansk Bibliotekscenter a/s. Licensed under GPLv3
- * See license text in LICENSE.txt or at https://opensource.dbc.dk/licenses/gpl-3.0/
- */
-
 package dk.dbc.promat.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -25,7 +20,7 @@ import org.testcontainers.containers.output.Slf4jLogConsumer;
 import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.utility.MountableFile;
 
-import javax.ws.rs.core.Response;
+import jakarta.ws.rs.core.Response;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.time.Duration;
@@ -35,7 +30,6 @@ import java.util.function.Function;
 import static com.github.tomakehurst.wiremock.client.WireMock.configureFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.requestMatching;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options;
-
 
 public abstract class ContainerTest extends IntegrationTest {
     private static final Logger LOGGER = LoggerFactory.getLogger(ContainerTest.class);
@@ -149,12 +143,8 @@ public abstract class ContainerTest extends IntegrationTest {
     }
 
     private static String getDebuggingHost() {
-        try {
-            String port = getSysVar("CONTAINER_DEBUG_PORT", System::getenv, System::getProperty);
-            return port == null ? "" : InetAddress.getLocalHost().getHostAddress() + ":" + port;
-        } catch (UnknownHostException e) {
-            throw new RuntimeException(e);
-        }
+        String debuggingHost = getSysVar("REMOTE_DEBUGGING_HOST", System::getenv, System::getProperty);
+        return debuggingHost == null ? "" : debuggingHost;
     }
 
     @SafeVarargs

@@ -1,8 +1,3 @@
-/*
- * Copyright Dansk Bibliotekscenter a/s. Licensed under GPLv3
- * See license text in LICENSE.txt or at https://opensource.dbc.dk/licenses/gpl-3.0/
- */
-
 package dk.dbc.promat.service.templating;
 
 import com.github.tomakehurst.wiremock.WireMockServer;
@@ -37,8 +32,6 @@ import org.slf4j.LoggerFactory;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
-
-
 
 public class RendererTest {
     private static final Logger LOGGER = LoggerFactory.getLogger(RendererTest.class);

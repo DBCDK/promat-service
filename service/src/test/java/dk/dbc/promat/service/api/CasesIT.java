@@ -34,7 +34,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xml.sax.SAXException;
 
-import javax.ws.rs.core.Response;
+import jakarta.ws.rs.core.Response;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
 import java.net.URI;
@@ -59,11 +59,11 @@ import java.util.stream.Collectors;
 
 import static java.nio.file.StandardOpenOption.CREATE_NEW;
 import static java.nio.file.StandardOpenOption.WRITE;
-import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
-import static javax.ws.rs.core.Response.Status.CONFLICT;
-import static javax.ws.rs.core.Response.Status.CREATED;
-import static javax.ws.rs.core.Response.Status.NOT_FOUND;
-import static javax.ws.rs.core.Response.Status.OK;
+import static jakarta.ws.rs.core.Response.Status.BAD_REQUEST;
+import static jakarta.ws.rs.core.Response.Status.CONFLICT;
+import static jakarta.ws.rs.core.Response.Status.CREATED;
+import static jakarta.ws.rs.core.Response.Status.NOT_FOUND;
+import static jakarta.ws.rs.core.Response.Status.OK;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.not;
@@ -1374,8 +1374,8 @@ public class CasesIT extends ContainerTest {
 
         // Not checking that the documents are strictly equal comparing html output, but it does
         // check that all textual content in the body is equal.
-        String expectedText = Jsoup.parse(expected).normalise().text();
-        String actualText = Jsoup.parse(actual).normalise().text();
+        String expectedText = Jsoup.parse(expected).text();
+        String actualText = Jsoup.parse(actual).text();
         assertThat("case view is correct", expectedText.equals(actualText));
     }
 
@@ -1388,8 +1388,8 @@ public class CasesIT extends ContainerTest {
 
         // Not checking that the documents are strictly equal comparing html output, but it does
         // check that all textual content in the body is equal.
-        String expectedText = Jsoup.parse(expected).normalise().text();
-        String actualText = Jsoup.parse(actual).normalise().text();
+        String expectedText = Jsoup.parse(expected).text();
+        String actualText = Jsoup.parse(actual).text();
         assertThat("case view is correct", expectedText.equals(actualText));
 
         // Fetch the html view for the second related faustnumber
@@ -1398,8 +1398,8 @@ public class CasesIT extends ContainerTest {
 
         // Not checking that the documents are strictly equal comparing html output, but it does
         // check that all textual content in the body is equal.
-        expectedText = Jsoup.parse(expected).normalise().text();
-        actualText = Jsoup.parse(actual).normalise().text();
+        expectedText = Jsoup.parse(expected).text();
+        actualText = Jsoup.parse(actual).text();
         assertThat("case view is correct", expectedText.equals(actualText));
     }
 
@@ -1413,8 +1413,8 @@ public class CasesIT extends ContainerTest {
 
         // Not checking that the documents are strictly equal comparing html output, but it does
         // check that all textual content in the body is equal.
-        String expectedText = Jsoup.parse(expected).normalise().text();
-        String actualText = Jsoup.parse(actual).normalise().text();
+        String expectedText = Jsoup.parse(expected).text();
+        String actualText = Jsoup.parse(actual).text();
         assertThat("case view is correct", expectedText.equals(actualText));
 
         // Move case back to status CREATED(==>ASSIGNED) since it is clearly not done..  Expect no html view available
@@ -1450,8 +1450,8 @@ public class CasesIT extends ContainerTest {
         // Not checking that the documents are strictly equal comparing xml output, but it does
         // check that all text elements contains the correct information. Attributes is not
         // checked, but they are not important (at least not for dbckat)
-        String expectedText = Jsoup.parse(expected, StandardCharsets.ISO_8859_1.name()).normalise().text();
-        String actualText = Jsoup.parse(actual).normalise().text();
+        String expectedText = Jsoup.parse(expected, StandardCharsets.ISO_8859_1.name()).text();
+        String actualText = Jsoup.parse(actual).text();
         assertThat("case view is correct", expectedText.equals(actualText));
     }
 
@@ -1465,8 +1465,8 @@ public class CasesIT extends ContainerTest {
         // Not checking that the documents are strictly equal comparing xml output, but it does
         // check that all text elements contains the correct information. Attributes is not
         // checked, but they are not important (at least not for dbckat)
-        String expectedText = Jsoup.parse(expected, StandardCharsets.ISO_8859_1.name()).normalise().text();
-        String actualText = Jsoup.parse(actual).normalise().text();
+        String expectedText = Jsoup.parse(expected, StandardCharsets.ISO_8859_1.name()).text();
+        String actualText = Jsoup.parse(actual).text();
         assertThat("case view is correct", expectedText.equals(actualText));
     }
 
@@ -1480,8 +1480,8 @@ public class CasesIT extends ContainerTest {
         // Not checking that the documents are strictly equal comparing xml output, but it does
         // check that all text elements contains the correct information. Attributes is not
         // checked, but they are not important (at least not for dbckat)
-        String expectedText = Jsoup.parse(expected, StandardCharsets.ISO_8859_1.name()).normalise().text();
-        String actualText = Jsoup.parse(actual).normalise().text();
+        String expectedText = Jsoup.parse(expected, StandardCharsets.ISO_8859_1.name()).text();
+        String actualText = Jsoup.parse(actual).text();
         assertThat("case view is correct", expectedText.equals(actualText));
 
         // Fetch the xml view for the second related faustnumber
@@ -1491,8 +1491,8 @@ public class CasesIT extends ContainerTest {
         // Not checking that the documents are strictly equal comparing xml output, but it does
         // check that all text elements contains the correct information. Attributes is not
         // checked, but they are not important (at least not for dbckat)
-        expectedText = Jsoup.parse(expected, StandardCharsets.ISO_8859_1.name()).normalise().text();
-        actualText = Jsoup.parse(actual).normalise().text();
+        expectedText = Jsoup.parse(expected, StandardCharsets.ISO_8859_1.name()).text();
+        actualText = Jsoup.parse(actual).text();
         assertThat("case view is correct", expectedText.equals(actualText));
     }
 
@@ -1507,8 +1507,8 @@ public class CasesIT extends ContainerTest {
         // Not checking that the documents are strictly equal comparing xml output, but it does
         // check that all text elements contains the correct information. Attributes is not
         // checked, but they are not important (at least not for dbckat)
-        String expectedText = Jsoup.parse(expected, StandardCharsets.ISO_8859_1.name()).normalise().text();
-        String actualText = Jsoup.parse(actual).normalise().text();
+        String expectedText = Jsoup.parse(expected, StandardCharsets.ISO_8859_1.name()).text();
+        String actualText = Jsoup.parse(actual).text();
         assertThat("case view is correct", expectedText.equals(actualText));
 
         // Move case back to status CREATED(==>ASSIGNED) since it is clearly not done..  Expect no html view available
