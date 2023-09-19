@@ -42,13 +42,19 @@ public class CaseviewXmlTransformer {
     }
 
     public CaseviewXmlTransformer() {
+        this(true);
+    }
+
+    public CaseviewXmlTransformer(Boolean indent) {
+        this.indent = indent;
+
         final JacksonXmlModule module = new JacksonXmlModule();
         module.setDefaultUseWrapper(true);
         xmlMapper = new XmlMapper(module);
         xmlMapper.registerModule(new JavaTimeModule());
         xmlMapper.registerModule(new JakartaXmlBindAnnotationModule());
         xmlMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
-                .configure(SerializationFeature.INDENT_OUTPUT, indent)
+                .configure(SerializationFeature.INDENT_OUTPUT, this.indent)
                 .configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false)
                 .setSerializationInclusion(JsonInclude.Include.NON_NULL)
                 .setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
@@ -64,7 +70,6 @@ public class CaseviewXmlTransformer {
     }
 
     public byte[] toXml(XmlCaseview caseView) throws ServiceErrorException {
-        xmlMapper.configure(SerializationFeature.INDENT_OUTPUT, indent);
         final StringWriter stringWriter = new StringWriter();
         try {
             xmlMapper.writeValue(stringWriter, caseView);
