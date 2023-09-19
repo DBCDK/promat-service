@@ -136,14 +136,6 @@
           <groupId>org.glassfish.pfl</groupId>
           <artifactId>pfl-basic</artifactId>
         </exclusion>
-        <exclusion>
-          <groupId>angus</groupId>
-          <artifactId>angus-mail</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>com.sun.xml.ws</groupId>
-          <artifactId>:jaxws-rt</artifactId>
-        </exclusion>
       </exclusions>
     </dependency>
     <dependency>
