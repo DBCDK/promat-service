@@ -34,7 +34,7 @@ public class XmlCaseViewTest {
     public void testXmlCaseView() throws ServiceErrorException, IOException {
         final PromatCase promatCase = new PromatCase()
                 .withPrimaryFaust("123456789")
-                .withDeadline(LocalDate.now())
+                .withDeadline(LocalDate.parse("2023-09-19"))
                 .withTitle("title")
                 .withAssigned(LocalDate.now())
                 .withDetails("details")
