@@ -14,6 +14,9 @@ import dk.dbc.promat.service.util.PromatTaskUtils;
 import org.junit.jupiter.api.Test;
 
 import jakarta.ws.rs.core.Response;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.Arrays;
 import java.util.stream.Collectors;
 
@@ -23,6 +26,7 @@ import static org.hamcrest.core.Is.is;
 
 public class TasksIT extends ContainerTest {
 
+    Logger LOGGER = LoggerFactory.getLogger(TasksIT.class);
     @Test
     public void testEditTask() throws JsonProcessingException {
 
@@ -76,6 +80,7 @@ public class TasksIT extends ContainerTest {
         response = putResponse("v1/api/tasks/" + taskWithPrimaryTargetFaust.getId(), dto);
         assertThat("status code", response.getStatus(), is(200));
         PromatTask updated = mapper.readValue(response.readEntity(String.class), PromatTask.class);
+
         assertThat("data value is correct", updated.getData().equals("Here is data for task without targetFaust"), is(true));
         assertThat("tasktype value is correct", updated.getTaskType(), is(TaskType.GROUP_2_100_UPTO_199_PAGES));
         assertThat("paycategory value is correct", updated.getPayCategory(), is(PayCategory.GROUP_2_100_UPTO_199_PAGES));
@@ -106,6 +111,7 @@ public class TasksIT extends ContainerTest {
         // Add a new faustnumber to one task, this should succeed
         dto = new TaskDto().withTargetFausts(updated.getTargetFausts());
         dto.getTargetFausts().add("31005555");
+        LOGGER.info("targetFaust is {}", dto.getTargetFausts());
         response = putResponse("v1/api/tasks/" + taskWithPrimaryTargetFaust.getId(), dto);
         assertThat("status code", response.getStatus(), is(200));
         updated = mapper.readValue(response.readEntity(String.class), PromatTask.class);
