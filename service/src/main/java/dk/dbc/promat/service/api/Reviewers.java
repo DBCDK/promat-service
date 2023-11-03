@@ -15,13 +15,10 @@ import dk.dbc.promat.service.persistence.ReviewerView;
 import dk.dbc.promat.service.persistence.Subject;
 import dk.dbc.promat.service.templating.NotificationFactory;
 import dk.dbc.promat.service.templating.model.ReviewerDataChanged;
-
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.ws.rs.DefaultValue;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import jakarta.ejb.EJB;
 import jakarta.ejb.Stateless;
 import jakarta.inject.Inject;
@@ -395,5 +392,28 @@ public class Reviewers {
                     ", weekAfterEnd=" + weekAfterEnd +
                     '}';
         }
+    }
+
+    @POST
+    @Path("reviewers/{id}/resethiatus")
+    @Produces({MediaType.APPLICATION_JSON})
+    @RolesAllowed({"authenticated-user"})
+    public Response resetHiatus(@PathParam("id") final Integer id, @Context UriInfo uriInfo) {
+
+            // Find the existing user
+            final Reviewer reviewer = entityManager.find(Reviewer.class, id);
+            if (reviewer == null) {
+                LOGGER.info("Reviewer with id {} does not exists", id);
+                auditLogHandler.logTraceUpdateForToken("Request for update of profile", uriInfo, 0, 404);
+                return Response.status(404).build();
+            }
+
+            reviewer.setHiatusBegin(null);
+            reviewer.setHiatusEnd(null);
+
+            auditLogHandler.logTraceUpdateForToken("Hiatus reset", uriInfo, reviewer.getId(), 200);
+            LOGGER.info("Hiatus for reviewer with ID {} was reset", reviewer.getId());
+            return Response.ok(reviewer)
+                    .build();
     }
 }

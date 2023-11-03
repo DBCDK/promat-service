@@ -17,6 +17,7 @@ import dk.dbc.promat.service.persistence.Subject;
 import dk.dbc.promat.service.persistence.SubjectNote;
 import dk.dbc.promat.service.templating.Formatting;
 import org.checkerframework.checker.units.qual.A;
+import org.hamcrest.Matcher;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
 import org.junit.jupiter.api.Order;
@@ -32,10 +33,7 @@ import java.security.NoSuchAlgorithmException;
 import java.sql.Date;
 import java.time.Instant;
 import java.time.LocalDate;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static java.util.Map.entry;
@@ -248,6 +246,28 @@ public class ReviewersIT extends ContainerTest {
         ReviewerWithWorkloads reviewer1 = reviewers.getReviewers().stream().filter(r -> r.getId() == 1).findFirst().orElse(null);
         reviewer1.withActiveChanged(expected1.getActiveChanged()).withDeactivated(expected1.getDeactivated());
         Assertions.assertEquals(expected1, reviewer1, "Assert that reviewer with id 1");
+    }
+
+    @Test
+    void TestHiatusReset() throws  JsonProcessingException{
+
+        // Initialize reviewer3 from the database with a modified begin and end hiatus
+        final ReviewerRequest reviewerRequest = new ReviewerRequest()
+                .withHiatusBegin(LocalDate.parse("2023-11-11"))
+                .withHiatusEnd(LocalDate.parse("2023-11-16"));
+        final Response responseInitial = putResponse("v1/api/reviewers/3", reviewerRequest, "1-2-3-4-5");
+        final Reviewer initialReviewer = mapper.readValue(responseInitial.readEntity(String.class), Reviewer.class);
+        assertThat("Initial vacation begin", initialReviewer.getHiatusBegin(), is(LocalDate.parse("2023-11-11")));
+        assertThat("Initial vacation end", initialReviewer.getHiatusEnd(), is(LocalDate.parse("2023-11-16")));
+
+        // Reset begin and end hiatus
+        final Response responseReset = postResponse("v1/api/reviewers/3/resethiatus", null,"1-2-3-4-5");
+        assertThat("Response status", responseReset.getStatus(), is(Response.Status.OK.getStatusCode()));
+
+        // Verify the effect of reset
+        final Reviewer reset = mapper.readValue(responseReset.readEntity(String.class), Reviewer.class);
+        assertThat("Beginning of vacation is null", reset.getHiatusBegin(), is(nullValue()));
+        assertThat("Ending of vacation is null", reset.getHiatusEnd(), is(nullValue()));
     }
 
     @Test
@@ -575,6 +595,7 @@ public class ReviewersIT extends ContainerTest {
             reviewer.setPhone("87654321");
             reviewer.setPrivatePhone("12345678");
         }
+
         reviewer.setActiveChanged(Date.from(Instant.ofEpochSecond(1629900636)));
     }
 
