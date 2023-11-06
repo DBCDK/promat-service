@@ -28,6 +28,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Stateless
 @Path("")
@@ -67,20 +68,19 @@ public class Tasks {
 
             // Check that target faustnumbers has unique usage across a case
             if(dto.getTargetFausts() != null) {
-                // Used to remove duplicates and to keep the order of the elements
-                ArrayList<String> noDuplicateFaustNumbers =
-                        new ArrayList<>(new LinkedHashSet<>(List.of(dto.getTargetFausts().toArray(String[]::new))));
-                String[] faustNumbers = new String[noDuplicateFaustNumbers.size()];
-                for (int i = 0; i < noDuplicateFaustNumbers.size(); i++)
-                    faustNumbers[i] = noDuplicateFaustNumbers.get(i);
 
-                if(!Faustnumbers.checkNoOpenCaseWithFaust(entityManager, caseOfTask.getId(), faustNumbers)) {
+                // Used to remove duplicates and to keep the order of the elements
+                List<String> faustNumbers = dto.getTargetFausts().stream()
+                        .distinct().collect(Collectors.toList());
+
+                if(!Faustnumbers.checkNoOpenCaseWithFaust(entityManager, caseOfTask.getId(),
+                        faustNumbers.toArray(String[]::new))) {
                     LOGGER.info("Attempt to add one or more targetfausts {} " +
                             "which is in use on another active case", dto.getTargetFausts());
                     return ServiceErrorDto.InvalidRequest("Target faustnumber is in use",
                             "One or more target faustnumbers is in use on another active case");
                 }
-                existing.setTargetFausts(noDuplicateFaustNumbers);
+                existing.setTargetFausts(faustNumbers);
             }
 
             // Update fields

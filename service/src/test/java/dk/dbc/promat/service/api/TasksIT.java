@@ -12,15 +12,12 @@ import dk.dbc.promat.service.persistence.TaskFieldType;
 import dk.dbc.promat.service.persistence.TaskType;
 import dk.dbc.promat.service.util.PromatTaskUtils;
 import org.junit.jupiter.api.Test;
-
 import jakarta.ws.rs.core.Response;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.stream.Collectors;
-
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.core.Is.is;
@@ -28,6 +25,7 @@ import static org.hamcrest.core.Is.is;
 public class TasksIT extends ContainerTest {
 
     Logger LOGGER = LoggerFactory.getLogger(TasksIT.class);
+
     @Test
     public void testEditTask() throws JsonProcessingException {
 
@@ -113,6 +111,7 @@ public class TasksIT extends ContainerTest {
         dto = new TaskDto().withTargetFausts(updated.getTargetFausts());
         dto.getTargetFausts().add("31005555");
         LOGGER.info("targetFaust is {}", dto.getTargetFausts());
+
         response = putResponse("v1/api/tasks/" + taskWithPrimaryTargetFaust.getId(), dto);
         assertThat("status code", response.getStatus(), is(200));
         updated = mapper.readValue(response.readEntity(String.class), PromatTask.class);
@@ -134,26 +133,30 @@ public class TasksIT extends ContainerTest {
         // When updating faustnumbers they must be unique and ordered by entry
         // the system will remove all duplicate faustnumbers
         dto = new TaskDto().withTargetFausts(updated.getTargetFausts());
+
         // The faustnumbers set earlier in the test
         assertThat("targetfaust contains", updated.getTargetFausts().stream().sorted().collect(Collectors.toList()),
                 is(Arrays.asList("31001111", "31002222", "31005555")));
         response = putResponse("v1/api/tasks/" + taskWithPrimaryTargetFaust.getId(), dto);
         assertThat("status code", response.getStatus(), is(200));
+
         // We can easily add duplicate faustnumbers to the list
         dto.getTargetFausts().add("31001111");
         dto.getTargetFausts().add("31007777");
         dto.getTargetFausts().add("31006666");
+
         // The list now contains duplicate faustnumbers; 31001111 has two entries
         assertThat("targetfaust contains", new ArrayList<>(updated.getTargetFausts()),
                 is(Arrays.asList("31001111", "31002222", "31005555", "31001111", "31007777", "31006666")));
         response = putResponse("v1/api/tasks/" + taskWithPrimaryTargetFaust.getId(), dto);
+
         // our API call succeeds
         assertThat("status code", response.getStatus(), is(200));
         updated = mapper.readValue(response.readEntity(String.class), PromatTask.class);
+
         // Duplicate faustnumbers were removed by the system without notifying the user and the order maintained
         assertThat("targetfaust contains no duplicates", new ArrayList<>(updated.getTargetFausts()),
                 is(Arrays.asList("31001111", "31002222", "31005555", "31007777", "31006666")));
-
     }
 
     @Test
