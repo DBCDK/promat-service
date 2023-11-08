@@ -24,6 +24,12 @@ import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.stream.Collectors;
+
 @Stateless
 @Path("")
 public class Tasks {
@@ -49,7 +55,8 @@ public class Tasks {
             PromatTask existing = entityManager.find(PromatTask.class, id);
             if( existing == null ) {
                 LOGGER.info("No such task {}", id);
-                return ServiceErrorDto.NotFound("No such task", String.format("Task with id %s does not exist", id));
+                return ServiceErrorDto.NotFound("No such task",
+                        String.format("Task with id %s does not exist", id));
             }
 
             // Find the case to which the stated task belongs
@@ -61,18 +68,24 @@ public class Tasks {
 
             // Check that target faustnumbers has unique usage across a case
             if(dto.getTargetFausts() != null) {
-                if(!Faustnumbers.checkNoOpenCaseWithFaust(entityManager, caseOfTask.getId(), dto.getTargetFausts().toArray(String[]::new))) {
-                    LOGGER.info("Attempt to add one or more targetfausts {} which is in use on another active case", dto.getTargetFausts());
-                    return ServiceErrorDto.InvalidRequest("Target faustnumber is in use", "One or more target faustnumbers is in use on another active case");
+
+                // Used to remove duplicates and to keep the order of the elements
+                List<String> faustNumbers = dto.getTargetFausts().stream()
+                        .distinct().collect(Collectors.toList());
+
+                if(!Faustnumbers.checkNoOpenCaseWithFaust(entityManager, caseOfTask.getId(),
+                        faustNumbers.toArray(String[]::new))) {
+                    LOGGER.info("Attempt to add one or more targetfausts {} " +
+                            "which is in use on another active case", dto.getTargetFausts());
+                    return ServiceErrorDto.InvalidRequest("Target faustnumber is in use",
+                            "One or more target faustnumbers is in use on another active case");
                 }
+                existing.setTargetFausts(faustNumbers);
             }
 
             // Update fields
             if(dto.getData() != null) {
                 existing.setData(dto.getData()); // It is allowed to update with an empty value
-            }
-            if(dto.getTargetFausts() != null) {
-                existing.setTargetFausts(dto.getTargetFausts());
             }
             if(dto.getTaskType() != null) {
                 existing.setTaskType(dto.getTaskType());
