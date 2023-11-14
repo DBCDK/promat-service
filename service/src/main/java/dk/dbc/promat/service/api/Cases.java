@@ -653,7 +653,7 @@ public class Cases {
                 }
 
                 // If status is changing from PENDING_APPROVAL to PENDING_ISSUES, this means that an editor
-                // has reviewed the case and send it back to the reviewer for further refinement.
+                // has reviewed the case and sent it back to the reviewer for further refinement.
                 // The case should then be approved again by the same editor - not reassigned to a new editor
                 // in the next mornings 'distribute cases' operation, so the editor field should not be cleared
                 // during the night.
@@ -664,6 +664,16 @@ public class Cases {
                         LOGGER.error("Sending case {} back to reviewer without an editor assigned", existing.getId());
                     }
                 }
+
+                // If status is changing from ASSIGNED to PENDING_APPROVAL, it means that the reviewer assumes his/her
+                // part is done, and that the case is ready to be reviewed by an editor. And not necessarily the one
+                // that created the case. SO editor must be removed from the case.
+                if( existing.in(CaseStatus.ASSIGNED) && status.in(CaseStatus.PENDING_APPROVAL)) {
+                    if( existing.getEditor() != null ) {
+                        existing.setEditor(null);
+                    }
+                }
+
 
                 // If status is changing from any inactive state, back to CREATED or ASSIGNED,
                 // then check that any faustnumber on the case is not in use on any active case

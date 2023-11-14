@@ -3,7 +3,6 @@ package dk.dbc.promat.service.batch;
 import dk.dbc.connector.openformat.OpenFormatConnectorException;
 import dk.dbc.promat.service.Dates;
 import dk.dbc.promat.service.api.BibliographicInformation;
-import dk.dbc.promat.service.api.FulltextHandler;
 import dk.dbc.promat.service.api.OpenFormatHandler;
 import dk.dbc.promat.service.persistence.CaseStatus;
 import dk.dbc.promat.service.persistence.MaterialType;
@@ -15,9 +14,6 @@ import dk.dbc.promat.service.Repository;
 
 import java.time.LocalDate;
 import java.time.Month;
-import java.util.ArrayList;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
-import org.eclipse.microprofile.metrics.ConcurrentGauge;
 import org.eclipse.microprofile.metrics.Metadata;
 import org.eclipse.microprofile.metrics.MetricRegistry;
 import org.eclipse.microprofile.metrics.MetricType;

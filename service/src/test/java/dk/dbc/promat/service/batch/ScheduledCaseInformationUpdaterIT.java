@@ -1266,7 +1266,7 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
         Integer inactiveId = created.getId();
 
         // Send the active case back to the reviewer, then again to approval - to set the keepEditor flag
-        dto = new CaseRequest().withStatus(CaseStatus.PENDING_ISSUES);
+        dto = new CaseRequest().withStatus(CaseStatus.PENDING_ISSUES).withEditor(10);
         response = postResponse("v1/api/cases/" + activeId, dto);
         assertThat("status code", response.getStatus(), is(200));
         dto.setStatus(CaseStatus.PENDING_APPROVAL);
