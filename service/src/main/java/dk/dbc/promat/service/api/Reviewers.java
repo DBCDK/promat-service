@@ -403,13 +403,12 @@ public class Reviewers {
                                 @QueryParam("notify") @DefaultValue("false") final Boolean notify,
                                 @Context UriInfo uriInfo) {
 
-
-        Notification notification;
         // Find the existing user
         final Reviewer reviewer = entityManager.find(Reviewer.class, id);
         if (reviewer == null) {
             LOGGER.info("Reviewer with id {} does not exists", id);
-            auditLogHandler.logTraceUpdateForToken("Request for update of profile", uriInfo, 0, 404);
+            auditLogHandler.logTraceUpdateForToken("Request for update of profile",
+                    uriInfo, 0, 404);
             return Response.status(404).build();
         }
 
@@ -420,6 +419,7 @@ public class Reviewers {
             // notify
             if (notify) {
                 // Create the notification now, before we fill in the changed fields in reviewer.
+                Notification notification;
                 notification = notificationFactory.notificationOf(new HiatusReset().withReviewer(reviewer));
                 entityManager.persist(notification);
             }
@@ -430,6 +430,9 @@ public class Reviewers {
                     .build();
         } catch (NotificationFactory.ValidateException e) {
             LOGGER.error("ResetHiatus failed:", e);
+            return Response.serverError().entity(e.getMessage()).build();
+        }catch (Exception e){
+            LOGGER.error("Unexpected error when resetting hiatus:", e);
             return Response.serverError().entity(e.getMessage()).build();
         }
 
