@@ -245,7 +245,7 @@ public class ReviewersIT extends ContainerTest {
     }
 
     @Test
-    void TestHiatusReset() throws  JsonProcessingException{
+    void testHiatusReset() throws  JsonProcessingException{
 
         // Initialize reviewer3 from the database with a modified begin and end hiatus
         final ReviewerRequest reviewerRequest = new ReviewerRequest()
@@ -257,13 +257,18 @@ public class ReviewersIT extends ContainerTest {
         assertThat("Initial vacation end", initialReviewer.getHiatusEnd(), is(LocalDate.parse("2023-11-16")));
 
         // Reset begin and end hiatus
-        final Response responseReset = postResponse("v1/api/reviewers/3/resethiatus", null,"1-2-3-4-5");
+        final Response responseReset = postResponse("v1/api/reviewers/3/resethiatus", null, Map.of("notify", true), "1-2-3-4-5");
         assertThat("Response status", responseReset.getStatus(), is(Response.Status.OK.getStatusCode()));
 
         // Verify the effect of reset
         final Reviewer reset = mapper.readValue(responseReset.readEntity(String.class), Reviewer.class);
         assertThat("Beginning of vacation is null", reset.getHiatusBegin(), is(nullValue()));
         assertThat("Ending of vacation is null", reset.getHiatusEnd(), is(nullValue()));
+
+
+        // Verify notification has been sent
+        List<Notification> notifications = getNotifications("Ferie nulstillet", "Lektør Peter Petersen med lønnummer 22 har nulstillet sin ferie.");
+        assertThat("The list has 1 element", notifications.size(), is(1));
     }
 
     @Test

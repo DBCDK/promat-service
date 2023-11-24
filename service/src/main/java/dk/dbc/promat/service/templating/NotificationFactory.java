@@ -8,28 +8,28 @@ import dk.dbc.promat.service.persistence.Notification;
 import dk.dbc.promat.service.persistence.NotificationStatus;
 import dk.dbc.promat.service.persistence.PromatCase;
 import dk.dbc.promat.service.persistence.PromatTask;
-import dk.dbc.promat.service.persistence.PromatUser;
 import dk.dbc.promat.service.persistence.Reviewer;
 import dk.dbc.promat.service.persistence.TaskFieldType;
 import dk.dbc.promat.service.templating.model.AssignReviewer;
 import dk.dbc.promat.service.templating.model.ChangedValue;
 import dk.dbc.promat.service.templating.model.DeadlinePassedMail;
 import dk.dbc.promat.service.templating.model.EarlyReminderMail;
+import dk.dbc.promat.service.templating.model.HiatusReset;
 import dk.dbc.promat.service.templating.model.MailToReviewerOnNewMessage;
 import dk.dbc.promat.service.templating.model.ReviewerDataChanged;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
 import jakarta.ejb.Stateless;
 import jakarta.inject.Inject;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
@@ -44,6 +44,7 @@ public class NotificationFactory {
         ValidateException(String reason) {
             super(reason);
         }
+
         ValidateException(Exception e) {
             super(e);
         }
@@ -81,7 +82,7 @@ public class NotificationFactory {
             subjectReminderCloseToDeadline = Files.readString(
                     Path.of(Notification.class.getResource("/mail/subject.reminder.closetodeadline.template").getPath()));
             subjectDeadlinePassed = Files.readString(
-                    Path.of(Notification.class.getResource( "/mail/subject.reminder.deadlinepassed.template").getPath()));
+                    Path.of(Notification.class.getResource("/mail/subject.reminder.deadlinepassed.template").getPath()));
 
         } catch (IOException ioException) {
             throw new RuntimeException(ioException);
@@ -106,6 +107,18 @@ public class NotificationFactory {
                 .withSubject(subject)
                 .withBodyText(renderer.render("reviewer_assign_to_case.jte",
                         model.withTitleSections(getTitleSections(fausts))))
+                .withStatus(NotificationStatus.PENDING);
+    }
+
+    public Notification notificationOf(HiatusReset model) throws ValidateException {
+        Notification notification = new Notification();
+        Reviewer reviewer = model.getReviewer();
+
+        return notification
+                .withToAddress(LU_MAILADDRESS)
+                .withSubject("Ferie nulstillet")
+                .withBodyText(String.format("Lektør %s %s med lønnummer %s har nulstillet sin ferie.",
+                        reviewer.getFirstName(), reviewer.getLastName(), reviewer.getPaycode()))
                 .withStatus(NotificationStatus.PENDING);
     }
 
@@ -179,7 +192,7 @@ public class NotificationFactory {
 
     private List<String> collectFausts(PromatCase promatCase) {
         String faust = promatCase.getPrimaryFaust();
-        if(promatCase.getTasks() != null) {
+        if (promatCase.getTasks() != null) {
             return Stream.concat(Stream.of(faust),
                     promatCase.getTasks().stream()
                             .map(PromatTask::getTargetFausts)

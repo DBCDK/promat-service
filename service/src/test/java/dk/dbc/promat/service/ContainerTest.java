@@ -32,7 +32,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.requestMatching;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options;
 
 public abstract class ContainerTest extends IntegrationTest {
-    private static final Logger LOGGER = LoggerFactory.getLogger(ContainerTest.class);
+    protected static final Logger LOGGER = LoggerFactory.getLogger(ContainerTest.class);
     protected static final ObjectMapper mapper = new JsonMapperProvider().getObjectMapper();
     protected static WireMockServer wireMockServer = makeWireMockServer();
     protected static final GenericContainer<?> promatServiceContainer = makePromatServiceContainer();
@@ -98,6 +98,20 @@ public abstract class ContainerTest extends IntegrationTest {
                 .withBaseUrl(promatServiceBaseUrl)
                 .withPathElements(path)
                 .withData(body, "application/json");
+        if (authToken != null) {
+            httpPost.getHeaders().put("Authorization", "Bearer " + authToken);
+        }
+        return httpClient.execute(httpPost);
+    }
+
+    public <T> Response postResponse(String path, T body, Map<String, Object> queryParameter, String authToken) {
+        HttpPost httpPost = new HttpPost(httpClient)
+                .withBaseUrl(promatServiceBaseUrl)
+                .withPathElements(path)
+                .withData(body, "application/json");
+        if (queryParameter != null) {
+            httpPost.getQueryParameters().putAll(queryParameter);
+        }
         if (authToken != null) {
             httpPost.getHeaders().put("Authorization", "Bearer " + authToken);
         }

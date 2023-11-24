@@ -14,6 +14,7 @@ import dk.dbc.promat.service.persistence.Reviewer;
 import dk.dbc.promat.service.persistence.ReviewerView;
 import dk.dbc.promat.service.persistence.Subject;
 import dk.dbc.promat.service.templating.NotificationFactory;
+import dk.dbc.promat.service.templating.model.HiatusReset;
 import dk.dbc.promat.service.templating.model.ReviewerDataChanged;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.ws.rs.DefaultValue;
@@ -35,6 +36,7 @@ import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.UriInfo;
+
 import java.time.DayOfWeek;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -81,8 +83,7 @@ public class Reviewers {
 
             auditLogHandler.logTraceReadForToken("View full profile", uriInfo, reviewer.getPaycode(), 200);
             return Response.ok(reviewer).build();
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             LOGGER.error("Exception in /reviewers when requesting id {}", id);
             LOGGER.error("Exception was: {}\n{}", e.getMessage(), e.getStackTrace());
             return ServiceErrorDto.Failed("Unexpected exception when trying to find reviewer");
@@ -108,7 +109,7 @@ public class Reviewers {
                     "Field 'paycode' must be supplied when creating a new reviewer");
         }
 
-        if(reviewerRequest.getEmail() == null && reviewerRequest.getPrivateEmail() == null) {
+        if (reviewerRequest.getEmail() == null && reviewerRequest.getPrivateEmail() == null) {
             return ServiceErrorDto.InvalidRequest("Missing required field in the request data",
                     "Field 'email' or 'private email' must be supplied when creating a new reviewer");
         }
@@ -217,54 +218,54 @@ public class Reviewers {
                 return Response.status(404).build();
             }
 
-            if(notify) {
+            if (notify) {
                 // Create the notification now, before we fill in the changed fields in reviewer.
-                 notification = notificationFactory.notificationOf(new ReviewerDataChanged()
+                notification = notificationFactory.notificationOf(new ReviewerDataChanged()
                         .withReviewerRequest(reviewerRequest)
                         .withReviewer(reviewer)
                 );
             }
 
             // Update by patching
-            if(reviewerRequest.isActive() != null) {
+            if (reviewerRequest.isActive() != null) {
                 reviewer.setActive(reviewerRequest.isActive());
                 reviewer.setActiveChanged(Date.from(Instant.now()));
-                if( reviewerRequest.isActive() ) {
+                if (reviewerRequest.isActive()) {
                     reviewer.setDeactivated(null);
                 }
             }
-            if(reviewerRequest.getAccepts() != null) {
+            if (reviewerRequest.getAccepts() != null) {
                 reviewer.setAccepts(reviewerRequest.getAccepts());
             }
-            if(reviewerRequest.getAddress() != null) {
+            if (reviewerRequest.getAddress() != null) {
                 reviewer.setAddress(reviewerRequest.getAddress());
             }
-            if(reviewerRequest.getPrivateAddress() != null) {
+            if (reviewerRequest.getPrivateAddress() != null) {
                 reviewer.setPrivateAddress(reviewerRequest.getPrivateAddress());
             }
-            if(reviewerRequest.getEmail() != null) {
+            if (reviewerRequest.getEmail() != null) {
                 reviewer.setEmail(reviewerRequest.getEmail());
             }
-            if(reviewerRequest.getPrivateEmail() != null) {
+            if (reviewerRequest.getPrivateEmail() != null) {
                 reviewer.setPrivateEmail(reviewerRequest.getPrivateEmail());
             }
-            if(reviewerRequest.getFirstName() != null) {
+            if (reviewerRequest.getFirstName() != null) {
                 reviewer.setFirstName(reviewerRequest.getFirstName());
             }
-            if(reviewerRequest.getLastName() != null) {
+            if (reviewerRequest.getLastName() != null) {
                 reviewer.setLastName(reviewerRequest.getLastName());
             }
-            if(reviewerRequest.getHiatusBegin() != null) {
+            if (reviewerRequest.getHiatusBegin() != null) {
                 reviewer.setHiatusBegin(reviewerRequest.getHiatusBegin());
             }
-            if(reviewerRequest.getHiatusEnd() != null) {
+            if (reviewerRequest.getHiatusEnd() != null) {
                 reviewer.setHiatusEnd(reviewerRequest.getHiatusEnd());
             }
-            if(reviewerRequest.getInstitution() != null) {
+            if (reviewerRequest.getInstitution() != null) {
                 reviewer.setInstitution(reviewerRequest.getInstitution());
             }
-            if(reviewerRequest.getPaycode() != null) {
-                if( !reviewerRequest.getPaycode().equals(reviewer.getPaycode()) ) {
+            if (reviewerRequest.getPaycode() != null) {
+                if (!reviewerRequest.getPaycode().equals(reviewer.getPaycode())) {
                     Map<String, String> paycodeChanges = new HashMap<>();
                     paycodeChanges.put("Current value", reviewer.getPaycode().toString());
                     paycodeChanges.put("New value", reviewerRequest.getPaycode().toString());
@@ -272,23 +273,23 @@ public class Reviewers {
                 }
                 reviewer.setPaycode(reviewerRequest.getPaycode());
             }
-            if(reviewerRequest.getPhone() != null) {
+            if (reviewerRequest.getPhone() != null) {
                 reviewer.setPhone(reviewerRequest.getPhone());
             }
-            if(reviewerRequest.getPrivatePhone() != null) {
+            if (reviewerRequest.getPrivatePhone() != null) {
                 reviewer.setPrivatePhone(reviewerRequest.getPrivatePhone());
             }
-            if(reviewerRequest.getSubjects() != null) {
+            if (reviewerRequest.getSubjects() != null) {
 
                 // If subjects were removed, make sure that associated notes are also removed.
                 reviewer.setSubjectNotes(repository.resolveSubjectNotes(reviewerRequest.getSubjects(), reviewer.getSubjectNotes()));
                 reviewer.setSubjects(repository.resolveSubjects(reviewerRequest.getSubjects()));
             }
-            if(reviewerRequest.getSubjectNotes() != null) {
+            if (reviewerRequest.getSubjectNotes() != null) {
 
                 // If both subjects and subjectnotes were changed, make sure that the supplied subjectnotes refer to
                 // subjects present in the new subjectlist.
-                if(reviewerRequest.getSubjects() != null) {
+                if (reviewerRequest.getSubjects() != null) {
                     reviewer.setSubjectNotes(repository.checkSubjectNotes(reviewerRequest.getSubjectNotes(), reviewerRequest.getSubjects()));
                 } else {
 
@@ -299,10 +300,10 @@ public class Reviewers {
                                     reviewerRequest.getSubjectNotes()));
                 }
             }
-            if(reviewerRequest.getCapacity() != null) {
+            if (reviewerRequest.getCapacity() != null) {
                 reviewer.setCapacity(reviewerRequest.getCapacity());
             }
-            if(reviewerRequest.getNote() != null) {
+            if (reviewerRequest.getNote() != null) {
                 reviewer.setNote(reviewerRequest.getNote());
             }
 
@@ -398,22 +399,41 @@ public class Reviewers {
     @Path("reviewers/{id}/resethiatus")
     @Produces({MediaType.APPLICATION_JSON})
     @RolesAllowed({"authenticated-user"})
-    public Response resetHiatus(@PathParam("id") final Integer id, @Context UriInfo uriInfo) {
+    public Response resetHiatus(@PathParam("id") final Integer id,
+                                @QueryParam("notify") @DefaultValue("false") final Boolean notify,
+                                @Context UriInfo uriInfo) {
 
-            // Find the existing user
-            final Reviewer reviewer = entityManager.find(Reviewer.class, id);
-            if (reviewer == null) {
-                LOGGER.info("Reviewer with id {} does not exists", id);
-                auditLogHandler.logTraceUpdateForToken("Request for update of profile", uriInfo, 0, 404);
-                return Response.status(404).build();
+        // Find the existing user
+        final Reviewer reviewer = entityManager.find(Reviewer.class, id);
+        if (reviewer == null) {
+            LOGGER.info("Reviewer with id {} does not exists", id);
+            auditLogHandler.logTraceUpdateForToken("Request for update of profile",
+                    uriInfo, 0, 404);
+            return Response.status(404).build();
+        }
+
+        reviewer.setHiatusBegin(null);
+        reviewer.setHiatusEnd(null);
+
+        try {
+            // notify
+            if (notify) {
+                // Create the notification now, before we fill in the changed fields in reviewer.
+                Notification notification = notificationFactory.notificationOf(new HiatusReset().withReviewer(reviewer));
+                entityManager.persist(notification);
             }
-
-            reviewer.setHiatusBegin(null);
-            reviewer.setHiatusEnd(null);
 
             auditLogHandler.logTraceUpdateForToken("Hiatus reset", uriInfo, reviewer.getId(), 200);
             LOGGER.info("Hiatus for reviewer with ID {} was reset", reviewer.getId());
             return Response.ok(reviewer)
                     .build();
+        } catch (NotificationFactory.ValidateException e) {
+            LOGGER.error("ResetHiatus failed:", e);
+            return Response.serverError().entity(e.getMessage()).build();
+        } catch (Exception e) {
+            LOGGER.error("Unexpected error when resetting hiatus:", e);
+            return Response.serverError().entity(e.getMessage()).build();
+        }
+
     }
 }
