@@ -16,7 +16,7 @@ public class HiatusReset {
 
     @Override
     public String toString() {
-        return "HiathusReset{" +
+        return "HiatusReset{" +
                 "reviewer=" + reviewer +
                 '}';
     }
