@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonView;
 import dk.dbc.commons.jpa.converter.StringListToJsonArrayConverter;
 
+import dk.dbc.promat.service.dto.CaseRequest;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
@@ -250,6 +251,9 @@ public class PromatCase {
     @Transient
     private String note;
 
+    @JsonView({CaseView.Case.class})
+    private String internalNote;
+
     @JsonView({CaseView.Summary.class, CaseView.Case.class})
     private LocalDate reminderSent;
 
@@ -291,6 +295,19 @@ public class PromatCase {
 
     public void setDetails(String details) {
         this.details = details;
+    }
+
+    public String getInternalNote() {
+        return internalNote;
+    }
+
+    public void setInternalNote(String internalNote) {
+        this.internalNote = internalNote;
+    }
+
+    public PromatCase withInternalNote(String internalNote) {
+        this.internalNote = internalNote;
+        return this;
     }
 
     public String getPrimaryFaust() {
@@ -647,6 +664,7 @@ public class PromatCase {
                 Objects.equals(creator, aCase.creator) &&
                 Objects.equals(publisher, aCase.publisher) &&
                 Objects.equals(fulltextLink, aCase.fulltextLink) &&
+                Objects.equals(internalNote, aCase.internalNote) &&
                 newMessagesToEditor == aCase.newMessagesToEditor &&
                 newMessagesToReviewer == aCase.newMessagesToReviewer &&
                 Objects.equals(reminderSent, aCase.reminderSent) &&
@@ -658,7 +676,7 @@ public class PromatCase {
     public int hashCode() {
         return Objects.hash(id, title, details, primaryFaust, relatedFausts, reviewer, editor, subjects, created,
                 deadline, assigned, status, materialType, tasks, weekCode, trimmedWeekCode, author, creator, publisher,
-                fulltextLink, newMessagesToEditor, newMessagesToReviewer, reminderSent, codes, keepEditor);
+                fulltextLink, newMessagesToEditor, newMessagesToReviewer, reminderSent, codes, keepEditor, internalNote);
     }
 
     @Override
@@ -687,6 +705,7 @@ public class PromatCase {
                 ", newMessagesToEditor='" + newMessagesToEditor + '\'' +
                 ", newMessagesToReviewer='" + newMessagesToReviewer + '\'' +
                 ", note='" + note + '\'' +
+                ", internalNote='" + internalNote + '\'' +
                 ", reminderSent'" + reminderSent + '\'' +
                 ", codes=" + codes +
                 ", keepEditor=" + keepEditor +

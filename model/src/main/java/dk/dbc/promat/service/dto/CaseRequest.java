@@ -38,6 +38,8 @@ public class CaseRequest implements Dto {
         this.title = promatCase.getTitle();
         this.weekCode = promatCase.getWeekCode();
         this.fulltextLink = promatCase.getFulltextLink();
+
+        this.internalNote = promatCase.getInternalNote();
     }
 
     private String title;
@@ -82,6 +84,8 @@ public class CaseRequest implements Dto {
     //       Do note that we specifically do NOT change the model version even though we have added a field. This
     //       is to allow easy rollback if/when we remove the "hack" again
     private List<String> codes;
+
+    private String internalNote;
 
     public String getTitle() {
         return title;
@@ -337,6 +341,19 @@ public class CaseRequest implements Dto {
         return this;
     }
 
+    public String getInternalNote() {
+        return internalNote;
+    }
+
+    public void setInternalNote(String internalNote) {
+        this.internalNote = internalNote;
+    }
+
+    public CaseRequest withInternalNote(String internalNote) {
+        this.internalNote = internalNote;
+        return this;
+    }
+
     @Override
     public String toString() {
         return "CaseRequestDto{" +
@@ -359,6 +376,7 @@ public class CaseRequest implements Dto {
                 ", fulltextLink='" + fulltextLink + '\'' +
                 ", reminderSent='" + reminderSent + '\'' +
                 ", codes=" + codes +
+                ", internalNote='" + internalNote + '\'' +
                 '}';
     }
 
@@ -421,6 +439,9 @@ public class CaseRequest implements Dto {
         if (note != null ? !note.equals(that.note) : that.note != null) {
             return false;
         }
+        if (internalNote != null ? !internalNote.equals(that.internalNote) : that.internalNote != null) {
+            return false;
+        }
         if (fulltextLink != null ? !fulltextLink.equals(that.fulltextLink) : that.fulltextLink != null) {
             return false;
         }
@@ -448,6 +469,7 @@ public class CaseRequest implements Dto {
         result = 31 * result + (creator != null ? creator.hashCode() : 0);
         result = 31 * result + (publisher != null ? publisher.hashCode() : 0);
         result = 31 * result + (note != null ? note.hashCode() : 0);
+        result = 31 * result + (internalNote != null ? internalNote.hashCode() : 0);
         result = 31 * result + (fulltextLink != null ? fulltextLink.hashCode() : 0);
         result = 31 * result + (reminderSent != null ? reminderSent.hashCode() : 0);
         result = 31 * result + (codes != null ? codes.hashCode() : 0);

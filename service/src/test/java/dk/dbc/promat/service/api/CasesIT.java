@@ -53,6 +53,7 @@ import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
@@ -3327,4 +3328,29 @@ public class CasesIT extends ContainerTest {
         assertThat("status code", deleteResponse("v1/api/cases/" + aCase.getId()).getStatus(), is(200));
     }
 
+    @Test
+    public void testInternalNote() throws IOException {
+
+        // Create case with status ASSIGNED but no reviewer given
+        CaseRequest requestDto = new CaseRequest()
+                .withPrimaryFaust("7001112")
+                .withTitle("Title for 7001112")
+                .withDetails("Details for 7001112")
+                .withMaterialType(MaterialType.BOOK)
+                .withDeadline("2023-12-12");
+
+        // Assert internalNote is null, change note, assert internal note has set value
+        Response response = postResponse("v1/api/cases", requestDto);
+
+        PromatCase aCase = mapper.readValue(response.readEntity(String.class), PromatCase.class);
+        assertThat("Internal note", aCase.getInternalNote(), is(IsNull.nullValue()));
+
+        CaseRequest newRequestDto = new CaseRequest()
+                .withInternalNote("Testing");
+
+        assertThat("status code", postResponse("v1/api/cases/" + aCase.getId(), newRequestDto).getStatus(), is(200));
+
+        PromatCase updated = get("v1/api/cases/" + aCase.getId(), PromatCase.class);
+        assertThat("Note", updated.getInternalNote(), is("Testing"));
+    }
 }

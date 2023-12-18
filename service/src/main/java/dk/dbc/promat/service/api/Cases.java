@@ -595,6 +595,9 @@ public class Cases {
             if(dto.getNote() != null) {
                 existing.setNote(dto.getNote());
             }
+            if(dto.getInternalNote() != null) {
+                existing.setInternalNote(dto.getInternalNote());
+            }
             if(dto.getReviewer() != null) {
                 Integer reviewer_id = existing.getReviewer() == null ? null : existing.getReviewer().getId();
                 if (!dto.getReviewer().equals(reviewer_id)) {
