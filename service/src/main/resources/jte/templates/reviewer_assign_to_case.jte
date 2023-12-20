@@ -13,8 +13,6 @@
     <p>Note: $unsafe{note}</p>
 @endif
 
-<p>@tag.metakompas_section_tag(promatCase = promatCase)</p>
-
 @tag.how_to_get_material_tag(model = model)
 
 <p>God fornøjelse</p>
