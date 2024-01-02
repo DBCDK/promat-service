@@ -19,7 +19,7 @@
   </parent>
 
   <artifactId>promat</artifactId>
-  <version>2.1-SNAPSHOT</version>
+  <version>${revision}</version>
   <packaging>pom</packaging>
 
   <modules>
@@ -29,6 +29,7 @@
   </modules>
 
   <properties>
+    <revision>2.1-SNAPSHOT</revision>
     <jte.version>1.4.0</jte.version>
   </properties>
 
