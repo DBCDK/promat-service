@@ -12,5 +12,5 @@
     "$unsafe{messageText.replace("\n", "<br/>")}"</i></p>
 
 <p>Med venlig hilsen,<br/>
-    ProMat redaktionen
+    Redaktionen
 </p>
