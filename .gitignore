@@ -4,3 +4,4 @@
 target
 jte-classes
 db.logs
+.flattened*

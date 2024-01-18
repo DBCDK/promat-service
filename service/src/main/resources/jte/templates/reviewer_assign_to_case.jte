@@ -17,5 +17,5 @@
 
 <p>God fornøjelse</p>
 <p>Med venlig hilsen,<br/>
-ProMat redaktionen
+Redaktionen
 </p>
