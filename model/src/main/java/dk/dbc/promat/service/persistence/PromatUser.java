@@ -45,38 +45,44 @@ public abstract class PromatUser {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @JsonView({CaseView.Summary.class, ReviewerView.Summary.class, ReviewerView.Reviewer.class})
+    @JsonView({CaseView.Summary.class, ReviewerView.Summary.class, ReviewerView.Reviewer.class, EditorView.Summary.class, EditorView.Editor.class})
     protected Integer id;
 
     // update/insert is managed by discriminator mechanics
     @Column(nullable = false, insertable = false, updatable = false)
     @Convert(converter = RoleConverter.class)
-    @JsonView({CaseView.Summary.class, CaseView.Case.class, ReviewerView.Summary.class, ReviewerView.Reviewer.class})
+    @JsonView({CaseView.Summary.class, CaseView.Case.class, ReviewerView.Summary.class, ReviewerView.Reviewer.class, EditorView.Summary.class, EditorView.Editor.class})
     protected Role role;
 
-    @JsonView({CaseView.Summary.class, CaseView.Case.class, ReviewerView.Summary.class, ReviewerView.Reviewer.class})
+    @JsonView({CaseView.Summary.class, CaseView.Case.class, ReviewerView.Summary.class, ReviewerView.Reviewer.class, EditorView.Summary.class, EditorView.Editor.class})
     protected boolean active;
 
-    @JsonView({CaseView.Summary.class, CaseView.Case.class, ReviewerView.Reviewer.class})
+    @JsonView({CaseView.Summary.class, CaseView.Case.class, ReviewerView.Reviewer.class, EditorView.Editor.class})
     protected String culrId;
 
-    @JsonView({CaseView.Export.class, CaseView.Summary.class, CaseView.Case.class, ReviewerView.Summary.class, ReviewerView.Reviewer.class})
+    @JsonView({CaseView.Export.class, CaseView.Summary.class, CaseView.Case.class, ReviewerView.Summary.class, ReviewerView.Reviewer.class, EditorView.Summary.class, EditorView.Editor.class})
     protected String firstName;
 
-    @JsonView({CaseView.Export.class, CaseView.Summary.class, CaseView.Case.class, ReviewerView.Summary.class, ReviewerView.Reviewer.class})
+    @JsonView({CaseView.Export.class, CaseView.Summary.class, CaseView.Case.class, ReviewerView.Summary.class, ReviewerView.Reviewer.class, EditorView.Summary.class, EditorView.Editor.class})
     protected String lastName;
 
-    @JsonView({ReviewerView.Reviewer.class})
+    @JsonView({ReviewerView.Reviewer.class, EditorView.Editor.class})
     protected String email;
 
-    @JsonView({ReviewerView.Reviewer.class})
+    @JsonView({ReviewerView.Reviewer.class, EditorView.Editor.class})
     protected String phone;
 
-    @JsonView({ReviewerView.Reviewer.class})
+    @JsonView({ReviewerView.Reviewer.class, EditorView.Editor.class})
     protected Date activeChanged;
 
-    @JsonView({ReviewerView.Reviewer.class})
+    @JsonView({ReviewerView.Reviewer.class, EditorView.Editor.class})
     protected Date deactivated;
+
+    @JsonView({ReviewerView.Reviewer.class, EditorView.Editor.class})
+    protected String agency;
+
+    @JsonView({ReviewerView.Reviewer.class, EditorView.Editor.class})
+    protected String userId;
 
     public Integer getId() {
         return id;

@@ -56,7 +56,7 @@ public class ReviewersIT extends ContainerTest {
 
         // Example log entry:
         // [docker-java-stream-2022862423] INFO dk.dbc.promat.service.ContainerTest - STDOUT: {"timestamp":"2021-08-04T23:41:34.661920+02:00","sys_event_type":"audit","client_ip":["172.17.0.1"],"app_name":"PROMAT","action":"CREATE","accessing_user":{"token":"1-2-3-4-5"},"owning_user":"6666/190976","PROMAT":{"Created new user":"reviewers","Response":"200"}}
-        assertThat("auditlog entry", promatServiceContainer.getLogs().contains("{\"Created new user\":\"reviewers\",\"Response\":\"201\"}"));
+        assertThat("auditlog entry", promatServiceContainer.getLogs().contains("{\"Created new reviewer\":\"reviewers\",\"Response\":\"201\"}"));
     }
 
     @Test
@@ -155,7 +155,7 @@ public class ReviewersIT extends ContainerTest {
 
         // Example log entry:
         // [docker-java-stream--208115991] INFO dk.dbc.promat.service.ContainerTest - STDOUT: {"timestamp":"2021-08-04T14:14:48.151178+02:00","sys_event_type":"audit","client_ip":["172.17.0.1"],"app_name":"PROMAT","action":"READ","accessing_user":{"token":"1-2-3-4-5"},"owning_user":"123/190976","PROMAT":{"View full profile":"reviewers/1","Response":"200"}}
-        assertThat("auditlog entry", promatServiceContainer.getLogs().contains("{\"View full profile\":\"reviewers/1\",\"Response\":\"200\"}"));
+        assertThat("auditlog entry", promatServiceContainer.getLogs().contains("{\"View full reviewer profile\":\"reviewers/1\",\"Response\":\"200\"}"));
     }
 
     @Test

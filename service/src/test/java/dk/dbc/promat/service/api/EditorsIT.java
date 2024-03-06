@@ -1,6 +1,7 @@
 package dk.dbc.promat.service.api;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import dk.dbc.commons.testcontainers.postgres.AbstractJpaAndRestTestBase;
 import dk.dbc.promat.service.ContainerTest;
 import dk.dbc.promat.service.dto.EditorList;
 import dk.dbc.promat.service.dto.EditorRequest;
@@ -24,7 +25,7 @@ public class EditorsIT extends ContainerTest {
     private static final Logger LOGGER = LoggerFactory.getLogger(EditorsIT.class);
 
     @Test
-    void getEditor() {
+    void getEditor() throws JsonProcessingException {
         final Editor expectedEditor = new Editor();
         expectedEditor.setId(10);
         expectedEditor.setActive(true);
@@ -33,14 +34,15 @@ public class EditorsIT extends ContainerTest {
         expectedEditor.setEmail("ed.itor@dbc.dk");
         expectedEditor.setActiveChanged(Date.from(Instant.ofEpochSecond(1629900636)));
 
-        Editor actual = get("v1/api/editors/10", Editor.class);
+        Response response = getResponse("v1/api/editors/10", "1-2-3-4-5");
+        final Editor actual = mapper.readValue(response.readEntity(String.class), Editor.class);
         actual.setActiveChanged(Date.from(Instant.ofEpochSecond(1629900636)));
         actual.setDeactivated(null);
         assertThat(actual, is(expectedEditor));
     }
 
     @Test
-    void getAllEditors() throws JsonProcessingException, InterruptedException {
+    void getAllEditors() throws JsonProcessingException {
         Response response = getResponse("v1/api/editors");
 
         EditorList<Editor> editors = mapper.readValue(response.readEntity(String.class), EditorList.class);
@@ -62,7 +64,7 @@ public class EditorsIT extends ContainerTest {
 
     @Test
     void editorNotFound() {
-        final Response response = getResponse("v1/api/editors/4242");
+        final Response response = getResponse("v1/api/editors/4242", "1-2-3-4-5");
 
         assertThat(response.getStatus(), is(404));
     }
@@ -76,7 +78,7 @@ public class EditorsIT extends ContainerTest {
                 .withFirstName("Edito")
                 .withLastName("r");
 
-        final Response response = putResponse("v1/api/editors/12", editorRequest);
+        final Response response = putResponse("v1/api/editors/12", editorRequest, "1-2-3-4-5");
         assertThat("response status", response.getStatus(), is(200));
         final Editor updated = mapper.readValue(response.readEntity(String.class), Editor.class);
 
@@ -98,7 +100,7 @@ public class EditorsIT extends ContainerTest {
                 .withEmail("edi.tore@dbc.dk")
                 .withPaycode(9999);
 
-        Response response = postResponse("v1/api/editors", editorRequest);
+        Response response = postResponse("v1/api/editors", editorRequest, "1-2-3-4-5");
         assertThat("response status", response.getStatus(), is(201));
         final Editor created = mapper.readValue(response.readEntity(String.class), Editor.class);
 
@@ -108,7 +110,7 @@ public class EditorsIT extends ContainerTest {
 
         assertThat("Editor has been created", created.equals(expected));
 
-        response = getResponse("v1/api/editors/" + created.getId());
+        response = getResponse("v1/api/editors/" + created.getId(), "1-2-3-4-5");
         assertThat("response status", response.getStatus(), is(200));
         final Editor existing = mapper.readValue(response.readEntity(String.class), Editor.class);
 
