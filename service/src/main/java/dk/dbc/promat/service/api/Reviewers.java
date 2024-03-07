@@ -311,7 +311,7 @@ public class Reviewers {
                 entityManager.persist(notification);
             }
 
-            auditLogHandler.logTraceUpdateForToken("Update and view full profile", uriInfo, reviewer.getPaycode(), 200);
+            auditLogHandler.logTraceUpdateForToken("Update and view full reviewer profile", uriInfo, reviewer.getPaycode(), 200);
             return Response.status(200)
                     .entity(reviewer)
                     .build();

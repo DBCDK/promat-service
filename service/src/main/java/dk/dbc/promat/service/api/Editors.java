@@ -148,7 +148,7 @@ public class Editors {
     @Path("editors/{id}")
     @Produces({MediaType.APPLICATION_JSON})
     @RolesAllowed({"authenticated-user"})
-    public Response updateEditor(@PathParam("id") final Integer id, EditorRequest editorRequest) {
+    public Response updateEditor(@PathParam("id") final Integer id, EditorRequest editorRequest, @Context UriInfo uriInfo) {
         LOGGER.info("editors/{} (PUT)", id);
 
         try {
@@ -178,6 +178,7 @@ public class Editors {
                 editor.setLastName(editorRequest.getLastName());
             }
 
+            auditLogHandler.logTraceUpdateForToken("Update and view full editor profile", uriInfo, editor.getId(), 200);
             return Response.status(200)
                     .entity(editor)
                     .build();

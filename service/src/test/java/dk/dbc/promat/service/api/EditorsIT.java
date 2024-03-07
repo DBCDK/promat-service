@@ -88,6 +88,8 @@ public class EditorsIT extends ContainerTest {
         updated.setActiveChanged(Date.from(Instant.ofEpochSecond(1629900636)));
         updated.setDeactivated(null);
         assertThat("Editor has been updated", updated.equals(expected));
+
+        assertThat("auditlog update", promatServiceContainer.getLogs().contains("{\"Update and view full editor profile\":\"editors/12\",\"Response\":\"200\"}"));
     }
 
     @Test
