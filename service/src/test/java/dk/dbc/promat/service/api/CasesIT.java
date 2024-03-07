@@ -58,6 +58,7 @@ import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 
+import static jakarta.ws.rs.core.Response.Status.NO_CONTENT;
 import static java.nio.file.StandardOpenOption.CREATE_NEW;
 import static java.nio.file.StandardOpenOption.WRITE;
 import static jakarta.ws.rs.core.Response.Status.BAD_REQUEST;
@@ -1586,11 +1587,11 @@ public class CasesIT extends ContainerTest {
     public void testBuggiApproval() throws IOException, PromatServiceConnectorException {
         String pidPreamble = "870170-BASIS:";
         TagList tags = new TagList(new Tag("hest", 1));
-        assertPromatThrows(NOT_FOUND, () -> promatServiceConnector.approveBuggiTask(pidPreamble + "12345678", tags));
+        assertPromatThrows(NO_CONTENT, () -> promatServiceConnector.approveBuggiTask(pidPreamble + "12345678", tags));
 
         CaseRequest noBuggiReq = makeRequest("92001234", TaskFieldType.BKM);
         PromatCase noBuggiCase = postAndAssert("v1/api/cases", noBuggiReq, PromatCase.class, CREATED);
-        assertPromatThrows(NOT_FOUND, () -> promatServiceConnector.approveBuggiTask(pidPreamble + noBuggiCase.getPrimaryFaust(), tags));
+        assertPromatThrows(NO_CONTENT, () -> promatServiceConnector.approveBuggiTask(pidPreamble + noBuggiCase.getPrimaryFaust(), tags));
         deleteResponse("v1/api/cases/" + noBuggiCase.getId());
 
         CaseRequest cr = makeRequest("93001234", TaskFieldType.BUGGI);

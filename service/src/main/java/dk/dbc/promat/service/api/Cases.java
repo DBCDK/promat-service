@@ -78,6 +78,7 @@ import java.util.stream.Stream;
 
 import static jakarta.ws.rs.core.Response.Status.BAD_REQUEST;
 import static jakarta.ws.rs.core.Response.Status.NOT_FOUND;
+import static jakarta.ws.rs.core.Response.Status.NO_CONTENT;
 
 @Stateless
 @Path("")
@@ -538,7 +539,7 @@ public class Cases {
         PromatCase promatCase = findBuggiCase(faust);
         if(promatCase == null) {
             LOGGER.warn("Pid {} was not found for request Buggi task approval", pid);
-            return Response.status(NOT_FOUND).type(MediaType.APPLICATION_JSON_TYPE).entity(mapper.writeValueAsString(new ServiceErrorDto().withCode(ServiceErrorCode.FAILED))).build();
+            return Response.status(NO_CONTENT).type(MediaType.APPLICATION_JSON_TYPE).entity(mapper.writeValueAsString(new ServiceErrorDto().withCode(ServiceErrorCode.FAILED))).build();
         }
         // Todo: We lack a proper way to "store" the presence of BUGGI data, if the BUGGI task has more than one faust.
         return promatCase.getTasks().stream()
