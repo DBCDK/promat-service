@@ -1,17 +1,14 @@
 package dk.dbc.promat.service.api;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import dk.dbc.commons.testcontainers.postgres.AbstractJpaAndRestTestBase;
 import dk.dbc.promat.service.ContainerTest;
 import dk.dbc.promat.service.dto.EditorList;
 import dk.dbc.promat.service.dto.EditorRequest;
 import dk.dbc.promat.service.persistence.Editor;
-import dk.dbc.promat.service.persistence.Reviewer;
 import dk.dbc.promat.service.templating.Formatting;
 
 import java.sql.Date;
 import java.time.Instant;
-import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
