@@ -81,7 +81,7 @@ public class Reviewers {
                 return Response.status(404).build();
             }
 
-            auditLogHandler.logTraceReadForToken("View full profile", uriInfo, reviewer.getPaycode(), 200);
+            auditLogHandler.logTraceReadForToken("View full reviewer profile", uriInfo, reviewer.getPaycode(), 200);
             return Response.ok(reviewer).build();
         } catch (Exception e) {
             LOGGER.error("Exception in /reviewers when requesting id {}", id);
@@ -147,7 +147,7 @@ public class Reviewers {
             entityManager.persist(entity);
             entityManager.flush();
 
-            auditLogHandler.logTraceCreateForToken("Created new user", uriInfo, entity.getPaycode(), 201);
+            auditLogHandler.logTraceCreateForToken("Created new reviewer", uriInfo, entity.getPaycode(), 201);
             LOGGER.info("Created new reviewer with ID {}", entity.getId());
             return Response.status(201)
                     .entity(entity)
@@ -311,7 +311,7 @@ public class Reviewers {
                 entityManager.persist(notification);
             }
 
-            auditLogHandler.logTraceUpdateForToken("Update and view full profile", uriInfo, reviewer.getPaycode(), 200);
+            auditLogHandler.logTraceUpdateForToken("Update and view full reviewer profile", uriInfo, reviewer.getPaycode(), 200);
             return Response.status(200)
                     .entity(reviewer)
                     .build();

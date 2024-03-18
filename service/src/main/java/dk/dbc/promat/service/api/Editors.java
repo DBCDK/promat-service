@@ -1,16 +1,23 @@
 package dk.dbc.promat.service.api;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import dk.dbc.connector.culr.CulrConnectorException;
 import dk.dbc.promat.service.dto.EditorList;
 import dk.dbc.promat.service.dto.EditorRequest;
 import dk.dbc.promat.service.dto.ServiceErrorDto;
 import dk.dbc.promat.service.persistence.Editor;
+import dk.dbc.promat.service.persistence.EditorView;
 import dk.dbc.promat.service.persistence.PromatEntityManager;
 
 import java.time.Instant;
 import java.util.Date;
 import java.util.List;
+
+import dk.dbc.promat.service.persistence.ReviewerView;
+import jakarta.annotation.security.RolesAllowed;
 import jakarta.persistence.TypedQuery;
+import jakarta.ws.rs.core.Context;
+import jakarta.ws.rs.core.UriInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,10 +45,14 @@ public class Editors {
     @Inject
     CulrHandler culrHandler;
 
+    @Inject
+    AuditLogHandler auditLogHandler;
+
     @POST
     @Path("editors")
     @Produces({MediaType.APPLICATION_JSON})
-    public Response createEditor(EditorRequest editorRequest) throws CulrConnectorException {
+    @RolesAllowed({"authenticated-user"})
+    public Response createEditor(EditorRequest editorRequest, @Context UriInfo uriInfo) throws CulrConnectorException {
         LOGGER.info("editors (POST)");
 
         final String firstName = editorRequest.getFirstName();
@@ -94,6 +105,7 @@ public class Editors {
             entityManager.persist(entity);
             entityManager.flush();
 
+            auditLogHandler.logTraceCreateForToken("Created new editor", uriInfo, entity.getId(), 201);
             LOGGER.info("Created new editor with ID {} for request {}", entity.getId(), editorRequest);
             return Response.status(201)
                     .entity(entity)
@@ -106,11 +118,14 @@ public class Editors {
     @GET
     @Path("editors/{id}")
     @Produces({MediaType.APPLICATION_JSON})
-    public Response getEditor(@PathParam("id") Integer id) {
+    @RolesAllowed({"authenticated-user"})
+    public Response getEditor(@PathParam("id") Integer id, @Context UriInfo uriInfo) {
         final Editor editor = entityManager.find(Editor.class, id);
         if (editor == null) {
+            auditLogHandler.logTraceReadForToken("Request for full profile", uriInfo, 0, 404);
             return Response.status(404).build();
         }
+        auditLogHandler.logTraceReadForToken("View full editor profile", uriInfo, editor.getId(), 200);
         return Response.ok(editor).build();
     }
 
@@ -118,10 +133,12 @@ public class Editors {
     @Path("editors")
     @Produces({MediaType.APPLICATION_JSON})
     public Response getAllEditors() {
+        final ObjectMapper objectMapper = new JsonMapperProvider().getObjectMapper();
+
         try {
             TypedQuery<Editor> q = entityManager.createNamedQuery(Editor.GET_ALL_EDITORS, Editor.class);
             final List<Editor> editors = q.getResultList();
-            return Response.ok().entity(new EditorList<>().withEditors(editors)).build();
+            return Response.ok(objectMapper.writerWithView(EditorView.Summary.class).writeValueAsString(new EditorList<>().withEditors(editors))).build();
         } catch (Exception e) {
             return ServiceErrorDto.Failed(e.getMessage());
         }
@@ -130,7 +147,8 @@ public class Editors {
     @PUT
     @Path("editors/{id}")
     @Produces({MediaType.APPLICATION_JSON})
-    public Response updateEditor(@PathParam("id") final Integer id, EditorRequest editorRequest) {
+    @RolesAllowed({"authenticated-user"})
+    public Response updateEditor(@PathParam("id") final Integer id, EditorRequest editorRequest, @Context UriInfo uriInfo) {
         LOGGER.info("editors/{} (PUT)", id);
 
         try {
@@ -160,6 +178,7 @@ public class Editors {
                 editor.setLastName(editorRequest.getLastName());
             }
 
+            auditLogHandler.logTraceUpdateForToken("Update and view full editor profile", uriInfo, editor.getId(), 200);
             return Response.status(200)
                     .entity(editor)
                     .build();
