@@ -241,7 +241,6 @@ public abstract class ContainerTest extends IntegrationTest {
                 .withEnv("OPENSEARCH_PROFILE", "dbckat")
                 .withEnv("OPENSEARCH_AGENCY", "010100")
                 .withEnv("OPENSEARCH_REPOSITORY", "rawrepo_basis")
-                .withEnv("WORK_PRESENTATION_SERVICE_URL", "http://host.testcontainers.internal:" + wireMockServer.port() + "/api/")
                 .withEnv("PROMAT_CLUSTER_NAME", "")
                 .withEnv("MAIL_HOST", "mailhost")
                 .withEnv("MAIL_USER", "mail.user")
