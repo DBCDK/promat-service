@@ -258,7 +258,7 @@ public abstract class ContainerTest extends IntegrationTest {
                 .withEnv("OAUTH2_CLIENT_SECRET", "abcdef")
                 .withEnv("OAUTH2_INTROSPECTION_URL", "http://host.testcontainers.internal:" + wireMockServer.port())
                 .withExposedPorts(8080)
-                .waitingFor(Wait.forHttp("/openapi"))
+                .waitingFor(Wait.forHttp("/v1/api/cases"))
                 .withStartupTimeout(Duration.ofMinutes(2));
         if(isContainerDebugging()) {
             container.withEnv("REMOTE_DEBUGGING_HOST", getDebuggingHost())

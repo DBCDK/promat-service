@@ -4,20 +4,14 @@ import dk.dbc.mail.Headers;
 import dk.dbc.mail.MailManager;
 import dk.dbc.promat.service.persistence.Notification;
 import dk.dbc.promat.service.persistence.NotificationStatus;
-import dk.dbc.promat.service.persistence.PromatEntityManager;
 import jakarta.ejb.Stateless;
 import jakarta.ejb.TransactionAttribute;
 import jakarta.ejb.TransactionAttributeType;
 import jakarta.inject.Inject;
-import jakarta.mail.MessagingException;
-import jakarta.persistence.EntityManager;
 
 import org.eclipse.microprofile.config.inject.ConfigProperty;
-import org.eclipse.microprofile.metrics.ConcurrentGauge;
 import org.eclipse.microprofile.metrics.Metadata;
 import org.eclipse.microprofile.metrics.MetricRegistry;
-import org.eclipse.microprofile.metrics.MetricType;
-import org.eclipse.microprofile.metrics.annotation.RegistryType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,7 +26,6 @@ public class NotificationSender {
     String replyToAddress;
 
     @Inject
-    @RegistryType(type = MetricRegistry.Type.APPLICATION)
     MetricRegistry metricRegistry;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(NotificationSender.class);
@@ -40,25 +33,17 @@ public class NotificationSender {
     static final Metadata mailCounterMetadata = Metadata.builder()
             .withName("promat_service_mailsender_counter")
             .withDescription("Number of mails sent.")
-            .withType(MetricType.COUNTER)
             .withUnit("mails")
             .build();
 
-    static final Metadata mailFailureGaugeMetadata = Metadata.builder()
+    static final Metadata mailFailureCounterMetadata = Metadata.builder()
             .withName("promat_service_mailsender_failures")
             .withDescription("Number of mails that promat backend service is currently unable to send.")
-            .withType(MetricType.CONCURRENT_GAUGE)
             .withUnit("failures")
             .build();
 
     @Inject
     MailManager mailManager;
-
-
-    @Inject
-    @PromatEntityManager
-    EntityManager entityManager;
-
 
     @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
     public void notifyMailRecipient(Notification notification) {
@@ -79,18 +64,11 @@ public class NotificationSender {
         } catch (jakarta.mail.MessagingException e) {
             LOGGER.error("Unable to send mail due to MessagingException. Notification:{}",notification.toString());
             notification.setStatus(NotificationStatus.ERROR);
-            metricRegistry.concurrentGauge(mailFailureGaugeMetadata).inc();
+            metricRegistry.counter(mailFailureCounterMetadata).inc();
         } catch (Exception e) {
             LOGGER.error("Unable to send mail due to unexpected exception. Notification:{}",notification.toString());
             notification.setStatus(NotificationStatus.ERROR);
-            metricRegistry.concurrentGauge(mailFailureGaugeMetadata).inc();
-        }
-    }
-
-    public void resetMailFailuresGauge() {
-        ConcurrentGauge gauge = metricRegistry.concurrentGauge(mailFailureGaugeMetadata);
-        while (gauge.getCount() > 0) {
-            gauge.dec();
+            metricRegistry.counter(mailFailureCounterMetadata).inc();
         }
     }
 }

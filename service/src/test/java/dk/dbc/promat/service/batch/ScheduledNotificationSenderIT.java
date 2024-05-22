@@ -6,7 +6,6 @@ import dk.dbc.promat.service.IntegrationTest;
 import dk.dbc.promat.service.cluster.ServerRole;
 import dk.dbc.promat.service.persistence.Notification;
 import dk.dbc.promat.service.persistence.NotificationStatus;
-import org.eclipse.microprofile.metrics.ConcurrentGauge;
 import org.eclipse.microprofile.metrics.Counter;
 import org.eclipse.microprofile.metrics.Metadata;
 import org.eclipse.microprofile.metrics.MetricRegistry;
@@ -38,13 +37,11 @@ public class ScheduledNotificationSenderIT extends IntegrationTest {
     }
     TransactionScopedPersistenceContext persistenceContext;
     private final MetricRegistry metricRegistry = mock(MetricRegistry.class);
-    private final Counter mailCounter = mock(Counter.class);
-    private final ConcurrentGauge mailFailureGauge = mock(ConcurrentGauge.class);
+    private final Counter counter = mock(Counter.class);
 
     @BeforeEach
     public void setupMailStuff() {
-        when(metricRegistry.counter(any(Metadata.class))).thenReturn(mailCounter);
-        when(metricRegistry.concurrentGauge(any(Metadata.class))).thenReturn(mailFailureGauge);
+        when(metricRegistry.counter(any(Metadata.class))).thenReturn(counter);
         persistenceContext = new TransactionScopedPersistenceContext(entityManager);
         Mailbox.clearAll();
     }
