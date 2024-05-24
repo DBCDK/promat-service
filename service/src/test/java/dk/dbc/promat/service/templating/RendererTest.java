@@ -3,6 +3,7 @@ package dk.dbc.promat.service.templating;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import dk.dbc.connector.openformat.OpenFormatConnectorException;
 import dk.dbc.connector.openformat.OpenFormatConnectorFactory;
+import dk.dbc.promat.service.ContainerTest;
 import dk.dbc.promat.service.api.OpenFormatHandler;
 import dk.dbc.promat.service.dto.ReviewerRequest;
 import dk.dbc.promat.service.persistence.Address;
@@ -40,7 +41,7 @@ public class RendererTest {
     private final PromatCase aCase = new PromatCase()
             .withPrimaryFaust("48742238")
             .withDeadline(LocalDate.of(2021, 1, 16))
-            .withTitle("TvekampenAsterix og briterne")
+            .withTitle("Tvekampen. Asterix og briterne")
             .withReviewer(
                     new Reviewer()
                             .withFirstName("Hans")
@@ -58,7 +59,7 @@ public class RendererTest {
         wireMockServer.start();
 
         notificationFactory.openFormatHandler = new OpenFormatHandler().withConnector(
-                OpenFormatConnectorFactory.create(wireMockServer.baseUrl()));
+                OpenFormatConnectorFactory.create(ContainerTest.getOpenFormatBaseUrl(wireMockServer.baseUrl())));
         notificationFactory.reviewerDiffer = new ReviewerDiffer();
         notificationFactory.LU_MAILADDRESS = "TEST@dbc.dk";
         notificationFactory.CC_MAILADDRESS = "cc_test@dbc.dk";
@@ -86,7 +87,7 @@ public class RendererTest {
                         Path.of(RendererTest.class.getResource("/mailBodys/collectionReview.html").getPath())));
         String actual = stripTrailingAndLeading(notification.getBodyText());
 
-        assertThat("Subject", notification.getSubject(), is("Ny ProMat anmeldelse:  Frist: 16/1 2021. - TvekampenAsterix og briterne"));
+        assertThat("Subject", notification.getSubject(), is("Ny ProMat anmeldelse:  Frist: 16/1 2021. - Tvekampen. Asterix og briterne"));
         assertThat("Mailtext", actual, is(expected));
 
         assertThat("Mail address", notification.getToAddress(),
@@ -126,7 +127,7 @@ public class RendererTest {
 
         assertThat("Mailtext", actual, is(expected));
 
-        assertThat("Subject", notification.getSubject(), is("Ny ProMat anmeldelse: EKSPRES! Frist: 16/1 2021. - TvekampenAsterix og briterne"));
+        assertThat("Subject", notification.getSubject(), is("Ny ProMat anmeldelse: EKSPRES! Frist: 16/1 2021. - Tvekampen. Asterix og briterne"));
         assertThat("Mail address", notification.getToAddress(), is(String.join(",",
                 "hans@hansen.dk", notificationFactory.CC_MAILADDRESS)));
     }

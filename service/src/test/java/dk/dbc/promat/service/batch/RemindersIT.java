@@ -31,9 +31,9 @@ public class RemindersIT extends ContainerTest {
 
     // Create a case with deadline three days from now.
     CaseRequest dto = new CaseRequest()
-            .withTitle("Title for 80011115")
-            .withDetails("Details for 80011115")
-            .withPrimaryFaust("80011115")
+            .withTitle("Title for 27241549")
+            .withDetails("Details for 27241549")
+            .withPrimaryFaust("27241549")
             .withEditor(10)
             .withReviewer(7)
             .withSubjects(Arrays.asList(3, 4))
@@ -43,11 +43,11 @@ public class RemindersIT extends ContainerTest {
                     new TaskDto()
                             .withTaskType(TaskType.MULTIMEDIA_FEE)
                             .withTaskFieldType(TaskFieldType.BRIEF)
-                            .withTargetFausts(List.of("80011115")),
+                            .withTargetFausts(List.of("27241549")),
                     new TaskDto()
                             .withTaskType(TaskType.MULTIMEDIA_FEE)
                             .withTaskFieldType(TaskFieldType.BKM)
-                            .withTargetFausts(List.of("80011115"))
+                            .withTargetFausts(List.of("27241549"))
             ));
 
         Response response = postResponse("v1/api/cases", dto);

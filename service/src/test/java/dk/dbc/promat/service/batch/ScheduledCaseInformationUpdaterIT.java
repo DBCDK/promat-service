@@ -41,9 +41,11 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
@@ -78,7 +80,7 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
         wireMockServer = new WireMockServer(options().dynamicPort());
         wireMockServer.start();
         configureFor("localhost", wireMockServer.port());
-        wiremockHost = wireMockServer.baseUrl();
+        wiremockHost = ContainerTest.getOpenFormatBaseUrl(wireMockServer.baseUrl());
     }
 
     @AfterAll
@@ -109,33 +111,34 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
                 .withEditor(10)
                 .withReviewer(1);
 
-        Response response = postResponse("v1/api/cases", dto);
-        assertThat("status code", response.getStatus(), is(201));
-        PromatCase created = mapper.readValue(response.readEntity(String.class), PromatCase.class);
+        try(Response response = postResponse("v1/api/cases", dto)) {
+            assertThat("status code", response.getStatus(), is(201));
+            PromatCase created = mapper.readValue(response.readEntity(String.class), PromatCase.class);
 
-        ScheduledCaseInformationUpdater upd = new ScheduledCaseInformationUpdater();
-        upd.caseInformationUpdater = new CaseInformationUpdater();
-        upd.caseInformationUpdater.metricRegistry = metricRegistry;
-        upd.caseInformationUpdater.openFormatHandler = new OpenFormatHandler()
-                .withConnector(OpenFormatConnectorFactory.create(wiremockHost));
+            ScheduledCaseInformationUpdater upd = new ScheduledCaseInformationUpdater();
+            upd.caseInformationUpdater = new CaseInformationUpdater();
+            upd.caseInformationUpdater.metricRegistry = metricRegistry;
+            upd.caseInformationUpdater.openFormatHandler = new OpenFormatHandler()
+                    .withConnector(OpenFormatConnectorFactory.create(wiremockHost));
 
-        ContentLookUp contentLookUpMock = mock(ContentLookUp.class);
-        upd.caseInformationUpdater.contentLookUp = contentLookUpMock;
-        when(contentLookUpMock.lookUpContent(anyString())).thenReturn(Optional.empty());
+            ContentLookUp contentLookUpMock = mock(ContentLookUp.class);
+            upd.caseInformationUpdater.contentLookUp = contentLookUpMock;
+            when(contentLookUpMock.lookUpContent(anyString())).thenReturn(Optional.empty());
 
-        Dates mockedDates = mock(Dates.class);
-        upd.caseInformationUpdater.dates = mockedDates;
-        when(mockedDates.getCurrentDate()).thenReturn(LocalDate.now());
+            Dates mockedDates = mock(Dates.class);
+            upd.caseInformationUpdater.dates = mockedDates;
+            when(mockedDates.getCurrentDate()).thenReturn(LocalDate.now());
 
-        persistenceContext.run(() -> upd.caseInformationUpdater.updateCaseInformation(created));
+            persistenceContext.run(() -> upd.caseInformationUpdater.updateCaseInformation(created));
 
-        assertThat("title is correct", created.getTitle(), is("Den lukkede bog"));
-        assertThat("weekcode is correct", created.getWeekCode(), is("BKM201105"));
+            assertThat("title is correct", created.getTitle(), is("Den lukkede bog"));
+            assertThat("weekcode is correct", created.getWeekCode(), is("BKM201105"));
 
-        // Delete the case so that we dont mess up payments and dataio-export tests
-        response = deleteResponse("v1/api/cases/" + created.getId());
-        assertThat("status code", response.getStatus(), is(200));
+            // Delete the case so that we don't mess up payments and dataio-export tests
+            deleteTestCase(created.getId());
+        }
     }
+
 
     @Test
     public void testUpdateCaseWithNullWeekcode() throws JsonProcessingException, OpenFormatConnectorException {
@@ -151,31 +154,31 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
                 .withEditor(10)
                 .withReviewer(1);
 
-        Response response = postResponse("v1/api/cases", dto);
-        assertThat("status code", response.getStatus(), is(201));
-        PromatCase created = mapper.readValue(response.readEntity(String.class), PromatCase.class);
+        try (Response response = postResponse("v1/api/cases", dto)) {
+            assertThat("status code", response.getStatus(), is(201));
+            PromatCase created = mapper.readValue(response.readEntity(String.class), PromatCase.class);
 
-        ScheduledCaseInformationUpdater upd = new ScheduledCaseInformationUpdater();
-        upd.caseInformationUpdater = new CaseInformationUpdater();
-        upd.caseInformationUpdater.metricRegistry = metricRegistry;
-        upd.caseInformationUpdater.openFormatHandler = new OpenFormatHandler()
-                .withConnector(OpenFormatConnectorFactory.create(wiremockHost));
+            ScheduledCaseInformationUpdater upd = new ScheduledCaseInformationUpdater();
+            upd.caseInformationUpdater = new CaseInformationUpdater();
+            upd.caseInformationUpdater.metricRegistry = metricRegistry;
+            upd.caseInformationUpdater.openFormatHandler = new OpenFormatHandler()
+                    .withConnector(OpenFormatConnectorFactory.create(wiremockHost));
 
-        ContentLookUp contentLookUpMock = mock(ContentLookUp.class);
-        upd.caseInformationUpdater.contentLookUp = contentLookUpMock;
-        when(contentLookUpMock.lookUpContent(anyString())).thenReturn(Optional.empty());
+            ContentLookUp contentLookUpMock = mock(ContentLookUp.class);
+            upd.caseInformationUpdater.contentLookUp = contentLookUpMock;
+            when(contentLookUpMock.lookUpContent(anyString())).thenReturn(Optional.empty());
 
-        Dates mockedDates = mock(Dates.class);
-        upd.caseInformationUpdater.dates = mockedDates;
-        when(mockedDates.getCurrentDate()).thenReturn(LocalDate.now());
+            Dates mockedDates = mock(Dates.class);
+            upd.caseInformationUpdater.dates = mockedDates;
+            when(mockedDates.getCurrentDate()).thenReturn(LocalDate.now());
 
-        persistenceContext.run(() -> upd.caseInformationUpdater.updateCaseInformation(created));
+            persistenceContext.run(() -> upd.caseInformationUpdater.updateCaseInformation(created));
 
-        assertThat("weekcode is correct", created.getWeekCode(), is("BKM201105"));
+            assertThat("weekcode is correct", created.getWeekCode(), is("BKM201105"));
 
-        // Delete the case so that we dont mess up payments and dataio-export tests
-        response = deleteResponse("v1/api/cases/" + created.getId());
-        assertThat("status code", response.getStatus(), is(200));
+            // Delete the case so that we don't mess up payments and dataio-export tests
+            deleteTestCase(created.getId());
+        }
     }
 
     @Test
@@ -193,31 +196,31 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
                 .withEditor(10)
                 .withReviewer(1);
 
-        Response response = postResponse("v1/api/cases", dto);
-        assertThat("status code", response.getStatus(), is(201));
-        PromatCase created = mapper.readValue(response.readEntity(String.class), PromatCase.class);
+        try (Response response = postResponse("v1/api/cases", dto)) {
+            assertThat("status code", response.getStatus(), is(201));
+            PromatCase created = mapper.readValue(response.readEntity(String.class), PromatCase.class);
 
-        ScheduledCaseInformationUpdater upd = new ScheduledCaseInformationUpdater();
-        upd.caseInformationUpdater = new CaseInformationUpdater();
-        upd.caseInformationUpdater.metricRegistry = metricRegistry;
-        upd.caseInformationUpdater.openFormatHandler = new OpenFormatHandler()
-                .withConnector(OpenFormatConnectorFactory.create(wiremockHost));
+            ScheduledCaseInformationUpdater upd = new ScheduledCaseInformationUpdater();
+            upd.caseInformationUpdater = new CaseInformationUpdater();
+            upd.caseInformationUpdater.metricRegistry = metricRegistry;
+            upd.caseInformationUpdater.openFormatHandler = new OpenFormatHandler()
+                    .withConnector(OpenFormatConnectorFactory.create(wiremockHost));
 
-        ContentLookUp contentLookUpMock = mock(ContentLookUp.class);
-        upd.caseInformationUpdater.contentLookUp = contentLookUpMock;
-        when(contentLookUpMock.lookUpContent(anyString())).thenReturn(Optional.empty());
+            ContentLookUp contentLookUpMock = mock(ContentLookUp.class);
+            upd.caseInformationUpdater.contentLookUp = contentLookUpMock;
+            when(contentLookUpMock.lookUpContent(anyString())).thenReturn(Optional.empty());
 
-        Dates mockedDates = mock(Dates.class);
-        upd.caseInformationUpdater.dates = mockedDates;
-        when(mockedDates.getCurrentDate()).thenReturn(LocalDate.now());
+            Dates mockedDates = mock(Dates.class);
+            upd.caseInformationUpdater.dates = mockedDates;
+            when(mockedDates.getCurrentDate()).thenReturn(LocalDate.now());
 
-        persistenceContext.run(() -> upd.caseInformationUpdater.updateCaseInformation(created));
+            persistenceContext.run(() -> upd.caseInformationUpdater.updateCaseInformation(created));
 
-        assertThat("weekcode is correct", created.getWeekCode(), is("BKM201105"));
+            assertThat("weekcode is correct", created.getWeekCode(), is("BKM201105"));
 
-        // Delete the case so that we dont mess up payments and dataio-export tests
-        response = deleteResponse("v1/api/cases/" + created.getId());
-        assertThat("status code", response.getStatus(), is(200));
+            // Delete the case so that we dont mess up payments and dataio-export tests
+            deleteTestCase(created.getId());
+        }
     }
 
     @Test
@@ -235,31 +238,31 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
                 .withEditor(10)
                 .withReviewer(1);
 
-        Response response = postResponse("v1/api/cases", dto);
-        assertThat("status code", response.getStatus(), is(201));
-        PromatCase created = mapper.readValue(response.readEntity(String.class), PromatCase.class);
+        try (Response response = postResponse("v1/api/cases", dto)) {
+            assertThat("status code", response.getStatus(), is(201));
+            PromatCase created = mapper.readValue(response.readEntity(String.class), PromatCase.class);
 
-        ScheduledCaseInformationUpdater upd = new ScheduledCaseInformationUpdater();
-        upd.caseInformationUpdater = new CaseInformationUpdater();
-        upd.caseInformationUpdater.metricRegistry = metricRegistry;
-        upd.caseInformationUpdater.openFormatHandler = new OpenFormatHandler()
-                .withConnector(OpenFormatConnectorFactory.create(wiremockHost));
+            ScheduledCaseInformationUpdater upd = new ScheduledCaseInformationUpdater();
+            upd.caseInformationUpdater = new CaseInformationUpdater();
+            upd.caseInformationUpdater.metricRegistry = metricRegistry;
+            upd.caseInformationUpdater.openFormatHandler = new OpenFormatHandler()
+                    .withConnector(OpenFormatConnectorFactory.create(wiremockHost));
 
-        ContentLookUp contentLookUpMock = mock(ContentLookUp.class);
-        upd.caseInformationUpdater.contentLookUp = contentLookUpMock;
-        when(contentLookUpMock.lookUpContent(anyString())).thenReturn(Optional.empty());
+            ContentLookUp contentLookUpMock = mock(ContentLookUp.class);
+            upd.caseInformationUpdater.contentLookUp = contentLookUpMock;
+            when(contentLookUpMock.lookUpContent(anyString())).thenReturn(Optional.empty());
 
-        Dates mockedDates = mock(Dates.class);
-        upd.caseInformationUpdater.dates = mockedDates;
-        when(mockedDates.getCurrentDate()).thenReturn(LocalDate.now());
+            Dates mockedDates = mock(Dates.class);
+            upd.caseInformationUpdater.dates = mockedDates;
+            when(mockedDates.getCurrentDate()).thenReturn(LocalDate.now());
 
-        persistenceContext.run(() -> upd.caseInformationUpdater.updateCaseInformation(created));
+            persistenceContext.run(() -> upd.caseInformationUpdater.updateCaseInformation(created));
 
-        assertThat("weekcode is correct", created.getWeekCode(), is(""));
+            assertThat("weekcode is correct", created.getWeekCode(), is("BKM201102"));
 
-        // Delete the case so that we dont mess up payments and dataio-export tests
-        response = deleteResponse("v1/api/cases/" + created.getId());
-        assertThat("status code", response.getStatus(), is(200));
+            // Delete the case so that we don't mess up payments and dataio-export tests
+            deleteTestCase(created.getId());
+        }
     }
 
     @Test
@@ -277,52 +280,52 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
                 .withEditor(10)
                 .withReviewer(1);
 
-        Response response = postResponse("v1/api/cases", dto);
-        assertThat("status code", response.getStatus(), is(201));
-        PromatCase created = mapper.readValue(response.readEntity(String.class), PromatCase.class);
+        try (Response response = postResponse("v1/api/cases", dto)) {
+            assertThat("status code", response.getStatus(), is(201));
+            PromatCase created = mapper.readValue(response.readEntity(String.class), PromatCase.class);
 
-        ScheduledCaseInformationUpdater upd = new ScheduledCaseInformationUpdater();
-        upd.caseInformationUpdater = new CaseInformationUpdater();
-        upd.caseInformationUpdater.metricRegistry = metricRegistry;
-        upd.entityManager = entityManager;
-        upd.serverRole = ServerRole.PRIMARY;
-        OpenFormatHandler mockedHandler = mock(OpenFormatHandler.class);
-        upd.caseInformationUpdater.openFormatHandler = mockedHandler;
-        when(mockedHandler.format(created.getPrimaryFaust()))
-                .thenReturn(new BibliographicInformation()
-                        .withTitle("UPDATED_TITLE")
-                        .withCatalogcodes(Arrays.asList("BKM999999"))
-                        .withCreator("UPDATED_AUTHOR"));
-        when(mockedHandler.format(not(eq(created.getPrimaryFaust()))))
-                .thenReturn(new BibliographicInformation()
-                        .withError("not real handler")); // Causing update of case to be skipped
+            ScheduledCaseInformationUpdater upd = new ScheduledCaseInformationUpdater();
+            upd.caseInformationUpdater = new CaseInformationUpdater();
+            upd.caseInformationUpdater.metricRegistry = metricRegistry;
+            upd.entityManager = entityManager;
+            upd.serverRole = ServerRole.PRIMARY;
+            OpenFormatHandler mockedHandler = mock(OpenFormatHandler.class);
+            upd.caseInformationUpdater.openFormatHandler = mockedHandler;
+            when(mockedHandler.format(created.getPrimaryFaust()))
+                    .thenReturn(new BibliographicInformation()
+                            .withTitle("UPDATED_TITLE")
+                            .withCatalogcodes(List.of("BKM999999"))
+                            .withCreator("UPDATED_AUTHOR"));
+            when(mockedHandler.format(not(eq(created.getPrimaryFaust()))))
+                    .thenReturn(new BibliographicInformation()
+                            .withError("not real handler")); // Causing update of case to be skipped
 
-        ContentLookUp contentLookUpMock = mock(ContentLookUp.class);
-        upd.caseInformationUpdater.contentLookUp = contentLookUpMock;
-        when(contentLookUpMock.lookUpContent(anyString())).thenReturn(Optional.empty());
+            ContentLookUp contentLookUpMock = mock(ContentLookUp.class);
+            upd.caseInformationUpdater.contentLookUp = contentLookUpMock;
+            when(contentLookUpMock.lookUpContent(anyString())).thenReturn(Optional.empty());
 
-        Dates mockedDates = mock(Dates.class);
-        upd.caseInformationUpdater.dates = mockedDates;
-        when(mockedDates.getCurrentDate()).thenReturn(LocalDate.now());
+            Dates mockedDates = mock(Dates.class);
+            upd.caseInformationUpdater.dates = mockedDates;
+            when(mockedDates.getCurrentDate()).thenReturn(LocalDate.now());
 
-        persistenceContext.run(() -> {
-            upd.updateCaseInformation();
+            persistenceContext.run(() -> {
+                upd.updateCaseInformation();
 
-            entityManager.flush();
+                entityManager.flush();
 
-            TypedQuery<PromatCase> query = entityManager.createQuery(
-                    "SELECT c FROM PromatCase c " +
-                            "WHERE c.id = :id", PromatCase.class);
-            query.setParameter("id", created.getId());
-            PromatCase updated = query.getSingleResult();
-            assertThat("title is updated", updated.getTitle().equals("UPDATED_TITLE"));
-            assertThat("weekcode is updated", updated.getWeekCode().equals("BKM999999"));
-            assertThat("author is updated", updated.getAuthor().equals("UPDATED_AUTHOR"));
-        });
+                TypedQuery<PromatCase> query = entityManager.createQuery(
+                        "SELECT c FROM PromatCase c " +
+                                "WHERE c.id = :id", PromatCase.class);
+                query.setParameter("id", created.getId());
+                PromatCase updated = query.getSingleResult();
+                assertThat("title is updated", updated.getTitle().equals("UPDATED_TITLE"));
+                assertThat("weekcode is updated", updated.getWeekCode().equals("BKM999999"));
+                assertThat("author is updated", updated.getAuthor().equals("UPDATED_AUTHOR"));
+            });
 
-        // Delete the case so that we dont mess up payments and dataio-export tests
-        response = deleteResponse("v1/api/cases/" + created.getId());
-        assertThat("status code", response.getStatus(), is(200));
+            // Delete the case so that we don't mess up payments and dataio-export tests
+            deleteTestCase(created.getId());
+        }
     }
 
     @Test
@@ -340,31 +343,31 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
                 .withEditor(10)
                 .withReviewer(1);
 
-        Response response = postResponse("v1/api/cases", dto);
-        assertThat("status code", response.getStatus(), is(201));
-        PromatCase created = mapper.readValue(response.readEntity(String.class), PromatCase.class);
+        try (Response response = postResponse("v1/api/cases", dto)) {
+            assertThat("status code", response.getStatus(), is(201));
+            PromatCase created = mapper.readValue(response.readEntity(String.class), PromatCase.class);
 
-        ScheduledCaseInformationUpdater upd = new ScheduledCaseInformationUpdater();
-        upd.caseInformationUpdater = new CaseInformationUpdater();
-        upd.caseInformationUpdater.metricRegistry = metricRegistry;
-        upd.caseInformationUpdater.openFormatHandler = new OpenFormatHandler()
-                .withConnector(OpenFormatConnectorFactory.create(wiremockHost));
+            ScheduledCaseInformationUpdater upd = new ScheduledCaseInformationUpdater();
+            upd.caseInformationUpdater = new CaseInformationUpdater();
+            upd.caseInformationUpdater.metricRegistry = metricRegistry;
+            upd.caseInformationUpdater.openFormatHandler = new OpenFormatHandler()
+                    .withConnector(OpenFormatConnectorFactory.create(wiremockHost));
 
-        ContentLookUp contentLookUpMock = mock(ContentLookUp.class);
-        upd.caseInformationUpdater.contentLookUp = contentLookUpMock;
-        when(contentLookUpMock.lookUpContent(anyString())).thenReturn(Optional.empty());
+            ContentLookUp contentLookUpMock = mock(ContentLookUp.class);
+            upd.caseInformationUpdater.contentLookUp = contentLookUpMock;
+            when(contentLookUpMock.lookUpContent(anyString())).thenReturn(Optional.empty());
 
-        Dates mockedDates = mock(Dates.class);
-        upd.caseInformationUpdater.dates = mockedDates;
-        when(mockedDates.getCurrentDate()).thenReturn(LocalDate.now());
+            Dates mockedDates = mock(Dates.class);
+            upd.caseInformationUpdater.dates = mockedDates;
+            when(mockedDates.getCurrentDate()).thenReturn(LocalDate.now());
 
-        persistenceContext.run(() -> upd.caseInformationUpdater.updateCaseInformation(created));
+            persistenceContext.run(() -> upd.caseInformationUpdater.updateCaseInformation(created));
 
-        assertThat("weekcode is removed", created.getWeekCode(), is(""));
+            assertThat("weekcode is removed", created.getWeekCode(), is(""));
 
-        // Delete the case so that we dont mess up payments and dataio-export tests
-        response = deleteResponse("v1/api/cases/" + created.getId());
-        assertThat("status code", response.getStatus(), is(200));
+            // Delete the case so that we don't mess up payments and dataio-export tests
+            deleteTestCase(created.getId());
+        }
     }
 
     @Test
@@ -383,33 +386,33 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
                 .withEditor(10)
                 .withReviewer(1);
 
-        Response response = postResponse("v1/api/cases", dto);
-        assertThat("status code", response.getStatus(), is(201));
-        PromatCase created = mapper.readValue(response.readEntity(String.class), PromatCase.class);
+        try (Response response = postResponse("v1/api/cases", dto)) {
+            assertThat("status code", response.getStatus(), is(201));
+            PromatCase created = mapper.readValue(response.readEntity(String.class), PromatCase.class);
 
-        ScheduledCaseInformationUpdater upd = new ScheduledCaseInformationUpdater();
-        upd.caseInformationUpdater = new CaseInformationUpdater();
-        upd.caseInformationUpdater.metricRegistry = metricRegistry;
-        upd.caseInformationUpdater.openFormatHandler = new OpenFormatHandler()
-                .withConnector(OpenFormatConnectorFactory.create(wiremockHost));
+            ScheduledCaseInformationUpdater upd = new ScheduledCaseInformationUpdater();
+            upd.caseInformationUpdater = new CaseInformationUpdater();
+            upd.caseInformationUpdater.metricRegistry = metricRegistry;
+            upd.caseInformationUpdater.openFormatHandler = new OpenFormatHandler()
+                    .withConnector(OpenFormatConnectorFactory.create(wiremockHost));
 
-        ContentLookUp contentLookUpMock = mock(ContentLookUp.class);
-        upd.caseInformationUpdater.contentLookUp = contentLookUpMock;
-        when(contentLookUpMock.lookUpContent(anyString())).thenReturn(Optional.empty());
+            ContentLookUp contentLookUpMock = mock(ContentLookUp.class);
+            upd.caseInformationUpdater.contentLookUp = contentLookUpMock;
+            when(contentLookUpMock.lookUpContent(anyString())).thenReturn(Optional.empty());
 
-        Dates mockedDates = mock(Dates.class);
-        upd.caseInformationUpdater.dates = mockedDates;
-        when(mockedDates.getCurrentDate()).thenReturn(LocalDate.now());
+            Dates mockedDates = mock(Dates.class);
+            upd.caseInformationUpdater.dates = mockedDates;
+            when(mockedDates.getCurrentDate()).thenReturn(LocalDate.now());
 
-        persistenceContext.run(() -> upd.caseInformationUpdater.updateCaseInformation(created));
+            persistenceContext.run(() -> upd.caseInformationUpdater.updateCaseInformation(created));
 
-        assertThat("title is updated", created.getTitle().equals("Deadpool"));
-        assertThat("weekcode is updated", created.getWeekCode().equals("BKM999999"));
-        assertThat("author is updated", created.getAuthor().equals(""));
+            assertThat("title is updated", created.getTitle().equals("Præsidentjagt"));
+            assertThat("weekcode is updated", created.getWeekCode().equals("BKM202111"));
+            assertThat("author is updated", created.getAuthor().equals("Duggan, Gerry"));
 
-        // Delete the case so that we dont mess up payments and dataio-export tests
-        response = deleteResponse("v1/api/cases/" + created.getId());
-        assertThat("status code", response.getStatus(), is(200));
+            // Delete the case so that we don't mess up payments and dataio-export tests
+            deleteTestCase(created.getId());
+        }
     }
 
     @Test
@@ -438,87 +441,85 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
                 .withEditor(10)
                 .withReviewer(1);
 
-        Response response = postResponse("v1/api/cases", dto);
-        assertThat("status code", response.getStatus(), is(201));
-        PromatCase created = mapper.readValue(response.readEntity(String.class), PromatCase.class);
+        try (Response response = postResponse("v1/api/cases", dto)) {
+            assertThat("status code", response.getStatus(), is(201));
+            PromatCase created = mapper.readValue(response.readEntity(String.class), PromatCase.class);
 
-        Map<String, BibliographicInformation> openFormatResponse =
-                Map.of(
-                        "48959939", getOpenformatResponseFromResource("48959939").withMetakompassubject(null),
-                        "48959912", getOpenformatResponseFromResource("48959912").withMetakompassubject("false"),
-                        "48959955", getOpenformatResponseFromResource("48959955").withMetakompassubject(null)
-                );
+            Map<String, BibliographicInformation> openFormatResponse =
+                    Map.of(
+                            "48959939", getOpenformatResponseFromResource("48959939").withMetakompassubject(null),
+                            "48959912", getOpenformatResponseFromResource("48959912").withMetakompassubject("false"),
+                            "48959955", getOpenformatResponseFromResource("48959955").withMetakompassubject(null)
+                    );
 
+            PromatCase promatCase = getCaseWithId(created.getId());
+            ScheduledCaseInformationUpdater upd = new ScheduledCaseInformationUpdater();
+            upd.caseInformationUpdater = new CaseInformationUpdater();
+            upd.caseInformationUpdater.metricRegistry = metricRegistry;
+            OpenFormatHandler openFormatHandler = mock(OpenFormatHandler.class);
+            upd.caseInformationUpdater.openFormatHandler = openFormatHandler;
+            when(openFormatHandler.format(anyString()))
+                    .thenAnswer(invocationOnMock -> openFormatResponse.get(invocationOnMock.getArgument(0)));
 
-        PromatCase promatCase = getCaseWithId(created.getId());
-        ScheduledCaseInformationUpdater upd = new ScheduledCaseInformationUpdater();
-        upd.caseInformationUpdater = new CaseInformationUpdater();
-        upd.caseInformationUpdater.metricRegistry = metricRegistry;
-        OpenFormatHandler openFormatHandler = mock(OpenFormatHandler.class);
-        upd.caseInformationUpdater.openFormatHandler = openFormatHandler;
-        when(openFormatHandler.format(anyString()))
-                .thenAnswer(invocationOnMock -> openFormatResponse.get(invocationOnMock.getArgument(0)));
+            ContentLookUp contentLookUpMock = mock(ContentLookUp.class);
+            upd.caseInformationUpdater.contentLookUp = contentLookUpMock;
+            when(contentLookUpMock.lookUpContent(anyString())).thenReturn(Optional.empty());
 
-        ContentLookUp contentLookUpMock = mock(ContentLookUp.class);
-        upd.caseInformationUpdater.contentLookUp = contentLookUpMock;
-        when(contentLookUpMock.lookUpContent(anyString())).thenReturn(Optional.empty());
+            Dates mockedDates = mock(Dates.class);
+            upd.caseInformationUpdater.dates = mockedDates;
+            when(mockedDates.getCurrentDate()).thenReturn(LocalDate.now());
 
-        Dates mockedDates = mock(Dates.class);
-        upd.caseInformationUpdater.dates = mockedDates;
-        when(mockedDates.getCurrentDate()).thenReturn(LocalDate.now());
+            //
+            // First round: Lets say that none are ready yet.
+            //
+            persistenceContext.run(() -> upd.caseInformationUpdater.updateCaseInformation(promatCase));
 
-        //
-        // First round: Lets say that none are ready yet.
-        //
-        persistenceContext.run(() -> upd.caseInformationUpdater.updateCaseInformation(promatCase));
+            for (PromatTask task : PromatTaskUtils.getTasksOfType(promatCase, TaskFieldType.METAKOMPAS)) {
+                assertThat("metakompasdata task",
+                        task.getData(),
+                        anyOf(is(nullValue()), is("false")));
+            }
 
-        for (PromatTask task : PromatTaskUtils.getTasksOfType(promatCase, TaskFieldType.METAKOMPAS)) {
-            assertThat("metakompasdata task",
-                    task.getData(),
-                    anyOf(is(nullValue()), is("false")));
+            //
+            // Second round: lets say metakompasdata for primary faust now has been done.
+            //
+            openFormatResponse.get("48959939").setMetakompassubject(CaseInformationUpdater.METAKOMPASDATA_PRESENT);
+            persistenceContext.run(() -> upd.caseInformationUpdater.updateCaseInformation(promatCase));
+            created = getCaseWithId(promatCase.getId());
+            List<PromatTask> tasks = getTasksWhereMetakompasIsPresent(created);
+            assertThat("There is only one finished.", tasks.size(), is(1));
+            assertThat("And it is the primaryfaust", tasks.get(0).getTargetFausts().contains("48959939"), is(true));
+
+            //
+            // Third round: Metadata for one of the related faust has been done. There is still only one in
+            // the list of done Metakompas tasks.
+            //
+            openFormatResponse.get("48959955").setMetakompassubject(CaseInformationUpdater.METAKOMPASDATA_PRESENT);
+            persistenceContext.run(() -> upd.caseInformationUpdater.updateCaseInformation(promatCase));
+            created = getCaseWithId(promatCase.getId());
+            tasks = getTasksWhereMetakompasIsPresent(created);
+            assertThat("There is only one finished.", tasks.size(), is(1));
+            assertThat("And it is the task with the primaryfaust", tasks.get(0).getTargetFausts().contains("48959939"), is(true));
+
+            //
+            // Fourth round: Metadata for both of the related faust has been done.
+            // AND let's say we updated the case to PENDING_EXTERNAL.
+            //
+            promatCase.setStatus(CaseStatus.PENDING_EXTERNAL);
+            entityManager.persist(promatCase);
+            openFormatResponse.get("48959912").setMetakompassubject(CaseInformationUpdater.METAKOMPASDATA_PRESENT);
+            persistenceContext.run(() -> upd.caseInformationUpdater.updateCaseInformation(promatCase));
+            created = getCaseWithId(promatCase.getId());
+
+            tasks = getTasksWhereMetakompasIsPresent(created);
+            assertThat("They all are finished.", tasks.size(), is(2));
+
+            created = getCaseWithId(promatCase.getId());
+            assertThat("case closed", created.getStatus(), is(CaseStatus.APPROVED));
+
+            // Delete the case so that we dont mess up payments and dataio-export tests
+            deleteTestCase(created.getId());
         }
-
-        //
-        // Second round: lets say metakompasdata for primary faust now has been done.
-        //
-        openFormatResponse.get("48959939").setMetakompassubject(CaseInformationUpdater.METAKOMPASDATA_PRESENT);
-        persistenceContext.run(() -> upd.caseInformationUpdater.updateCaseInformation(promatCase));
-        created = getCaseWithId(promatCase.getId());
-        List<PromatTask> tasks = getTasksWhereMetakompasIsPresent(created);
-        assertThat("There is only one finished.", tasks.size(), is(1));
-        assertThat("And it is the primaryfaust", tasks.get(0).getTargetFausts().contains("48959939"));
-
-        //
-        // Third round: Metadata for one of the related faust has been done. There is still only one in
-        // the list of done Metakompas tasks.
-        //
-        openFormatResponse.get("48959955").setMetakompassubject(CaseInformationUpdater.METAKOMPASDATA_PRESENT);
-        persistenceContext.run(() -> upd.caseInformationUpdater.updateCaseInformation(promatCase));
-        created = getCaseWithId(promatCase.getId());
-        tasks = getTasksWhereMetakompasIsPresent(created);
-        assertThat("There is only one finished.", tasks.size(), is(1));
-        assertThat("And it is the task with the primaryfaust", tasks.get(0).getTargetFausts().contains("48959939"));
-
-        //
-        // Fourth round: Metadata for both of the related faust has been done.
-        // AND lets say we updated the case to PENDING_EXTERNAL.
-        //
-        promatCase.setStatus(CaseStatus.PENDING_EXTERNAL);
-        entityManager.persist(promatCase);
-        openFormatResponse.get("48959912").setMetakompassubject(CaseInformationUpdater.METAKOMPASDATA_PRESENT);
-        persistenceContext.run(() -> upd.caseInformationUpdater.updateCaseInformation(promatCase));
-        created = getCaseWithId(promatCase.getId());
-
-        tasks = getTasksWhereMetakompasIsPresent(created);
-        assertThat("They all are finished.", tasks.size(), is(2));
-
-        created = getCaseWithId(promatCase.getId());
-        assertThat("case closed", created.getStatus(), is(CaseStatus.APPROVED));
-
-
-        // Delete the case so that we dont mess up payments and dataio-export tests
-        response = deleteResponse("v1/api/cases/" + created.getId());
-        assertThat("status code", response.getStatus(), is(200));
     }
 
     private List<PromatTask> getTasksWhereMetakompasIsPresent(PromatCase promatCase) {
@@ -539,8 +540,8 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
     private BibliographicInformation getOpenformatResponseFromResource(String faust) throws IOException {
         return mapper.readValue(
                 Files.readString(
-                        Path.of(ScheduledCaseInformationUpdaterIT.class
-                                .getResource(String.format("/openformat/%s.json", faust))
+                        Path.of(Objects.requireNonNull(ScheduledCaseInformationUpdaterIT.class
+                                        .getResource(String.format("/openformat/%s.json", faust)))
                 .getPath())), BibliographicInformation.class);
     }
 
@@ -557,51 +558,51 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
                 .withDeadline("2024-02-29")
                 .withCreator(10)
                 .withEditor(10)
-                .withReviewer(1).withTasks(Arrays.asList(new TaskDto()
+                .withReviewer(1).withTasks(Collections.singletonList(new TaskDto()
                         .withTaskType(TaskType.GROUP_1_LESS_THAN_100_PAGES)
                         .withTaskFieldType(TaskFieldType.BRIEF)
-                        .withTargetFausts(Arrays.asList("24699773"))
+                        .withTargetFausts(List.of("24699773"))
                 ));
 
-        Response response = postResponse("v1/api/cases", dto);
-        assertThat("status code", response.getStatus(), is(201));
-        PromatCase created = mapper.readValue(response.readEntity(String.class), PromatCase.class);
+        try (Response response = postResponse("v1/api/cases", dto)) {
+            assertThat("status code", response.getStatus(), is(201));
+            PromatCase created = mapper.readValue(response.readEntity(String.class), PromatCase.class);
 
-        ScheduledCaseInformationUpdater upd = new ScheduledCaseInformationUpdater();
-        upd.caseInformationUpdater = new CaseInformationUpdater();
-        upd.caseInformationUpdater.metricRegistry = metricRegistry;
-        upd.entityManager = entityManager;
-        upd.serverRole = ServerRole.PRIMARY;
-        OpenFormatHandler mockedHandler = mock(OpenFormatHandler.class);
-        upd.caseInformationUpdater.openFormatHandler = mockedHandler;
-        Repository mockedRepository = mock(Repository.class);
-        upd.caseInformationUpdater.repository = mockedRepository;
+            ScheduledCaseInformationUpdater upd = new ScheduledCaseInformationUpdater();
+            upd.caseInformationUpdater = new CaseInformationUpdater();
+            upd.caseInformationUpdater.metricRegistry = metricRegistry;
+            upd.entityManager = entityManager;
+            upd.serverRole = ServerRole.PRIMARY;
+            OpenFormatHandler mockedHandler = mock(OpenFormatHandler.class);
+            upd.caseInformationUpdater.openFormatHandler = mockedHandler;
+            Repository mockedRepository = mock(Repository.class);
+            upd.caseInformationUpdater.repository = mockedRepository;
 
-        ContentLookUp contentLookUpMock = mock(ContentLookUp.class);
-        upd.caseInformationUpdater.contentLookUp = contentLookUpMock;
-        when(contentLookUpMock.lookUpContent(anyString())).thenReturn(Optional.empty());
+            ContentLookUp contentLookUpMock = mock(ContentLookUp.class);
+            upd.caseInformationUpdater.contentLookUp = contentLookUpMock;
+            when(contentLookUpMock.lookUpContent(anyString())).thenReturn(Optional.empty());
 
-        created.setStatus(CaseStatus.APPROVED);
-        when(mockedHandler.format(anyString()))
-                .thenReturn(new BibliographicInformation()
-                        .withCatalogcodes(Arrays.asList("BKM202001", "ACC202001")));
-        doAnswer(answer -> {
-            PromatCase existing = ((PromatCase) answer.getArgument(0));
-            existing.getTasks().stream().forEach(t -> t.setRecordId("123456789"));
-            return null;
-        }).when(mockedRepository).assignFaustnumber(any(PromatCase.class));
+            created.setStatus(CaseStatus.APPROVED);
+            when(mockedHandler.format(anyString()))
+                    .thenReturn(new BibliographicInformation()
+                            .withCatalogcodes(Arrays.asList("BKM202001", "ACC202001")));
+            doAnswer(answer -> {
+                PromatCase existing = ((PromatCase) answer.getArgument(0));
+                existing.getTasks().forEach(t -> t.setRecordId("123456789"));
+                return null;
+            }).when(mockedRepository).assignFaustnumber(any(PromatCase.class));
 
-        Dates mockedDates = mock(Dates.class);
-        upd.caseInformationUpdater.dates = mockedDates;
-        when(mockedDates.getCurrentDate()).thenReturn(LocalDate.now());
+            Dates mockedDates = mock(Dates.class);
+            upd.caseInformationUpdater.dates = mockedDates;
+            when(mockedDates.getCurrentDate()).thenReturn(LocalDate.now());
 
-        persistenceContext.run(() -> upd.caseInformationUpdater.updateCaseInformation(created));
-        assertThat("status", created.getStatus(), is(CaseStatus.PENDING_EXPORT));
-        created.getTasks().stream().forEach(t -> assertThat("recordId", t.getRecordId(), is("123456789")));
+            persistenceContext.run(() -> upd.caseInformationUpdater.updateCaseInformation(created));
+            assertThat("status", created.getStatus(), is(CaseStatus.PENDING_EXPORT));
+            created.getTasks().forEach(t -> assertThat("recordId", t.getRecordId(), is("123456789")));
 
-        // Delete the case so that we dont mess up payments and dataio-export tests
-        response = deleteResponse("v1/api/cases/" + created.getId());
-        assertThat("status code", response.getStatus(), is(200));
+            // Delete the case so that we don't mess up payments and dataio-export tests
+            deleteTestCase(created.getId());
+        }
     }
 
     @Test
@@ -618,54 +619,54 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
                 .withCreator(10)
                 .withEditor(10)
                 .withReviewer(1)
-                .withTasks(Arrays.asList(new TaskDto()
+                .withTasks(Collections.singletonList(new TaskDto()
                         .withTaskType(TaskType.GROUP_1_LESS_THAN_100_PAGES)
                         .withTaskFieldType(TaskFieldType.BRIEF)
-                        .withTargetFausts(Arrays.asList("24699773"))
+                        .withTargetFausts(List.of("24699773"))
                 ));
 
-        Response response = postResponse("v1/api/cases", dto);
-        assertThat("status code", response.getStatus(), is(201));
-        PromatCase created = mapper.readValue(response.readEntity(String.class), PromatCase.class);
+        try (Response response = postResponse("v1/api/cases", dto)) {
+            assertThat("status code", response.getStatus(), is(201));
+            PromatCase created = mapper.readValue(response.readEntity(String.class), PromatCase.class);
 
-        ScheduledCaseInformationUpdater upd = new ScheduledCaseInformationUpdater();
-        upd.caseInformationUpdater = new CaseInformationUpdater();
-        upd.caseInformationUpdater.metricRegistry = metricRegistry;
-        upd.entityManager = entityManager;
-        upd.serverRole = ServerRole.PRIMARY;
-        OpenFormatHandler mockedHandler = mock(OpenFormatHandler.class);
-        upd.caseInformationUpdater.openFormatHandler = mockedHandler;
-        Repository mockedRepository = mock(Repository.class);
-        upd.caseInformationUpdater.repository = mockedRepository;
+            ScheduledCaseInformationUpdater upd = new ScheduledCaseInformationUpdater();
+            upd.caseInformationUpdater = new CaseInformationUpdater();
+            upd.caseInformationUpdater.metricRegistry = metricRegistry;
+            upd.entityManager = entityManager;
+            upd.serverRole = ServerRole.PRIMARY;
+            OpenFormatHandler mockedHandler = mock(OpenFormatHandler.class);
+            upd.caseInformationUpdater.openFormatHandler = mockedHandler;
+            Repository mockedRepository = mock(Repository.class);
+            upd.caseInformationUpdater.repository = mockedRepository;
 
-        ContentLookUp contentLookUpMock = mock(ContentLookUp.class);
-        upd.caseInformationUpdater.contentLookUp = contentLookUpMock;
-        when(contentLookUpMock.lookUpContent(anyString())).thenReturn(Optional.empty());
+            ContentLookUp contentLookUpMock = mock(ContentLookUp.class);
+            upd.caseInformationUpdater.contentLookUp = contentLookUpMock;
+            when(contentLookUpMock.lookUpContent(anyString())).thenReturn(Optional.empty());
 
-        LocalDate date = LocalDate.now().plusWeeks(1);
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyww", new Locale("da", "DK"));
+            LocalDate date = LocalDate.now().plusWeeks(1);
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyww", new Locale("da", "DK"));
 
-        created.setStatus(CaseStatus.APPROVED);
-        when(mockedHandler.format(anyString()))
-                .thenReturn(new BibliographicInformation()
-                        .withCatalogcodes(Arrays.asList("BKM" + date.format(formatter), "ACC202001")));
-        doAnswer(answer -> {
-            PromatCase existing = ((PromatCase) answer.getArgument(0));
-            existing.getTasks().stream().forEach(t -> t.setRecordId("123456789"));
-            return null;
-        }).when(mockedRepository).assignFaustnumber(any(PromatCase.class));
+            created.setStatus(CaseStatus.APPROVED);
+            when(mockedHandler.format(anyString()))
+                    .thenReturn(new BibliographicInformation()
+                            .withCatalogcodes(Arrays.asList("BKM" + date.format(formatter), "ACC202001")));
+            doAnswer(answer -> {
+                PromatCase existing = ((PromatCase) answer.getArgument(0));
+                existing.getTasks().forEach(t -> t.setRecordId("123456789"));
+                return null;
+            }).when(mockedRepository).assignFaustnumber(any(PromatCase.class));
 
-        Dates mockedDates = mock(Dates.class);
-        upd.caseInformationUpdater.dates = mockedDates;
-        when(mockedDates.getCurrentDate()).thenReturn(LocalDate.now());
+            Dates mockedDates = mock(Dates.class);
+            upd.caseInformationUpdater.dates = mockedDates;
+            when(mockedDates.getCurrentDate()).thenReturn(LocalDate.now());
 
-        persistenceContext.run(() -> upd.caseInformationUpdater.updateCaseInformation(created));
-        assertThat("status", created.getStatus(), is(CaseStatus.PENDING_EXPORT));
-        created.getTasks().stream().forEach(t -> assertThat("recordId", t.getRecordId(), is("123456789")));
+            persistenceContext.run(() -> upd.caseInformationUpdater.updateCaseInformation(created));
+            assertThat("status", created.getStatus(), is(CaseStatus.PENDING_EXPORT));
+            created.getTasks().forEach(t -> assertThat("recordId", t.getRecordId(), is("123456789")));
 
-        // Delete the case so that we dont mess up payments and dataio-export tests
-        response = deleteResponse("v1/api/cases/" + created.getId());
-        assertThat("status code", response.getStatus(), is(200));
+            // Delete the case so that we don't mess up payments and dataio-export tests
+            deleteTestCase(created.getId());
+        }
     }
 
     @Test
@@ -681,54 +682,54 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
                 .withDeadline("2024-02-29")
                 .withCreator(10)
                 .withEditor(10)
-                .withReviewer(1).withTasks(Arrays.asList(new TaskDto()
+                .withReviewer(1).withTasks(Collections.singletonList(new TaskDto()
                         .withTaskType(TaskType.GROUP_1_LESS_THAN_100_PAGES)
                         .withTaskFieldType(TaskFieldType.BRIEF)
-                        .withTargetFausts(Arrays.asList("24699773"))
+                        .withTargetFausts(List.of("24699773"))
                 ));
 
-        Response response = postResponse("v1/api/cases", dto);
-        assertThat("status code", response.getStatus(), is(201));
-        PromatCase created = mapper.readValue(response.readEntity(String.class), PromatCase.class);
+        try (Response response = postResponse("v1/api/cases", dto)) {
+            assertThat("status code", response.getStatus(), is(201));
+            PromatCase created = mapper.readValue(response.readEntity(String.class), PromatCase.class);
 
-        ScheduledCaseInformationUpdater upd = new ScheduledCaseInformationUpdater();
-        upd.caseInformationUpdater = new CaseInformationUpdater();
-        upd.caseInformationUpdater.metricRegistry = metricRegistry;
-        upd.entityManager = entityManager;
-        upd.serverRole = ServerRole.PRIMARY;
-        OpenFormatHandler mockedHandler = mock(OpenFormatHandler.class);
-        upd.caseInformationUpdater.openFormatHandler = mockedHandler;
-        Repository mockedRepository = mock(Repository.class);
-        upd.caseInformationUpdater.repository = mockedRepository;
+            ScheduledCaseInformationUpdater upd = new ScheduledCaseInformationUpdater();
+            upd.caseInformationUpdater = new CaseInformationUpdater();
+            upd.caseInformationUpdater.metricRegistry = metricRegistry;
+            upd.entityManager = entityManager;
+            upd.serverRole = ServerRole.PRIMARY;
+            OpenFormatHandler mockedHandler = mock(OpenFormatHandler.class);
+            upd.caseInformationUpdater.openFormatHandler = mockedHandler;
+            Repository mockedRepository = mock(Repository.class);
+            upd.caseInformationUpdater.repository = mockedRepository;
 
-        ContentLookUp contentLookUpMock = mock(ContentLookUp.class);
-        upd.caseInformationUpdater.contentLookUp = contentLookUpMock;
-        when(contentLookUpMock.lookUpContent(anyString())).thenReturn(Optional.empty());
+            ContentLookUp contentLookUpMock = mock(ContentLookUp.class);
+            upd.caseInformationUpdater.contentLookUp = contentLookUpMock;
+            when(contentLookUpMock.lookUpContent(anyString())).thenReturn(Optional.empty());
 
-        LocalDate date = LocalDate.now().plusWeeks(2);
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyww", new Locale("da", "DK"));
+            LocalDate date = LocalDate.now().plusWeeks(2);
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyww", new Locale("da", "DK"));
 
-        created.setStatus(CaseStatus.APPROVED);
-        when(mockedHandler.format(anyString()))
-                .thenReturn(new BibliographicInformation()
-                        .withCatalogcodes(Arrays.asList("BKM" + date.format(formatter), "ACC202001")));
-        doAnswer(answer -> {
-            PromatCase existing = ((PromatCase) answer.getArgument(0));
-            existing.getTasks().stream().forEach(t -> t.setRecordId("123456789"));
-            return null;
-        }).when(mockedRepository).assignFaustnumber(any(PromatCase.class));
+            created.setStatus(CaseStatus.APPROVED);
+            when(mockedHandler.format(anyString()))
+                    .thenReturn(new BibliographicInformation()
+                            .withCatalogcodes(Arrays.asList("BKM" + date.format(formatter), "ACC202001")));
+            doAnswer(answer -> {
+                PromatCase existing = ((PromatCase) answer.getArgument(0));
+                existing.getTasks().forEach(t -> t.setRecordId("123456789"));
+                return null;
+            }).when(mockedRepository).assignFaustnumber(any(PromatCase.class));
 
-        Dates mockedDates = mock(Dates.class);
-        upd.caseInformationUpdater.dates = mockedDates;
-        when(mockedDates.getCurrentDate()).thenReturn(LocalDate.now());
+            Dates mockedDates = mock(Dates.class);
+            upd.caseInformationUpdater.dates = mockedDates;
+            when(mockedDates.getCurrentDate()).thenReturn(LocalDate.now());
 
-        persistenceContext.run(() -> upd.caseInformationUpdater.updateCaseInformation(created));
-        assertThat("status", created.getStatus(), is(CaseStatus.APPROVED));
-        created.getTasks().stream().forEach(t -> assertThat("recordId", t.getRecordId(), is(nullValue())));
+            persistenceContext.run(() -> upd.caseInformationUpdater.updateCaseInformation(created));
+            assertThat("status", created.getStatus(), is(CaseStatus.APPROVED));
+            created.getTasks().forEach(t -> assertThat("recordId", t.getRecordId(), is(nullValue())));
 
-        // Delete the case so that we dont mess up payments and dataio-export tests
-        response = deleteResponse("v1/api/cases/" + created.getId());
-        assertThat("status code", response.getStatus(), is(200));
+            // Delete the case so that we don't mess up payments and dataio-export tests
+            deleteTestCase(created.getId());
+        }
     }
 
     @Test
@@ -745,58 +746,57 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
                 .withCreator(10)
                 .withEditor(10)
                 .withReviewer(1)
-                .withTasks(Arrays.asList(new TaskDto()
+                .withTasks(Collections.singletonList(new TaskDto()
                         .withTaskType(TaskType.GROUP_1_LESS_THAN_100_PAGES)
                         .withTaskFieldType(TaskFieldType.BRIEF)
-                        .withTargetFausts(Arrays.asList("24699773"))
+                        .withTargetFausts(List.of("24699773"))
                 ));
 
-        Response response = postResponse("v1/api/cases", dto);
-        assertThat("status code", response.getStatus(), is(201));
-        PromatCase created = mapper.readValue(response.readEntity(String.class), PromatCase.class);
+        try (Response response = postResponse("v1/api/cases", dto)) {
+            assertThat("status code", response.getStatus(), is(201));
+            PromatCase created = mapper.readValue(response.readEntity(String.class), PromatCase.class);
 
-        ScheduledCaseInformationUpdater upd = new ScheduledCaseInformationUpdater();
-        upd.caseInformationUpdater = new CaseInformationUpdater();
-        upd.caseInformationUpdater.metricRegistry = metricRegistry;
-        upd.entityManager = entityManager;
-        upd.serverRole = ServerRole.PRIMARY;
-        OpenFormatHandler mockedHandler = mock(OpenFormatHandler.class);
-        upd.caseInformationUpdater.openFormatHandler = mockedHandler;
-        Repository mockedRepository = mock(Repository.class);
-        upd.caseInformationUpdater.repository = mockedRepository;
+            ScheduledCaseInformationUpdater upd = new ScheduledCaseInformationUpdater();
+            upd.caseInformationUpdater = new CaseInformationUpdater();
+            upd.caseInformationUpdater.metricRegistry = metricRegistry;
+            upd.entityManager = entityManager;
+            upd.serverRole = ServerRole.PRIMARY;
+            OpenFormatHandler mockedHandler = mock(OpenFormatHandler.class);
+            upd.caseInformationUpdater.openFormatHandler = mockedHandler;
+            upd.caseInformationUpdater.repository = mock(Repository.class);
 
-        ContentLookUp contentLookUpMock = mock(ContentLookUp.class);
-        upd.caseInformationUpdater.contentLookUp = contentLookUpMock;
-        when(contentLookUpMock.lookUpContent(anyString())).thenReturn(Optional.empty());
+            ContentLookUp contentLookUpMock = mock(ContentLookUp.class);
+            upd.caseInformationUpdater.contentLookUp = contentLookUpMock;
+            when(contentLookUpMock.lookUpContent(anyString())).thenReturn(Optional.empty());
 
-        created.setStatus(CaseStatus.APPROVED);
+            created.setStatus(CaseStatus.APPROVED);
 
-        when(mockedHandler.format(anyString()))
-                .thenReturn(new BibliographicInformation()
-                        .withCatalogcodes(List.of("ACC202001")));
+            when(mockedHandler.format(anyString()))
+                    .thenReturn(new BibliographicInformation()
+                            .withCatalogcodes(List.of("ACC202001")));
 
-        Counter mockedCounter = mock(Counter.class);
-        doAnswer(answer -> {
-            return mockedCounter;
-        }).when(metricRegistry).counter(any(Metadata.class));
+            Counter mockedCounter = mock(Counter.class);
+            doAnswer(answer -> {
+                return mockedCounter;
+            }).when(metricRegistry).counter(any(Metadata.class));
 
-        AtomicInteger errors = new AtomicInteger(0);
-        doAnswer(answer -> {
-            errors.getAndIncrement();
-            return null;
-        }).when(mockedCounter).inc();
+            AtomicInteger errors = new AtomicInteger(0);
+            doAnswer(answer -> {
+                errors.getAndIncrement();
+                return null;
+            }).when(mockedCounter).inc();
 
-        Dates mockedDates = mock(Dates.class);
-        upd.caseInformationUpdater.dates = mockedDates;
-        when(mockedDates.getCurrentDate()).thenReturn(LocalDate.now());
+            Dates mockedDates = mock(Dates.class);
+            upd.caseInformationUpdater.dates = mockedDates;
+            when(mockedDates.getCurrentDate()).thenReturn(LocalDate.now());
 
-        persistenceContext.run(() -> upd.caseInformationUpdater.updateCaseInformation(created));
+            persistenceContext.run(() -> upd.caseInformationUpdater.updateCaseInformation(created));
 
-        assertThat("no errors", errors.get(), is(0));
+            assertThat("no errors", errors.get(), is(0));
 
-        // Delete the case so that we dont mess up payments and dataio-export tests
-        response = deleteResponse("v1/api/cases/" + created.getId());
-        assertThat("status code", response.getStatus(), is(200));
+            // Delete the case so that we don't mess up payments and dataio-export tests
+            deleteTestCase(created.getId());
+        }
     }
 
     @Test
@@ -813,52 +813,52 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
                 .withCreator(10)
                 .withEditor(10)
                 .withReviewer(1)
-                .withTasks(Arrays.asList(new TaskDto()
+                .withTasks(Collections.singletonList(new TaskDto()
                         .withTaskType(TaskType.GROUP_1_LESS_THAN_100_PAGES)
                         .withTaskFieldType(TaskFieldType.BRIEF)
-                        .withTargetFausts(Arrays.asList("24699773"))
+                        .withTargetFausts(List.of("24699773"))
                 ));
 
-        Response response = postResponse("v1/api/cases", dto);
-        assertThat("status code", response.getStatus(), is(201));
-        PromatCase created = mapper.readValue(response.readEntity(String.class), PromatCase.class);
+        try (Response response = postResponse("v1/api/cases", dto)) {
+            assertThat("status code", response.getStatus(), is(201));
+            PromatCase created = mapper.readValue(response.readEntity(String.class), PromatCase.class);
 
-        ScheduledCaseInformationUpdater upd = new ScheduledCaseInformationUpdater();
-        upd.caseInformationUpdater = new CaseInformationUpdater();
-        upd.caseInformationUpdater.metricRegistry = metricRegistry;
-        upd.entityManager = entityManager;
-        upd.serverRole = ServerRole.PRIMARY;
-        OpenFormatHandler mockedHandler = mock(OpenFormatHandler.class);
-        upd.caseInformationUpdater.openFormatHandler = mockedHandler;
-        Repository mockedRepository = mock(Repository.class);
-        upd.caseInformationUpdater.repository = mockedRepository;
+            ScheduledCaseInformationUpdater upd = new ScheduledCaseInformationUpdater();
+            upd.caseInformationUpdater = new CaseInformationUpdater();
+            upd.caseInformationUpdater.metricRegistry = metricRegistry;
+            upd.entityManager = entityManager;
+            upd.serverRole = ServerRole.PRIMARY;
+            OpenFormatHandler mockedHandler = mock(OpenFormatHandler.class);
+            upd.caseInformationUpdater.openFormatHandler = mockedHandler;
+            Repository mockedRepository = mock(Repository.class);
+            upd.caseInformationUpdater.repository = mockedRepository;
 
-        LocalDate date = LocalDate.now().minusWeeks(1);
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyww", new Locale("da", "DK"));
+            LocalDate date = LocalDate.now().minusWeeks(1);
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyww", new Locale("da", "DK"));
 
-        created.setStatus(CaseStatus.APPROVED);
-        when(mockedHandler.format(anyString()))
-                .thenReturn(new BibliographicInformation()
-                        .withCatalogcodes(Arrays.asList("BKM" + date.format(formatter), "BKX299999", "FFK299999", "ACC202001")));
-        doAnswer(answer -> {
-            PromatCase existing = ((PromatCase) answer.getArgument(0));
-            existing.getTasks().stream().forEach(t -> t.setRecordId("123456789"));
-            return null;
-        }).when(mockedRepository).assignFaustnumber(any(PromatCase.class));
+            created.setStatus(CaseStatus.APPROVED);
+            when(mockedHandler.format(anyString()))
+                    .thenReturn(new BibliographicInformation()
+                            .withCatalogcodes(Arrays.asList("BKM" + date.format(formatter), "BKX299999", "FFK299999", "ACC202001")));
+            doAnswer(answer -> {
+                PromatCase existing = ((PromatCase) answer.getArgument(0));
+                existing.getTasks().forEach(t -> t.setRecordId("123456789"));
+                return null;
+            }).when(mockedRepository).assignFaustnumber(any(PromatCase.class));
 
-        Dates mockedDates = mock(Dates.class);
-        upd.caseInformationUpdater.dates = mockedDates;
-        when(mockedDates.getCurrentDate()).thenReturn(LocalDate.now());
+            Dates mockedDates = mock(Dates.class);
+            upd.caseInformationUpdater.dates = mockedDates;
+            when(mockedDates.getCurrentDate()).thenReturn(LocalDate.now());
 
-        // BKM is previous week, but BKX and FFK is in the future, and since BKX or FFK takes precedence, status should not change
+            // BKM is previous week, but BKX and FFK is in the future, and since BKX or FFK takes precedence, status should not change
 
-        persistenceContext.run(() -> upd.caseInformationUpdater.updateCaseInformation(created));
-        assertThat("status", created.getStatus(), is(CaseStatus.APPROVED));
-        created.getTasks().stream().forEach(t -> assertThat("recordId", t.getRecordId(), is(nullValue())));
+            persistenceContext.run(() -> upd.caseInformationUpdater.updateCaseInformation(created));
+            assertThat("status", created.getStatus(), is(CaseStatus.APPROVED));
+            created.getTasks().forEach(t -> assertThat("recordId", t.getRecordId(), is(nullValue())));
 
-        // Delete the case so that we dont mess up payments and dataio-export tests
-        response = deleteResponse("v1/api/cases/" + created.getId());
-        assertThat("status code", response.getStatus(), is(200));
+            // Delete the case so that we don't mess up payments and dataio-export tests
+            deleteTestCase(created.getId());
+        }
     }
 
     @Test
@@ -875,59 +875,59 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
                 .withCreator(10)
                 .withEditor(10)
                 .withReviewer(1)
-                .withTasks(Arrays.asList(new TaskDto()
+                .withTasks(Collections.singletonList(new TaskDto()
                         .withTaskType(TaskType.GROUP_1_LESS_THAN_100_PAGES)
                         .withTaskFieldType(TaskFieldType.BRIEF)
-                        .withTargetFausts(Arrays.asList("24699773"))
+                        .withTargetFausts(List.of("24699773"))
                 ));
 
-        Response response = postResponse("v1/api/cases", dto);
-        assertThat("status code", response.getStatus(), is(201));
-        PromatCase created = mapper.readValue(response.readEntity(String.class), PromatCase.class);
+        try (Response response = postResponse("v1/api/cases", dto)) {
+            assertThat("status code", response.getStatus(), is(201));
+            PromatCase created = mapper.readValue(response.readEntity(String.class), PromatCase.class);
 
-        ScheduledCaseInformationUpdater upd = new ScheduledCaseInformationUpdater();
-        upd.caseInformationUpdater = new CaseInformationUpdater();
-        upd.caseInformationUpdater.metricRegistry = metricRegistry;
-        upd.entityManager = entityManager;
-        upd.serverRole = ServerRole.PRIMARY;
-        OpenFormatHandler mockedHandler = mock(OpenFormatHandler.class);
-        upd.caseInformationUpdater.openFormatHandler = mockedHandler;
-        Repository mockedRepository = mock(Repository.class);
-        upd.caseInformationUpdater.repository = mockedRepository;
+            ScheduledCaseInformationUpdater upd = new ScheduledCaseInformationUpdater();
+            upd.caseInformationUpdater = new CaseInformationUpdater();
+            upd.caseInformationUpdater.metricRegistry = metricRegistry;
+            upd.entityManager = entityManager;
+            upd.serverRole = ServerRole.PRIMARY;
+            OpenFormatHandler mockedHandler = mock(OpenFormatHandler.class);
+            upd.caseInformationUpdater.openFormatHandler = mockedHandler;
+            Repository mockedRepository = mock(Repository.class);
+            upd.caseInformationUpdater.repository = mockedRepository;
 
-        ContentLookUp contentLookUpMock = mock(ContentLookUp.class);
-        upd.caseInformationUpdater.contentLookUp = contentLookUpMock;
-        when(contentLookUpMock.lookUpContent(anyString())).thenReturn(Optional.empty());
+            ContentLookUp contentLookUpMock = mock(ContentLookUp.class);
+            upd.caseInformationUpdater.contentLookUp = contentLookUpMock;
+            when(contentLookUpMock.lookUpContent(anyString())).thenReturn(Optional.empty());
 
-        LocalDate date = LocalDate.now().minusWeeks(1);
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyww", new Locale("da", "DK"));
+            LocalDate date = LocalDate.now().minusWeeks(1);
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyww", new Locale("da", "DK"));
 
-        created.setStatus(CaseStatus.APPROVED);
-        when(mockedHandler.format(anyString()))
-                .thenReturn(new BibliographicInformation()
-                        .withCatalogcodes(Arrays.asList("BKM" + date.format(formatter),
-                                "BKX" + date.format(formatter),
-                                "FFK299999",
-                                "ACC202001")));
-        doAnswer(answer -> {
-            PromatCase existing = ((PromatCase) answer.getArgument(0));
-            existing.getTasks().stream().forEach(t -> t.setRecordId("123456789"));
-            return null;
-        }).when(mockedRepository).assignFaustnumber(any(PromatCase.class));
+            created.setStatus(CaseStatus.APPROVED);
+            when(mockedHandler.format(anyString()))
+                    .thenReturn(new BibliographicInformation()
+                            .withCatalogcodes(Arrays.asList("BKM" + date.format(formatter),
+                                    "BKX" + date.format(formatter),
+                                    "FFK299999",
+                                    "ACC202001")));
+            doAnswer(answer -> {
+                PromatCase existing = ((PromatCase) answer.getArgument(0));
+                existing.getTasks().forEach(t -> t.setRecordId("123456789"));
+                return null;
+            }).when(mockedRepository).assignFaustnumber(any(PromatCase.class));
 
-        Dates mockedDates = mock(Dates.class);
-        upd.caseInformationUpdater.dates = mockedDates;
-        when(mockedDates.getCurrentDate()).thenReturn(LocalDate.now());
+            Dates mockedDates = mock(Dates.class);
+            upd.caseInformationUpdater.dates = mockedDates;
+            when(mockedDates.getCurrentDate()).thenReturn(LocalDate.now());
 
-        // BKM and BKX is previous week, but FFK is in the future, and since FFK takes precedence, status should not change
+            // BKM and BKX is previous week, but FFK is in the future, and since FFK takes precedence, status should not change
 
-        persistenceContext.run(() -> upd.caseInformationUpdater.updateCaseInformation(created));
-        assertThat("status", created.getStatus(), is(CaseStatus.APPROVED));
-        created.getTasks().stream().forEach(t -> assertThat("recordId", t.getRecordId(), is(nullValue())));
+            persistenceContext.run(() -> upd.caseInformationUpdater.updateCaseInformation(created));
+            assertThat("status", created.getStatus(), is(CaseStatus.APPROVED));
+            created.getTasks().forEach(t -> assertThat("recordId", t.getRecordId(), is(nullValue())));
 
-        // Delete the case so that we dont mess up payments and dataio-export tests
-        response = deleteResponse("v1/api/cases/" + created.getId());
-        assertThat("status code", response.getStatus(), is(200));
+            // Delete the case so that we don't mess up payments and dataio-export tests
+            deleteTestCase(created.getId());
+        }
     }
 
     @Test
@@ -944,56 +944,56 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
                 .withCreator(10)
                 .withEditor(10)
                 .withReviewer(1)
-                .withTasks(Arrays.asList(new TaskDto()
+                .withTasks(Collections.singletonList(new TaskDto()
                         .withTaskType(TaskType.GROUP_1_LESS_THAN_100_PAGES)
                         .withTaskFieldType(TaskFieldType.BRIEF)
-                        .withTargetFausts(Arrays.asList("24699773"))
+                        .withTargetFausts(List.of("24699773"))
                 ));
 
-        Response response = postResponse("v1/api/cases", dto);
-        assertThat("status code", response.getStatus(), is(201));
-        PromatCase created = mapper.readValue(response.readEntity(String.class), PromatCase.class);
+        try (Response response = postResponse("v1/api/cases", dto)) {
+            assertThat("status code", response.getStatus(), is(201));
+            PromatCase created = mapper.readValue(response.readEntity(String.class), PromatCase.class);
 
-        ScheduledCaseInformationUpdater upd = new ScheduledCaseInformationUpdater();
-        upd.caseInformationUpdater = new CaseInformationUpdater();
-        upd.caseInformationUpdater.metricRegistry = metricRegistry;
-        upd.entityManager = entityManager;
-        upd.serverRole = ServerRole.PRIMARY;
-        OpenFormatHandler mockedHandler = mock(OpenFormatHandler.class);
-        upd.caseInformationUpdater.openFormatHandler = mockedHandler;
-        Repository mockedRepository = mock(Repository.class);
-        upd.caseInformationUpdater.repository = mockedRepository;
+            ScheduledCaseInformationUpdater upd = new ScheduledCaseInformationUpdater();
+            upd.caseInformationUpdater = new CaseInformationUpdater();
+            upd.caseInformationUpdater.metricRegistry = metricRegistry;
+            upd.entityManager = entityManager;
+            upd.serverRole = ServerRole.PRIMARY;
+            OpenFormatHandler mockedHandler = mock(OpenFormatHandler.class);
+            upd.caseInformationUpdater.openFormatHandler = mockedHandler;
+            Repository mockedRepository = mock(Repository.class);
+            upd.caseInformationUpdater.repository = mockedRepository;
 
-        ContentLookUp contentLookUpMock = mock(ContentLookUp.class);
-        upd.caseInformationUpdater.contentLookUp = contentLookUpMock;
-        when(contentLookUpMock.lookUpContent(anyString())).thenReturn(Optional.empty());
+            ContentLookUp contentLookUpMock = mock(ContentLookUp.class);
+            upd.caseInformationUpdater.contentLookUp = contentLookUpMock;
+            when(contentLookUpMock.lookUpContent(anyString())).thenReturn(Optional.empty());
 
-        LocalDate date = LocalDate.now().minusWeeks(1);
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyww", new Locale("da", "DK"));
+            LocalDate date = LocalDate.now().minusWeeks(1);
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyww", new Locale("da", "DK"));
 
-        created.setStatus(CaseStatus.APPROVED);
-        when(mockedHandler.format(anyString()))
-                .thenReturn(new BibliographicInformation()
-                        .withCatalogcodes(Arrays.asList("BKX" + date.format(formatter), "BKM299999", "ACC202001")));
-        doAnswer(answer -> {
-            PromatCase existing = ((PromatCase) answer.getArgument(0));
-            existing.getTasks().stream().forEach(t -> t.setRecordId("123456789"));
-            return null;
-        }).when(mockedRepository).assignFaustnumber(any(PromatCase.class));
+            created.setStatus(CaseStatus.APPROVED);
+            when(mockedHandler.format(anyString()))
+                    .thenReturn(new BibliographicInformation()
+                            .withCatalogcodes(Arrays.asList("BKX" + date.format(formatter), "BKM299999", "ACC202001")));
+            doAnswer(answer -> {
+                PromatCase existing = ((PromatCase) answer.getArgument(0));
+                existing.getTasks().forEach(t -> t.setRecordId("123456789"));
+                return null;
+            }).when(mockedRepository).assignFaustnumber(any(PromatCase.class));
 
-        Dates mockedDates = mock(Dates.class);
-        upd.caseInformationUpdater.dates = mockedDates;
-        when(mockedDates.getCurrentDate()).thenReturn(LocalDate.now());
+            Dates mockedDates = mock(Dates.class);
+            upd.caseInformationUpdater.dates = mockedDates;
+            when(mockedDates.getCurrentDate()).thenReturn(LocalDate.now());
 
-        // BKX is previous week, but BKM is in the future, since BKX takes precedence, status should change
+            // BKX is previous week, but BKM is in the future, since BKX takes precedence, status should change
 
-        persistenceContext.run(() -> upd.caseInformationUpdater.updateCaseInformation(created));
-        assertThat("status", created.getStatus(), is(CaseStatus.PENDING_EXPORT));
-        created.getTasks().stream().forEach(t -> assertThat("recordId", t.getRecordId(), is("123456789")));
+            persistenceContext.run(() -> upd.caseInformationUpdater.updateCaseInformation(created));
+            assertThat("status", created.getStatus(), is(CaseStatus.PENDING_EXPORT));
+            created.getTasks().forEach(t -> assertThat("recordId", t.getRecordId(), is("123456789")));
 
-        // Delete the case so that we dont mess up payments and dataio-export tests
-        response = deleteResponse("v1/api/cases/" + created.getId());
-        assertThat("status code", response.getStatus(), is(200));
+            // Delete the case so that we don't mess up payments and dataio-export tests
+            deleteTestCase(created.getId());
+        }
     }
 
     @Test
@@ -1010,52 +1010,52 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
                 .withCreator(10)
                 .withEditor(10)
                 .withReviewer(1)
-                .withTasks(Arrays.asList(new TaskDto()
+                .withTasks(Collections.singletonList(new TaskDto()
                         .withTaskType(TaskType.GROUP_1_LESS_THAN_100_PAGES)
                         .withTaskFieldType(TaskFieldType.BRIEF)
-                        .withTargetFausts(Arrays.asList("24699773"))
+                        .withTargetFausts(List.of("24699773"))
                 ));
 
-        Response response = postResponse("v1/api/cases", dto);
-        assertThat("status code", response.getStatus(), is(201));
-        PromatCase created = mapper.readValue(response.readEntity(String.class), PromatCase.class);
+        try (Response response = postResponse("v1/api/cases", dto)) {
+            assertThat("status code", response.getStatus(), is(201));
+            PromatCase created = mapper.readValue(response.readEntity(String.class), PromatCase.class);
 
-        ScheduledCaseInformationUpdater upd = new ScheduledCaseInformationUpdater();
-        upd.caseInformationUpdater = new CaseInformationUpdater();
-        upd.caseInformationUpdater.metricRegistry = metricRegistry;
-        upd.entityManager = entityManager;
-        upd.serverRole = ServerRole.PRIMARY;
-        OpenFormatHandler mockedHandler = mock(OpenFormatHandler.class);
-        upd.caseInformationUpdater.openFormatHandler = mockedHandler;
-        Repository mockedRepository = mock(Repository.class);
-        upd.caseInformationUpdater.repository = mockedRepository;
+            ScheduledCaseInformationUpdater upd = new ScheduledCaseInformationUpdater();
+            upd.caseInformationUpdater = new CaseInformationUpdater();
+            upd.caseInformationUpdater.metricRegistry = metricRegistry;
+            upd.entityManager = entityManager;
+            upd.serverRole = ServerRole.PRIMARY;
+            OpenFormatHandler mockedHandler = mock(OpenFormatHandler.class);
+            upd.caseInformationUpdater.openFormatHandler = mockedHandler;
+            Repository mockedRepository = mock(Repository.class);
+            upd.caseInformationUpdater.repository = mockedRepository;
 
-        LocalDate date = LocalDate.now().minusWeeks(1);
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyww", new Locale("da", "DK"));
+            LocalDate date = LocalDate.now().minusWeeks(1);
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyww", new Locale("da", "DK"));
 
-        created.setStatus(CaseStatus.APPROVED);
-        when(mockedHandler.format(anyString()))
-                .thenReturn(new BibliographicInformation()
-                        .withCatalogcodes(Arrays.asList("FFK" + date.format(formatter), "BKM299999", "BKX299999", "ACC202001")));
-        doAnswer(answer -> {
-            PromatCase existing = ((PromatCase) answer.getArgument(0));
-            existing.getTasks().stream().forEach(t -> t.setRecordId("123456789"));
-            return null;
-        }).when(mockedRepository).assignFaustnumber(any(PromatCase.class));
+            created.setStatus(CaseStatus.APPROVED);
+            when(mockedHandler.format(anyString()))
+                    .thenReturn(new BibliographicInformation()
+                            .withCatalogcodes(Arrays.asList("FFK" + date.format(formatter), "BKM299999", "BKX299999", "ACC202001")));
+            doAnswer(answer -> {
+                PromatCase existing = ((PromatCase) answer.getArgument(0));
+                existing.getTasks().forEach(t -> t.setRecordId("123456789"));
+                return null;
+            }).when(mockedRepository).assignFaustnumber(any(PromatCase.class));
 
-        Dates mockedDates = mock(Dates.class);
-        upd.caseInformationUpdater.dates = mockedDates;
-        when(mockedDates.getCurrentDate()).thenReturn(LocalDate.now());
+            Dates mockedDates = mock(Dates.class);
+            upd.caseInformationUpdater.dates = mockedDates;
+            when(mockedDates.getCurrentDate()).thenReturn(LocalDate.now());
 
-        // FFK is previous week, but BKM and BKX is in the future, since FFK takes precedence, status should change
+            // FFK is previous week, but BKM and BKX is in the future, since FFK takes precedence, status should change
 
-        persistenceContext.run(() -> upd.caseInformationUpdater.updateCaseInformation(created));
-        assertThat("status", created.getStatus(), is(CaseStatus.PENDING_EXPORT));
-        created.getTasks().stream().forEach(t -> assertThat("recordId", t.getRecordId(), is("123456789")));
+            persistenceContext.run(() -> upd.caseInformationUpdater.updateCaseInformation(created));
+            assertThat("status", created.getStatus(), is(CaseStatus.PENDING_EXPORT));
+            created.getTasks().forEach(t -> assertThat("recordId", t.getRecordId(), is("123456789")));
 
-        // Delete the case so that we dont mess up payments and dataio-export tests
-        response = deleteResponse("v1/api/cases/" + created.getId());
-        assertThat("status code", response.getStatus(), is(200));
+            // Delete the case so that we don't mess up payments and dataio-export tests
+            deleteTestCase(created.getId());
+        }
     }
 
     @Test
@@ -1080,36 +1080,36 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
                 .withEditor(10)
                 .withReviewer(1);
 
-        Response response = postResponse("v1/api/cases", dto);
-        assertThat("status code", response.getStatus(), is(201));
-        PromatCase created = mapper.readValue(response.readEntity(String.class), PromatCase.class);
+        try (Response response = postResponse("v1/api/cases", dto)) {
+            assertThat("status code", response.getStatus(), is(201));
+            PromatCase created = mapper.readValue(response.readEntity(String.class), PromatCase.class);
 
-        PromatCase promatCase = getCaseWithId(created.getId());
-        ScheduledCaseInformationUpdater upd = new ScheduledCaseInformationUpdater();
-        upd.caseInformationUpdater = new CaseInformationUpdater();
-        upd.caseInformationUpdater.metricRegistry = metricRegistry;
-        upd.caseInformationUpdater.openFormatHandler = mock(OpenFormatHandler.class);
-        when(upd.caseInformationUpdater.openFormatHandler.format(anyString()))
-                .thenReturn(new BibliographicInformation()
-                        .withCatalogcodes(new ArrayList<>()));
+            PromatCase promatCase = getCaseWithId(created.getId());
+            ScheduledCaseInformationUpdater upd = new ScheduledCaseInformationUpdater();
+            upd.caseInformationUpdater = new CaseInformationUpdater();
+            upd.caseInformationUpdater.metricRegistry = metricRegistry;
+            upd.caseInformationUpdater.openFormatHandler = mock(OpenFormatHandler.class);
+            when(upd.caseInformationUpdater.openFormatHandler.format(anyString()))
+                    .thenReturn(new BibliographicInformation()
+                            .withCatalogcodes(new ArrayList<>()));
 
-        ContentLookUp contentLookUpMock = mock(ContentLookUp.class);
-        upd.caseInformationUpdater.contentLookUp = contentLookUpMock;
-        when(contentLookUpMock.lookUpContent("48959940")).thenReturn(Optional.of(DOWNLOAD_LINK));
+            ContentLookUp contentLookUpMock = mock(ContentLookUp.class);
+            upd.caseInformationUpdater.contentLookUp = contentLookUpMock;
+            when(contentLookUpMock.lookUpContent("48959940")).thenReturn(Optional.of(DOWNLOAD_LINK));
 
-        Dates mockedDates = mock(Dates.class);
-        upd.caseInformationUpdater.dates = mockedDates;
-        when(mockedDates.getCurrentDate()).thenReturn(LocalDate.now());
+            Dates mockedDates = mock(Dates.class);
+            upd.caseInformationUpdater.dates = mockedDates;
+            when(mockedDates.getCurrentDate()).thenReturn(LocalDate.now());
 
-        //
-        // Now do an update, and confirm that the corrct link is present.
-        //
-        persistenceContext.run(() -> upd.caseInformationUpdater.updateCaseInformation(promatCase));
-        assertThat("Download link is now present", promatCase.getFulltextLink(), is(DOWNLOAD_LINK));
+            //
+            // Now do an update, and confirm that the corrct link is present.
+            //
+            persistenceContext.run(() -> upd.caseInformationUpdater.updateCaseInformation(promatCase));
+            assertThat("Download link is now present", promatCase.getFulltextLink(), is(DOWNLOAD_LINK));
 
-        // Delete the case so that we dont mess up payments and dataio-export tests
-        response = deleteResponse("v1/api/cases/" + created.getId());
-        assertThat("status code", response.getStatus(), is(200));
+            // Delete the case so that we don't mess up payments and dataio-export tests
+            deleteTestCase(created.getId());
+        }
     }
 
     @Test
@@ -1126,42 +1126,42 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
                 .withCreator(10)
                 .withEditor(10)
                 .withReviewer(1)
-                .withTasks(Arrays.asList(new TaskDto()
+                .withTasks(Collections.singletonList(new TaskDto()
                         .withTaskType(TaskType.GROUP_1_LESS_THAN_100_PAGES)
                         .withTaskFieldType(TaskFieldType.BRIEF)
-                        .withTargetFausts(Arrays.asList("24699773"))
+                        .withTargetFausts(List.of("24699773"))
                 ));
 
-        Response response = postResponse("v1/api/cases", dto);
-        assertThat("status code", response.getStatus(), is(201));
-        PromatCase created = mapper.readValue(response.readEntity(String.class), PromatCase.class);
+        try (Response response = postResponse("v1/api/cases", dto)) {
+            assertThat("status code", response.getStatus(), is(201));
+            PromatCase created = mapper.readValue(response.readEntity(String.class), PromatCase.class);
 
-        ScheduledCaseInformationUpdater upd = new ScheduledCaseInformationUpdater();
-        upd.caseInformationUpdater = new CaseInformationUpdater();
-        upd.caseInformationUpdater.metricRegistry = metricRegistry;
-        upd.entityManager = entityManager;
-        upd.serverRole = ServerRole.PRIMARY;
-        OpenFormatHandler mockedHandler = mock(OpenFormatHandler.class);
-        upd.caseInformationUpdater.openFormatHandler = mockedHandler;
-        Repository mockedRepository = mock(Repository.class);
-        upd.caseInformationUpdater.repository = mockedRepository;
+            ScheduledCaseInformationUpdater upd = new ScheduledCaseInformationUpdater();
+            upd.caseInformationUpdater = new CaseInformationUpdater();
+            upd.caseInformationUpdater.metricRegistry = metricRegistry;
+            upd.entityManager = entityManager;
+            upd.serverRole = ServerRole.PRIMARY;
+            OpenFormatHandler mockedHandler = mock(OpenFormatHandler.class);
+            upd.caseInformationUpdater.openFormatHandler = mockedHandler;
+            Repository mockedRepository = mock(Repository.class);
+            upd.caseInformationUpdater.repository = mockedRepository;
 
-        when(mockedHandler.format(anyString()))
-                .thenReturn(new BibliographicInformation()
-                        .withCatalogcodes(null));
-        doNothing().when(mockedRepository).assignFaustnumber(any(PromatCase.class));
+            when(mockedHandler.format(anyString()))
+                    .thenReturn(new BibliographicInformation()
+                            .withCatalogcodes(null));
+            doNothing().when(mockedRepository).assignFaustnumber(any(PromatCase.class));
 
-        Dates mockedDates = mock(Dates.class);
-        upd.caseInformationUpdater.dates = mockedDates;
-        when(mockedDates.getCurrentDate()).thenReturn(LocalDate.now());
+            Dates mockedDates = mock(Dates.class);
+            upd.caseInformationUpdater.dates = mockedDates;
+            when(mockedDates.getCurrentDate()).thenReturn(LocalDate.now());
 
-        persistenceContext.run(() -> upd.caseInformationUpdater.updateCaseInformation(created));
-        LOGGER.info("codes: {}", created.getCodes());
-        assertThat("codes exists", created.getCodes(), is(nullValue()));
+            persistenceContext.run(() -> upd.caseInformationUpdater.updateCaseInformation(created));
+            LOGGER.info("codes: {}", created.getCodes());
+            assertThat("codes exists", created.getCodes(), is(nullValue()));
 
-        // Delete the case so that we dont mess up payments and dataio-export tests
-        response = deleteResponse("v1/api/cases/" + created.getId());
-        assertThat("status code", response.getStatus(), is(200));
+            // Delete the case so that we don't mess up payments and dataio-export tests
+            deleteTestCase(created.getId());
+        }
     }
 
     @Test
@@ -1178,44 +1178,44 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
                 .withCreator(10)
                 .withEditor(10)
                 .withReviewer(1)
-                .withTasks(Arrays.asList(new TaskDto()
+                .withTasks(Collections.singletonList(new TaskDto()
                         .withTaskType(TaskType.GROUP_1_LESS_THAN_100_PAGES)
                         .withTaskFieldType(TaskFieldType.BRIEF)
-                        .withTargetFausts(Arrays.asList("24699773"))
+                        .withTargetFausts(List.of("24699773"))
                 ));
 
-        Response response = postResponse("v1/api/cases", dto);
-        assertThat("status code", response.getStatus(), is(201));
-        PromatCase created = mapper.readValue(response.readEntity(String.class), PromatCase.class);
+        try (Response response = postResponse("v1/api/cases", dto)) {
+            assertThat("status code", response.getStatus(), is(201));
+            PromatCase created = mapper.readValue(response.readEntity(String.class), PromatCase.class);
 
-        ScheduledCaseInformationUpdater upd = new ScheduledCaseInformationUpdater();
-        upd.caseInformationUpdater = new CaseInformationUpdater();
-        upd.caseInformationUpdater.metricRegistry = metricRegistry;
-        upd.entityManager = entityManager;
-        upd.serverRole = ServerRole.PRIMARY;
-        OpenFormatHandler mockedHandler = mock(OpenFormatHandler.class);
-        upd.caseInformationUpdater.openFormatHandler = mockedHandler;
-        Repository mockedRepository = mock(Repository.class);
-        upd.caseInformationUpdater.repository = mockedRepository;
+            ScheduledCaseInformationUpdater upd = new ScheduledCaseInformationUpdater();
+            upd.caseInformationUpdater = new CaseInformationUpdater();
+            upd.caseInformationUpdater.metricRegistry = metricRegistry;
+            upd.entityManager = entityManager;
+            upd.serverRole = ServerRole.PRIMARY;
+            OpenFormatHandler mockedHandler = mock(OpenFormatHandler.class);
+            upd.caseInformationUpdater.openFormatHandler = mockedHandler;
+            Repository mockedRepository = mock(Repository.class);
+            upd.caseInformationUpdater.repository = mockedRepository;
 
-        when(mockedHandler.format(anyString()))
-                .thenReturn(new BibliographicInformation()
-                        .withCatalogcodes(Arrays.asList("FFK20210603", "BKM20210603", "bkx20210602", "ACC20210601")));
-        doNothing().when(mockedRepository).assignFaustnumber(any(PromatCase.class));
+            when(mockedHandler.format(anyString()))
+                    .thenReturn(new BibliographicInformation()
+                            .withCatalogcodes(Arrays.asList("FFK20210603", "BKM20210603", "bkx20210602", "ACC20210601")));
+            doNothing().when(mockedRepository).assignFaustnumber(any(PromatCase.class));
 
-        Dates mockedDates = mock(Dates.class);
-        upd.caseInformationUpdater.dates = mockedDates;
-        when(mockedDates.getCurrentDate()).thenReturn(LocalDate.now());
+            Dates mockedDates = mock(Dates.class);
+            upd.caseInformationUpdater.dates = mockedDates;
+            when(mockedDates.getCurrentDate()).thenReturn(LocalDate.now());
 
-        persistenceContext.run(() -> upd.caseInformationUpdater.updateCaseInformation(created));
-        assertThat("codes exists", created.getCodes(), is(notNullValue()));
-        assertThat("codes contains", created.getCodes().stream()
-                .sorted().collect(Collectors.toList()),
-                is(Arrays.asList("ACC20210601", "BKM20210603", "BKX20210602", "FFK20210603")));
+            persistenceContext.run(() -> upd.caseInformationUpdater.updateCaseInformation(created));
+            assertThat("codes exists", created.getCodes(), is(notNullValue()));
+            assertThat("codes contains", created.getCodes().stream()
+                            .sorted().collect(Collectors.toList()),
+                    is(Arrays.asList("ACC20210601", "BKM20210603", "BKX20210602", "FFK20210603")));
 
-        // Delete the case so that we dont mess up payments and dataio-export tests
-        response = deleteResponse("v1/api/cases/" + created.getId());
-        assertThat("status code", response.getStatus(), is(200));
+            // Delete the case so that we don't mess up payments and dataio-export tests
+            deleteTestCase(created.getId());
+        }
     }
 
     @Test
@@ -1233,13 +1233,10 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
                 .withEditor(10)
                 .withReviewer(1);
 
-        Response response = postResponse("v1/api/cases", dto);
-        assertThat("status code", response.getStatus(), is(201));
-        PromatCase created = mapper.readValue(response.readEntity(String.class), PromatCase.class);
+        PromatCase created = postAndAssert("v1/api/cases", dto, PromatCase.class, Response.Status.CREATED);
 
         dto = new CaseRequest().withStatus(CaseStatus.PENDING_APPROVAL);
-        response = postResponse("v1/api/cases/" + created.getId(), dto);
-        assertThat("status code", response.getStatus(), is(200));
+        postAndAssert("v1/api/cases/" + created.getId(), dto, Response.Status.OK);
 
         Integer activeId = created.getId();
 
@@ -1255,23 +1252,18 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
                 .withEditor(10)
                 .withReviewer(1);
 
-        response = postResponse("v1/api/cases", dto);
-        assertThat("status code", response.getStatus(), is(201));
-        created = mapper.readValue(response.readEntity(String.class), PromatCase.class);
+        created = postAndAssert("v1/api/cases", dto, PromatCase.class, Response.Status.CREATED);
 
         dto = new CaseRequest().withStatus(CaseStatus.PENDING_APPROVAL);
-        response = postResponse("v1/api/cases/" + created.getId(), dto);
-        assertThat("status code", response.getStatus(), is(200));
+        postAndAssert("v1/api/cases/" + created.getId(), dto, Response.Status.OK);
 
         Integer inactiveId = created.getId();
 
         // Send the active case back to the reviewer, then again to approval - to set the keepEditor flag
         dto = new CaseRequest().withStatus(CaseStatus.PENDING_ISSUES).withEditor(10);
-        response = postResponse("v1/api/cases/" + activeId, dto);
-        assertThat("status code", response.getStatus(), is(200));
+        postAndAssert("v1/api/cases/" + activeId, dto, Response.Status.OK);
         dto.setStatus(CaseStatus.PENDING_APPROVAL);
-        response = postResponse("v1/api/cases/" + activeId, dto);
-        assertThat("status code", response.getStatus(), is(200));
+        postAndAssert("v1/api/cases/" + activeId, dto, Response.Status.OK);
 
         // Run nightly update to clear the editor on the 'inactive case, but retain the editor on the 'active' case
         ScheduledCaseInformationUpdater upd = new ScheduledCaseInformationUpdater();
@@ -1289,7 +1281,6 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
             entityManager.flush();
         });
 
-
         PromatCase updated = entityManager.find(PromatCase.class, activeId);
         assertThat("editor is retained", updated.getEditor(), is(notNullValue()));
         assertThat("editor is same editor", updated.getEditor().getId(), is(10));
@@ -1297,11 +1288,9 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
         updated = entityManager.find(PromatCase.class, inactiveId);
         assertThat("editor is cleared", updated.getEditor(), is(nullValue()));
 
-        // Delete the cases so that we dont mess up payments and dataio-export tests
-        response = deleteResponse("v1/api/cases/" + activeId);
-        assertThat("status code", response.getStatus(), is(200));
-        response = deleteResponse("v1/api/cases/" + inactiveId);
-        assertThat("status code", response.getStatus(), is(200));
+        // Delete the cases so that we don't mess up payments and dataio-export tests
+        deleteTestCase(activeId);
+        deleteTestCase(inactiveId);
     }
 
     @Test
@@ -1318,15 +1307,13 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
                 .withCreator(10)
                 .withEditor(10)
                 .withReviewer(1)
-                .withTasks(Arrays.asList(new TaskDto()
+                .withTasks(Collections.singletonList(new TaskDto()
                         .withTaskType(TaskType.GROUP_1_LESS_THAN_100_PAGES)
                         .withTaskFieldType(TaskFieldType.BRIEF)
-                        .withTargetFausts(Arrays.asList("52000202"))
+                        .withTargetFausts(List.of("52000202"))
                 ));
 
-        Response response = postResponse("v1/api/cases", dto);
-        assertThat("status code", response.getStatus(), is(201));
-        PromatCase created = mapper.readValue(response.readEntity(String.class), PromatCase.class);
+        PromatCase created = postAndAssert("v1/api/cases", dto, PromatCase.class, Response.Status.CREATED);
 
         ScheduledCaseInformationUpdater upd = new ScheduledCaseInformationUpdater();
         upd.caseInformationUpdater = new CaseInformationUpdater();
@@ -1347,7 +1334,7 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
                         .withCatalogcodes(Arrays.asList("BKM" + date.format(formatter), "ACC202001")));
         doAnswer(answer -> {
             PromatCase existing = ((PromatCase) answer.getArgument(0));
-            existing.getTasks().stream().forEach(t -> t.setRecordId("123456789"));
+            existing.getTasks().forEach(t -> t.setRecordId("123456789"));
             return null;
         }).when(mockedRepository).assignFaustnumber(any(PromatCase.class));
 
@@ -1360,9 +1347,8 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
         persistenceContext.run(() -> upd.caseInformationUpdater.updateCaseInformation(created));
         assertThat("status", created.getStatus(), is(CaseStatus.APPROVED));
 
-        // Delete the case so that we dont mess up payments and dataio-export tests
-        response = deleteResponse("v1/api/cases/" + created.getId());
-        assertThat("status code", response.getStatus(), is(200));
+        // Delete the case so that we don't mess up payments and dataio-export tests
+        deleteTestCase(created.getId());
     }
 
     @Test
@@ -1379,15 +1365,13 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
                 .withCreator(10)
                 .withEditor(10)
                 .withReviewer(1)
-                .withTasks(Arrays.asList(new TaskDto()
+                .withTasks(Collections.singletonList(new TaskDto()
                         .withTaskType(TaskType.GROUP_1_LESS_THAN_100_PAGES)
                         .withTaskFieldType(TaskFieldType.BRIEF)
-                        .withTargetFausts(Arrays.asList("53000202"))
+                        .withTargetFausts(List.of("53000202"))
                 ));
 
-        Response response = postResponse("v1/api/cases", dto);
-        assertThat("status code", response.getStatus(), is(201));
-        PromatCase created = mapper.readValue(response.readEntity(String.class), PromatCase.class);
+        PromatCase created = postAndAssert("v1/api/cases", dto, PromatCase.class, Response.Status.CREATED);
 
         ScheduledCaseInformationUpdater upd = new ScheduledCaseInformationUpdater();
         upd.caseInformationUpdater = new CaseInformationUpdater();
@@ -1408,7 +1392,7 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
                         .withCatalogcodes(Arrays.asList("BKM" + date.format(formatter), "ACC202001")));
         doAnswer(answer -> {
             PromatCase existing = ((PromatCase) answer.getArgument(0));
-            existing.getTasks().stream().forEach(t -> t.setRecordId("123456789"));
+            existing.getTasks().forEach(t -> t.setRecordId("123456789"));
             return null;
         }).when(mockedRepository).assignFaustnumber(any(PromatCase.class));
 
@@ -1417,13 +1401,11 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
         when(mockedDates.getCurrentDate()).thenReturn(LocalDate.now());
 
         // BKM is next week so case must remain in status PENDING_EXPORT
-
         persistenceContext.run(() -> upd.caseInformationUpdater.updateCaseInformation(created));
         assertThat("status", created.getStatus(), is(CaseStatus.PENDING_EXPORT));
 
-        // Delete the case so that we dont mess up payments and dataio-export tests
-        response = deleteResponse("v1/api/cases/" + created.getId());
-        assertThat("status code", response.getStatus(), is(200));
+        // Delete the case so that we don't mess up payments and dataio-export tests
+        deleteTestCase(created.getId());
     }
 
     @Test
@@ -1440,15 +1422,13 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
                 .withCreator(10)
                 .withEditor(10)
                 .withReviewer(1)
-                .withTasks(Arrays.asList(new TaskDto()
+                .withTasks(Collections.singletonList(new TaskDto()
                         .withTaskType(TaskType.GROUP_1_LESS_THAN_100_PAGES)
                         .withTaskFieldType(TaskFieldType.BRIEF)
-                        .withTargetFausts(Arrays.asList("53000303"))
+                        .withTargetFausts(List.of("53000303"))
                 ));
 
-        Response response = postResponse("v1/api/cases", dto);
-        assertThat("status code", response.getStatus(), is(201));
-        PromatCase created = mapper.readValue(response.readEntity(String.class), PromatCase.class);
+        PromatCase created = postAndAssert("v1/api/cases", dto, PromatCase.class, Response.Status.CREATED);
 
         ScheduledCaseInformationUpdater upd = new ScheduledCaseInformationUpdater();
         upd.caseInformationUpdater = new CaseInformationUpdater();
@@ -1466,7 +1446,7 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
                         .withCatalogcodes(Arrays.asList("BKM202152" , "ACC202203")));
         doAnswer(answer -> {
             PromatCase existing = ((PromatCase) answer.getArgument(0));
-            existing.getTasks().stream().forEach(t -> t.setRecordId("123456789"));
+            existing.getTasks().forEach(t -> t.setRecordId("123456789"));
             return null;
         }).when(mockedRepository).assignFaustnumber(any(PromatCase.class));
 
@@ -1477,9 +1457,8 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
         persistenceContext.run(() -> upd.caseInformationUpdater.updateCaseInformation(created));
         assertThat("status", created.getStatus(), is(CaseStatus.PENDING_EXPORT));
 
-        // Delete the case so that we dont mess up payments and dataio-export tests
-        response = deleteResponse("v1/api/cases/" + created.getId());
-        assertThat("status code", response.getStatus(), is(200));
+        // Delete the case so that we don't mess up payments and dataio-export tests
+        deleteTestCase(created.getId());
     }
 
     @Test
@@ -1496,15 +1475,13 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
                 .withCreator(10)
                 .withEditor(10)
                 .withReviewer(1)
-                .withTasks(Arrays.asList(new TaskDto()
+                .withTasks(Collections.singletonList(new TaskDto()
                         .withTaskType(TaskType.GROUP_1_LESS_THAN_100_PAGES)
                         .withTaskFieldType(TaskFieldType.BRIEF)
-                        .withTargetFausts(Arrays.asList("53000304"))
+                        .withTargetFausts(List.of("53000304"))
                 ));
 
-        Response response = postResponse("v1/api/cases", dto);
-        assertThat("status code", response.getStatus(), is(201));
-        PromatCase created = mapper.readValue(response.readEntity(String.class), PromatCase.class);
+        PromatCase created = postAndAssert("v1/api/cases", dto, PromatCase.class, Response.Status.CREATED);
 
         ScheduledCaseInformationUpdater upd = new ScheduledCaseInformationUpdater();
         upd.caseInformationUpdater = new CaseInformationUpdater();
@@ -1522,7 +1499,7 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
                         .withCatalogcodes(Arrays.asList("BKM202201" , "ACC202203")));
         doAnswer(answer -> {
             PromatCase existing = ((PromatCase) answer.getArgument(0));
-            existing.getTasks().stream().forEach(t -> t.setRecordId("123456789"));
+            existing.getTasks().forEach(t -> t.setRecordId("123456789"));
             return null;
         }).when(mockedRepository).assignFaustnumber(any(PromatCase.class));
 
@@ -1533,9 +1510,8 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
         persistenceContext.run(() -> upd.caseInformationUpdater.updateCaseInformation(created));
         assertThat("status", created.getStatus(), is(CaseStatus.PENDING_EXPORT));
 
-        // Delete the case so that we dont mess up payments and dataio-export tests
-        response = deleteResponse("v1/api/cases/" + created.getId());
-        assertThat("status code", response.getStatus(), is(200));
+        // Delete the case so that we don't mess up payments and dataio-export tests
+        deleteTestCase(created.getId());
     }
 
     @Test
@@ -1552,15 +1528,13 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
                 .withCreator(10)
                 .withEditor(10)
                 .withReviewer(1)
-                .withTasks(Arrays.asList(new TaskDto()
+                .withTasks(Collections.singletonList(new TaskDto()
                         .withTaskType(TaskType.GROUP_1_LESS_THAN_100_PAGES)
                         .withTaskFieldType(TaskFieldType.BRIEF)
-                        .withTargetFausts(Arrays.asList("53000305"))
+                        .withTargetFausts(List.of("53000305"))
                 ));
 
-        Response response = postResponse("v1/api/cases", dto);
-        assertThat("status code", response.getStatus(), is(201));
-        PromatCase created = mapper.readValue(response.readEntity(String.class), PromatCase.class);
+        PromatCase created = postAndAssert("v1/api/cases", dto, PromatCase.class, Response.Status.CREATED);
 
         ScheduledCaseInformationUpdater upd = new ScheduledCaseInformationUpdater();
         upd.caseInformationUpdater = new CaseInformationUpdater();
@@ -1578,7 +1552,7 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
                         .withCatalogcodes(Arrays.asList("BKM202202" , "ACC202203")));
         doAnswer(answer -> {
             PromatCase existing = ((PromatCase) answer.getArgument(0));
-            existing.getTasks().stream().forEach(t -> t.setRecordId("123456789"));
+            existing.getTasks().forEach(t -> t.setRecordId("123456789"));
             return null;
         }).when(mockedRepository).assignFaustnumber(any(PromatCase.class));
 
@@ -1587,13 +1561,11 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
         when(mockedDates.getCurrentDate()).thenReturn(LocalDate.parse("2022-01-03"));
 
         // BKM is next shiftday (friday this week) so case must be moved to status PENDING_EXPORT
-
         persistenceContext.run(() -> upd.caseInformationUpdater.updateCaseInformation(created));
         assertThat("status", created.getStatus(), is(CaseStatus.PENDING_EXPORT));
 
-        // Delete the case so that we dont mess up payments and dataio-export tests
-        response = deleteResponse("v1/api/cases/" + created.getId());
-        assertThat("status code", response.getStatus(), is(200));
+        // Delete the case so that we don't mess up payments and dataio-export tests
+        deleteTestCase(created.getId());
     }
 
     @Test
@@ -1610,15 +1582,13 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
                 .withCreator(10)
                 .withEditor(10)
                 .withReviewer(1)
-                .withTasks(Arrays.asList(new TaskDto()
+                .withTasks(Collections.singletonList(new TaskDto()
                         .withTaskType(TaskType.GROUP_1_LESS_THAN_100_PAGES)
                         .withTaskFieldType(TaskFieldType.BRIEF)
-                        .withTargetFausts(Arrays.asList("53000306"))
+                        .withTargetFausts(List.of("53000306"))
                 ));
 
-        Response response = postResponse("v1/api/cases", dto);
-        assertThat("status code", response.getStatus(), is(201));
-        PromatCase created = mapper.readValue(response.readEntity(String.class), PromatCase.class);
+        PromatCase created = postAndAssert("v1/api/cases", dto, PromatCase.class, Response.Status.CREATED);
 
         ScheduledCaseInformationUpdater upd = new ScheduledCaseInformationUpdater();
         upd.caseInformationUpdater = new CaseInformationUpdater();
@@ -1636,7 +1606,7 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
                         .withCatalogcodes(Arrays.asList("BKM202653" , "ACC202703")));
         doAnswer(answer -> {
             PromatCase existing = ((PromatCase) answer.getArgument(0));
-            existing.getTasks().stream().forEach(t -> t.setRecordId("123456789"));
+            existing.getTasks().forEach(t -> t.setRecordId("123456789"));
             return null;
         }).when(mockedRepository).assignFaustnumber(any(PromatCase.class));
 
@@ -1647,9 +1617,8 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
         persistenceContext.run(() -> upd.caseInformationUpdater.updateCaseInformation(created));
         assertThat("status", created.getStatus(), is(CaseStatus.PENDING_EXPORT));
 
-        // Delete the case so that we dont mess up payments and dataio-export tests
-        response = deleteResponse("v1/api/cases/" + created.getId());
-        assertThat("status code", response.getStatus(), is(200));
+        // Delete the case so that we don't mess up payments and dataio-export tests
+        deleteTestCase(created.getId());
     }
 
     @Test
@@ -1666,15 +1635,13 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
                 .withCreator(10)
                 .withEditor(10)
                 .withReviewer(1)
-                .withTasks(Arrays.asList(new TaskDto()
+                .withTasks(Collections.singletonList(new TaskDto()
                         .withTaskType(TaskType.GROUP_1_LESS_THAN_100_PAGES)
                         .withTaskFieldType(TaskFieldType.BRIEF)
-                        .withTargetFausts(Arrays.asList("53000307"))
+                        .withTargetFausts(List.of("53000307"))
                 ));
 
-        Response response = postResponse("v1/api/cases", dto);
-        assertThat("status code", response.getStatus(), is(201));
-        PromatCase created = mapper.readValue(response.readEntity(String.class), PromatCase.class);
+        PromatCase created = postAndAssert("v1/api/cases", dto, PromatCase.class, Response.Status.CREATED);
 
         ScheduledCaseInformationUpdater upd = new ScheduledCaseInformationUpdater();
         upd.caseInformationUpdater = new CaseInformationUpdater();
@@ -1692,7 +1659,7 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
                         .withCatalogcodes(Arrays.asList("BKM202701" , "ACC202203")));
         doAnswer(answer -> {
             PromatCase existing = ((PromatCase) answer.getArgument(0));
-            existing.getTasks().stream().forEach(t -> t.setRecordId("123456789"));
+            existing.getTasks().forEach(t -> t.setRecordId("123456789"));
             return null;
         }).when(mockedRepository).assignFaustnumber(any(PromatCase.class));
 
@@ -1703,9 +1670,8 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
         persistenceContext.run(() -> upd.caseInformationUpdater.updateCaseInformation(created));
         assertThat("status", created.getStatus(), is(CaseStatus.PENDING_EXPORT));
 
-        // Delete the case so that we dont mess up payments and dataio-export tests
-        response = deleteResponse("v1/api/cases/" + created.getId());
-        assertThat("status code", response.getStatus(), is(200));
+        // Delete the case so that we don't mess up payments and dataio-export tests
+        deleteTestCase(created.getId());
     }
 
     @Test
@@ -1722,15 +1688,13 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
                 .withCreator(10)
                 .withEditor(10)
                 .withReviewer(1)
-                .withTasks(Arrays.asList(new TaskDto()
+                .withTasks(Collections.singletonList(new TaskDto()
                         .withTaskType(TaskType.GROUP_1_LESS_THAN_100_PAGES)
                         .withTaskFieldType(TaskFieldType.BRIEF)
-                        .withTargetFausts(Arrays.asList("53000308"))
+                        .withTargetFausts(List.of("53000308"))
                 ));
 
-        Response response = postResponse("v1/api/cases", dto);
-        assertThat("status code", response.getStatus(), is(201));
-        PromatCase created = mapper.readValue(response.readEntity(String.class), PromatCase.class);
+        PromatCase created = postAndAssert("v1/api/cases", dto, PromatCase.class, Response.Status.CREATED);
 
         ScheduledCaseInformationUpdater upd = new ScheduledCaseInformationUpdater();
         upd.caseInformationUpdater = new CaseInformationUpdater();
@@ -1748,7 +1712,7 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
                         .withCatalogcodes(Arrays.asList("BKM202702" , "ACC202203")));
         doAnswer(answer -> {
             PromatCase existing = ((PromatCase) answer.getArgument(0));
-            existing.getTasks().stream().forEach(t -> t.setRecordId("123456789"));
+            existing.getTasks().forEach(t -> t.setRecordId("123456789"));
             return null;
         }).when(mockedRepository).assignFaustnumber(any(PromatCase.class));
 
@@ -1760,8 +1724,12 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
         assertThat("status", created.getStatus(), is(CaseStatus.PENDING_EXPORT));
 
         // Delete the case so that we dont mess up payments and dataio-export tests
-        response = deleteResponse("v1/api/cases/" + created.getId());
-        assertThat("status code", response.getStatus(), is(200));
+        deleteTestCase(created.getId());
     }
 
+    private void deleteTestCase(Integer id) {
+        try (Response response = deleteResponse("v1/api/cases/" + id)) {
+            assertThat("status code", response.getStatus(), is(200));
+        }
+    }
 }

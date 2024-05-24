@@ -2,16 +2,14 @@ package dk.dbc.promat.service.api;
 
 import dk.dbc.connector.openformat.OpenFormatConnector;
 import dk.dbc.connector.openformat.OpenFormatConnectorException;
-import dk.dbc.connector.openformat.model.OpenFormatValue;
+import dk.dbc.connector.openformat.model.OpenFormatResponse;
 import dk.dbc.connector.openformat.model.formats.Promat.PromatElements;
-import dk.dbc.connector.openformat.model.formats.Promat.PromatEntity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import java.util.ArrayList;
-import java.util.stream.Collectors;
 
 @ApplicationScoped
 public class OpenFormatHandler {
@@ -31,54 +29,47 @@ public class OpenFormatHandler {
     }
 
     public BibliographicInformation format(String faust, String agency) throws OpenFormatConnectorException {
-        PromatEntity entity = connector.format(faust, agency, PromatEntity.class);
+        OpenFormatResponse<PromatElements> response = connector.format(faust, agency, PromatElements.class);
 
-        if (entity.getFormatResponse().getError().size() > 0) {
+        if (response.hasError()) {
             LOGGER.error("Error when trying to obtain bibliographic information for faust {} in agency {}: {}",
-                    faust, agency, entity.getFormatResponse().getError());
+                    faust, agency, String.join(",", response.getErrors()));
 
             return new BibliographicInformation().withError(
-                    entity.getFormatResponse().getError().stream()
-                    .map(error -> error.getMessage().getValue())
-                    .collect(Collectors.joining(",")));
+                    String.join(",", response.getErrors()));
         }
 
         // We only expect a single result since only 1 faustnumber is being looked up
-        if (entity.getFormatResponse().getPromat().size() == 0) {
+        if (response.getElements() == null) {
             LOGGER.error("No bibliographic information returned for faust {} in agency {}", faust, agency);
             return new BibliographicInformation().withError("No results");
         }
 
-        // Map the relatively complex openformat result to simple tring values (or lists of strings)
-        PromatElements elements = entity.getFormatResponse().getPromat().get(0).getElements();
+        // Map the relatively complex openformat result to simple string values (or lists of strings)
+        PromatElements elements = response.getElements();
         return new BibliographicInformation()
-        .withFaust(elements.getFaust().getValue())
-        .withCreator(elements.getCreator() != null && elements.getCreator().size() > 0
-                ? elements.getCreator().stream().map(c -> c.getValue())
-                        .collect(Collectors.joining(", "))
-                : "")
-        .withDk5(elements.getDk5() != null && elements.getDk5().size() > 0
-                ? elements.getDk5().stream().map(dk5 -> dk5.getValue())
-                .collect(Collectors.toList())
-                : new ArrayList<>())
-        .withIsbn(elements.getIsbn() != null && elements.getIsbn().size() > 0
-                ? elements.getIsbn().stream().map(isbn -> isbn.getValue())
-                        .collect(Collectors.toList())
-                : new ArrayList<>())
-        .withMaterialtypes(elements.getMaterialtypes() != null && elements.getMaterialtypes().getType() != null
-                ? elements.getMaterialtypes().getType().stream().map(materialtype -> materialtype.getValue())
-                        .collect(Collectors.toList())
-                : new ArrayList<>())
-        .withExtent(elements.getExtent().getValue())
-        .withPublisher(elements.getPublisher().stream().map(p -> p.getValue()).collect(Collectors.joining()))
-        .withCatalogcodes(elements.getCatalogcodes() != null && elements.getCatalogcodes().getCode() != null
-                ? elements.getCatalogcodes().getCode().stream().map(code -> code.getValue())
-                        .collect(Collectors.toList())
-                : new ArrayList<>())
-        .withTitle(elements.getTitle().getValue())
-        .withTargetgroup(elements.getTargetgroup() != null ?
-                elements.getTargetgroup().stream().map(OpenFormatValue::getValue).collect(Collectors.toList())
-                : new ArrayList<>())
-        .withMetakompassubject(elements.getMetakompassubject().getValue());
+                .withFaust(elements.getFaust().stream().findFirst().orElse(""))
+                .withCreator(elements.getCreator() != null && elements.getCreator().size() > 0
+                        ? String.join(", ", elements.getCreator())
+                        : "")
+                .withDk5(elements.getDk5() != null && elements.getDk5().size() > 0
+                        ? elements.getDk5()
+                        : new ArrayList<>())
+                .withIsbn(elements.getIsbn() != null && elements.getIsbn().size() > 0
+                        ? elements.getIsbn()
+                        : new ArrayList<>())
+                .withMaterialtypes(elements.getMaterialTypes() != null && elements.getMaterialTypes().getType() != null
+                        ? elements.getMaterialTypes().getType()
+                        : new ArrayList<>())
+                .withExtent(elements.getExtent().stream().findFirst().orElse(""))
+                .withPublisher(String.join(", ", elements.getPublisher()))
+                .withCatalogcodes(elements.getCatalogCodes() != null && elements.getCatalogCodes().getCode() != null
+                        ? elements.getCatalogCodes().getCode()
+                        : new ArrayList<>())
+                .withTitle(elements.getTitle().stream().findFirst().orElse(""))
+                .withTargetgroup(elements.getTargetGroup() != null
+                        ? elements.getTargetGroup()
+                        : new ArrayList<>())
+                .withMetakompassubject(elements.getMetakompasSubject().stream().findFirst().orElse(""));
     }
 }
