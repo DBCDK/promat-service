@@ -80,7 +80,7 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
         wireMockServer = new WireMockServer(options().dynamicPort());
         wireMockServer.start();
         configureFor("localhost", wireMockServer.port());
-        wiremockHost = ContainerTest.getOpenFormatBaseUrl(wireMockServer.baseUrl());
+        wiremockHost = ContainerTest.getOpenFormatBaseUrl(wireMockServer.baseUrl()) + "/api/v2";
     }
 
     @AfterAll

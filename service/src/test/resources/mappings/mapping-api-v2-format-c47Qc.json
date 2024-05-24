@@ -1,0 +1,22 @@
+{
+  "id" : "b9539678-15a7-3faa-9b35-01703ce49db0",
+  "request" : {
+    "url" : "/api/v2/format",
+    "method" : "POST",
+    "bodyPatterns" : [ {
+      "equalToJson" : "{\"formats\":[{\"name\":\"promat\",\"mediaType\":\"application/json\"}],\"objects\":[{\"repositoryId\":\"870970-basis:23319322\"}]}",
+      "ignoreArrayOrder" : true,
+      "ignoreExtraElements" : true
+    } ]
+  },
+  "response" : {
+    "status" : 200,
+    "bodyFileName" : "body-api-v2-format-c47Qc.json",
+    "headers" : {
+      "Server" : "Payara Micro #badassfish",
+      "Content-Type" : "application/json",
+      "X-Frame-Options" : "SAMEORIGIN"
+    }
+  },
+  "uuid" : "b9539678-15a7-3faa-9b35-01703ce49db0"
+}

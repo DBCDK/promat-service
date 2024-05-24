@@ -253,7 +253,7 @@ public abstract class ContainerTest extends IntegrationTest {
                 .withEnv("MAIL_HOST", "mailhost")
                 .withEnv("MAIL_USER", "mail.user")
                 .withEnv("MAIL_FROM", "some@address.dk")
-                .withEnv("OPENFORMAT_SERVICE_URL", getOpenFormatBaseUrl("http://host.testcontainers.internal:" + wireMockServer.port() + "/"))
+                .withEnv("OPENFORMAT_SERVICE_URL", getOpenFormatBaseUrl("http://host.testcontainers.internal:" + wireMockServer.port() + "/api/v2"))
                 .withEnv("LU_MAILADDRESS", "TEST@dbc.dk")
                 .withEnv("OPENNUMBERROLL_SERVICE_URL", "http://host.testcontainers.internal:" + wireMockServer.port() + "/")
                 .withEnv("EMATERIAL_CONTENT_REPO", "http://host.testcontainers.internal:" + wireMockServer.port() +
@@ -277,23 +277,24 @@ public abstract class ContainerTest extends IntegrationTest {
 
     /**
      * Helper method to set wiremock host for open-format, since we use open-format
-     * quite a few places and it is a pain in the ****e to go between a real server,
-     * a local wiremock(recorder) and the in-test wiremock host when making changes.
+     * quite a few places, and it is a pain in the ****e to go between a real server,
+     * a local wiremock(recorder) and the in-test wiremock host when making changes that
+     * involves the openformat connector (or mocks thereof)
      *
      * @param server The servername under normal circumstances
-     * @return Either the given open-format baseurl, or if set, a mocked static address
+     * @return Either the given open-format baseurl, or if modified, a static address
      */
     public static String getOpenFormatBaseUrl(String server) {
 
         // Use fixed address for a real open-format broker
         // NEVER COMMIT THIS AS ACTIVE !
-        return "http://open-format-broker.cisterne.svc.cloud.dbc.dk/api/v2";
+        //return "http://open-format-broker.cisterne.svc.cloud.dbc.dk/api/v2";
 
-        // Use local wiremock recorder
+        // Use local wiremock recorder. Use '--proxy-all http://open-format-broker.cisterne.svc.cloud.dbc.dk'
         // NEVER COMMIT THIS AS ACTIVE !
         //return "http://172.17.33.64:8080/api/v2";
 
-        // Use default server value
-        //return server;
+        // Use default server value as given by the various tests.
+        return server;
     }
 }

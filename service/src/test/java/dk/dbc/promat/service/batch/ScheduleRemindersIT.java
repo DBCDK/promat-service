@@ -39,7 +39,7 @@ public class ScheduleRemindersIT extends ContainerTest {
 
     @BeforeAll
     public static void startWiremock() {
-        wiremockHost = wireMockServer.baseUrl();
+        wiremockHost = wireMockServer.baseUrl() + "/api/v2";
     }
 
     @BeforeEach

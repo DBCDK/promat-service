@@ -1,0 +1,22 @@
+{
+  "id" : "192c554e-3fdc-3b2e-ae91-ae0867c83cbe",
+  "request" : {
+    "url" : "/api/v2/format",
+    "method" : "POST",
+    "bodyPatterns" : [ {
+      "equalToJson" : "{\"formats\":[{\"name\":\"promat\",\"mediaType\":\"application/json\"}],\"objects\":[{\"repositoryId\":\"870970-basis:5004321\"}]}",
+      "ignoreArrayOrder" : true,
+      "ignoreExtraElements" : true
+    } ]
+  },
+  "response" : {
+    "status" : 200,
+    "bodyFileName" : "body-api-v2-format-ZaNm4.json",
+    "headers" : {
+      "Server" : "Payara Micro #badassfish",
+      "Content-Type" : "application/json",
+      "X-Frame-Options" : "SAMEORIGIN"
+    }
+  },
+  "uuid" : "192c554e-3fdc-3b2e-ae91-ae0867c83cbe"
+}

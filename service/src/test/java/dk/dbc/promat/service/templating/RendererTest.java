@@ -59,7 +59,7 @@ public class RendererTest {
         wireMockServer.start();
 
         notificationFactory.openFormatHandler = new OpenFormatHandler().withConnector(
-                OpenFormatConnectorFactory.create(ContainerTest.getOpenFormatBaseUrl(wireMockServer.baseUrl())));
+                OpenFormatConnectorFactory.create(ContainerTest.getOpenFormatBaseUrl(wireMockServer.baseUrl() + "/api/v2")));
         notificationFactory.reviewerDiffer = new ReviewerDiffer();
         notificationFactory.LU_MAILADDRESS = "TEST@dbc.dk";
         notificationFactory.CC_MAILADDRESS = "cc_test@dbc.dk";
