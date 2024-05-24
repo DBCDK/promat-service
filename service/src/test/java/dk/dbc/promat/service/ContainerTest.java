@@ -176,32 +176,6 @@ public abstract class ContainerTest extends IntegrationTest {
     private static WireMockServer makeWireMockServer() {
         WireMockServer wireMockServer = new WireMockServer(options().dynamicPort());
 
-        // Add a "catch-all" for openformat requests.
-        // All openformat requests will return the same json.
-        /*wireMockServer.stubFor(requestMatching(request -> {
-                LOGGER.info("------\n{}----", request.getBodyAsString());
-                return MatchResult.of(
-                        request.getBodyAsString().equals("{\n" +
-                                "    \"formats\":[\n" +
-                                "        {\n" +
-                                "            \"mediaType\": \"application/json\",\n" +
-                                "            \"name\": \"promat\"\n" +
-                                "        }\n" +
-                                "    ],\n" +
-                                "    \"objects\":[\n" +
-                                "        {\n" +
-                                "            \"repositoryId\": \"870970-basis:22677780\"\n" +
-                                "        }\n" +
-                                "    ]\n" +
-                                "}")
-                );})
-
-                .willReturn(ResponseDefinitionBuilder
-                        .responseDefinition()
-                        .withStatus(200)
-                        .withHeader("Content-Type", "application/json")
-                        .withBody(genericOpenFormatResult)));*/
-
         // Add two catch-all responses for AdgangsPlatformens introspect endpoint.
         // ...
         // It is not possible to record the request/response using an external wiremock
