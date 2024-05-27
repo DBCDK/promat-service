@@ -44,7 +44,6 @@ public class IntegrationTest {
     protected static final HttpClient httpClient;
     protected static EntityManager entityManager;
     private static boolean setupDone;
-    protected static final String genericOpenFormatResult = makeGenericOpenFormatResult();
 
     static {
         httpClient = HttpClient.create(HttpClient.newClient());
@@ -81,15 +80,6 @@ public class IntegrationTest {
             setupDone = true;
         } else {
             LOGGER.info("No setup stuff to do. Already done.");
-        }
-    }
-
-    private static String makeGenericOpenFormatResult() {
-        try {
-            URL url = Objects.requireNonNull(IntegrationTest.class.getResource("/__files/body-openformat-generic.json"));
-            return Files.readString(Path.of(url.getPath()));
-        } catch (IOException e) {
-            throw new RuntimeException(e);
         }
     }
 
