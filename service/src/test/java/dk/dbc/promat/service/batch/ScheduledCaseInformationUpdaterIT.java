@@ -21,10 +21,10 @@ import dk.dbc.promat.service.persistence.PromatTask;
 import dk.dbc.promat.service.persistence.TaskFieldType;
 import dk.dbc.promat.service.persistence.TaskType;
 import dk.dbc.promat.service.util.PromatTaskUtils;
-import org.eclipse.microprofile.metrics.ConcurrentGauge;
+import org.eclipse.microprofile.metrics.Counter;
 import org.eclipse.microprofile.metrics.Metadata;
 import org.eclipse.microprofile.metrics.MetricRegistry;
-import org.eclipse.microprofile.metrics.SimpleTimer;
+import org.eclipse.microprofile.metrics.Timer;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -67,8 +67,8 @@ import static org.mockito.Mockito.when;
 public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
     private TransactionScopedPersistenceContext persistenceContext;
     private final MetricRegistry metricRegistry = mock(MetricRegistry.class);
-    private final SimpleTimer timer = mock(SimpleTimer.class);
-    private final ConcurrentGauge gauge = mock(ConcurrentGauge.class);
+    private final Timer timer = mock(Timer.class);
+    private final Counter gauge = mock(Counter.class);
     private static WireMockServer wireMockServer;
     private static String wiremockHost;
     private static final Logger LOGGER = LoggerFactory.getLogger(ScheduledCaseInformationUpdaterIT.class);
@@ -89,8 +89,8 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
     @BeforeEach
     public void setup() {
         persistenceContext = new TransactionScopedPersistenceContext(entityManager);
-        when(metricRegistry.simpleTimer(any(Metadata.class))).thenReturn(timer);
-        when(metricRegistry.concurrentGauge(any(Metadata.class))).thenReturn(gauge);
+        when(metricRegistry.timer(any(Metadata.class))).thenReturn(timer);
+        when(metricRegistry.counter(any(Metadata.class))).thenReturn(gauge);
 
     }
 
@@ -773,18 +773,18 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
 
         when(mockedHandler.format(anyString()))
                 .thenReturn(new BibliographicInformation()
-                        .withCatalogcodes(Arrays.asList("ACC202001")));
+                        .withCatalogcodes(List.of("ACC202001")));
 
-        ConcurrentGauge mockedGauge = mock(ConcurrentGauge.class);
+        Counter mockedCounter = mock(Counter.class);
         doAnswer(answer -> {
-            return mockedGauge;
-        }).when(metricRegistry).concurrentGauge(any(Metadata.class));
+            return mockedCounter;
+        }).when(metricRegistry).counter(any(Metadata.class));
 
         AtomicInteger errors = new AtomicInteger(0);
         doAnswer(answer -> {
             errors.getAndIncrement();
             return null;
-        }).when(mockedGauge).inc();
+        }).when(mockedCounter).inc();
 
         Dates mockedDates = mock(Dates.class);
         upd.caseInformationUpdater.dates = mockedDates;

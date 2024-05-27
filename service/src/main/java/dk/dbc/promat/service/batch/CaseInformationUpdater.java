@@ -16,9 +16,7 @@ import java.time.LocalDate;
 import java.time.Month;
 import org.eclipse.microprofile.metrics.Metadata;
 import org.eclipse.microprofile.metrics.MetricRegistry;
-import org.eclipse.microprofile.metrics.MetricType;
 import org.eclipse.microprofile.metrics.MetricUnits;
-import org.eclipse.microprofile.metrics.annotation.RegistryType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,7 +40,6 @@ public class CaseInformationUpdater {
     protected static final String METAKOMPASDATA_PRESENT = "true";
 
     @Inject
-    @RegistryType(type = MetricRegistry.Type.APPLICATION)
     MetricRegistry metricRegistry;
 
     @Inject
@@ -60,14 +57,12 @@ public class CaseInformationUpdater {
     static final Metadata openformatTimerMetadata = Metadata.builder()
             .withName("promat_service_caseinformationupdater_openformat_timer")
             .withDescription("Openformat response time")
-            .withType(MetricType.SIMPLE_TIMER)
             .withUnit(MetricUnits.MILLISECONDS)
             .build();
 
-    static final Metadata caseUpdateFailureGaugeMetadata = Metadata.builder()
+    static final Metadata caseUpdateFailureCounterMetadata = Metadata.builder()
             .withName("promat_service_caseinformationupdater_update_failures")
             .withDescription("Number of failing update attempts")
-            .withType(MetricType.CONCURRENT_GAUGE)
             .withUnit("failures")
             .build();
 
@@ -82,10 +77,10 @@ public class CaseInformationUpdater {
             if (!bibliographicInformation.isOk()) {
                 LOGGER.error("Failed to obtain bibliographic information for case with id {} and primary faust {}: {}",
                         promatCase.getId(), promatCase.getPrimaryFaust(), bibliographicInformation.getError());
-                metricRegistry.concurrentGauge(caseUpdateFailureGaugeMetadata).inc();
+                metricRegistry.counter(caseUpdateFailureCounterMetadata).inc();
                 return;
             }
-            metricRegistry.simpleTimer(openformatTimerMetadata).update(Duration.ofMillis(System.currentTimeMillis() - taskStartTime));
+            metricRegistry.timer(openformatTimerMetadata).update(Duration.ofMillis(System.currentTimeMillis() - taskStartTime));
             // Update title, if changed
             if (useSameOrUpdateValue(promatCase.getTitle(), bibliographicInformation.getTitle(), false)) {
                 LOGGER.info("Updating title: '{}' ==> '{}' of case with id {}", promatCase.getTitle(),
@@ -134,12 +129,12 @@ public class CaseInformationUpdater {
             if( bibliographicInformation.getCatalogcodes() != null && bibliographicInformation.getCatalogcodes().size() > 0 ) {
                 LOGGER.info("Adding or updating catalog codes: {}", bibliographicInformation.getCatalogcodes());
                 promatCase.setCodes(bibliographicInformation.getCatalogcodes().stream()
-                        .map(code -> code.toUpperCase())
+                        .map(String::toUpperCase)
                         .collect(Collectors.toList()));
             }
 
             // Check and update case with Metakompasdata
-            checkAndUpdateCaseWithMetakompasdata(promatCase, bibliographicInformation);
+            checkAndUpdateCaseWithMetakompasdata(promatCase);
 
             //
             // Status is 'PENDING_EXTERNAL'. Now do last check of metakompas data before setting
@@ -168,14 +163,14 @@ public class CaseInformationUpdater {
         } catch(OpenFormatConnectorException e) {
             LOGGER.error("Caught exception when trying to obtain bibliographic information for faust {} in case with id {}: {}",
                     promatCase.getPrimaryFaust(), promatCase.getId(), e.getMessage());
-            metricRegistry.concurrentGauge(caseUpdateFailureGaugeMetadata).inc();
+            metricRegistry.counter(caseUpdateFailureCounterMetadata).inc();
         } catch (Exception e) {
             LOGGER.error("Unable to update case with id {}: {}",promatCase.getId(), e.getMessage());
-            metricRegistry.concurrentGauge(caseUpdateFailureGaugeMetadata).inc();
+            metricRegistry.counter(caseUpdateFailureCounterMetadata).inc();
         }
     }
 
-    private void checkAndUpdateCaseWithMetakompasdata(PromatCase promatCase, BibliographicInformation bibliographicInformation) {
+    private void checkAndUpdateCaseWithMetakompasdata(PromatCase promatCase) {
 
         // All metakompas tasks
         for (PromatTask task : PromatTaskUtils.getTasksOfType(promatCase, TaskFieldType.METAKOMPAS)) {
@@ -190,7 +185,7 @@ public class CaseInformationUpdater {
                             String present = metakompassubject != null ? metakompassubject.strip() : null;
                             return METAKOMPASDATA_PRESENT.equals(present);
                         } catch (OpenFormatConnectorException e) {
-                            LOGGER.error("Unable to look up faust {}, {}", faust, e);
+                            LOGGER.error("Unable to look up faust {}", faust, e);
                         }
                         return false;
                     });
@@ -210,10 +205,7 @@ public class CaseInformationUpdater {
         if (currentValue == null) {
             return true;
         }
-        if (!currentValue.equals(newValue)) {
-            return true;
-        }
-        return false;
+        return !currentValue.equals(newValue);
     }
 
     private String getFirstWeekcode(List<String> codes) {
@@ -222,9 +214,8 @@ public class CaseInformationUpdater {
         // If Both exists (as they would for express cases), BKX takes precedence
         Optional<String> newCode = codes.stream()
                 .filter(code -> Arrays.asList("BKM", "BKX", "FFK").contains(code.substring(0, 3)))
-                .sorted(Comparator.comparingInt(code -> "FFK BKX BKM".indexOf(code.substring(0, 3))))
-                .findFirst();
-        return newCode.isPresent() ? newCode.get() : "";
+                .min(Comparator.comparingInt(code -> "FFK BKX BKM".indexOf(code.substring(0, 3))));
+        return newCode.orElse("");
     }
 
     private Boolean weekcodeMatchOrBefore(PromatCase promatCase) {
@@ -240,13 +231,13 @@ public class CaseInformationUpdater {
 
         // Get todays (of next week) weekcode.
         String todaysWeekcode = date.format(yearWeekFormatter);
-        Integer today = Integer.parseInt(todaysWeekcode);
+        int today = Integer.parseInt(todaysWeekcode);
 
-        // In years where the last week of the year "spills over" into the new year, such as 2021/2022,
+        // In years when the last week of the year "spills over" into the new year, such as 2021/2022,
         // then the weekcode as returned by the formatter will be '202252' for the first few dates belonging to
         // the old year's week.
         String todaysWeek = date.format(weekFormatter);
-        Integer week = Integer.parseInt(todaysWeek);
+        int week = Integer.parseInt(todaysWeek);
         if( date.getMonth() == Month.JANUARY && week >= 52 ) {
             // 202252 - 100 = 202152
             LOGGER.info("Shifting year-part of weekcode one year backwards due to overlapping weeknumber for early january dates");
@@ -258,7 +249,7 @@ public class CaseInformationUpdater {
         // might not have been commited before we get to this line
         if( promatCase.getWeekCode() != null && !promatCase.getWeekCode().isEmpty() ) {
             LOGGER.info("Case has weekcode {}", promatCase.getWeekCode());
-            Integer caseWeekcode = Integer.parseInt(promatCase.getWeekCode().substring(3));
+            int caseWeekcode = Integer.parseInt(promatCase.getWeekCode().substring(3));
             LOGGER.info("caseWeekcode = {}, today (shifted) = {}", caseWeekcode, today);
             return caseWeekcode <= today;
         }
@@ -274,7 +265,7 @@ public class CaseInformationUpdater {
             promatCase.setEditor(null);
         } catch (Exception e) {
             LOGGER.error("Unable to clear editor on case with id {}: {}",promatCase.getId(), e.getMessage());
-            metricRegistry.concurrentGauge(caseUpdateFailureGaugeMetadata).inc();
+            metricRegistry.counter(caseUpdateFailureCounterMetadata).inc();
         }
     }
 }

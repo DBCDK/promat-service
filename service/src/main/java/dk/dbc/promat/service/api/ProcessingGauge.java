@@ -5,7 +5,6 @@ import dk.dbc.promat.service.persistence.PromatEntityManager;
 import org.eclipse.microprofile.metrics.Gauge;
 import org.eclipse.microprofile.metrics.Metadata;
 import org.eclipse.microprofile.metrics.MetricRegistry;
-import org.eclipse.microprofile.metrics.MetricType;
 import org.eclipse.microprofile.metrics.annotation.RegistryType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,6 +16,8 @@ import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.TypedQuery;
 
+import java.util.function.Supplier;
+
 @Startup
 @Singleton
 public class ProcessingGauge {
@@ -24,7 +25,6 @@ public class ProcessingGauge {
 
     @SuppressWarnings("CdiInjectionPointsInspection")
     @Inject
-    @RegistryType(type = MetricRegistry.Type.APPLICATION)
     MetricRegistry metricRegistry;
 
     @Inject
@@ -34,11 +34,10 @@ public class ProcessingGauge {
     static final Metadata recordHandlerRecordsInProcessingGauge = Metadata.builder()
             .withName("promat_service_record_handler_records_in_processing")
             .withDescription("Number of records with status PROCESSING")
-            .withType(MetricType.GAUGE)
             .withUnit("records")
             .build();
 
-    Gauge<Long> recordsInProcessingGauge = () -> {
+    Supplier<Long> recordsInProcessingGauge = () -> {
         TypedQuery<Long> query = entityManager
                 .createNamedQuery(PromatCase.GET_COUNT_OF_CASES_IN_PROCESSING_STATE_NAME, Long.class);
         return query.getSingleResult();
@@ -48,7 +47,7 @@ public class ProcessingGauge {
     public void register() {
         if (metricRegistry != null) {
             LOGGER.info("Registering {}", recordHandlerRecordsInProcessingGauge.getName());
-            metricRegistry.register(recordHandlerRecordsInProcessingGauge, recordsInProcessingGauge);
+            metricRegistry.gauge(recordHandlerRecordsInProcessingGauge, recordsInProcessingGauge);
         } else {
             LOGGER.info("No injected metricRegistry. Unable to register {}", recordHandlerRecordsInProcessingGauge.getName());
         }

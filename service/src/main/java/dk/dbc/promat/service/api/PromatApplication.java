@@ -13,17 +13,11 @@ import java.util.Set;
 public class PromatApplication extends Application {
     private static final Set<Class<?>> classes = Set.of(
             Cases.class, Editors.class, JacksonFeature.class, Records.class, Reviewers.class, Subjects.class,
-            Users.class, Tasks.class, PersistenceExceptionMapper.class, Messages.class, Payments.class, SubjectNote.class);
-
-    private static final Set<Object> singletons = Set.of(new JsonMapperProvider(), new LocalDateConverterProvider());
+            Users.class, Tasks.class, PersistenceExceptionMapper.class, Messages.class, Payments.class, SubjectNote.class,
+            LocalDateConverterProvider.class, JsonMapperProvider.class, HowRUService.class);
 
     @Override
     public Set<Class<?>> getClasses() {
         return classes;
-    }
-
-    @Override
-    public Set<Object> getSingletons() {
-        return singletons;
     }
 }

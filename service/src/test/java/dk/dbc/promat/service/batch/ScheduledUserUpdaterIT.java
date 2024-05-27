@@ -8,16 +8,13 @@ import dk.dbc.promat.service.ContainerTest;
 import dk.dbc.promat.service.cluster.ServerRole;
 import dk.dbc.promat.service.persistence.Editor;
 import dk.dbc.promat.service.persistence.Reviewer;
-import dk.dbc.promat.service.util.PromatTaskUtils;
-import org.eclipse.microprofile.metrics.ConcurrentGauge;
+import org.eclipse.microprofile.metrics.Counter;
 import org.eclipse.microprofile.metrics.Metadata;
 import org.eclipse.microprofile.metrics.MetricRegistry;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.time.Instant;
 import java.time.ZonedDateTime;
@@ -39,19 +36,14 @@ import static org.mockito.Mockito.when;
 public class ScheduledUserUpdaterIT extends ContainerTest {
     private TransactionScopedPersistenceContext persistenceContext;
     private final MetricRegistry metricRegistry = mock(MetricRegistry.class);
-    private final ConcurrentGauge gauge = mock(ConcurrentGauge.class);
+    private final Counter counter = mock(Counter.class);
     private static WireMockServer wireMockServer;
-    private static String wiremockHost;
-    private static PromatTaskUtils promatTaskUtils;
-    private static final Logger LOGGER = LoggerFactory.getLogger(ScheduledUserUpdaterIT.class);
 
     @BeforeAll
     public static void startWiremock() {
         wireMockServer = new WireMockServer(options().dynamicPort());
         wireMockServer.start();
         configureFor("localhost", wireMockServer.port());
-        wiremockHost = wireMockServer.baseUrl();
-        promatTaskUtils = new PromatTaskUtils();
     }
 
     @AfterAll
@@ -62,7 +54,7 @@ public class ScheduledUserUpdaterIT extends ContainerTest {
     @BeforeEach
     public void setup() {
         persistenceContext = new TransactionScopedPersistenceContext(entityManager);
-        when(metricRegistry.concurrentGauge(any(Metadata.class))).thenReturn(gauge);
+        when(metricRegistry.counter(any(Metadata.class))).thenReturn(counter);
     }
 
     @Test

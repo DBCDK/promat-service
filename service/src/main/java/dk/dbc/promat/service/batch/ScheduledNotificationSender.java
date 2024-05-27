@@ -35,7 +35,6 @@ public class ScheduledNotificationSender {
     public void processNotifications() {
         try {
             if(serverRole == ServerRole.PRIMARY) {
-                notificationSender.resetMailFailuresGauge();
                 Notification notification = pop(-1);
                 while(notification != null) {
                     LOGGER.info("Notifying: '{}' on subject '{}'", notification.getToAddress(), notification.getSubject());
