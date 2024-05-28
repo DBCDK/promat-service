@@ -11,10 +11,7 @@ import dk.dbc.promat.service.dto.CaseRequest;
 import dk.dbc.promat.service.dto.CaseSummaryList;
 import dk.dbc.promat.service.dto.CreateStatusDto;
 import dk.dbc.promat.service.dto.CriteriaOperator;
-import dk.dbc.promat.service.dto.Dto;
 import dk.dbc.promat.service.dto.ListCasesParams;
-import dk.dbc.promat.service.dto.RecordDto;
-import dk.dbc.promat.service.dto.RecordsListDto;
 import dk.dbc.promat.service.dto.ServiceErrorCode;
 import dk.dbc.promat.service.dto.ServiceErrorDto;
 import dk.dbc.promat.service.dto.Tag;
@@ -63,10 +60,8 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -77,7 +72,6 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static jakarta.ws.rs.core.Response.Status.BAD_REQUEST;
-import static jakarta.ws.rs.core.Response.Status.NOT_FOUND;
 import static jakarta.ws.rs.core.Response.Status.NO_CONTENT;
 
 @Stateless
