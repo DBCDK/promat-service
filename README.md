@@ -10,7 +10,6 @@ Promat service
 * OPENSEARCH_PROFILE opensearch profile (optional, default is 'test')
 * OPENSEARCH_AGENCY opensearch agency (optional, default is '100200')
 * OPENSEARCH_REPOSITORY opensearch profile (optional, default is 'rawrepo_basis')
-* WORK_PRESENTATION_SERVICE_URL work-presentation service url
 * WORK_PRESENTATION_PROFILE work-presentation profile (optional, default is 'test')
 
 ### API

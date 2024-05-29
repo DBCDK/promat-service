@@ -39,7 +39,7 @@ public class ScheduleRemindersIT extends ContainerTest {
 
     @BeforeAll
     public static void startWiremock() {
-        wiremockHost = wireMockServer.baseUrl();
+        wiremockHost = wireMockServer.baseUrl() + "/api/v2";
     }
 
     @BeforeEach
@@ -52,9 +52,9 @@ public class ScheduleRemindersIT extends ContainerTest {
 
         // Create a case with deadline yesterday
         CaseRequest dto = new CaseRequest()
-                .withTitle("Title for 80011116")
-                .withDetails("Details for 80011116")
-                .withPrimaryFaust("80011116")
+                .withTitle("Title for 53738222")
+                .withDetails("Details for 53738222")
+                .withPrimaryFaust("53738222")
                 .withEditor(10)
                 .withReviewer(6)
                 .withSubjects(Arrays.asList(3, 4))
@@ -64,11 +64,11 @@ public class ScheduleRemindersIT extends ContainerTest {
                         new TaskDto()
                                 .withTaskType(TaskType.MULTIMEDIA_FEE)
                                 .withTaskFieldType(TaskFieldType.BRIEF)
-                                .withTargetFausts(List.of("80011116")),
+                                .withTargetFausts(List.of("53738222")),
                         new TaskDto()
                                 .withTaskType(TaskType.MULTIMEDIA_FEE)
                                 .withTaskFieldType(TaskFieldType.BKM)
-                                .withTargetFausts(List.of("80011116"))));
+                                .withTargetFausts(List.of("53738222"))));
 
         // Rig up a test-local Scheduler.
         Response response = postResponse("v1/api/cases", dto);
@@ -77,7 +77,7 @@ public class ScheduleRemindersIT extends ContainerTest {
         ScheduledReminders scheduledReminders = new ScheduledReminders();
         scheduledReminders.reminders = new Reminders();
         scheduledReminders.reminders.entityManager = entityManager;
-        scheduledReminders.reminders.notificationFactory = NotificationFactoryIT.getNotificationFactory(wiremockHost);
+        scheduledReminders.reminders.notificationFactory = NotificationFactoryIT.getNotificationFactory(ContainerTest.getOpenFormatBaseUrl(wiremockHost));
         scheduledReminders.ENABLE_REMINDERS = "true";
         scheduledReminders.serverRole = ServerRole.PRIMARY;
         persistenceContext.run(scheduledReminders::processReminders);

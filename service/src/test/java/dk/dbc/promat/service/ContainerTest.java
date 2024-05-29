@@ -176,29 +176,11 @@ public abstract class ContainerTest extends IntegrationTest {
     private static WireMockServer makeWireMockServer() {
         WireMockServer wireMockServer = new WireMockServer(options().dynamicPort());
 
-        // Add a "catch-all" for openformat requests.
-        // All openformat requests will return the same json.
-        wireMockServer.stubFor(requestMatching(request ->
-                MatchResult.of(
-                        request.queryParameter("action").isPresent() &&
-                                request.queryParameter("action").containsValue("formatObject") &&
-                                request.queryParameter("outputFormat").isPresent() &&
-                                request.queryParameter("outputFormat").containsValue("promat") &&
-                                request.queryParameter("pid").isPresent() &&
-                                request.queryParameter("pid").firstValue().contains("870970-basis:")
-                ))
-
-                .willReturn(ResponseDefinitionBuilder
-                        .responseDefinition()
-                        .withStatus(200)
-                        .withHeader("Content-Type", "application/json")
-                        .withBody(genericOpenFormatResult)));
-
         // Add two catch-all responses for AdgangsPlatformens introspect endpoint.
         // ...
         // It is not possible to record the request/response using an external wiremock
         // unless ssl certificate validation is disabled for the service application.
-        // Instead use regular http for the introspection endpoint and mock the response here
+        // Instead, use regular http for the introspection endpoint and mock the response here
         wireMockServer.stubFor(requestMatching(request ->
                 MatchResult.of(
                         request.queryParameter("access_token").isPresent() &&
@@ -241,12 +223,11 @@ public abstract class ContainerTest extends IntegrationTest {
                 .withEnv("OPENSEARCH_PROFILE", "dbckat")
                 .withEnv("OPENSEARCH_AGENCY", "010100")
                 .withEnv("OPENSEARCH_REPOSITORY", "rawrepo_basis")
-                .withEnv("WORK_PRESENTATION_SERVICE_URL", "http://host.testcontainers.internal:" + wireMockServer.port() + "/api/")
                 .withEnv("PROMAT_CLUSTER_NAME", "")
                 .withEnv("MAIL_HOST", "mailhost")
                 .withEnv("MAIL_USER", "mail.user")
                 .withEnv("MAIL_FROM", "some@address.dk")
-                .withEnv("OPENFORMAT_SERVICE_URL", "http://host.testcontainers.internal:" + wireMockServer.port() + "/")
+                .withEnv("OPENFORMAT_SERVICE_URL", getOpenFormatBaseUrl("http://host.testcontainers.internal:" + wireMockServer.port() + "/api/v2"))
                 .withEnv("LU_MAILADDRESS", "TEST@dbc.dk")
                 .withEnv("OPENNUMBERROLL_SERVICE_URL", "http://host.testcontainers.internal:" + wireMockServer.port() + "/")
                 .withEnv("EMATERIAL_CONTENT_REPO", "http://host.testcontainers.internal:" + wireMockServer.port() +
@@ -258,7 +239,7 @@ public abstract class ContainerTest extends IntegrationTest {
                 .withEnv("OAUTH2_CLIENT_SECRET", "abcdef")
                 .withEnv("OAUTH2_INTROSPECTION_URL", "http://host.testcontainers.internal:" + wireMockServer.port())
                 .withExposedPorts(8080)
-                .waitingFor(Wait.forHttp("/v1/api/cases"))
+                .waitingFor(Wait.forHttp("/health"))
                 .withStartupTimeout(Duration.ofMinutes(2));
         if(isContainerDebugging()) {
             container.withEnv("REMOTE_DEBUGGING_HOST", getDebuggingHost())
@@ -266,5 +247,28 @@ public abstract class ContainerTest extends IntegrationTest {
         }
         container.start();
         return container;
+    }
+
+    /**
+     * Helper method to set wiremock host for open-format, since we use open-format
+     * quite a few places, and it is a pain in the ****e to go between a real server,
+     * a local wiremock(recorder) and the in-test wiremock host when making changes that
+     * involves the openformat connector (or mocks thereof)
+     *
+     * @param server The servername under normal circumstances
+     * @return Either the given open-format baseurl, or if modified, a static address
+     */
+    public static String getOpenFormatBaseUrl(String server) {
+
+        // Use fixed address for a real open-format broker
+        // NEVER COMMIT THIS AS ACTIVE !
+        //return "http://open-format-broker.cisterne.svc.cloud.dbc.dk/api/v2";
+
+        // Use local wiremock recorder. Use '--proxy-all http://open-format-broker.cisterne.svc.cloud.dbc.dk'
+        // NEVER COMMIT THIS AS ACTIVE !
+        //return "http://172.17.33.64:8080/api/v2";
+
+        // Use default server value as given by the various tests.
+        return server;
     }
 }
