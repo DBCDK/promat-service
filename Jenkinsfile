@@ -12,6 +12,11 @@ pipeline {
 
     environment {
 		GITLAB_PRIVATE_TOKEN = credentials("metascrum-gitlab-api-token")
+		SONAR_SCANNER_HOME = tool 'SonarQube Scanner from Maven Central'
+		SONAR_SCANNER = "$SONAR_SCANNER_HOME/bin/sonar-scanner"
+		SONAR_PROJECT_KEY = "promat-service"
+		SONAR_SOURCES="src"
+		SONAR_TESTS="test"
 	}
   triggers {
     upstream('/Docker-payara6-bump-trigger')
@@ -51,7 +56,37 @@ pipeline {
 				}
 			}
 		}
+		stage("sonarqube") {
+			steps {
+				withSonarQubeEnv(installationName: 'sonarqube.dbc.dk') {
+					script {
+						def status = 0
 
+						def sonarOptions = "-Dsonar.branch.name=${BRANCH_NAME}"
+						if (env.BRANCH_NAME != 'master-rda') {
+							sonarOptions += " -Dsonar.newCode.referenceBranch=master-rda"
+						}
+
+						// Do sonar via maven
+						status += sh returnStatus: true, script: """
+                            mvn -B $sonarOptions -pl '!debian' sonar:sonar
+                        """
+
+						if (status != 0) {
+							error("build failed")
+						}
+					}
+				}
+			}
+		}
+		stage("quality gate") {
+			steps {
+				// wait for analysis results
+				timeout(time: 1, unit: 'HOURS') {
+					waitForQualityGate abortPipeline: true
+				}
+			}
+		}
 		stage("docker push") {
 			when {
                 branch "master"
