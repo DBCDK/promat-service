@@ -2,7 +2,7 @@ package dk.dbc.promat.service.batch;
 
 import dk.dbc.commons.persistence.TransactionScopedPersistenceContext;
 import dk.dbc.mail.MailManager;
-import dk.dbc.promat.service.IntegrationTest;
+import dk.dbc.promat.service.IntegrationTestIT;
 import dk.dbc.promat.service.cluster.ServerRole;
 import dk.dbc.promat.service.persistence.Notification;
 import dk.dbc.promat.service.persistence.NotificationStatus;
@@ -26,7 +26,7 @@ import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-public class ScheduledNotificationSenderIT extends IntegrationTest {
+public class ScheduledNotificationSenderIT extends IntegrationTestIT {
     static MailManager mailManager;
     static {
         Properties props = System.getProperties();
