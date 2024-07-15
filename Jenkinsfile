@@ -63,8 +63,8 @@ pipeline {
 						def status = 0
 
 						def sonarOptions = "-Dsonar.branch.name=${BRANCH_NAME}"
-						if (env.BRANCH_NAME != 'master-rda') {
-							sonarOptions += " -Dsonar.newCode.referenceBranch=master-rda"
+						if (env.BRANCH_NAME != 'master') {
+							sonarOptions += " -Dsonar.newCode.referenceBranch=master"
 						}
 
 						// Do sonar via maven
