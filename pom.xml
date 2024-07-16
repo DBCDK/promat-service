@@ -23,8 +23,8 @@
   <packaging>pom</packaging>
 
   <modules>
-    <module>connector</module>
     <module>model</module>
+    <module>connector</module>
     <module>service</module>
   </modules>
 
