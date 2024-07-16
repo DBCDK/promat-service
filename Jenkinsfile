@@ -36,7 +36,7 @@ pipeline {
 
 		stage("verify") {
 			steps {
-				sh "mvn -D sourcepath=src/main/java verify pmd:pmd spotbugs:spotbugs"
+				sh "mvn -D sourcepath=src/main/java verify pmd:pmd"
 
 				junit testResults: '**/target/*-reports/TEST-*.xml'
 
@@ -47,12 +47,6 @@ pipeline {
 
 					def pmd = scanForIssues tool: [$class: 'Pmd'], pattern: '**/target/pmd.xml'
 					publishIssues issues: [pmd]
-
-					// spotbugs still has some outstanding issues with regard
-					// to analyzing Java 11 bytecode.
-
-					def spotbugs = scanForIssues tool: [$class: 'SpotBugs'], pattern: '**/target/spotbugsXml.xml'
-					publishIssues issues:[spotbugs]
 				}
 			}
 		}
@@ -89,7 +83,14 @@ pipeline {
 				}
 			}
 		}
-
+		stage("quality gate") {
+			steps {
+				// wait for analysis results
+				timeout(time: 1, unit: 'HOURS') {
+					waitForQualityGate abortPipeline: true
+				}
+			}
+		}
         stage("bump docker tag in promat-service-secrets") {
             agent {
                 docker {
