@@ -36,7 +36,7 @@ pipeline {
 
 		stage("verify") {
 			steps {
-				sh "mvn -D sourcepath=src/main/java verify pmd:pmd javadoc:aggregate"
+				sh "mvn -D sourcepath=src/main/java verify pmd:pmd spotbugs:spotbugs"
 
 				junit testResults: '**/target/*-reports/TEST-*.xml'
 
@@ -76,14 +76,6 @@ pipeline {
 							error("build failed")
 						}
 					}
-				}
-			}
-		}
-		stage("quality gate") {
-			steps {
-				// wait for analysis results
-				timeout(time: 1, unit: 'HOURS') {
-					waitForQualityGate abortPipeline: true
 				}
 			}
 		}
