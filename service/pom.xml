@@ -10,9 +10,10 @@
     <version>${revision}</version>
   </parent>
 
-  <artifactId>promat-service</artifactId>
+  <artifactId>promatservice</artifactId>
   <version>${revision}</version>
   <packaging>war</packaging>
+
   <dependencies>
     <dependency>
       <groupId>dk.dbc</groupId>

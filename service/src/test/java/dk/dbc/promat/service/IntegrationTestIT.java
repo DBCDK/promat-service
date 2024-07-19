@@ -21,14 +21,11 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 import static org.eclipse.persistence.config.PersistenceUnitProperties.JDBC_DRIVER;
@@ -37,8 +34,8 @@ import static org.eclipse.persistence.config.PersistenceUnitProperties.JDBC_URL;
 import static org.eclipse.persistence.config.PersistenceUnitProperties.JDBC_USER;
 
 @SuppressWarnings("SameParameterValue")
-public class IntegrationTest {
-    private static final Logger LOGGER = LoggerFactory.getLogger(IntegrationTest.class);
+public class IntegrationTestIT {
+    private static final Logger LOGGER = LoggerFactory.getLogger(IntegrationTestIT.class);
     static final DBCPostgreSQLContainer promatDBContainer = makeDBContainer();
 
     protected static final HttpClient httpClient;
@@ -69,11 +66,11 @@ public class IntegrationTest {
             LOGGER.info("..Populating database for test");
             migrate(promatDBContainer.datasource());
             Connection connection = promatDBContainer.createConnection();
-            executeScript(connection, IntegrationTest.class.getResource("/dk/dbc/promat/service/db/subjectsdump.sql"));
-            executeScript(connection, IntegrationTest.class.getResource("/dk/dbc/promat/service/db/promatusers.sql"));
-            executeScript(connection, IntegrationTest.class.getResource("/dk/dbc/promat/service/db/promatcases.sql"));
-            executeScript(connection, IntegrationTest.class.getResource("/dk/dbc/promat/service/db/notification.sql"));
-            executeScript(connection, IntegrationTest.class.getResource("/dk/dbc/promat/service/db/payments.sql"));
+            executeScript(connection, IntegrationTestIT.class.getResource("/dk/dbc/promat/service/db/subjectsdump.sql"));
+            executeScript(connection, IntegrationTestIT.class.getResource("/dk/dbc/promat/service/db/promatusers.sql"));
+            executeScript(connection, IntegrationTestIT.class.getResource("/dk/dbc/promat/service/db/promatcases.sql"));
+            executeScript(connection, IntegrationTestIT.class.getResource("/dk/dbc/promat/service/db/notification.sql"));
+            executeScript(connection, IntegrationTestIT.class.getResource("/dk/dbc/promat/service/db/payments.sql"));
             entityManager = createEntityManager(promatDBContainer, "promatITPU");
             LOGGER.info("..Populating database tables done");
             LOGGER.info("Setup done!");

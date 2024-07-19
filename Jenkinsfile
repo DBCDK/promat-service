@@ -12,6 +12,11 @@ pipeline {
 
     environment {
 		GITLAB_PRIVATE_TOKEN = credentials("metascrum-gitlab-api-token")
+		SONAR_SCANNER_HOME = tool 'SonarQube Scanner from Maven Central'
+		SONAR_SCANNER = "$SONAR_SCANNER_HOME/bin/sonar-scanner"
+		SONAR_PROJECT_KEY = "promat-service"
+		SONAR_SOURCES="src"
+		SONAR_TESTS="test"
 	}
   triggers {
     upstream('/Docker-payara6-bump-trigger')
@@ -31,7 +36,7 @@ pipeline {
 
 		stage("verify") {
 			steps {
-				sh "mvn -D sourcepath=src/main/java verify pmd:pmd javadoc:aggregate"
+				sh "mvn -D sourcepath=src/main/java verify pmd:pmd"
 
 				junit testResults: '**/target/*-reports/TEST-*.xml'
 
@@ -42,16 +47,32 @@ pipeline {
 
 					def pmd = scanForIssues tool: [$class: 'Pmd'], pattern: '**/target/pmd.xml'
 					publishIssues issues: [pmd]
-
-					// spotbugs still has some outstanding issues with regard
-					// to analyzing Java 11 bytecode.
-
-					def spotbugs = scanForIssues tool: [$class: 'SpotBugs'], pattern: '**/target/spotbugsXml.xml'
-					publishIssues issues:[spotbugs]
 				}
 			}
 		}
+		stage("sonarqube") {
+			steps {
+				withSonarQubeEnv(installationName: 'sonarqube.dbc.dk') {
+					script {
+						def status = 0
 
+						def sonarOptions = "-Dsonar.branch.name=${BRANCH_NAME}"
+						if (env.BRANCH_NAME != 'master') {
+							sonarOptions += " -Dsonar.newCode.referenceBranch=master"
+						}
+
+						// Do sonar via maven
+						status += sh returnStatus: true, script: """
+                            mvn -B $sonarOptions sonar:sonar
+                        """
+
+						if (status != 0) {
+							error("build failed")
+						}
+					}
+				}
+			}
+		}
 		stage("docker push") {
 			when {
                 branch "master"
@@ -62,7 +83,14 @@ pipeline {
 				}
 			}
 		}
-
+		stage("quality gate") {
+			steps {
+				// wait for analysis results
+				timeout(time: 1, unit: 'HOURS') {
+					waitForQualityGate abortPipeline: true
+				}
+			}
+		}
         stage("bump docker tag in promat-service-secrets") {
             agent {
                 docker {

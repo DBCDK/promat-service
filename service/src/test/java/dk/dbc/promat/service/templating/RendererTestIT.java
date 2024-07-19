@@ -34,8 +34,8 @@ import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 
-public class RendererTest {
-    private static final Logger LOGGER = LoggerFactory.getLogger(RendererTest.class);
+public class RendererTestIT extends ContainerTest {
+    private static final Logger LOGGER = LoggerFactory.getLogger(RendererTestIT.class);
     private static final NotificationFactory notificationFactory = new NotificationFactory();
     private static WireMockServer wireMockServer;
     private final PromatCase aCase = new PromatCase()
@@ -84,7 +84,7 @@ public class RendererTest {
                 .withNote(NOTE));
         String expected = stripTrailingAndLeading(
                 Files.readString(
-                        Path.of(RendererTest.class.getResource("/mailBodys/collectionReview.html").getPath())));
+                        Path.of(RendererTestIT.class.getResource("/mailBodys/collectionReview.html").getPath())));
         String actual = stripTrailingAndLeading(notification.getBodyText());
 
         assertThat("Subject", notification.getSubject(), is("Ny ProMat anmeldelse:  Frist: 16/1 2021. - Tvekampen. Asterix og briterne"));
@@ -104,7 +104,7 @@ public class RendererTest {
                             .withTaskFieldType(TaskFieldType.METAKOMPAS)))));
         String expected = stripTrailingAndLeading(
                 Files.readString(
-                        Path.of(RendererTest.class.getResource("/mailBodys/printfileReview.html").getPath())));
+                        Path.of(RendererTestIT.class.getResource("/mailBodys/printfileReview.html").getPath())));
         String actual = stripTrailingAndLeading(notification.getBodyText());
 
         assertThat("Mailtext", actual, is(expected));
@@ -122,7 +122,7 @@ public class RendererTest {
                                 .withTaskFieldType(TaskFieldType.EXPRESS)))));
         String expected = stripTrailingAndLeading(
                 Files.readString(
-                        Path.of(RendererTest.class.getResource("/mailBodys/ebookReview.html").getPath())));
+                        Path.of(RendererTestIT.class.getResource("/mailBodys/ebookReview.html").getPath())));
         String actual = stripTrailingAndLeading(notification.getBodyText());
 
         assertThat("Mailtext", actual, is(expected));
@@ -232,7 +232,7 @@ public class RendererTest {
                 .withReviewerRequest(reviewerRequest));
         String actual = stripTrailingAndLeading(notification.getBodyText());
         String expected = stripTrailingAndLeading(
-                Files.readString(Path.of(RendererTest.class.getResource("/mailBodys/reviewerDataChanged.html").getPath()))
+                Files.readString(Path.of(RendererTestIT.class.getResource("/mailBodys/reviewerDataChanged.html").getPath()))
         );
         assertThat("Bodytext", actual, is(expected));
         assertThat("Subject", notification.getSubject(), is("ProMat anmelderprofil '1001' er ændret"));

@@ -21,8 +21,7 @@ import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.utility.MountableFile;
 
 import jakarta.ws.rs.core.Response;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
+
 import java.time.Duration;
 import java.util.Map;
 import java.util.function.Function;
@@ -31,7 +30,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.configureFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.requestMatching;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options;
 
-public abstract class ContainerTest extends IntegrationTest {
+public abstract class ContainerTest extends IntegrationTestIT {
     protected static final Logger LOGGER = LoggerFactory.getLogger(ContainerTest.class);
     protected static final ObjectMapper mapper = new JsonMapperProvider().getObjectMapper();
     protected static WireMockServer wireMockServer = makeWireMockServer();
