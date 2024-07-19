@@ -38,6 +38,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+@SuppressWarnings("java:S1192")
 @Stateless
 @Path("")
 public class Payments {
@@ -165,6 +166,7 @@ public class Payments {
                         .ofPattern(TIMESTAMP_FORMAT))) + ".csv";
     }
 
+    @SuppressWarnings("java:S3457")
     private String convertPaymentListToCsv(PaymentList paymentList) {
         return "Dato;Lønnr.;Lønart;Antal;Tekst;Anmelder\n" +
                 paymentList.getPayments()
@@ -179,6 +181,7 @@ public class Payments {
                         .collect(Collectors.joining());
     }
 
+    @SuppressWarnings({"java:S2629"})
     private PaymentList getPendingPayments(boolean execute, String stamp) throws ServiceErrorException {
 
         // Lock all relevant tables
@@ -366,8 +369,9 @@ public class Payments {
                 return " Metadata";
             case BKM:
                 return " Bkm";
+            default:
+                return "";
         }
-        return "";
     }
 
     private String getFaustList(PromatCase promatCase) {

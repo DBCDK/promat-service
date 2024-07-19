@@ -5,8 +5,6 @@ import dk.dbc.promat.service.persistence.CaseView;
 import dk.dbc.promat.service.persistence.MaterialType;
 import dk.dbc.promat.service.persistence.PayCategory;
 import dk.dbc.promat.service.persistence.Reviewer;
-import dk.dbc.promat.service.persistence.TaskFieldType;
-import dk.dbc.promat.service.persistence.TaskType;
 
 import java.time.LocalDate;
 

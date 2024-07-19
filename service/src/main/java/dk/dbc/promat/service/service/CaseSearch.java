@@ -45,6 +45,7 @@ public class CaseSearch {
     private static final Logger LOGGER = LoggerFactory.getLogger(CaseSearch.class);
     // Default number of results when getting cases
     private static final int DEFAULT_CASES_LIMIT = 100;
+    private static final String STATUS = "status";
 
     @Inject
     @PromatEntityManager
@@ -70,7 +71,7 @@ public class CaseSearch {
         callConditionally(params::getFaust, f ->  makeFaustPredicate(f, builder, root)).ifPresent(allPredicates::add);
         callConditionally(params::getId, id -> makeIdPredicates(id, builder, root)).ifPresent(allPredicates::add);
 
-        Predicate statusPredicate = callConditionally(params::getStatus, s -> makeStatusPredicate(s, builder, root)).orElse(builder.notEqual(root.get("status"), DELETED));
+        Predicate statusPredicate = callConditionally(params::getStatus, s -> makeStatusPredicate(s, builder, root)).orElse(builder.notEqual(root.get(STATUS), DELETED));
         allPredicates.add(statusPredicate);
 
         // Get cases with given reviewer
@@ -207,7 +208,7 @@ public class CaseSearch {
         List<Predicate> statusPredicates = new ArrayList<>();
         for (String oneStatus : status.split(",")) {
             try {
-                statusPredicates.add(builder.equal(root.get("status"), valueOf(oneStatus)));
+                statusPredicates.add(builder.equal(root.get(STATUS), valueOf(oneStatus)));
             } catch (IllegalArgumentException ex) {
                 ServiceErrorDto error = new ServiceErrorDto().withCode(ServiceErrorCode.INVALID_REQUEST).withCause("Invalid case status").withDetails(String.format("Unknown case status: %s", oneStatus));
                 throw new ServiceErrorException(error.getCause()).withHttpStatus(400);
@@ -224,7 +225,7 @@ public class CaseSearch {
         Predicate faustPredicate = builder.or(primaryFaustPredicate, relatedFaustsPredicate);
 
         // And status not CLOSED or DONE
-        CriteriaBuilder.In<CaseStatus> inClause = builder.in(root.get("status"));
+        CriteriaBuilder.In<CaseStatus> inClause = builder.in(root.get(STATUS));
         inClause.value(CLOSED).value(EXPORTED).value(DELETED);
         Predicate statusPredicate = builder.not(inClause);
 

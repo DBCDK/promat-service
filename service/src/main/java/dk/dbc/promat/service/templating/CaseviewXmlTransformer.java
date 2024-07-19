@@ -17,7 +17,6 @@ import jakarta.inject.Inject;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
-import java.time.LocalDateTime;
 
 public class CaseviewXmlTransformer {
     private final XmlMapper xmlMapper;

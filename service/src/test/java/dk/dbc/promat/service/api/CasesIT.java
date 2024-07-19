@@ -520,6 +520,7 @@ public class CasesIT extends ContainerTest {
         assertThat("2nd case with weekcode less than '202101'", fetched.getCases().get(1).getId(), is(2));
     }
 
+    @SuppressWarnings("java:S5961")
     @Test
     public void testEditCase() throws JsonProcessingException, PromatServiceConnectorException {
 

@@ -7,9 +7,11 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.stream.Collectors;
 
 public class Formatting {
+
+    private Formatting() {}
+
     private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("d/M yyyy");
     public static String format(LocalDate localDate) {
         return localDate.format(formatter);
@@ -28,7 +30,7 @@ public class Formatting {
             names.addAll(Arrays.asList(user.getLastName().split(" ")));
         }
 
-        return names.size() > 0 ? names.stream().collect(Collectors.joining(" ")) : "";
+        return !names.isEmpty() ? String.join(" ", names) : "";
     }
 
     public static String format(CaseStatus status) {

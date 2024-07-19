@@ -25,12 +25,12 @@ import org.slf4j.LoggerFactory;
 
 @ApplicationScoped
 public class RecordsResolver {
-    private static final Logger LOGGER = LoggerFactory.getLogger(Records.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(RecordsResolver.class);
 
     @Inject
     OpensearchConnector opensearchConnector;
 
-    public Dto resolveId(String id) throws Exception{
+    public Dto resolveId(String id) throws OpensearchConnectorException {
         try {
 
             // Get records that either match directly on the id (faust) or with the id as the isbn number

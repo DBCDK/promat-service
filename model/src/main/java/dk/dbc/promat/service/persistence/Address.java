@@ -39,7 +39,7 @@ public class Address {
     }
 
     public boolean getSelected() {
-        return selected != null && selected == true ? true : false;
+        return selected != null && selected;
     }
 
     public void setAddress1(String address1) {

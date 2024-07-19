@@ -28,6 +28,7 @@ public class AcceptsListToJsonArrayConverter implements AttributeConverter<List<
         }
     }
 
+    @SuppressWarnings("java:S1168")
     public List<Reviewer.Accepts> convertToEntityAttribute(PGobject pgObject) {
         if (pgObject != null) {
             try {

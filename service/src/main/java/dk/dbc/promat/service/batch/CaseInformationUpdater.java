@@ -218,7 +218,8 @@ public class CaseInformationUpdater {
         return newCode.orElse("");
     }
 
-    private Boolean weekcodeMatchOrBefore(PromatCase promatCase) {
+    @SuppressWarnings("java:S2629")
+    private boolean weekcodeMatchOrBefore(PromatCase promatCase) {
         DateTimeFormatter yearWeekFormatter = DateTimeFormatter.ofPattern("yyyyww", new Locale("da", "DK"));
         DateTimeFormatter weekFormatter = DateTimeFormatter.ofPattern("ww", new Locale("da", "DK"));
 

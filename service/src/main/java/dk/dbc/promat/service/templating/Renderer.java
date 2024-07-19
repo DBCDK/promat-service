@@ -1,12 +1,9 @@
 package dk.dbc.promat.service.templating;
 
-import gg.jte.CodeResolver;
 import gg.jte.ContentType;
 import gg.jte.TemplateEngine;
 import gg.jte.TemplateOutput;
 import gg.jte.output.StringOutput;
-import gg.jte.resolve.DirectoryCodeResolver;
-import java.nio.file.Path;
 import java.util.Map;
 
 import org.slf4j.Logger;
@@ -18,7 +15,6 @@ public class Renderer {
     public Renderer() {
         String path = Renderer.class.getResource("/jte/templates/").getPath();
         LOGGER.info("Using templates at: {}", path);
-        CodeResolver codeResolver = new DirectoryCodeResolver(Path.of(path));
         templateEngine = TemplateEngine.createPrecompiled(ContentType.Html);
     }
 

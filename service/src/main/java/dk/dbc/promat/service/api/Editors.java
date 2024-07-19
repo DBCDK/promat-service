@@ -13,7 +13,6 @@ import java.time.Instant;
 import java.util.Date;
 import java.util.List;
 
-import dk.dbc.promat.service.persistence.ReviewerView;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.persistence.TypedQuery;
 import jakarta.ws.rs.core.Context;
@@ -37,6 +36,7 @@ import jakarta.ws.rs.core.Response;
 @Path("")
 public class Editors {
     private static final Logger LOGGER = LoggerFactory.getLogger(Editors.class);
+    private static final String MISSING_FIELDS_MESSAGE = "Missing required field in the request data";
 
     @Inject
     @PromatEntityManager
@@ -57,31 +57,31 @@ public class Editors {
 
         final String firstName = editorRequest.getFirstName();
         if ( firstName == null || firstName.isBlank()) {
-            return ServiceErrorDto.InvalidRequest("Missing required field in the request data",
+            return ServiceErrorDto.InvalidRequest(MISSING_FIELDS_MESSAGE,
                     "Field 'firstName' must be supplied and not be blank when creating a new reviewer");
         }
 
         final String lastName = editorRequest.getLastName();
         if ( lastName == null || lastName.isBlank()) {
-            return ServiceErrorDto.InvalidRequest("Missing required field in the request data",
+            return ServiceErrorDto.InvalidRequest(MISSING_FIELDS_MESSAGE,
                     "Field 'lastName' must be supplied and not be blank when creating a new reviewer");
         }
 
         final String email = editorRequest.getEmail();
         if ( email == null || email.isBlank()) {
-            return ServiceErrorDto.InvalidRequest("Missing required field in the request data",
+            return ServiceErrorDto.InvalidRequest(MISSING_FIELDS_MESSAGE,
                     "Field 'email' must be supplied and not be blank when creating a new reviewer");
         }
 
         final String cprNumber = editorRequest.getCprNumber();
         if (cprNumber == null || cprNumber.isBlank()) {
-            return ServiceErrorDto.InvalidRequest("Missing required field in the request data",
+            return ServiceErrorDto.InvalidRequest(MISSING_FIELDS_MESSAGE,
                     "Field 'cprNumber' must be supplied when creating a new reviewer");
         }
 
         final Integer paycode = editorRequest.getPaycode();
         if (paycode == null) {
-            return ServiceErrorDto.InvalidRequest("Missing required field in the request data",
+            return ServiceErrorDto.InvalidRequest(MISSING_FIELDS_MESSAGE,
                     "Field 'paycode' must be supplied when creating a new reviewer");
         }
 
@@ -95,7 +95,7 @@ public class Editors {
 
         try {
             final Editor entity = new Editor()
-                    .withActive(editorRequest.isActive() != null ? editorRequest.isActive() : true)  // New users defaults to active
+                    .withActive(editorRequest.isActive() == null || editorRequest.isActive())  // New users defaults to active
                     .withFirstName(firstName)
                     .withLastName(lastName)
                     .withEmail(email);
@@ -164,7 +164,7 @@ public class Editors {
             if(editorRequest.isActive() != null) {
                 editor.setActive(editorRequest.isActive());
                 editor.setActiveChanged(Date.from(Instant.now()));
-                if( editorRequest.isActive() ) {
+                if(Boolean.TRUE.equals(editorRequest.isActive()) ) {
                     editor.setDeactivated(null);
                 }
             }

@@ -1,6 +1,5 @@
 package dk.dbc.promat.service.batch;
 
-import dk.dbc.promat.service.api.FulltextHandler;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
@@ -20,14 +19,13 @@ public class ContentLookUp {
     @ConfigProperty(name = "EMATERIAL_CONTENT_REPO")
     String contentRepo;
 
-    public static HttpClient client = null;
+    HttpClient client;
 
     public ContentLookUp() {
         client = HttpClient.newBuilder().version(HttpClient.Version.HTTP_1_1).build();
     }
 
     public Optional<String> lookUpContent(String faust) {
-        final HttpResponse<InputStream> httpResponse;
         final String fullTextLink = String.format(contentRepo, faust);
 
         try {
@@ -43,7 +41,10 @@ public class ContentLookUp {
                             ? "Content exists"
                             : "No content"));
             return (headResponse.statusCode() == 200 || headResponse.statusCode() == 302) ? Optional.of(fullTextLink) : Optional.empty();
-        } catch (InterruptedException | IOException exception) {
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            return Optional.empty();
+        } catch (IOException exception) {
             LOGGER.error("Unable to lookup '{}', error:", fullTextLink, exception);
             return Optional.empty();
         } catch(Exception exception) {

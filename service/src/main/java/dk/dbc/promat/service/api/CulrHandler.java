@@ -24,6 +24,7 @@ import java.util.Optional;
 public class CulrHandler {
     private static final Logger LOGGER = LoggerFactory.getLogger(CulrHandler.class);
 
+    @SuppressWarnings("java:S116")
     @Inject
     @ConfigProperty(name = "PROMAT_AGENCY_ID")
     private String PROMAT_AGENCY_ID;

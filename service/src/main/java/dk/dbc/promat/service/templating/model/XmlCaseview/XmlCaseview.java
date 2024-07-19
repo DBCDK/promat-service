@@ -1,7 +1,6 @@
 package dk.dbc.promat.service.templating.model.XmlCaseview;
 
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 import dk.dbc.promat.service.api.ServiceErrorException;
 import dk.dbc.promat.service.persistence.PromatCase;
@@ -11,7 +10,6 @@ import dk.dbc.promat.service.templating.Formatting;
 
 import jakarta.xml.bind.annotation.XmlElement;
 
-import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -53,7 +51,7 @@ public class XmlCaseview {
         return this;
     }
 
-    private String GetTaskDataForFaust(String requestedFaust, TaskFieldType fieldType, List<PromatTask> tasks) throws ServiceErrorException {
+    private String GetTaskDataForFaust(String requestedFaust, TaskFieldType fieldType, List<PromatTask> tasks) {
 
         // Get the task that matches faust and fieldtype
         Optional<PromatTask> task;

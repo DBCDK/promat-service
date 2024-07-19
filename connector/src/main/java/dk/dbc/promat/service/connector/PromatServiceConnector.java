@@ -43,6 +43,7 @@ public class PromatServiceConnector {
 
     private final FailSafeHttpClient failSafeHttpClient;
     private final String baseUrl;
+    private static final String CASES_PATH = "cases";
 
     public PromatServiceConnector(Client client, String promatServiceBaseUrl) {
         this(FailSafeHttpClient.create(client, RETRY_POLICY), promatServiceBaseUrl);
@@ -70,7 +71,7 @@ public class PromatServiceConnector {
     public CaseSummaryList listCases(ListCasesParams params) throws PromatServiceConnectorException {
         final HttpGet httpGet = new HttpGet(failSafeHttpClient)
                 .withBaseUrl(baseUrl)
-                .withPathElements("cases");
+                .withPathElements(CASES_PATH);
         if (params != null) {
             for (Map.Entry<String, Object> param : params.entrySet()) {
                 httpGet.withQueryParameter(param.getKey(), param.getValue());
@@ -90,7 +91,7 @@ public class PromatServiceConnector {
     public PromatCase updateCase(int caseID, CaseRequest caseRequest) throws PromatServiceConnectorException {
         final HttpPost httpPost = new HttpPost(failSafeHttpClient)
                 .withBaseUrl(baseUrl)
-                .withPathElements("cases", String.valueOf(caseID))
+                .withPathElements(CASES_PATH, String.valueOf(caseID))
                 .withJsonData(caseRequest);
         final Response response = httpPost.execute();
         assertResponseStatus(response, Response.Status.OK);
@@ -106,7 +107,7 @@ public class PromatServiceConnector {
     public PromatCase getCase(int caseID) throws PromatServiceConnectorException {
         final HttpGet httpGet = new HttpGet(failSafeHttpClient)
                 .withBaseUrl(baseUrl)
-                .withPathElements("cases", String.valueOf(caseID));
+                .withPathElements(CASES_PATH, String.valueOf(caseID));
         final Response response = httpGet.execute();
         assertResponseStatus(response, Response.Status.OK);
         return readResponseEntity(response, PromatCase.class);
@@ -161,7 +162,7 @@ public class PromatServiceConnector {
     public String getCaseview(String faust, String format, boolean override, Charset charset) throws PromatServiceConnectorException {
         final HttpGet httpGet = new HttpGet(failSafeHttpClient)
                 .withBaseUrl(baseUrl)
-                .withPathElements("cases", format, faust)
+                .withPathElements(CASES_PATH, format, faust)
                 .withQueryParameter("override", override);
         final Response response = httpGet.execute();
         assertResponseStatus(response, Response.Status.OK);
@@ -183,7 +184,7 @@ public class PromatServiceConnector {
     public PromatCase approveBuggiTask(String pid, TagList tags) throws PromatServiceConnectorException {
         HttpPost httpPost = new HttpPost(failSafeHttpClient)
                 .withBaseUrl(baseUrl)
-                .withPathElements("cases", pid, "buggi")
+                .withPathElements(CASES_PATH, pid, "buggi")
                 .withJsonData(tags);
         Response response = httpPost.execute();
         assertResponseStatus(response, Response.Status.OK, Response.Status.NOT_MODIFIED);

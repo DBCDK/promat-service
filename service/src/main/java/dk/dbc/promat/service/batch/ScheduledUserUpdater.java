@@ -20,6 +20,7 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 
+@SuppressWarnings({"java:S3252", "java:S1155"})
 @Startup
 @Singleton
 public class ScheduledUserUpdater {
@@ -35,7 +36,7 @@ public class ScheduledUserUpdater {
     @EJB
     UserUpdater userUpdater;
 
-    private static Lock updateLock = new ReentrantLock();
+    private static final Lock updateLock = new ReentrantLock();
 
     // Users must be deactivated after 5 years having active=f, so no need to run
     // this more than one time each day
@@ -73,7 +74,7 @@ public class ScheduledUserUpdater {
                     entityManager.flush();
                 } catch(Exception e) {
                     LOGGER.error("Caught exception {}:{} when trying to update users", e.getCause(), e.getMessage());
-                    LOGGER.info("Exception: {}", e);
+                    LOGGER.info("Exception:", e);
                 } finally {
                     updateLock.unlock();
                 }
@@ -82,6 +83,7 @@ public class ScheduledUserUpdater {
             LOGGER.error("Caught exception in scheduled job 'updateUser()': {}", e.getMessage());
         }
     }
+
 
     public List<Reviewer> getInactiveReviewers() {
         return entityManager

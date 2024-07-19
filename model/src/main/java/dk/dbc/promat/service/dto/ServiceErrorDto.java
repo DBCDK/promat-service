@@ -2,7 +2,10 @@ package dk.dbc.promat.service.dto;
 
 import jakarta.ws.rs.core.Response;
 
-public class ServiceErrorDto implements Dto {
+import java.io.Serializable;
+
+@SuppressWarnings("java:S100")
+public class ServiceErrorDto implements Dto, Serializable {
 
     private ServiceErrorCode code;
 

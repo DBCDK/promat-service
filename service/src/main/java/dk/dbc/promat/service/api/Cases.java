@@ -79,6 +79,16 @@ import static jakarta.ws.rs.core.Response.Status.NO_CONTENT;
 public class Cases {
     private static final Logger LOGGER = LoggerFactory.getLogger(Cases.class);
     private static final Pattern PID_PATTERN = Pattern.compile(".*:(?<faust>\\d+)");
+    private static final String MISSING_FIELDS_MESSAGE = "Missing required field in the request data";
+    private static final String SERVICE_ERROR_MESSAGE = "Received serviceErrorException while mapping entities: {}";
+    private static final String CAUGHT_EXCEPTION_MESSAGE = "Caught exception:";
+    private static final String NO_SUCH_CASE_MESSAGE = "No such case";
+    private static final String NO_CASE_WITH_ID_MESSAGE = "No case with id {}";
+    private static final String OPEN_CASE_WITH_FAUST_EXISTS_MESSAGE = "Case with primary or related faust %s and status not DONE or CLOSED exists";
+    private static final String NO_CASE_WITH_ID_EXISTS_MESSAGE = "No case with id %d exists";
+    private static final String CASE_WITH_OPEN_TASKS_EXISTS_MESSAGE = "Case contains a task with one or more targetFaust {} used by other active cases";
+    private static final String FAUST_IN_USE_MESSAGE = "Faustnumber is in use";
+    private static final String CASE_CONTAIN_TASKS_ON_TARGET_FAUSTS = "Case contains tasks with one or more targetfausts %s used by other active cases";
 
     @Inject
     @PromatEntityManager
@@ -102,7 +112,7 @@ public class Cases {
     @Inject
     @ConfigProperty(name = "EMATERIAL_CONTENT_REPO")
     String contentRepo;
-    
+
     @EJB
     CaseSearch caseSearch;
 
@@ -112,7 +122,7 @@ public class Cases {
                     CaseStatus.REJECTED,
                     CaseStatus.ASSIGNED,
                     CaseStatus.PENDING_ISSUES);
-    Set<CaseStatus> INVALID_BUGGI_APPROVAL_STATES = EnumSet.of(CaseStatus.CLOSED, CaseStatus.DELETED, CaseStatus.REVERTED);
+    private static  final Set<CaseStatus> INVALID_BUGGI_APPROVAL_STATES = EnumSet.of(CaseStatus.CLOSED, CaseStatus.DELETED, CaseStatus.REVERTED);
 
     // Set of allowed states when approving tasks
     private static final Set<CaseStatus> APPROVE_TASKS_ALLOWED_STATES =
@@ -132,20 +142,21 @@ public class Cases {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Response createCase(CaseRequest dto) {
+
         LOGGER.info("cases/ (POST) body: {}", dto);
 
         // Check for required data when creating a new case
         if( dto.getTitle() == null || dto.getTitle().isEmpty() ) {
             LOGGER.info("Request dto is missing 'title' field");
-            return ServiceErrorDto.InvalidRequest("Missing required field in the request data", "Field 'title' must be supplied when creating a new case");
+            return ServiceErrorDto.InvalidRequest(MISSING_FIELDS_MESSAGE, "Field 'title' must be supplied when creating a new case");
         }
         if( dto.getPrimaryFaust() == null || dto.getPrimaryFaust().isEmpty() ) {
             LOGGER.info("Request dto is missing 'primaryFaust' field");
-            return ServiceErrorDto.InvalidRequest("Missing required field in the request data", "Field 'primaryFaust' must be supplied when creating a new case");
+            return ServiceErrorDto.InvalidRequest(MISSING_FIELDS_MESSAGE, "Field 'primaryFaust' must be supplied when creating a new case");
         }
         if( dto.getMaterialType() == null ) {
             LOGGER.info("Request dto is missing 'materialType' field");
-            return ServiceErrorDto.InvalidRequest("Missing required field in the request data", "Field 'materialType' must be supplied when creating a new case");
+            return ServiceErrorDto.InvalidRequest(MISSING_FIELDS_MESSAGE, "Field 'materialType' must be supplied when creating a new case");
         }
 
         repository.getExclusiveAccessToTable(PromatCase.TABLE_NAME);
@@ -189,7 +200,7 @@ public class Cases {
             tasks = createTasks(dto.getTasks());
 
         } catch(ServiceErrorException serviceErrorException) {
-            LOGGER.info("Received serviceErrorException while mapping entities: {}", serviceErrorException.getMessage());
+            LOGGER.info(SERVICE_ERROR_MESSAGE, serviceErrorException.getMessage());
             return Response.status(serviceErrorException.getHttpStatus()).entity(serviceErrorException.getServiceErrorDto()).build();
         }
 
@@ -292,7 +303,7 @@ public class Cases {
 
             return Response.status(200).entity(asCase(requested)).build();
         } catch(Exception exception) {
-            LOGGER.error("Caught exception:", exception);
+            LOGGER.error(CAUGHT_EXCEPTION_MESSAGE, exception);
             return ServiceErrorDto.Failed(exception.getMessage());
         }
     }
@@ -321,7 +332,7 @@ public class Cases {
                             fulltextHandler.getFilename()))
                     .entity(streamingFulltext).build();
         } catch(Exception exception) {
-            LOGGER.error("Caught exception:", exception);
+            LOGGER.error(CAUGHT_EXCEPTION_MESSAGE, exception);
             return ServiceErrorDto.Failed(exception.getMessage());
         }
     }
@@ -340,7 +351,7 @@ public class Cases {
                             fulltextHandler.getFilename()))
                     .entity(streamingFulltext).build();
         } catch(Exception exception) {
-            LOGGER.error("Caught exception:", exception);
+            LOGGER.error(CAUGHT_EXCEPTION_MESSAGE, exception);
             return ServiceErrorDto.Failed(exception.getMessage());
         }
     }
@@ -365,7 +376,7 @@ public class Cases {
                 return Response.status(200)
                         .entity(dto).build();
         } catch (Exception exception) {
-            LOGGER.error("Caught exception:", exception);
+            LOGGER.error(CAUGHT_EXCEPTION_MESSAGE, exception);
             return ServiceErrorDto.Failed(exception.getMessage());
         }
     }
@@ -384,7 +395,7 @@ public class Cases {
             TypedQuery<PromatCase> query = entityManager.createNamedQuery(PromatCase.GET_CASE_BY_FAUST_NAME, PromatCase.class);
             query.setParameter("faust", faust);
             List<PromatCase> cases = query.getResultList();
-            if (cases == null || cases.size() == 0) {
+            if (cases == null || cases.isEmpty()) {
                 LOGGER.info("No case with faust {}", faust);
                 return ServiceErrorDto.NotFound("No case with this primary- or relatedfaust or no case in required states",
                         String.format("No case with primary- or relatedfaust %s or in required states exists", faust));
@@ -439,7 +450,7 @@ public class Cases {
                     return ServiceErrorDto.Failed("No handling of CaseviewFormat " + format);
             }
         } catch(Exception exception) {
-            LOGGER.error("Caught exception:", exception);
+            LOGGER.error(CAUGHT_EXCEPTION_MESSAGE, exception);
             return ServiceErrorDto.Failed(exception.getMessage());
         }
     }
@@ -510,7 +521,7 @@ public class Cases {
         } catch (ServiceErrorException e) {
             return Response.status(e.getHttpStatus()).entity(e.getServiceErrorDto()).build();
         } catch(Exception exception) {
-            LOGGER.error("Caught exception:", exception);
+            LOGGER.error(CAUGHT_EXCEPTION_MESSAGE, exception);
             return ServiceErrorDto.Failed(exception.getMessage());
         }
     }
@@ -570,7 +581,7 @@ public class Cases {
             existing = entityManager.find(PromatCase.class, id);
             if( existing == null ) {
                 LOGGER.info("No such case {}", id);
-                return ServiceErrorDto.NotFound("No such case", String.format("Case with id %d does not exist", id));
+                return ServiceErrorDto.NotFound(NO_SUCH_CASE_MESSAGE, String.format("Case with id %d does not exist", id));
             }
 
             // Update fields
@@ -594,13 +605,13 @@ public class Cases {
                 existing.setInternalNote(dto.getInternalNote());
             }
             if(dto.getReviewer() != null) {
-                Integer reviewer_id = existing.getReviewer() == null ? null : existing.getReviewer().getId();
-                if (!dto.getReviewer().equals(reviewer_id)) {
+                Integer reviewerId = existing.getReviewer() == null ? null : existing.getReviewer().getId();
+                if (!dto.getReviewer().equals(reviewerId)) {
                     if(REVIEWER_CHANGE_ALLOWED_STATES.contains(existing.getStatus())) {
                         existing.setReviewer(resolveReviewer(dto.getReviewer()));
                         existing.setAssigned(LocalDate.now());
                         notifyOnReviewerChanged(existing);
-                        if( reviewer_id == null ) {
+                        if( reviewerId == null ) {
                             setInitialMessageForReviewer(existing);
                         }
                         existing.setStatus(calculateStatus(existing, CaseStatus.ASSIGNED));
@@ -718,14 +729,14 @@ public class Cases {
             existing.setNewMessagesToEditor(areThereNewMessages(existing.getId(), PromatMessage.Direction.REVIEWER_TO_EDITOR));
             return Response.ok(asSummary(existing)).build();
         } catch(ServiceErrorException serviceErrorException) {
-            LOGGER.info("Received serviceErrorException while mapping entities: {}", serviceErrorException.getMessage());
+            LOGGER.info(SERVICE_ERROR_MESSAGE, serviceErrorException.getMessage());
 
             // Some type of illegal update was Detected. All changes must be rolled back.
             // SO detach case from entitymanager, and thereby in effect do a rollback.
             entityManager.detach(existing);
             return Response.status(serviceErrorException.getHttpStatus()).entity(serviceErrorException.getServiceErrorDto()).build();
         } catch(Exception exception) {
-            LOGGER.error("Caught exception:", exception);
+            LOGGER.error(CAUGHT_EXCEPTION_MESSAGE, exception);
 
             // Updating the case went wrong for some other reason. All changes must be rolled back.
             // SO detach case from entitymanager, and thereby in effect do a rollback.
@@ -754,14 +765,14 @@ public class Cases {
             // Fetch the case
             PromatCase promatCase = entityManager.find(PromatCase.class, id);
             if(promatCase == null) {
-                LOGGER.info("No case with id {}", id);
-                return ServiceErrorDto.NotFound("No such case", String.format("No case with id %d exists", id));
+                LOGGER.info(NO_CASE_WITH_ID_MESSAGE, id);
+                return ServiceErrorDto.NotFound(NO_SUCH_CASE_MESSAGE, String.format(NO_CASE_WITH_ID_EXISTS_MESSAGE, id));
             }
 
             // Check that we do not add any targetfausts that is in use
             if(dto.getTargetFausts() != null) {
                 if(!Faustnumbers.checkNoOpenCaseWithFaust(entityManager, promatCase.getId(), dto.getTargetFausts().toArray(String[]::new))) {
-                    LOGGER.info("Case contains a task with one or more targetFaust {} used by other active cases", dto.getTargetFausts());
+                    LOGGER.info(CASE_WITH_OPEN_TASKS_EXISTS_MESSAGE, dto.getTargetFausts());
                     return ServiceErrorDto.FaustInUse("One or more targetFausts is used by other active cases");
                 }
             }
@@ -797,10 +808,10 @@ public class Cases {
                     .entity(task)
                     .build();
         } catch(ServiceErrorException serviceErrorException) {
-            LOGGER.info("Received serviceErrorException while mapping entities: {}", serviceErrorException.getMessage());
+            LOGGER.info(SERVICE_ERROR_MESSAGE, serviceErrorException.getMessage());
             return Response.status(serviceErrorException.getHttpStatus()).entity(serviceErrorException.getServiceErrorDto()).build();
         } catch(Exception exception) {
-            LOGGER.error("Caught exception:", exception);
+            LOGGER.error(CAUGHT_EXCEPTION_MESSAGE, exception);
             return ServiceErrorDto.Failed(exception.getMessage());
         }
     }
@@ -814,8 +825,8 @@ public class Cases {
             // Fetch the case
             PromatCase promatCase = entityManager.find(PromatCase.class, id);
             if(promatCase == null) {
-                LOGGER.info("No case with id {}", id);
-                return ServiceErrorDto.NotFound("No such case", String.format("No case with id %d exists", id));
+                LOGGER.info(NO_CASE_WITH_ID_MESSAGE, id);
+                return ServiceErrorDto.NotFound(NO_SUCH_CASE_MESSAGE, String.format(NO_CASE_WITH_ID_EXISTS_MESSAGE, id));
             }
 
             promatCase.setStatus(CaseStatus.DELETED);
@@ -832,8 +843,8 @@ public class Cases {
         // Fetch the case
         PromatCase promatCase = entityManager.find(PromatCase.class, id);
         if(promatCase == null) {
-            LOGGER.info("No case with id {}", id);
-            return ServiceErrorDto.NotFound("No such case", String.format("No case with id %d exists", id));
+            LOGGER.info(NO_CASE_WITH_ID_MESSAGE, id);
+            return ServiceErrorDto.NotFound(NO_SUCH_CASE_MESSAGE, String.format(NO_CASE_WITH_ID_EXISTS_MESSAGE, id));
         }
         reminders.processReminder(promatCase, LocalDate.now());
         return Response.ok(asSummary(promatCase)).build();
@@ -844,12 +855,12 @@ public class Cases {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @JsonView({CaseView.Summary.class})
-    public Response addDraftOrUpdateExistingCase(CaseRequest caseRequest) throws Exception {
+    public Response addDraftOrUpdateExistingCase(CaseRequest caseRequest) {
         LOGGER.info("POST /drafts: {}", caseRequest);
 
         // Check for missing required information
         if (caseRequest.getPrimaryFaust() == null || caseRequest.getPrimaryFaust().isBlank()) {
-            return ServiceErrorDto.InvalidRequest("Missing required field in the request data",
+            return ServiceErrorDto.InvalidRequest(MISSING_FIELDS_MESSAGE,
                     "Field 'primaryFaust' must be supplied when creating a new case draft");
         }
         if (caseRequest.getReviewer() != null) {
@@ -896,6 +907,7 @@ public class Cases {
         return editor;
     }
 
+    @SuppressWarnings("java:S112")
     private PromatCase findBuggiCase(String faust) {
         try {
             CaseSummaryList list = caseSearch.listCases(new ListCasesParams().withFaust(faust));
@@ -947,11 +959,11 @@ public class Cases {
         // as the given primary faustnumber and a state other than CLOSED or DONE
         if(!Faustnumbers.checkNoOpenCaseWithFaust(entityManager, dto.getPrimaryFaust())) {
             LOGGER.info("Case with primary or related Faust {} and state <> CLOSED|DONE exists", dto.getPrimaryFaust());
-            throw new ServiceErrorException(String.format("Case with primary or related faust %s and status not DONE or CLOSED exists", dto.getPrimaryFaust()))
+            throw new ServiceErrorException(String.format(OPEN_CASE_WITH_FAUST_EXISTS_MESSAGE, dto.getPrimaryFaust()))
                     .withHttpStatus(409)
                     .withCode(ServiceErrorCode.FAUST_IN_USE)
-                    .withCause("Faustnumber is in use")
-                    .withDetails(String.format("Case with primary or related faust %s and status not DONE or CLOSED exists", dto.getPrimaryFaust()));
+                    .withCause(FAUST_IN_USE_MESSAGE)
+                    .withDetails(String.format(OPEN_CASE_WITH_FAUST_EXISTS_MESSAGE, dto.getPrimaryFaust()));
         }
 
         // Check that no existing case exists with the same primary or related faustnumber
@@ -960,12 +972,12 @@ public class Cases {
             for(TaskDto task : dto.getTasks()) {
                 if(task.getTargetFausts() != null) {
                     if(!Faustnumbers.checkNoOpenCaseWithFaust(entityManager, task.getTargetFausts().toArray(String[]::new))) {
-                        LOGGER.info("Case contains a task with one or more targetFaust {} used by other active cases", task.getTargetFausts());
-                        throw new ServiceErrorException(String.format("Case contains tasks with one or more targetfausts %s used by other active cases", task.getTargetFausts()))
+                        LOGGER.info(CASE_WITH_OPEN_TASKS_EXISTS_MESSAGE, task.getTargetFausts());
+                        throw new ServiceErrorException(String.format(CASE_CONTAIN_TASKS_ON_TARGET_FAUSTS, task.getTargetFausts()))
                                 .withHttpStatus(409)
                                 .withCode(ServiceErrorCode.FAUST_IN_USE)
-                                .withCause("Faustnumber is in use")
-                                .withDetails(String.format("Case contains tasks with one or more targetfausts %s used by other active cases", task.getTargetFausts()));
+                                .withCause(FAUST_IN_USE_MESSAGE)
+                                .withDetails(String.format(CASE_CONTAIN_TASKS_ON_TARGET_FAUSTS, task.getTargetFausts()));
                     }
                 }
             }
@@ -988,11 +1000,11 @@ public class Cases {
         // as the given primary faustnumber and a state other than CLOSED or DONE
         if(!Faustnumbers.checkNoOpenCaseWithFaust(entityManager, existing.getId(), existing.getPrimaryFaust())) {
             LOGGER.info("Case with primary or related Faust {} and state <> CLOSED|DONE exists", existing.getPrimaryFaust());
-            throw new ServiceErrorException(String.format("Case with primary or related faust %s and status not DONE or CLOSED exists", existing.getPrimaryFaust()))
+            throw new ServiceErrorException(String.format(OPEN_CASE_WITH_FAUST_EXISTS_MESSAGE, existing.getPrimaryFaust()))
                     .withHttpStatus(409)
                     .withCode(ServiceErrorCode.FAUST_IN_USE)
-                    .withCause("Faustnumber is in use")
-                    .withDetails(String.format("Case with primary or related faust %s and status not DONE or CLOSED exists", existing.getPrimaryFaust()));
+                    .withCause(FAUST_IN_USE_MESSAGE)
+                    .withDetails(String.format(OPEN_CASE_WITH_FAUST_EXISTS_MESSAGE, existing.getPrimaryFaust()));
         }
 
         // Check that no existing case exists with the same primary or related faustnumber
@@ -1001,12 +1013,12 @@ public class Cases {
             for(PromatTask task : existing.getTasks()) {
                 if(task.getTargetFausts() != null) {
                     if(!Faustnumbers.checkNoOpenCaseWithFaust(entityManager, existing.getId(), task.getTargetFausts().toArray(String[]::new))) {
-                        LOGGER.info("Case contains a task with one or more targetFaust {} used by other active cases", task.getTargetFausts());
-                        throw new ServiceErrorException(String.format("Case contains tasks with one or more targetfausts %s used by other active cases", task.getTargetFausts()))
+                        LOGGER.info(CASE_WITH_OPEN_TASKS_EXISTS_MESSAGE, task.getTargetFausts());
+                        throw new ServiceErrorException(String.format(CASE_CONTAIN_TASKS_ON_TARGET_FAUSTS, task.getTargetFausts()))
                                 .withHttpStatus(409)
                                 .withCode(ServiceErrorCode.FAUST_IN_USE)
-                                .withCause("Faustnumber is in use")
-                                .withDetails(String.format("Case contains tasks with one or more targetfausts %s used by other active cases", task.getTargetFausts()));
+                                .withCause(FAUST_IN_USE_MESSAGE)
+                                .withDetails(String.format(CASE_CONTAIN_TASKS_ON_TARGET_FAUSTS, task.getTargetFausts()));
                     }
                 }
             }
@@ -1221,9 +1233,10 @@ public class Cases {
         query.setParameter("direction", direction);
         query.setParameter("caseId", caseId);
 
-        return query.getResultList().size() > 0;
+        return !query.getResultList().isEmpty();
     }
 
+    @SuppressWarnings("java:S112")
     private <T> String asSummary(T entity) {
         final ObjectMapper objectMapper = new JsonMapperProvider().getObjectMapper();
         try {
@@ -1234,6 +1247,7 @@ public class Cases {
         }
     }
 
+    @SuppressWarnings("java:S112")
     private <T> String asCase(T entity) {
         final ObjectMapper objectMapper = new JsonMapperProvider().getObjectMapper();
         try {

@@ -41,6 +41,7 @@ import java.util.List;
 public class Messages {
     private static final Logger LOGGER = LoggerFactory.getLogger(Messages.class);
     final ObjectMapper objectMapper = new JsonMapperProvider().getObjectMapper();
+    private static final String CAUGHT_EXCEPTION_MESSAGE = "Caught exception: {}";
 
     @Inject
     @PromatEntityManager
@@ -65,7 +66,7 @@ public class Messages {
             if (promatCase == null) {
                 LOGGER.info("No such case {}", caseId);
                 return ServiceErrorDto.NotFound("No such case",
-                        String.format("Case with id {} does not exist", caseId));
+                        String.format("Case with id %s does not exist", caseId));
             }
 
             // Fetch the user that wants to send this
@@ -100,7 +101,7 @@ public class Messages {
                     .entity(promatMessage)
                     .build();
         } catch (Exception e) {
-            LOGGER.error("Caught exception: {}", e.getMessage());
+            LOGGER.error(CAUGHT_EXCEPTION_MESSAGE, e.getMessage());
             return ServiceErrorDto.Failed(e.getMessage());
         }
     }
@@ -119,7 +120,7 @@ public class Messages {
 
             return Response.ok().entity(message).build();
         } catch (Exception e) {
-            LOGGER.error("Caught exception: {}", e.getMessage());
+            LOGGER.error(CAUGHT_EXCEPTION_MESSAGE, e.getMessage());
             return ServiceErrorDto.Failed(e.getMessage());
         }
     }
@@ -137,7 +138,7 @@ public class Messages {
             return Response.ok().entity(new PromatMessagesList().withPromatMessages(messages)).build();
 
         } catch (Exception e) {
-            LOGGER.error("Caught exception: {}", e.getMessage());
+            LOGGER.error(CAUGHT_EXCEPTION_MESSAGE, e.getMessage());
             return ServiceErrorDto.Failed(e.getMessage());
         }
     }
@@ -179,7 +180,7 @@ public class Messages {
 
             return Response.ok().build();
         } catch (Exception e) {
-            LOGGER.error("Caught exception: {}", e.getMessage());
+            LOGGER.error(CAUGHT_EXCEPTION_MESSAGE, e.getMessage());
             return ServiceErrorDto.Failed(e.getMessage());
         }
     }

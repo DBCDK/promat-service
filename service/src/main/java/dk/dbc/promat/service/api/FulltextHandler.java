@@ -53,7 +53,10 @@ public class FulltextHandler {
 
         try {
             httpResponse = client.send(request, HttpResponse.BodyHandlers.ofInputStream());
-        } catch (IOException | InterruptedException e) {
+        } catch (IOException e) {
+            throw new IllegalStateException("Unable to access " + this.fulltextLink, e);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
             throw new IllegalStateException("Unable to access " + this.fulltextLink, e);
         }
         filename = getFilenameFromResponseHeaders(httpResponse);

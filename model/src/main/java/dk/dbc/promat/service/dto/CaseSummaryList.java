@@ -5,6 +5,7 @@ import dk.dbc.promat.service.persistence.PromatCase;
 import java.util.ArrayList;
 import java.util.List;
 
+@SuppressWarnings("java:S1068")
 public class CaseSummaryList {
 
     private int numFound = 0;

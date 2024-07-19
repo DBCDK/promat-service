@@ -427,9 +427,6 @@ public class Reviewers {
             LOGGER.info("Hiatus for reviewer with ID {} was reset", reviewer.getId());
             return Response.ok(reviewer)
                     .build();
-        } catch (NotificationFactory.ValidateException e) {
-            LOGGER.error("ResetHiatus failed:", e);
-            return Response.serverError().entity(e.getMessage()).build();
         } catch (Exception e) {
             LOGGER.error("Unexpected error when resetting hiatus:", e);
             return Response.serverError().entity(e.getMessage()).build();

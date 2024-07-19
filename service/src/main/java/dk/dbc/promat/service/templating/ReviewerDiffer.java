@@ -83,6 +83,7 @@ public class ReviewerDiffer {
     private final Set<String> changeablePrivateAddressFields = Set.of(
             "privateAddress1", "privateAddress2", "privateCity", "privateZip", "privateSelected");
 
+    @SuppressWarnings("java:S3011")
     private <T, T1> Map<String, ChangedValue> getChangedValueMap(T1 fromObject, T toObject, Set<String> fieldsTocheck )
             throws IllegalAccessException {
 
@@ -147,6 +148,7 @@ public class ReviewerDiffer {
         }
     }
 
+    @SuppressWarnings("java:S3740")
     private <T> Map<String, Field> getFields(T t, Set<String> fieldNames) {
         Set<Field> fields = new HashSet<>();
         if (t == null) {

@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+@SuppressWarnings("java:S1155")
 @Startup
 @Singleton
 public class ScheduledCaseInformationUpdater {
@@ -32,7 +33,7 @@ public class ScheduledCaseInformationUpdater {
     @EJB
     CaseInformationUpdater caseInformationUpdater;
 
-    private static Lock updateLock = new ReentrantLock();
+    private static final Lock updateLock = new ReentrantLock();
 
     // Since every update traverses all active cases, we should not run too often.
     // Run once every 10 minutes on digit 0 to match dataio which is running every

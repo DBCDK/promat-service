@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import java.util.ArrayList;
+import java.util.Objects;
 
 @ApplicationScoped
 public class OpenFormatHandler {
@@ -28,10 +29,11 @@ public class OpenFormatHandler {
         return format(faust, OPENFORMAT_AGENCY);
     }
 
+    @SuppressWarnings("java:S2629")
     public BibliographicInformation format(String faust, String agency) throws OpenFormatConnectorException {
         OpenFormatResponse<PromatElements> response = connector.format(faust, agency, PromatElements.class);
 
-        if (response.hasError()) {
+        if (Objects.equals(Boolean.TRUE, response.hasError())) {
             LOGGER.error("Error when trying to obtain bibliographic information for faust {} in agency {}: {}",
                     faust, agency, String.join(",", response.getErrors()));
 
@@ -49,13 +51,13 @@ public class OpenFormatHandler {
         PromatElements elements = response.getElements();
         return new BibliographicInformation()
                 .withFaust(elements.getFaust().stream().findFirst().orElse(""))
-                .withCreator(elements.getCreator() != null && elements.getCreator().size() > 0
+                .withCreator(elements.getCreator() != null && !elements.getCreator().isEmpty()
                         ? String.join(", ", elements.getCreator())
                         : "")
-                .withDk5(elements.getDk5() != null && elements.getDk5().size() > 0
+                .withDk5(elements.getDk5() != null && !elements.getDk5().isEmpty()
                         ? elements.getDk5()
                         : new ArrayList<>())
-                .withIsbn(elements.getIsbn() != null && elements.getIsbn().size() > 0
+                .withIsbn(elements.getIsbn() != null && !elements.getIsbn().isEmpty()
                         ? elements.getIsbn()
                         : new ArrayList<>())
                 .withMaterialtypes(elements.getMaterialTypes() != null && elements.getMaterialTypes().getType() != null

@@ -57,6 +57,7 @@ public class ScheduledUserUpdaterIT extends ContainerTest {
         when(metricRegistry.counter(any(Metadata.class))).thenReturn(counter);
     }
 
+    @SuppressWarnings("java:S5961")
     @Test
     public void testUserUpdatesDeactivatedUser() throws JsonProcessingException, OpenFormatConnectorException {
 

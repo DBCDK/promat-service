@@ -2,6 +2,7 @@ package dk.dbc.promat.service.connector;
 
 import dk.dbc.promat.service.dto.ServiceErrorDto;
 
+@SuppressWarnings("java:S1948")
 public class PromatServiceConnectorUnexpectedStatusCodeException extends PromatServiceConnectorException {
     private final int statusCode;
     private final ServiceErrorDto serviceErrorDto;

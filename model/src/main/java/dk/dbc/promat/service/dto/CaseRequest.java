@@ -9,6 +9,7 @@ import dk.dbc.promat.service.persistence.Subject;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@SuppressWarnings("java:S1874")
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class CaseRequest implements Dto {
 
@@ -48,6 +49,9 @@ public class CaseRequest implements Dto {
 
     private String primaryFaust;
 
+    /**
+     * @deprecated
+     */
     // Todo: Remove when no longer used
     @Deprecated
     private List<String> relatedFausts;
@@ -111,12 +115,20 @@ public class CaseRequest implements Dto {
         this.primaryFaust = primaryFaust;
     }
 
+    /**
+     * @deprecated
+     * @return
+     */
     // Todo: Remove when no longer used
     @Deprecated
     public List<String> getRelatedFausts() {
         return relatedFausts;
     }
 
+    /**
+     * @deprecated
+     * @param relatedFausts
+     */
     // Todo: Remove when no longer used
     @Deprecated
     public void setRelatedFausts(List<String> relatedFausts) {
@@ -242,6 +254,11 @@ public class CaseRequest implements Dto {
         return this;
     }
 
+    /**
+     * @deprecated
+     * @param relatedFausts
+     * @return
+     */
     // Todo: Remove when no longer used
     @Deprecated
     public CaseRequest withRelatedFausts(List<String> relatedFausts)

@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonView;
 import dk.dbc.commons.jpa.converter.StringListToJsonArrayConverter;
 
-import dk.dbc.promat.service.dto.CaseRequest;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
@@ -58,6 +57,7 @@ import java.util.Objects;
                 name = PromatCase.GET_COUNT_OF_CASES_IN_PROCESSING_STATE_NAME,
                 query = PromatCase.GET_COUNT_OF_CASES_IN_PROCESSING_STATE_QUERY)
 })
+@SuppressWarnings({"java:S1192", "java:S1874"})
 @Entity
 public class PromatCase {
     public static final String TABLE_NAME = "promatcase";
@@ -165,6 +165,9 @@ public class PromatCase {
     @JsonView({CaseView.Export.class, CaseView.Summary.class, CaseView.Case.class})
     private String primaryFaust;
 
+    /**
+     * @deprecated
+     */
     // Todo: Replace by use of column targetFausts in promattask. Should be removed when
     //       we are certain that the frontend does not expect this field anywhere
     @Deprecated

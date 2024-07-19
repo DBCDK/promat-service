@@ -1,13 +1,12 @@
 package dk.dbc.promat.service.api;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.Query;
 
 public class Faustnumbers {
-    private static final Logger LOGGER = LoggerFactory.getLogger(Faustnumbers.class);
+
+    private Faustnumbers() {}
+
 
     static boolean checkNoOpenCaseWithFaust(EntityManager entityManager, String... fausts) {
         return checkNoOpenCaseWithFaust(entityManager, null, fausts);
@@ -22,7 +21,7 @@ public class Faustnumbers {
 
         for( String faust : fausts) {
             q.setParameter(1, faust);
-            if( (boolean) q.getSingleResult() == false ) {
+            if(!((boolean) q.getSingleResult())) {
                 return false;
             }
         }

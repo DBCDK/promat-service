@@ -1197,6 +1197,10 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
             upd.caseInformationUpdater.openFormatHandler = mockedHandler;
             Repository mockedRepository = mock(Repository.class);
             upd.caseInformationUpdater.repository = mockedRepository;
+            ContentLookUp mockedContentLookUp = mock(ContentLookUp.class);
+            when(mockedContentLookUp.lookUpContent(anyString())).thenReturn(Optional.of("content"));
+            upd.caseInformationUpdater.contentLookUp = mockedContentLookUp;
+
 
             when(mockedHandler.format(anyString()))
                     .thenReturn(new BibliographicInformation()

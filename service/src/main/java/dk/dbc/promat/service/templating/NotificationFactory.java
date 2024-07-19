@@ -36,6 +36,7 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+@SuppressWarnings("java:S112")
 @Stateless
 public class NotificationFactory {
     private static final Logger LOGGER = LoggerFactory.getLogger(NotificationFactory.class);
@@ -56,34 +57,35 @@ public class NotificationFactory {
     @Inject
     ReviewerDiffer reviewerDiffer;
 
+    @SuppressWarnings("java:S116")
     @Inject
     @ConfigProperty(name = "LU_MAILADDRESS")
     String LU_MAILADDRESS;
 
+    @SuppressWarnings("java:S116")
     @Inject
     @ConfigProperty(name = "CC_MAILADDRESS", defaultValue = "-")
     String CC_MAILADDRESS;
 
     private final Renderer renderer = new Renderer();
-    private static final String subjectTemplate;
-    private static final String subjectTemplateReviewerChanged;
-    private static final String subjectTemplateNewMessageFromEditor;
-    private static final String subjectReminderCloseToDeadline;
-    private static final String subjectDeadlinePassed;
+    private static final String SUBJECT_TEMPLATE;
+    private static final String SUBJECT_TEMPLATE_REVIEWER_CHANGED;
+    private static final String SUBJECT_TEMPLATE_NEW_MESSAGE_FROM_EDITOR;
+    private static final String SUBJECT_REMINDER_CLOSE_TO_DEADLINE;
+    private static final String SUBJECT_DEADLINE_PASSED;
 
     static {
         try {
-            subjectTemplate = Files.readString(
+            SUBJECT_TEMPLATE = Files.readString(
                     Path.of(Notification.class.getResource("/mail/subject.template").getPath()));
-            subjectTemplateReviewerChanged = Files.readString(
+            SUBJECT_TEMPLATE_REVIEWER_CHANGED = Files.readString(
                     Path.of(Notification.class.getResource("/mail/subject.reviewer.change.template").getPath()));
-            subjectTemplateNewMessageFromEditor = Files.readString(
+            SUBJECT_TEMPLATE_NEW_MESSAGE_FROM_EDITOR = Files.readString(
                     Path.of(Notification.class.getResource("/mail/subject.reviewer.new.message.template").getPath()));
-            subjectReminderCloseToDeadline = Files.readString(
+            SUBJECT_REMINDER_CLOSE_TO_DEADLINE = Files.readString(
                     Path.of(Notification.class.getResource("/mail/subject.reminder.closetodeadline.template").getPath()));
-            subjectDeadlinePassed = Files.readString(
+            SUBJECT_DEADLINE_PASSED = Files.readString(
                     Path.of(Notification.class.getResource("/mail/subject.reminder.deadlinepassed.template").getPath()));
-
         } catch (IOException ioException) {
             throw new RuntimeException(ioException);
         }
@@ -97,7 +99,7 @@ public class NotificationFactory {
         // For some reason frontend posts a related-faust equal to the primary
         // one.
         List<String> fausts = collectFausts(promatCase);
-        String subject = String.format(subjectTemplate,
+        String subject = String.format(SUBJECT_TEMPLATE,
                 (promatCase.getTasks().stream().anyMatch(c -> c.getTaskFieldType() == TaskFieldType.EXPRESS)
                         ? "EKSPRES!" : ""),
                 Formatting.format(promatCase.getDeadline()),
@@ -110,7 +112,7 @@ public class NotificationFactory {
                 .withStatus(NotificationStatus.PENDING);
     }
 
-    public Notification notificationOf(HiatusReset model) throws ValidateException {
+    public Notification notificationOf(HiatusReset model) {
         Notification notification = new Notification();
         Reviewer reviewer = model.getReviewer();
 
@@ -127,7 +129,7 @@ public class NotificationFactory {
 
         Reviewer reviewer = model.getReviewer();
         ReviewerRequest reviewerRequest = model.getReviewerRequest();
-        String subject = String.format(subjectTemplateReviewerChanged, reviewer.getId());
+        String subject = String.format(SUBJECT_TEMPLATE_REVIEWER_CHANGED, reviewer.getId());
         try {
             Map<String, ChangedValue> diffMap = reviewerDiffer.getChangedValueMap(reviewer, reviewerRequest);
             if (diffMap.isEmpty()) {
@@ -150,7 +152,7 @@ public class NotificationFactory {
     public Notification notificationOf(MailToReviewerOnNewMessage model) throws ValidateException {
         Notification notification = new Notification();
 
-        String subject = String.format(subjectTemplateNewMessageFromEditor, model.getPromatCase().getTitle());
+        String subject = String.format(SUBJECT_TEMPLATE_NEW_MESSAGE_FROM_EDITOR, model.getPromatCase().getTitle());
         return notification
                 .withToAddress(compileMailAddressesForReviewerMails(model.getPromatCase().getReviewer()))
                 .withSubject(subject)
@@ -164,7 +166,7 @@ public class NotificationFactory {
 
         return notification
                 .withToAddress(compileMailAddressesForReviewerMails(model.getPromatCase().getReviewer()))
-                .withSubject(subjectReminderCloseToDeadline)
+                .withSubject(SUBJECT_REMINDER_CLOSE_TO_DEADLINE)
                 .withBodyText(renderer.render("promatcase_near_deadline.jte",
                         model.withTitleSections(getTitleSections(fausts))))
                 .withStatus(NotificationStatus.PENDING);
@@ -176,7 +178,7 @@ public class NotificationFactory {
 
         return notification
                 .withToAddress(compileMailAddressesForReviewerMails(model.getPromatCase().getReviewer()))
-                .withSubject(subjectDeadlinePassed)
+                .withSubject(SUBJECT_DEADLINE_PASSED)
                 .withBodyText(renderer.render("promatcase_passed_deadline.jte",
                         model.withTitleSections(getTitleSections(fausts))))
                 .withStatus(NotificationStatus.PENDING);

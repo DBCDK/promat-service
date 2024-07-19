@@ -13,7 +13,7 @@ import jakarta.inject.Inject;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
-
+@SuppressWarnings("java:S116")
 @Startup
 @Singleton
 public class ScheduledReminders {
@@ -45,7 +45,7 @@ public class ScheduledReminders {
             //  side by side, we might risk mails being sent from here on "stale" cases,
             //  already handled in old promat.
             try {
-                if ("true".equals(ENABLE_REMINDERS.toLowerCase())) {
+                if ("true".equalsIgnoreCase(ENABLE_REMINDERS)) {
                     reminders.processReminders();
                 } else {
                     LOGGER.info("Reminders batch is currently switched off '{}'. To reenable set env var ENABLE_REMINDERS to true.", ENABLE_REMINDERS);

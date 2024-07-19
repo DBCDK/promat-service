@@ -62,11 +62,11 @@ public class NotificationSender {
             notification.setStatus(NotificationStatus.DONE);
             metricRegistry.counter(mailCounterMetadata).inc();
         } catch (jakarta.mail.MessagingException e) {
-            LOGGER.error("Unable to send mail due to MessagingException. Notification:{}",notification.toString());
+            LOGGER.error("Unable to send mail due to MessagingException. Notification:{}",notification);
             notification.setStatus(NotificationStatus.ERROR);
             metricRegistry.counter(mailFailureCounterMetadata).inc();
         } catch (Exception e) {
-            LOGGER.error("Unable to send mail due to unexpected exception. Notification:{}",notification.toString());
+            LOGGER.error("Unable to send mail due to unexpected exception. Notification:{}",notification);
             notification.setStatus(NotificationStatus.ERROR);
             metricRegistry.counter(mailFailureCounterMetadata).inc();
         }

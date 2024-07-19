@@ -19,9 +19,9 @@ public class PersistenceExceptionMapper implements ExceptionMapper<PersistenceEx
     public Response toResponse(PersistenceException e) {
         if ("23502".equals(getErrorCode(e).orElse("no error code"))) {   // not_null_violation
             return ServiceErrorDto.InvalidRequest("Missing required field in the request data",
-                    e.getMessage());
+                    e != null ? e.getMessage() : null);
         }
-        return ServiceErrorDto.Failed(e.getMessage());
+        return ServiceErrorDto.Failed(e != null ? e.getMessage() : null);
     }
 
     private Optional<String> getErrorCode(PersistenceException persistenceException) {
