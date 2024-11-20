@@ -600,9 +600,7 @@ public class Cases {
                         existing.setReviewer(resolveReviewer(dto.getReviewer()));
                         existing.setAssigned(LocalDate.now());
                         notifyOnReviewerChanged(existing);
-                        if( reviewer_id == null ) {
-                            setInitialMessageForReviewer(existing);
-                        }
+                        setInitialMessageForReviewer(existing);
                         existing.setStatus(calculateStatus(existing, CaseStatus.ASSIGNED));
                     } else {
                         throw new ServiceErrorException("Not allowed to set status ASSIGNED when case is not in CREATED, REJECTED or no reviewer is set")
