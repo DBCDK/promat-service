@@ -2419,10 +2419,12 @@ public class CasesIT extends ContainerTest {
         response = postResponse("v1/api/cases/" + created.getId(), requestDto);
         assertThat("status code", response.getStatus(), is(200));
 
+
         // Reassign case without specifying a new status
         requestDto = new CaseRequest()
                 .withReviewer(2);
         response = postResponse("v1/api/cases/" + created.getId(), requestDto);
+
         assertThat("status code", response.getStatus(), is(200));
 
         // Send case to approval

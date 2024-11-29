@@ -26,7 +26,9 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.notNullValue;
@@ -448,14 +450,16 @@ public class MessagesIT extends ContainerTest {
 
         // Reassign the case
         dto.setReviewer(ANOTHER_REVIEWER_ID);
-        response = postResponse("v1/api/cases/" + aCase.getId(), dto);
+        response = postResponse("v1/api/cases/" + aCase.getId(), dto, "1-2-3-4-5");
         assertThat("status code", response.getStatus(), is(200));
 
-        // Make sure that we still only have 1 message from the editor to the reviewer and
+        // Make sure that we have 2 messages now:
+        // * The very first assignment from the editor to the originalæ reviewer and
+        // * The second when reassigned to new reviewer.
         // no messages from reviewer to the editor
-        assertThat("1 editor to reviewer message",
+        assertThat("2 editor to reviewer messages",
                 size(getMessageList(aCase), PromatMessage.Direction.EDITOR_TO_REVIEWER, true),
-                is(1L)
+                is(2L)
         );
         assertThat("No reviewer to editor messages",
                 size(getMessageList(aCase), PromatMessage.Direction.REVIEWER_TO_EDITOR, true),
@@ -465,7 +469,8 @@ public class MessagesIT extends ContainerTest {
         // And that it is the same message as previous
         assertThat("same message", getMessageList(aCase)
                 .getPromatMessages().stream()
-                .findFirst().orElseThrow()
+                .reduce((first, second) -> second)
+                .orElseThrow()
                 .getId(), is(onlyMessageId));
 
         // Cleanup
