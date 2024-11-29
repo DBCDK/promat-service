@@ -611,6 +611,7 @@ public class Cases {
                 }
             }
             if(dto.getEditor() != null) {
+                LOGGER.info("Setting editor from {}, to {}", existing.getEditor().getId(), dto.getEditor());
                 existing.setEditor(resolveEditor(dto.getEditor()));
             }
             if(dto.getSubjects() != null) {
@@ -1026,6 +1027,7 @@ public class Cases {
     }
 
     private void setInitialMessageForReviewer(PromatCase promatCase) throws ServiceErrorException {
+        LOGGER.info("setInitialMessageForReviewer, case is:{}", promatCase.toString());
         if( promatCase.getEditor() == null ) {
             throw new ServiceErrorException("Editor is null")
                     .withCode(ServiceErrorCode.INVALID_REQUEST)
