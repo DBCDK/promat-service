@@ -2400,6 +2400,7 @@ public class CasesIT extends ContainerTest {
                 .withDetails("Details for 26001111")
                 .withPrimaryFaust("26001111")
                 .withEditor(10)
+                .withCreator(10)
                 .withReviewer(1)
                 .withSubjects(Arrays.asList(3, 4))
                 .withDeadline("2021-03-30")
