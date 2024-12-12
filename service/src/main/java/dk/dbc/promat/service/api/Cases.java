@@ -611,7 +611,6 @@ public class Cases {
                 }
             }
             if(dto.getEditor() != null) {
-                LOGGER.info("Setting editor from {}, to {}", existing.getEditor().getId(), dto.getEditor());
                 existing.setEditor(resolveEditor(dto.getEditor()));
             }
             if(dto.getSubjects() != null) {
@@ -1028,7 +1027,7 @@ public class Cases {
 
     private void setInitialMessageForReviewer(PromatCase promatCase) throws ServiceErrorException {
         LOGGER.info("setInitialMessageForReviewer, case is:{}", promatCase.toString());
-        if( promatCase.getEditor() == null ) {
+        if (promatCase.getEditor() == null && promatCase.getCreator() == null) {
             throw new ServiceErrorException("Editor is null")
                     .withCode(ServiceErrorCode.INVALID_REQUEST)
                     .withHttpStatus(400)
@@ -1037,8 +1036,8 @@ public class Cases {
         if(promatCase.getNote() == null || promatCase.getNote().isBlank()) {
             return;
         }
-
-        PromatUser promatUser =  entityManager.find(Editor.class, promatCase.getEditor().getId());
+        int userId = promatCase.getEditor() != null ? promatCase.getEditor().getId() : promatCase.getCreator().getId();
+        PromatUser promatUser =  entityManager.find(Editor.class, userId);
 
         repository.getExclusiveAccessToTable(PromatMessage.TABLE_NAME);
 
