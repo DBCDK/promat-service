@@ -707,12 +707,15 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
             when(contentLookUpMock.lookUpContent(anyString())).thenReturn(Optional.empty());
 
             LocalDate date = LocalDate.now().plusWeeks(2);
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyww", new Locale("da", "DK"));
+
+            // Get weekcode 2 weeks into the future - and check for end-of-year rollaround which can cause
+            // trouble for the 'ww' weekcode formatter when used with a fixed 'yyyy' year
+            String weekcodeDate = getFormattedWeekcodeWithRollAroundCheck(date);
 
             created.setStatus(CaseStatus.APPROVED);
             when(mockedHandler.format(anyString()))
                     .thenReturn(new BibliographicInformation()
-                            .withCatalogcodes(Arrays.asList("BKM" + date.format(formatter), "ACC202001")));
+                            .withCatalogcodes(Arrays.asList("BKM" + weekcodeDate, "ACC202001")));
             doAnswer(answer -> {
                 PromatCase existing = ((PromatCase) answer.getArgument(0));
                 existing.getTasks().forEach(t -> t.setRecordId("123456789"));
@@ -1326,12 +1329,12 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
         upd.caseInformationUpdater.repository = mockedRepository;
 
         LocalDate date = LocalDate.now().plusWeeks(2);
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyww", new Locale("da", "DK"));
+        String weekcodeDate = getFormattedWeekcodeWithRollAroundCheck(date);
 
         created.setStatus(CaseStatus.PENDING_EXPORT);
         when(mockedHandler.format(anyString()))
                 .thenReturn(new BibliographicInformation()
-                        .withCatalogcodes(Arrays.asList("BKM" + date.format(formatter), "ACC202001")));
+                        .withCatalogcodes(Arrays.asList("BKM" + weekcodeDate, "ACC202001")));
         doAnswer(answer -> {
             PromatCase existing = ((PromatCase) answer.getArgument(0));
             existing.getTasks().forEach(t -> t.setRecordId("123456789"));
@@ -1731,5 +1734,23 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
         try (Response response = deleteResponse("v1/api/cases/" + id)) {
             assertThat("status code", response.getStatus(), is(200));
         }
+    }
+
+    private String getFormattedWeekcodeWithRollAroundCheck(LocalDate date) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyww", new Locale("da", "DK"));
+        String weekcodeDate = date.format(formatter);
+
+        int weekcodeYear = Integer.parseInt(weekcodeDate.substring(0, 4));
+        int weekcodeWeek = Integer.parseInt(weekcodeDate.substring(4, 6));
+        String currentWeekcodeDate = LocalDate.now().format(formatter);
+        int currentWeekcodeYear = Integer.parseInt(currentWeekcodeDate.substring(0, 4));
+        int currentWeekcodeWeek = Integer.parseInt(currentWeekcodeDate.substring(4, 6));
+        if (weekcodeWeek < currentWeekcodeWeek && currentWeekcodeYear == weekcodeYear) {
+            // We are end-of-year, so '2024-12-30' should become '202501', but instead is
+            // formatted as '202401' which is no good
+            weekcodeDate = String.format("%04d%02d", weekcodeYear + 1, weekcodeWeek);
+        }
+
+        return weekcodeDate;
     }
 }
