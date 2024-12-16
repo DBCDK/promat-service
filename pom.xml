@@ -19,7 +19,7 @@
   </parent>
 
   <artifactId>promat</artifactId>
-  <version>${revision}</version>
+  <version>2.1-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <modules>
@@ -29,7 +29,6 @@
   </modules>
 
   <properties>
-    <revision>2.1-SNAPSHOT</revision>
     <jte.version>1.4.0</jte.version>
     <sonar.projectKey>promat-service</sonar.projectKey>
     <sonar.moduleKey>${project.artifactId}</sonar.moduleKey>
