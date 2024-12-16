@@ -252,7 +252,9 @@ public class ReviewersIT extends ContainerTest {
                 .withHiatusBegin(LocalDate.parse("2023-11-11"))
                 .withHiatusEnd(LocalDate.parse("2023-11-16"));
         final Response responseInitial = putResponse("v1/api/reviewers/3", reviewerRequest, "1-2-3-4-5");
-        final Reviewer initialReviewer = mapper.readValue(responseInitial.readEntity(String.class), Reviewer.class);
+        String r = responseInitial.readEntity(String.class);
+        LOGGER.info(r);
+        final Reviewer initialReviewer = mapper.readValue(r, Reviewer.class);
         assertThat("Initial vacation begin", initialReviewer.getHiatusBegin(), is(LocalDate.parse("2023-11-11")));
         assertThat("Initial vacation end", initialReviewer.getHiatusEnd(), is(LocalDate.parse("2023-11-16")));
 

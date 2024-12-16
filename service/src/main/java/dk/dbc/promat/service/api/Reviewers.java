@@ -11,6 +11,7 @@ import dk.dbc.promat.service.dto.ServiceErrorDto;
 import dk.dbc.promat.service.persistence.Notification;
 import dk.dbc.promat.service.persistence.PromatEntityManager;
 import dk.dbc.promat.service.persistence.Reviewer;
+import dk.dbc.promat.service.persistence.ReviewerDataStash;
 import dk.dbc.promat.service.persistence.ReviewerView;
 import dk.dbc.promat.service.persistence.Subject;
 import dk.dbc.promat.service.templating.NotificationFactory;
@@ -40,10 +41,12 @@ import jakarta.ws.rs.core.UriInfo;
 import java.time.DayOfWeek;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Stateless
@@ -211,13 +214,38 @@ public class Reviewers {
         try {
 
             // Find the existing user
-            final Reviewer reviewer = entityManager.find(Reviewer.class, id);
+            Reviewer reviewer = entityManager.find(Reviewer.class, id);
             if (reviewer == null) {
                 LOGGER.info("Reviewer with id {} does not exists", id);
                 auditLogHandler.logTraceUpdateForToken("Request for update of profile", uriInfo, 0, 404);
                 return Response.status(404).build();
             }
 
+            // Assume that we will need to post a reviewerdata changed notification to the editors.
+            TypedQuery<ReviewerDataStash> query = entityManager
+                    .createNamedQuery(ReviewerDataStash.GET_STASH_FROM_REVIEWER, ReviewerDataStash.class);
+            query.setParameter("reviewerId", id);
+            Optional<ReviewerDataStash> stash = query.getResultList().stream().findFirst();
+
+            // If there is a stash: Settle for just updating the timestamp on reviewer data.
+            stash.ifPresentOrElse(reviewerDataStash -> {
+                reviewer.withLastChanged(LocalDateTime.now());
+            }, () -> {
+
+                // else create a new stash
+                LOGGER.info("Stash for reviewer with id {} does not exists. Creating it.", id);
+                ReviewerDataStash newStash = null;
+                try {
+                    newStash = ReviewerDataStash.fromReviewer(reviewer);
+                    entityManager.persist(newStash);
+                    reviewer.withLastChanged(LocalDateTime.now());
+                } catch (JsonProcessingException e) {
+                    LOGGER.error("Failed to serialize reviewer from stash:", e);
+                }
+            });
+
+
+            // This is the section we want to move to a cronjob
             if (notify) {
                 // Create the notification now, before we fill in the changed fields in reviewer.
                 notification = notificationFactory.notificationOf(new ReviewerDataChanged()
