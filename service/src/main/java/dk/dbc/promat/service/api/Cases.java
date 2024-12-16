@@ -1026,7 +1026,6 @@ public class Cases {
     }
 
     private void setInitialMessageForReviewer(PromatCase promatCase) throws ServiceErrorException {
-        LOGGER.info("setInitialMessageForReviewer, case is:{}", promatCase.toString());
         if (promatCase.getEditor() == null && promatCase.getCreator() == null) {
             throw new ServiceErrorException("Editor is null")
                     .withCode(ServiceErrorCode.INVALID_REQUEST)
