@@ -20,6 +20,7 @@ import dk.dbc.promat.service.dto.TaskDto;
 import dk.dbc.promat.service.persistence.CaseStatus;
 import dk.dbc.promat.service.persistence.CaseView;
 import dk.dbc.promat.service.persistence.Editor;
+import dk.dbc.promat.service.persistence.JsonMapperProvider;
 import dk.dbc.promat.service.persistence.Notification;
 import dk.dbc.promat.service.persistence.PromatCase;
 import dk.dbc.promat.service.persistence.PromatEntityManager;

@@ -1,4 +1,4 @@
-package dk.dbc.promat.service.api;
+package dk.dbc.promat.service.persistence;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;

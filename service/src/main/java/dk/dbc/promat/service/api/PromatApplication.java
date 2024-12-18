@@ -1,5 +1,6 @@
 package dk.dbc.promat.service.api;
 
+import dk.dbc.promat.service.persistence.JsonMapperProvider;
 import dk.dbc.promat.service.persistence.SubjectNote;
 import org.glassfish.jersey.jackson.JacksonFeature;
 

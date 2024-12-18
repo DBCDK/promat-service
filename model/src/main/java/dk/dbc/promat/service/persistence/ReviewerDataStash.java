@@ -25,48 +25,51 @@ import java.util.Objects;
 @Entity
 public class ReviewerDataStash {
     private static Logger LOGGER = LoggerFactory.getLogger(ReviewerDataStash.class);
-    private static ObjectMapper mapper = new ObjectMapper();
+    private static ObjectMapper mapper = new JsonMapperProvider().getObjectMapper();
     public final static String GET_STASH_FROM_REVIEWER = "ReviewerDataStash.getFromReviewer";
     public final static String GET_STASH_FROM_REVIEWER_QUERY =
             "SELECT r FROM ReviewerDataStash r where r.reviewerId = :reviewerId";
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
-    private Integer reviewerId;
+    protected Integer id;
+    protected Integer reviewerId;
+    protected String reviewer;
 
-    @Column(name = "reviewer")
-    private String reviewerData;
-    private LocalDateTime stashTime;
+    protected LocalDateTime stashTime;
 
-    public ReviewerDataStash withReviewerData(String reviewerData) {
-        this.reviewerData = reviewerData;
+    public ReviewerDataStash withReviewer(String reviewer) {
+        this.reviewer = reviewer;
         return this;
     }
 
-    public ReviewerDataStash withId(Integer id) {
+    public String getReviewer() {
+        return reviewer;
+    }
+
+    public void setId(Integer id) {
         this.id = id;
-        return this;
     }
 
     public LocalDateTime getStashTime() {
         return stashTime;
     }
 
-    public void setStashTime(LocalDateTime stashTime) {
+    public ReviewerDataStash withStashTime(LocalDateTime stashTime) {
         this.stashTime = stashTime;
+        return this;
     }
 
     @Override
     public boolean equals(Object o) {
         if (!(o instanceof ReviewerDataStash)) return false;
         ReviewerDataStash that = (ReviewerDataStash) o;
-        return Objects.equals(id, that.id) && Objects.equals(reviewerId, that.reviewerId) && Objects.equals(reviewerData, that.reviewerData) && Objects.equals(stashTime, that.stashTime);
+        return Objects.equals(id, that.id) && Objects.equals(reviewerId, that.reviewerId) && Objects.equals(reviewer, that.reviewer) && Objects.equals(stashTime, that.stashTime);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, reviewerId, reviewerData, stashTime);
+        return Objects.hash(id, reviewerId, reviewer, stashTime);
     }
 
     @Override
@@ -74,18 +77,20 @@ public class ReviewerDataStash {
         return "ReviewerDataStash{" +
                 "id=" + id +
                 ", reviewerId=" + reviewerId +
-                ", reviewerData='" + reviewerData + '\'' +
+                ", reviewer='" + reviewer + '\'' +
                 ", stashTime=" + stashTime +
                 '}';
     }
 
     public static ReviewerDataStash fromReviewer(Reviewer reviewer) throws JsonProcessingException {
-        return new ReviewerDataStash()
-                .withId(reviewer.getId())
-                .withReviewerData(mapper.writeValueAsString(reviewer));
+        ReviewerDataStash reviewerDataStash = new ReviewerDataStash()
+                .withStashTime(LocalDateTime.now())
+                .withReviewer(mapper.writeValueAsString(reviewer));
+        LOGGER.info("ReviewerDataStash from reviewer " + reviewerDataStash);
+        return reviewerDataStash;
     }
 
-    public Reviewer toReviewer() {
-        return mapper.convertValue(reviewerData, Reviewer.class);
+    public Reviewer toReviewer() throws JsonProcessingException {
+        return mapper.readValue(reviewer, Reviewer.class);
     }
 }

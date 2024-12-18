@@ -8,6 +8,7 @@ import dk.dbc.promat.service.dto.ReviewerList;
 import dk.dbc.promat.service.dto.ReviewerRequest;
 import dk.dbc.promat.service.dto.ReviewerWithWorkloads;
 import dk.dbc.promat.service.dto.ServiceErrorDto;
+import dk.dbc.promat.service.persistence.JsonMapperProvider;
 import dk.dbc.promat.service.persistence.Notification;
 import dk.dbc.promat.service.persistence.PromatEntityManager;
 import dk.dbc.promat.service.persistence.Reviewer;

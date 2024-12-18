@@ -8,7 +8,7 @@ import dk.dbc.httpclient.HttpDelete;
 import dk.dbc.httpclient.HttpGet;
 import dk.dbc.httpclient.HttpPost;
 import dk.dbc.httpclient.HttpPut;
-import dk.dbc.promat.service.api.JsonMapperProvider;
+import dk.dbc.promat.service.persistence.JsonMapperProvider;
 import dk.dbc.promat.service.connector.PromatServiceConnector;
 import dk.dbc.promat.service.connector.PromatServiceConnectorFactory;
 import org.junit.jupiter.api.Assertions;

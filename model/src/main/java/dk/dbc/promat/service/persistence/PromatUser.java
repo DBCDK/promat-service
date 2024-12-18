@@ -15,6 +15,7 @@ import jakarta.persistence.Inheritance;
 import jakarta.persistence.InheritanceType;
 import jakarta.persistence.NamedNativeQuery;
 import jakarta.persistence.SqlResultSetMapping;
+
 import java.util.Date;
 
 @SqlResultSetMapping(

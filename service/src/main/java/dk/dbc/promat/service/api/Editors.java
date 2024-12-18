@@ -7,13 +7,13 @@ import dk.dbc.promat.service.dto.EditorRequest;
 import dk.dbc.promat.service.dto.ServiceErrorDto;
 import dk.dbc.promat.service.persistence.Editor;
 import dk.dbc.promat.service.persistence.EditorView;
+import dk.dbc.promat.service.persistence.JsonMapperProvider;
 import dk.dbc.promat.service.persistence.PromatEntityManager;
 
 import java.time.Instant;
 import java.util.Date;
 import java.util.List;
 
-import dk.dbc.promat.service.persistence.ReviewerView;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.persistence.TypedQuery;
 import jakarta.ws.rs.core.Context;

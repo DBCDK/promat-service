@@ -23,11 +23,11 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.SqlResultSetMapping;
+
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
-import java.util.Objects;
 
 @SqlResultSetMapping(
         name = "ReviewerWithWorkloadMapping",
