@@ -600,9 +600,7 @@ public class Cases {
                         existing.setReviewer(resolveReviewer(dto.getReviewer()));
                         existing.setAssigned(LocalDate.now());
                         notifyOnReviewerChanged(existing);
-                        if( reviewer_id == null ) {
-                            setInitialMessageForReviewer(existing);
-                        }
+                        setInitialMessageForReviewer(existing);
                         existing.setStatus(calculateStatus(existing, CaseStatus.ASSIGNED));
                     } else {
                         throw new ServiceErrorException("Not allowed to set status ASSIGNED when case is not in CREATED, REJECTED or no reviewer is set")
@@ -1028,7 +1026,7 @@ public class Cases {
     }
 
     private void setInitialMessageForReviewer(PromatCase promatCase) throws ServiceErrorException {
-        if( promatCase.getEditor() == null ) {
+        if (promatCase.getEditor() == null && promatCase.getCreator() == null) {
             throw new ServiceErrorException("Editor is null")
                     .withCode(ServiceErrorCode.INVALID_REQUEST)
                     .withHttpStatus(400)
@@ -1037,8 +1035,8 @@ public class Cases {
         if(promatCase.getNote() == null || promatCase.getNote().isBlank()) {
             return;
         }
-
-        PromatUser promatUser =  entityManager.find(Editor.class, promatCase.getEditor().getId());
+        int userId = promatCase.getEditor() != null ? promatCase.getEditor().getId() : promatCase.getCreator().getId();
+        PromatUser promatUser =  entityManager.find(Editor.class, userId);
 
         repository.getExclusiveAccessToTable(PromatMessage.TABLE_NAME);
 
