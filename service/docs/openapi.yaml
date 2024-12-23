@@ -1091,7 +1091,7 @@ paths:
       responses:
         '200':
           description: Trigger of the notification cronjob was successful
-  /batch/job/userupdater/{userEditTimeOut}:
+  /batch/job/userupdater/config/{userEditTimeOut}:
     post:
       parameters:
         - in: path
