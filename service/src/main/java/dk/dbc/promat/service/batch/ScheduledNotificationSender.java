@@ -1,8 +1,6 @@
 package dk.dbc.promat.service.batch;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import dk.dbc.promat.service.cluster.ServerRole;
-import dk.dbc.promat.service.persistence.JsonMapperProvider;
 import dk.dbc.promat.service.persistence.Notification;
 import dk.dbc.promat.service.persistence.NotificationStatus;
 import dk.dbc.promat.service.persistence.PromatEntityManager;
@@ -22,7 +20,6 @@ import org.slf4j.LoggerFactory;
 @Singleton
 public class ScheduledNotificationSender {
     private static final Logger LOGGER = LoggerFactory.getLogger(ScheduledNotificationSender.class);
-    private static final ObjectMapper MAPPER = new JsonMapperProvider().getObjectMapper();
 
     @EJB
     NotificationSender notificationSender;

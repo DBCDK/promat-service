@@ -76,9 +76,6 @@ public class UserUpdater {
     public boolean isReviewerEditingFinished(int id, int checkInterval) {
         Reviewer reviewer = entityManager.find(Reviewer.class, id);
         boolean finished = reviewer.getLastChanged().plusSeconds(checkInterval).isBefore(LocalDateTime.now());
-        LOGGER.info("Seconds:{}", checkInterval);
-        LOGGER.info("Cutting time: {}", reviewer.getLastChanged().plusSeconds(checkInterval));
-        LOGGER.info("Now: {}", LocalDateTime.now());
 
         LOGGER.info("Checking if notification needs to be made now. reviewer id {}: Result:{}", id, finished);
         return finished;

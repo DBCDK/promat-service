@@ -2,11 +2,7 @@ package dk.dbc.promat.service.api;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
-import dk.dbc.commons.persistence.TransactionScopedPersistenceContext;
 import dk.dbc.promat.service.ContainerTest;
-import dk.dbc.promat.service.batch.NotificationSender;
-import dk.dbc.promat.service.batch.ScheduledNotificationSender;
-import dk.dbc.promat.service.cluster.ServerRole;
 import dk.dbc.promat.service.dto.ReviewerList;
 import dk.dbc.promat.service.dto.ReviewerRequest;
 import dk.dbc.promat.service.dto.ReviewerWithWorkloads;
@@ -20,16 +16,13 @@ import dk.dbc.promat.service.persistence.ReviewerView;
 import dk.dbc.promat.service.persistence.Subject;
 import dk.dbc.promat.service.persistence.SubjectNote;
 import dk.dbc.promat.service.templating.Formatting;
-import org.eclipse.microprofile.metrics.Metadata;
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
 import jakarta.ws.rs.core.GenericType;
 import jakarta.ws.rs.core.Response;
-import org.jvnet.mock_javamail.Mailbox;
 
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
@@ -45,14 +38,12 @@ import static java.util.Map.entry;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
 
 @TestMethodOrder(OrderAnnotation.class)
 public class ReviewersIT extends ContainerTest {
 
     @Test
-    void createReviewer() throws JsonProcessingException {
+    void createReviewer()  {
         final ReviewerRequest reviewerRequest = new ReviewerRequest()
                 .withCprNumber("2407776666")
                 .withPaycode(6666)
@@ -263,7 +254,6 @@ public class ReviewersIT extends ContainerTest {
                 .withHiatusEnd(LocalDate.parse("2023-11-16"));
         final Response responseInitial = putResponse("v1/api/reviewers/3", reviewerRequest, "1-2-3-4-5");
         String r = responseInitial.readEntity(String.class);
-        LOGGER.info(r);
         final Reviewer initialReviewer = mapper.readValue(r, Reviewer.class);
         assertThat("Initial vacation begin", initialReviewer.getHiatusBegin(), is(LocalDate.parse("2023-11-11")));
         assertThat("Initial vacation end", initialReviewer.getHiatusEnd(), is(LocalDate.parse("2023-11-16")));

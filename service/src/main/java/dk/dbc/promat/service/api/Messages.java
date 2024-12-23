@@ -1,13 +1,11 @@
 package dk.dbc.promat.service.api;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import dk.dbc.promat.service.Repository;
 import dk.dbc.promat.service.dto.MarkAsReadRequest;
 import dk.dbc.promat.service.dto.MessageRequestDto;
 import dk.dbc.promat.service.dto.PromatMessagesList;
 import dk.dbc.promat.service.dto.ServiceErrorDto;
 import dk.dbc.promat.service.persistence.Editor;
-import dk.dbc.promat.service.persistence.JsonMapperProvider;
 import dk.dbc.promat.service.persistence.Notification;
 import dk.dbc.promat.service.persistence.PromatCase;
 import dk.dbc.promat.service.persistence.PromatEntityManager;
@@ -41,7 +39,6 @@ import java.util.List;
 @Path("")
 public class Messages {
     private static final Logger LOGGER = LoggerFactory.getLogger(Messages.class);
-    final ObjectMapper objectMapper = new JsonMapperProvider().getObjectMapper();
 
     @Inject
     @PromatEntityManager
