@@ -60,6 +60,15 @@ public class ReviewerDataStash {
         return this;
     }
 
+    public Integer getReviewerId() {
+        return reviewerId;
+    }
+
+    public ReviewerDataStash withReviewerId(Integer reviewerId) {
+        this.reviewerId = reviewerId;
+        return this;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (!(o instanceof ReviewerDataStash)) return false;
@@ -85,7 +94,8 @@ public class ReviewerDataStash {
     public static ReviewerDataStash fromReviewer(Reviewer reviewer) throws JsonProcessingException {
         ReviewerDataStash reviewerDataStash = new ReviewerDataStash()
                 .withStashTime(LocalDateTime.now())
-                .withReviewer(mapper.writeValueAsString(reviewer));
+                .withReviewer(mapper.writeValueAsString(reviewer))
+                .withReviewerId(reviewer.getId());
         LOGGER.info("ReviewerDataStash from reviewer " + reviewerDataStash);
         return reviewerDataStash;
     }

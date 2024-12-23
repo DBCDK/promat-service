@@ -84,7 +84,7 @@ public class Reviewers {
                 return Response.status(404).build();
             }
 
-            auditLogHandler.logTraceReadForToken("View full profile", uriInfo, reviewer.getPaycode(), 200);
+            auditLogHandler.logTraceReadForToken("View full reviewer profile", uriInfo, reviewer.getPaycode(), 200);
             return Response.ok(reviewer).build();
         } catch (Exception e) {
             LOGGER.error("Exception in /reviewers when requesting id {}", id);

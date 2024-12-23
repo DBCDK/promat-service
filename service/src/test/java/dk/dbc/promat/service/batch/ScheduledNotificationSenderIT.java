@@ -17,6 +17,8 @@ import jakarta.mail.Message;
 import jakarta.mail.MessagingException;
 import jakarta.mail.Session;
 import jakarta.persistence.TypedQuery;
+import org.mockito.Mock;
+
 import java.util.List;
 import java.util.Properties;
 
@@ -54,6 +56,8 @@ public class ScheduledNotificationSenderIT extends IntegrationTestIT {
         scheduledNotificationSender.notificationSender = new NotificationSender();
         scheduledNotificationSender.notificationSender.mailManager = mailManager;
         scheduledNotificationSender.notificationSender.metricRegistry = metricRegistry;
+        UserUpdater userUpdater = mock(UserUpdater.class);
+        scheduledNotificationSender.userUpdater = userUpdater;
         persistenceContext.run(scheduledNotificationSender::processNotifications);
 
         List<Message> inbox1 = Mailbox.get("test1@test.dk");
