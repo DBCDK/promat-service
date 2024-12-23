@@ -17,7 +17,6 @@ import dk.dbc.promat.service.persistence.ReviewerView;
 import dk.dbc.promat.service.persistence.Subject;
 import dk.dbc.promat.service.templating.NotificationFactory;
 import dk.dbc.promat.service.templating.model.HiatusReset;
-import dk.dbc.promat.service.templating.model.ReviewerDataChanged;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.ws.rs.DefaultValue;
 import org.slf4j.Logger;
@@ -85,7 +84,7 @@ public class Reviewers {
                 return Response.status(404).build();
             }
 
-            auditLogHandler.logTraceReadForToken("View full reviewer profile", uriInfo, reviewer.getPaycode(), 200);
+            auditLogHandler.logTraceReadForToken("View full profile", uriInfo, reviewer.getPaycode(), 200);
             return Response.ok(reviewer).build();
         } catch (Exception e) {
             LOGGER.error("Exception in /reviewers when requesting id {}", id);
@@ -208,7 +207,6 @@ public class Reviewers {
     public Response updateReviewer(@PathParam("id") final Integer id, ReviewerRequest reviewerRequest,
                                    @QueryParam("notify") @DefaultValue("false") final Boolean notify,
                                    @Context UriInfo uriInfo) {
-        Notification notification = null;
 
         LOGGER.info("reviewers/{} (PUT), notify:{}", id, notify);
 
@@ -228,32 +226,27 @@ public class Reviewers {
             query.setParameter("reviewerId", id);
             Optional<ReviewerDataStash> stash = query.getResultList().stream().findFirst();
 
-            // If there is a stash: Settle for just updating the timestamp on reviewer data.
-            stash.ifPresentOrElse(reviewerDataStash -> {
-                reviewer.withLastChanged(LocalDateTime.now());
-            }, () -> {
-
-                // else create a new stash
-                LOGGER.info("Stash for reviewer with id {} does not exists. Creating it.", id);
-                ReviewerDataStash newStash = null;
-                try {
-                    newStash = ReviewerDataStash.fromReviewer(reviewer);
-                    entityManager.persist(newStash);
-                    reviewer.withLastChanged(LocalDateTime.now());
-                } catch (JsonProcessingException e) {
-                    LOGGER.error("Failed to serialize reviewer from stash:", e);
-                }
-            });
-
-
-            // This is the section we want to move to a cronjob
+            // If notification is required
             if (notify) {
-                // Create the notification now, before we fill in the changed fields in reviewer.
-                notification = notificationFactory.notificationOf(new ReviewerDataChanged()
-                        .withReviewerRequest(reviewerRequest)
-                        .withReviewer(reviewer)
-                );
+
+                // If there is a stash: Settle for just updating the timestamp on reviewer data.
+                stash.ifPresentOrElse(reviewerDataStash -> {
+                    reviewer.withLastChanged(LocalDateTime.now());
+                }, () -> {
+
+                    // else create a new stash
+                    LOGGER.info("Stash for reviewer with id {} does not exists. Creating it.", id);
+                    ReviewerDataStash newStash = null;
+                    try {
+                        newStash = ReviewerDataStash.fromReviewer(reviewer);
+                        entityManager.persist(newStash);
+                        reviewer.withLastChanged(LocalDateTime.now());
+                    } catch (JsonProcessingException e) {
+                        LOGGER.error("Failed to serialize reviewer from stash:", e);
+                    }
+                });
             }
+
 
             // Update by patching
             if (reviewerRequest.isActive() != null) {
@@ -334,10 +327,6 @@ public class Reviewers {
             }
             if (reviewerRequest.getNote() != null) {
                 reviewer.setNote(reviewerRequest.getNote());
-            }
-
-            if (notify && notification != null) {
-                entityManager.persist(notification);
             }
 
             auditLogHandler.logTraceUpdateForToken("Update and view full reviewer profile", uriInfo, reviewer.getPaycode(), 200);

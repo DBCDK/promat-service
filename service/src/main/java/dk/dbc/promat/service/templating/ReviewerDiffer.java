@@ -109,16 +109,16 @@ public class ReviewerDiffer {
         return changedValueMap;
     }
 
-    public Map<String, ChangedValue> getChangedValueMap(Reviewer reviewer, ReviewerRequest reviewerRequest) throws IllegalAccessException {
-        Map<String, ChangedValue> valueMap = getChangedValueMap(reviewer, reviewerRequest, changeableFields);
-        if (reviewerRequest.getAddress() != null) {
+    public Map<String, ChangedValue> getChangedValueMap(Reviewer reviewer, Reviewer newReviewer) throws IllegalAccessException {
+        Map<String, ChangedValue> valueMap = getChangedValueMap(reviewer, newReviewer, changeableFields);
+        if (newReviewer.getAddress() != null) {
             valueMap.putAll(getChangedValueMap(
                     reviewer.getAddress() == null ? new Address() : reviewer.getAddress(),
-                    reviewerRequest.getAddress(),
+                    newReviewer.getAddress(),
                     changeableAddressFields));
         }
-        if (reviewerRequest.getPrivateAddress() != null) {
-            PrivateAddress privateAddressRequest = new PrivateAddress(reviewerRequest.getPrivateAddress());
+        if (newReviewer.getPrivateAddress() != null) {
+            PrivateAddress privateAddressRequest = new PrivateAddress(newReviewer.getPrivateAddress());
             PrivateAddress privateAddress = new PrivateAddress(reviewer.getPrivateAddress());
             valueMap.putAll(getChangedValueMap(
                     privateAddress,
@@ -128,6 +128,8 @@ public class ReviewerDiffer {
         }
         return valueMap;
     }
+//Reviewer{id=7, active=false, culrId'=56434242', firstName='Holger', lastName='Holgersen', email='holg@holg.dk', phone='912345678902', privateEmail='holger.privat@holg.dk', privatePhone='null', address=Address{address1='null', address2='null', zip='null', city='null', selected=true}, privateAddress=Address{address1='Hellig Helges Vej', address2='null', zip='null', city='null', selected=false}, institution='Holgers Holdings', paycode=232222, hiatus_begin=null, hiatus_end=null, subjects=[], accepts=[MULTIMEDIA], note='note7', capacity=2, subjectNotes=[], activeChanged='Wed Dec 18 15:45:14 CET 2024', deactivated='null'}
+//Reviewer{id=7, active=false, culrId'=56434242', firstName='Holger', lastName='Holgersen', email='holg@holg.dk', phone='912345678902', privateEmail='holger.privat@holg.dk', privatePhone='null', address=Address{address1='null', address2='null', zip='null', city='null', selected=true}, privateAddress=null, institution='Holgers Holdings', paycode=232222, hiatus_begin=null, hiatus_end=null, subjects=[], accepts=[MULTIMEDIA], note='note7', capacity=2, subjectNotes=[], activeChanged='Wed Dec 18 15:45:14 CET 2024', deactivated='null'}
 
     private String getValueAsString(Field f, Object o ) throws IllegalAccessException {
         if (o == null || f == null || f.get(o) == null) {  return null; }

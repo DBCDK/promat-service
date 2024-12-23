@@ -2,7 +2,11 @@ package dk.dbc.promat.service.api;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
+import dk.dbc.commons.persistence.TransactionScopedPersistenceContext;
 import dk.dbc.promat.service.ContainerTest;
+import dk.dbc.promat.service.batch.NotificationSender;
+import dk.dbc.promat.service.batch.ScheduledNotificationSender;
+import dk.dbc.promat.service.cluster.ServerRole;
 import dk.dbc.promat.service.dto.ReviewerList;
 import dk.dbc.promat.service.dto.ReviewerRequest;
 import dk.dbc.promat.service.dto.ReviewerWithWorkloads;
@@ -16,13 +20,17 @@ import dk.dbc.promat.service.persistence.ReviewerView;
 import dk.dbc.promat.service.persistence.Subject;
 import dk.dbc.promat.service.persistence.SubjectNote;
 import dk.dbc.promat.service.templating.Formatting;
+import org.eclipse.microprofile.metrics.Metadata;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
 import jakarta.ws.rs.core.GenericType;
 import jakarta.ws.rs.core.Response;
+import org.jvnet.mock_javamail.Mailbox;
+
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.sql.Date;
@@ -37,6 +45,8 @@ import static java.util.Map.entry;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
 
 @TestMethodOrder(OrderAnnotation.class)
 public class ReviewersIT extends ContainerTest {
@@ -949,84 +959,6 @@ public class ReviewersIT extends ContainerTest {
         fetched.setDeactivated(null);
         loadReviewer6(reviewer6, ReviewerView.Reviewer.class);
         assertThat(fetched, is(reviewer6));
-    }
-
-    @Test
-    public void testThatMailsAreOnlySentOnRealChangesAndWhenNotifyQueryParmIsTrue() {
-
-        // Add private address, And check that a mail is added to the mailqueue with the changes.
-        ReviewerRequest reviewerRequest =
-                new ReviewerRequest()
-                        .withPrivateAddress(new Address().withAddress1("Hellig Helges Vej"));
-        Response response = putResponse("v1/api/reviewers/7", reviewerRequest, Map.of("notify", true), "1-2-3-4-5");
-        assertThat("response status", response.getStatus(), is(200));
-        List<Notification> notifications = getNotifications(null, "Hellig Helges Vej");
-
-        assertThat("There is only one mail containing info with this address change",
-                notifications.size(), is(1));
-        assertThat("This is a mail to the LU mailaddress", notifications.get(0).getToAddress(), is("TEST@dbc.dk"));
-
-
-        // Change the private address. Now with no notify parm. Expect nothing further in mail queue.
-        reviewerRequest.getPrivateAddress().setAddress1("Thors Torden gade 11");
-        response = putResponse("v1/api/reviewers/7", reviewerRequest, "1-2-3-4-5");
-        assertThat("response status", response.getStatus(), is(200));
-        notifications = getNotifications(null, "Thors Torden");
-        assertThat("There are no mails to this change", notifications.size(), is(0));
-
-        // Now submit the same address, but now with notify. Expect no mail.
-        response = putResponse("v1/api/reviewers/7", reviewerRequest, Map.of("notify", true), "1-2-3-4-5");
-        assertThat("response status", response.getStatus(), is(200));
-        notifications = getNotifications(null, "Thors Torden");
-        assertThat("There are no mails to this change", notifications.size(), is(0));
-
-        // Change various stuff: Phone, private address, and "selected" on addresses.
-        reviewerRequest = new ReviewerRequest()
-                .withPhone("123456112233445566")
-                .withPrivatePhone("987654321112233445566")
-                .withPrivateAddress(new Address().withAddress1("Classensgade 12").withSelected(true))
-                .withAddress(new Address().withSelected(false));
-        response = putResponse("v1/api/reviewers/7", reviewerRequest, Map.of("notify", true), "1-2-3-4-5");
-        assertThat("response status", response.getStatus(), is(200));
-        notifications = getNotifications(null, "123456112233445566");
-        assertThat("There are one mail matching this change", notifications.size(), is(1));
-        Notification notification = notifications.get(0);
-
-        assertThat("Address change is present", notification.getBodyText()
-                .contains("Classensgade 12"));
-
-        assertThat("Private phone change is present", notification.getBodyText()
-                .contains("987654321112233445566"));
-
-        assertThat("Phone change is present", notification.getBodyText()
-                .contains("123456112233445566"));
-
-        assertThat("Private address is selected", notification.getBodyText()
-                .contains("<tr>\n" +
-                        "                <td>[privateSelected]</td>\n" +
-                        "            </tr>\n" +
-                        "            \n" +
-                        "                <tr>\n" +
-                        "                    <td><table>\n" +
-                        "                            <tr>\n" +
-                        "                                <td>\n" +
-                        "                                    Fra:\n" +
-                        "                                </td>\n" +
-                        "                                <td>\n" +
-                        "                                    false\n" +
-                        "                                </td>\n" +
-                        "                            </tr>\n" +
-                        "                            <tr>\n" +
-                        "                                <td>\n" +
-                        "                                    Til:\n" +
-                        "                                </td>\n" +
-                        "                                <td>\n" +
-                        "                                    true\n" +
-                        "                                </td>\n" +
-                        "                            </tr>\n" +
-                        "                        </table>"));
-
-
     }
 
 }

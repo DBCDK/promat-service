@@ -199,12 +199,22 @@ public class Reviewer extends PromatUser {
         this.hiatusBegin = hiatus_begin;
     }
 
+    public Reviewer withHiatusBegin(LocalDate hiatus_begin) {
+        this.hiatusBegin = hiatus_begin;
+        return this;
+    }
+
     public LocalDate getHiatusEnd() {
         return hiatusEnd;
     }
 
     public void setHiatusEnd(LocalDate hiatus_end) {
         this.hiatusEnd = hiatus_end;
+    }
+
+    public Reviewer withHiatusEnd(LocalDate hiatus_end) {
+        this.hiatusEnd = hiatus_end;
+        return this;
     }
 
     public Collection<Subject> getSubjects() {

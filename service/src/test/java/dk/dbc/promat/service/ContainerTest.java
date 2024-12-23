@@ -118,10 +118,10 @@ public abstract class ContainerTest extends IntegrationTestIT {
     }
 
     public <T> Response putResponse(String path, T body, Map<String, Object> queryParameter, String authToken) {
-        HttpPut httpPut = new HttpPut(httpClient)
-                .withBaseUrl(promatServiceBaseUrl)
-                .withPathElements(path)
-                .withData(body, "application/json");
+        HttpPut httpPut = new HttpPut(httpClient).withBaseUrl(promatServiceBaseUrl).withPathElements(path);
+        if (body != null) {
+            httpPut.withData(body, "application/json");
+        }
         if (queryParameter != null) {
             httpPut.getQueryParameters().putAll(queryParameter);
         }
@@ -227,13 +227,13 @@ public abstract class ContainerTest extends IntegrationTestIT {
                 .withEnv("MAIL_USER", "mail.user")
                 .withEnv("MAIL_FROM", "some@address.dk")
                 .withEnv("OPENFORMAT_SERVICE_URL", getOpenFormatBaseUrl("http://host.testcontainers.internal:" + wireMockServer.port() + "/api/v2"))
-                .withEnv("LU_MAILADDRESS", "TEST@dbc.dk")
+                .withEnv("LU_MAILADDRESS", "lumailaddress-test@dbc.dk")
                 .withEnv("OPENNUMBERROLL_SERVICE_URL", "http://host.testcontainers.internal:" + wireMockServer.port() + "/")
                 .withEnv("EMATERIAL_CONTENT_REPO", "http://host.testcontainers.internal:" + wireMockServer.port() +
                         "?faust=%s")
                 .withEnv("OPENNUMBERROLL_NUMBERROLLNAME", "faust")
                 .withEnv("ENABLE_REMINDERS", String.valueOf(true))
-                .withEnv("CC_MAILADDRESS", "cc_test@dbc.dk")
+                .withEnv("CC_MAILADDRESS", "ccmailaddress-test@dbc.dk")
                 .withEnv("OAUTH2_CLIENT_ID", "123456789")
                 .withEnv("OAUTH2_CLIENT_SECRET", "abcdef")
                 .withEnv("OAUTH2_INTROSPECTION_URL", "http://host.testcontainers.internal:" + wireMockServer.port())

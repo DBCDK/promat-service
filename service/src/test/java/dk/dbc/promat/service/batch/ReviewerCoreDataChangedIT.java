@@ -1,70 +1,45 @@
 package dk.dbc.promat.service.batch;
 
-import dk.dbc.commons.persistence.TransactionScopedPersistenceContext;
 import dk.dbc.promat.service.ContainerTest;
-import dk.dbc.promat.service.cluster.ServerRole;
 import dk.dbc.promat.service.dto.ReviewerRequest;
 import dk.dbc.promat.service.persistence.Address;
 import dk.dbc.promat.service.persistence.Notification;
 import jakarta.ws.rs.core.Response;
-import org.eclipse.microprofile.metrics.MetricRegistry;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.jvnet.mock_javamail.Mailbox;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
-import static dk.dbc.promat.service.batch.ScheduledNotificationSenderIT.mailManager;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.mockito.Mockito.mock;
 
 public class ReviewerCoreDataChangedIT extends ContainerTest {
-    TransactionScopedPersistenceContext persistenceContext;
-    private final MetricRegistry metricRegistry = mock(MetricRegistry.class);
-    private final ScheduledNotificationSender scheduledNotificationSender  = new ScheduledNotificationSender();;
 
-    @BeforeEach
-    public void setupMailStuff() {
-        persistenceContext = new TransactionScopedPersistenceContext(entityManager);
-        Mailbox.clearAll();
-        scheduledNotificationSender.entityManager = entityManager;
-        scheduledNotificationSender.serverRole = ServerRole.PRIMARY;
-        scheduledNotificationSender.notificationSender = new NotificationSender();
-        scheduledNotificationSender.notificationSender.mailManager = mailManager;
-        scheduledNotificationSender.notificationSender.metricRegistry = metricRegistry;
-
-    }
     @Test
     public void testThatMailsAreOnlySentOnRealChangesAndWhenNotifyQueryParmIsTrue() throws InterruptedException {
+
+        // Reset "inactiveInterval". Minus 1 means do perform creation of notifications now.
+        clear();
 
         // Add private address, And check that a mail is added to the mailqueue with the changes.
         ReviewerRequest reviewerRequest =
                 new ReviewerRequest()
                         .withPrivateAddress(new Address().withAddress1("Hellig Helges Vej"));
-        Response response = putResponse("v1/api/reviewers/7", reviewerRequest, Map.of("notify", true), "1-2-3-4-5");
-        persistenceContext.run(scheduledNotificationSender::processNotifications);
-        assertThat("response status", response.getStatus(), is(200));
 
-        List<Notification> notifications = getNotifications(null, "Hellig Helges Vej");
+        List<Notification> notifications = performUpdateAndGetNotificationList(reviewerRequest, "Hellig Helges Vej", true);
 
         assertThat("There is only one mail containing info with this address change",
                 notifications.size(), is(1));
-        assertThat("This is a mail to the LU mailaddress", notifications.get(0).getToAddress(), is("TEST@dbc.dk"));
-
+        assertThat("This is a mail to the LU mailaddress", notifications.get(0).getToAddress(), is("lumailaddress-test@dbc.dk"));
 
         // Change the private address. Now with no notify parm. Expect nothing further in mail queue.
         reviewerRequest.getPrivateAddress().setAddress1("Thors Torden gade 11");
-        response = putResponse("v1/api/reviewers/7", reviewerRequest, "1-2-3-4-5");
-        assertThat("response status", response.getStatus(), is(200));
-        notifications = getNotifications(null, "Thors Torden");
+        notifications = performUpdateAndGetNotificationList(reviewerRequest, "Thors Torden gade 11", false);
         assertThat("There are no mails to this change", notifications.size(), is(0));
 
         // Now submit the same address, but now with notify. Expect no mail.
-        response = putResponse("v1/api/reviewers/7", reviewerRequest, Map.of("notify", true), "1-2-3-4-5");
-        assertThat("response status", response.getStatus(), is(200));
-        notifications = getNotifications(null, "Thors Torden");
+        notifications = performUpdateAndGetNotificationList(reviewerRequest, "Thors Torden", true);
         assertThat("There are no mails to this change", notifications.size(), is(0));
 
         // Change various stuff: Phone, private address, and "selected" on addresses.
@@ -73,9 +48,8 @@ public class ReviewerCoreDataChangedIT extends ContainerTest {
                 .withPrivatePhone("987654321112233445566")
                 .withPrivateAddress(new Address().withAddress1("Classensgade 12").withSelected(true))
                 .withAddress(new Address().withSelected(false));
-        response = putResponse("v1/api/reviewers/7", reviewerRequest, Map.of("notify", true), "1-2-3-4-5");
-        assertThat("response status", response.getStatus(), is(200));
-        notifications = getNotifications(null, "123456112233445566");
+
+        notifications = performUpdateAndGetNotificationList(reviewerRequest, "123456112233445566", true);
         assertThat("There are one mail matching this change", notifications.size(), is(1));
         Notification notification = notifications.get(0);
 
@@ -115,4 +89,62 @@ public class ReviewerCoreDataChangedIT extends ContainerTest {
 
 
     }
+
+    @Test
+    public void testThatNumerousUpdatesWithinSafeLimitsOfUserEditTimeoutsResultsInOnlyOneNotification() throws InterruptedException {
+        clear();
+
+        // Lower "inactiveInterval" to 3 seconds to simulate user interactions.
+        Response response = postResponse("v1/api/batch/job/userupdater/config/3", null);
+
+        ReviewerRequest reviewerRequest = new ReviewerRequest();
+        assertThat("response status", response.getStatus(), is(200));
+        reviewerRequest.withPrivateAddress(new Address().withAddress1("Hedne Hedwigs gade"));
+        assertThat("response status", response.getStatus(), is(200));
+        List<Notification> notifications = performUpdateAndGetNotificationList(reviewerRequest, "Hedne Hedwig", true);
+        assertThat("There are no mail matching this change. Yet!.", notifications.size(), is(0));
+
+        // Do a lot of changes to vacation for user 7
+        reviewerRequest = new ReviewerRequest().withHiatusBegin(LocalDate.now().plusDays(1));
+        notifications = performUpdateAndGetNotificationList(reviewerRequest, "Hedne Hedwig", true);
+        assertThat("There are no mail matching this change. Yet!.", notifications.size(), is(0));
+
+        reviewerRequest = new ReviewerRequest().withHiatusEnd(LocalDate.now().plusDays(5));
+        notifications = performUpdateAndGetNotificationList(reviewerRequest, "Hedne Hedwig", true);
+        assertThat("There are no mail matching this change. Yet!.", notifications.size(), is(0));
+
+        reviewerRequest = new ReviewerRequest().withHiatusEnd(LocalDate.now().plusDays(3)).withHiatusBegin(LocalDate.now().plusDays(2));
+        notifications = performUpdateAndGetNotificationList(reviewerRequest, "Hedne Hedwig", true);
+        assertThat("There are no mail matching this change. Yet!.", notifications.size(), is(0));
+
+        Thread.sleep(4000);
+
+        // Cronjob should have fired by now. Resulting in only one mail.
+        postResponse("v1/api/batch/job/userupdater",null);
+        notifications = getNotifications(null, "Hedne Hedwig");
+        assertThat("There is one mail matching this change.", notifications.size(), is(1));
+
+        clear();
+    }
+
+    private List<Notification> performUpdateAndGetNotificationList(ReviewerRequest reviewerRequest, String bodyTextWildcard, boolean notify) {
+        return performUpdateAndGetNotificationList(reviewerRequest, bodyTextWildcard, null, notify);
+    }
+
+    private List<Notification> performUpdateAndGetNotificationList(ReviewerRequest reviewerRequest, String bodyTextWildcard, String subjectWildCard, boolean notify) {
+        Response response = putResponse("v1/api/reviewers/7", reviewerRequest, notify ? Map.of("notify", true) : null, "1-2-3-4-5");
+        assertThat("response status", response.getStatus(), is(200));
+        response = postResponse("v1/api/batch/job/userupdater",null);
+        assertThat("response status", response.getStatus(), is(200));
+        return getNotifications(null, bodyTextWildcard);
+    }
+
+
+    private void clear() {
+        Response response = postResponse("v1/api/batch/job/userupdater/config/-1", null);
+        assertThat("response status", response.getStatus(), is(200));
+        response = postResponse("v1/api/batch/job/userupdater",null);
+        assertThat("response status", response.getStatus(), is(200));
+    }
+
 }
