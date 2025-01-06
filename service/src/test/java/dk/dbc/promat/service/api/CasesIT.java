@@ -2400,6 +2400,7 @@ public class CasesIT extends ContainerTest {
                 .withDetails("Details for 26001111")
                 .withPrimaryFaust("26001111")
                 .withEditor(10)
+                .withCreator(10)
                 .withReviewer(1)
                 .withSubjects(Arrays.asList(3, 4))
                 .withDeadline("2021-03-30")
@@ -2419,10 +2420,12 @@ public class CasesIT extends ContainerTest {
         response = postResponse("v1/api/cases/" + created.getId(), requestDto);
         assertThat("status code", response.getStatus(), is(200));
 
+
         // Reassign case without specifying a new status
         requestDto = new CaseRequest()
                 .withReviewer(2);
         response = postResponse("v1/api/cases/" + created.getId(), requestDto);
+
         assertThat("status code", response.getStatus(), is(200));
 
         // Send case to approval
