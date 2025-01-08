@@ -23,7 +23,6 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.SqlResultSetMapping;
-
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Collection;
@@ -153,7 +152,7 @@ public class Reviewer extends PromatUser {
     protected String privatePhone;
 
     // lastChanged is NOT part of equals and hashcode.
-    // This is totally on purpose, as there is no need no
+    // This is totally on purpose, as there is no need to
     // check the update datetimestamp apart from all other
     // changes going on.
     @JsonView({ReviewerView.Reviewer.class})

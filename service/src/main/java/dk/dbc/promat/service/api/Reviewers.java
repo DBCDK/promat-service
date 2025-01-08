@@ -247,7 +247,6 @@ public class Reviewers {
                 });
             }
 
-
             // Update by patching
             if (reviewerRequest.isActive() != null) {
                 reviewer.setActive(reviewerRequest.isActive());

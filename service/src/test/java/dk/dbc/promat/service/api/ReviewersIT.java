@@ -193,6 +193,10 @@ public class ReviewersIT extends ContainerTest {
         final Reviewer reviewer7 = new Reviewer();
         loadReviewer7(reviewer7, ReviewerView.Summary.class);
 
+        // Make sure not to get entangled with residue of earlier executed tests.
+        reviewer7.setHiatusBegin(null);
+        reviewer7.setHiatusEnd(null);
+
         final Reviewer reviewer8 = new Reviewer();
         loadReviewer8(reviewer8, ReviewerView.Summary.class);
 
@@ -220,6 +224,12 @@ public class ReviewersIT extends ContainerTest {
         for( Reviewer reviewer: actual.getReviewers() ) {
             reviewer.setActiveChanged(Date.from(Instant.ofEpochSecond(1629900636)));
             reviewer.setDeactivated(null);
+
+            // Make sure not to get entangled with residue of earlier executed tests.
+            if (reviewer.getId() == 7) {
+               reviewer.setHiatusBegin(null);
+               reviewer.setHiatusEnd(null);
+            }
         }
 
         assertThat("List of reviewers has all reviewers",

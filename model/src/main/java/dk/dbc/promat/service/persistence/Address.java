@@ -3,7 +3,6 @@ package dk.dbc.promat.service.persistence;
 import com.fasterxml.jackson.annotation.JsonView;
 
 import jakarta.persistence.Embeddable;
-
 import java.util.Objects;
 
 @Embeddable

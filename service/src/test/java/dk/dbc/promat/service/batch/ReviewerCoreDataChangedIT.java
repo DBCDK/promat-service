@@ -94,37 +94,44 @@ public class ReviewerCoreDataChangedIT extends ContainerTest {
     public void testThatNumerousUpdatesWithinSafeLimitsOfUserEditTimeoutsResultsInOnlyOneNotification() throws InterruptedException {
         clear();
 
-        // Lower "inactiveInterval" to 3 seconds to simulate user interactions.
-        Response response = postResponse("v1/api/batch/job/userupdater/config/3", null);
+        try {
+            // Lower "inactiveInterval" to 3 seconds to simulate user interactions.
+            Response response = postResponse("v1/api/batch/job/userupdater/config/3", null);
 
-        ReviewerRequest reviewerRequest = new ReviewerRequest();
-        assertThat("response status", response.getStatus(), is(200));
-        reviewerRequest.withPrivateAddress(new Address().withAddress1("Hedne Hedwigs gade"));
-        assertThat("response status", response.getStatus(), is(200));
-        List<Notification> notifications = performUpdateAndGetNotificationList(reviewerRequest, "Hedne Hedwig", true);
-        assertThat("There are no mail matching this change. Yet!.", notifications.size(), is(0));
+            ReviewerRequest reviewerRequest = new ReviewerRequest();
+            assertThat("response status", response.getStatus(), is(200));
+            reviewerRequest.withPrivateAddress(new Address().withAddress1("Hedne Hedwigs gade"));
+            assertThat("response status", response.getStatus(), is(200));
+            List<Notification> notifications = performUpdateAndGetNotificationList(reviewerRequest, "Hedne Hedwig", true);
+            assertThat("There are no mail matching this change. Yet!.", notifications.size(), is(0));
 
-        // Do a lot of changes to vacation for user 7
-        reviewerRequest = new ReviewerRequest().withHiatusBegin(LocalDate.now().plusDays(1));
-        notifications = performUpdateAndGetNotificationList(reviewerRequest, "Hedne Hedwig", true);
-        assertThat("There are no mail matching this change. Yet!.", notifications.size(), is(0));
+            // Do a lot of changes to vacation for user 7
+            reviewerRequest = new ReviewerRequest().withHiatusBegin(LocalDate.now().plusDays(1));
+            notifications = performUpdateAndGetNotificationList(reviewerRequest, "Hedne Hedwig", true);
+            assertThat("There are no mail matching this change. Yet!.", notifications.size(), is(0));
 
-        reviewerRequest = new ReviewerRequest().withHiatusEnd(LocalDate.now().plusDays(5));
-        notifications = performUpdateAndGetNotificationList(reviewerRequest, "Hedne Hedwig", true);
-        assertThat("There are no mail matching this change. Yet!.", notifications.size(), is(0));
+            reviewerRequest = new ReviewerRequest().withHiatusEnd(LocalDate.now().plusDays(5));
+            notifications = performUpdateAndGetNotificationList(reviewerRequest, "Hedne Hedwig", true);
+            assertThat("There are no mail matching this change. Yet!.", notifications.size(), is(0));
 
-        reviewerRequest = new ReviewerRequest().withHiatusEnd(LocalDate.now().plusDays(3)).withHiatusBegin(LocalDate.now().plusDays(2));
-        notifications = performUpdateAndGetNotificationList(reviewerRequest, "Hedne Hedwig", true);
-        assertThat("There are no mail matching this change. Yet!.", notifications.size(), is(0));
+            reviewerRequest = new ReviewerRequest().withHiatusEnd(LocalDate.now().plusDays(3)).withHiatusBegin(LocalDate.now().plusDays(2));
+            notifications = performUpdateAndGetNotificationList(reviewerRequest, "Hedne Hedwig", true);
+            assertThat("There are no mail matching this change. Yet!.", notifications.size(), is(0));
 
-        Thread.sleep(4000);
+            Thread.sleep(4000);
 
-        // Cronjob should have fired by now. Resulting in only one mail.
-        postResponse("v1/api/batch/job/userupdater",null);
-        notifications = getNotifications(null, "Hedne Hedwig");
-        assertThat("There is one mail matching this change.", notifications.size(), is(1));
+            // Cronjob should have fired by now. Resulting in only one mail.
+            postResponse("v1/api/batch/job/userupdater", null);
+            notifications = getNotifications(null, "Hedne Hedwig");
+            assertThat("There is one mail matching this change.", notifications.size(), is(1));
 
-        clear();
+            clear();
+        } finally {
+
+            // Reset update interval to a more reasonable half an hour
+            Response response = postResponse("v1/api/batch/job/userupdater/config/1800", null);
+            assertThat("response status", response.getStatus(), is(200));
+        }
     }
 
     private List<Notification> performUpdateAndGetNotificationList(ReviewerRequest reviewerRequest, String bodyTextWildcard, boolean notify) {
@@ -140,6 +147,7 @@ public class ReviewerCoreDataChangedIT extends ContainerTest {
     }
 
 
+    // Flush the rest of all pending userupdates
     private void clear() {
         Response response = postResponse("v1/api/batch/job/userupdater/config/-1", null);
         assertThat("response status", response.getStatus(), is(200));

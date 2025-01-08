@@ -21,7 +21,6 @@ import jakarta.ejb.Stateless;
 import jakarta.ejb.TransactionAttribute;
 import jakarta.ejb.TransactionAttributeType;
 import jakarta.inject.Inject;
-
 import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
 import java.util.Date;
@@ -88,7 +87,6 @@ public class UserUpdater {
         if (notification != null) {
             entityManager.persist(notification);
         }
-
     }
 
     public void processUserDataChanges() {
@@ -97,6 +95,9 @@ public class UserUpdater {
             for (ReviewerDataStash stash : stashes) {
                 LOGGER.info("Processing stash: {}", stash);
                 Reviewer stashedReviewer = MAPPER.readValue(stash.getReviewer(), Reviewer.class);
+
+                // It is assumed that editing of core data by the reviewer is done when the last modification
+                // is older (in seconds) than the timeout set in UserEditConfig.
                 if (isReviewerEditingFinished(stashedReviewer.getId(), UserEditConfig.getUserEditTimeOut())) {
                     makeReviewerChangedNotification(stashedReviewer);
                     entityManager.remove(stash);
