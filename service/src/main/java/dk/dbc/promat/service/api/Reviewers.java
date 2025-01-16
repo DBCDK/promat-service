@@ -208,7 +208,7 @@ public class Reviewers {
                                    @QueryParam("notify") @DefaultValue("false") final Boolean notify,
                                    @Context UriInfo uriInfo) {
 
-        LOGGER.info("reviewers/{} (PUT), notify:{}", id, notify);
+        LOGGER.info("reviewers/{} (PUT), notify:{} request:{}", id, notify, reviewerRequest);
 
         try {
 
@@ -220,31 +220,9 @@ public class Reviewers {
                 return Response.status(404).build();
             }
 
-            // Assume that we will need to post a reviewerdata changed notification to the editors.
-            TypedQuery<ReviewerDataStash> query = entityManager
-                    .createNamedQuery(ReviewerDataStash.GET_STASH_FROM_REVIEWER, ReviewerDataStash.class);
-            query.setParameter("reviewerId", id);
-            Optional<ReviewerDataStash> stash = query.getResultList().stream().findFirst();
-
             // If notification is required
             if (notify) {
-
-                // If there is a stash: Settle for just updating the timestamp on reviewer data.
-                stash.ifPresentOrElse(reviewerDataStash -> {
-                    reviewer.withLastChanged(LocalDateTime.now());
-                }, () -> {
-
-                    // else create a new stash
-                    LOGGER.info("Stash for reviewer with id {} does not exists. Creating it.", id);
-                    ReviewerDataStash newStash = null;
-                    try {
-                        newStash = ReviewerDataStash.fromReviewer(reviewer);
-                        entityManager.persist(newStash);
-                        reviewer.withLastChanged(LocalDateTime.now());
-                    } catch (JsonProcessingException e) {
-                        LOGGER.error("Failed to serialize reviewer from stash:", e);
-                    }
-                });
+                stash(reviewer, id);
             }
 
             // Update by patching
@@ -337,6 +315,39 @@ public class Reviewers {
         } catch (Exception e) {
             return Response.serverError().entity(e.getMessage()).build();
         }
+    }
+
+    /**
+     * "Stash" the reviewer data. That is: Save the full reviewer object as a marshalled json.
+     * The purpose: To have a baseline representing the reviewer before editing was begun.
+     * @param reviewer the reviewer to stash
+     * @param id of the reviewer.
+     */
+    private void stash(Reviewer reviewer, Integer id) {
+
+        // Assume that eventually we will need to post a reviewerdata changed notification to the editors.
+        TypedQuery<ReviewerDataStash> query = entityManager
+                .createNamedQuery(ReviewerDataStash.GET_STASH_FROM_REVIEWER, ReviewerDataStash.class);
+        query.setParameter("reviewerId", id);
+        Optional<ReviewerDataStash> stash = query.getResultList().stream().findFirst();
+
+
+        // If there is a stash: Settle for just updating the timestamp on reviewer data.
+        stash.ifPresentOrElse(reviewerDataStash -> {
+            reviewer.withLastChanged(LocalDateTime.now());
+        }, () -> {
+
+            // else create a new stash
+            LOGGER.info("Stash for reviewer with id {} does not exists. Creating it.", id);
+            ReviewerDataStash newStash = null;
+            try {
+                newStash = ReviewerDataStash.fromReviewer(reviewer);
+                entityManager.persist(newStash);
+                reviewer.withLastChanged(LocalDateTime.now());
+            } catch (JsonProcessingException e) {
+                LOGGER.error("Failed to serialize reviewer from stash:", e);
+            }
+        });
     }
 
     /**
