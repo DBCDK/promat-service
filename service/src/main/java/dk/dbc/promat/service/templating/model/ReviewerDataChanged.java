@@ -1,6 +1,5 @@
 package dk.dbc.promat.service.templating.model;
 
-import dk.dbc.promat.service.dto.ReviewerRequest;
 import dk.dbc.promat.service.persistence.Reviewer;
 import java.util.Map;
 
@@ -8,20 +7,20 @@ public class ReviewerDataChanged {
 
     Map<String, ChangedValue> diffMap;
 
-    private ReviewerRequest reviewerRequest;
+    private Reviewer newReviewerData;
 
     private Reviewer reviewer;
 
-    public ReviewerRequest getReviewerRequest() {
-        return reviewerRequest;
+    public Reviewer getNewReviewerData() {
+        return newReviewerData;
     }
 
     public Reviewer getReviewer() {
         return reviewer;
     }
 
-    public ReviewerDataChanged withReviewerRequest(ReviewerRequest reviewerRequest) {
-        this.reviewerRequest = reviewerRequest;
+    public ReviewerDataChanged withNewReviewer(Reviewer reviewer) {
+        this.newReviewerData = reviewer;
         return this;
     }
 
@@ -43,7 +42,7 @@ public class ReviewerDataChanged {
     public String toString() {
         return "ReviewerDataChanged{" +
                 "diffMap=" + diffMap +
-                ", reviewerRequest=" + reviewerRequest +
+                ", newReviewerData=" + newReviewerData +
                 ", reviewer=" + reviewer +
                 '}';
     }

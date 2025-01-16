@@ -109,16 +109,16 @@ public class ReviewerDiffer {
         return changedValueMap;
     }
 
-    public Map<String, ChangedValue> getChangedValueMap(Reviewer reviewer, ReviewerRequest reviewerRequest) throws IllegalAccessException {
-        Map<String, ChangedValue> valueMap = getChangedValueMap(reviewer, reviewerRequest, changeableFields);
-        if (reviewerRequest.getAddress() != null) {
+    public Map<String, ChangedValue> getChangedValueMap(Reviewer reviewer, Reviewer newReviewer) throws IllegalAccessException {
+        Map<String, ChangedValue> valueMap = getChangedValueMap(reviewer, newReviewer, changeableFields);
+        if (newReviewer.getAddress() != null) {
             valueMap.putAll(getChangedValueMap(
                     reviewer.getAddress() == null ? new Address() : reviewer.getAddress(),
-                    reviewerRequest.getAddress(),
+                    newReviewer.getAddress(),
                     changeableAddressFields));
         }
-        if (reviewerRequest.getPrivateAddress() != null) {
-            PrivateAddress privateAddressRequest = new PrivateAddress(reviewerRequest.getPrivateAddress());
+        if (newReviewer.getPrivateAddress() != null) {
+            PrivateAddress privateAddressRequest = new PrivateAddress(newReviewer.getPrivateAddress());
             PrivateAddress privateAddress = new PrivateAddress(reviewer.getPrivateAddress());
             valueMap.putAll(getChangedValueMap(
                     privateAddress,

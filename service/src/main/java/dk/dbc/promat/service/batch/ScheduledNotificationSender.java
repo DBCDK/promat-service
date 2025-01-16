@@ -4,7 +4,6 @@ import dk.dbc.promat.service.cluster.ServerRole;
 import dk.dbc.promat.service.persistence.Notification;
 import dk.dbc.promat.service.persistence.NotificationStatus;
 import dk.dbc.promat.service.persistence.PromatEntityManager;
-import java.util.ArrayList;
 import java.util.List;
 import jakarta.ejb.EJB;
 import jakarta.ejb.Schedule;
@@ -24,6 +23,9 @@ public class ScheduledNotificationSender {
     @EJB
     NotificationSender notificationSender;
 
+    @EJB
+    UserUpdater userUpdater;
+
     @Inject
     @PromatEntityManager
     EntityManager entityManager;
@@ -31,10 +33,14 @@ public class ScheduledNotificationSender {
     @Inject
     ServerRole serverRole;
 
+
     @Schedule(second = "0", minute = "*/10", hour = "*", persistent = false)
     public void processNotifications() {
         try {
-            if(serverRole == ServerRole.PRIMARY) {
+            if (serverRole == ServerRole.PRIMARY) {
+
+                userUpdater.processUserDataChanges();
+
                 Notification notification = pop(-1);
                 while(notification != null) {
                     LOGGER.info("Notifying: '{}' on subject '{}'", notification.getToAddress(), notification.getSubject());

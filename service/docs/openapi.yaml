@@ -298,7 +298,7 @@ paths:
       tags:
         - records
       summary: Return zero or more faust numbers that match the given id.
-               The id can be a faust number or an isbn-10 or isbn-13 number.
+        The id can be a faust number or an isbn-10 or isbn-13 number.
       operationId: getRecords
       parameters:
         - in: path
@@ -990,7 +990,7 @@ paths:
         '200':
           description: successful operation
           content:
-            application/csv: {}
+            application/csv: { }
             application/json:
               schema:
                 $ref: '#/components/schemas/PaymentList'
@@ -1011,7 +1011,7 @@ paths:
         '200':
           description: successful operation
           content:
-            application/csv: {}
+            application/csv: { }
         '500':
           description: Error while executing pending payments
           content:
@@ -1080,6 +1080,35 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ServiceError'
+  /batch/job/userupdater:
+    post:
+      tags:
+        - cronjobs
+      summary: Triggers cronjob ScheduledNotificationSender
+      description: |
+        For testing purpose. Or for forcing a flush of mailsending.
+      operationId: cronjobs
+      responses:
+        '200':
+          description: Trigger of the notification cronjob was successful
+  /batch/job/userupdater/config/{userEditTimeOut}:
+    post:
+      parameters:
+        - in: path
+          name: userEditTimeOut
+          required: true
+          schema:
+            type: integer
+            description: Time in seconds to wait for the user to finish editing, before generating a "user data has changed notification.
+      tags:
+        - cronjobs
+      summary: Triggers cronjob ScheduledNotificationSender
+      description: |
+        For testing purpose. Or for forcing a flush of mailsending.
+      operationId: cronjobs
+      responses:
+        '200':
+          description: Trigger of the notification cronjob was successful
 
 components:
   schemas:
@@ -1353,7 +1382,7 @@ components:
         cause:
           type: string
           description: Specific cause of the error,
-                       for example the name of an invalid query parameter.
+            for example the name of an invalid query parameter.
         details:
           type: string
       required:

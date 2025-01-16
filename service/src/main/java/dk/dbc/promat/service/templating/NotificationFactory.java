@@ -126,10 +126,10 @@ public class NotificationFactory {
         Notification notification = new Notification();
 
         Reviewer reviewer = model.getReviewer();
-        ReviewerRequest reviewerRequest = model.getReviewerRequest();
+        Reviewer newReviewerData = model.getNewReviewerData();
         String subject = String.format(subjectTemplateReviewerChanged, reviewer.getId());
         try {
-            Map<String, ChangedValue> diffMap = reviewerDiffer.getChangedValueMap(reviewer, reviewerRequest);
+            Map<String, ChangedValue> diffMap = reviewerDiffer.getChangedValueMap(reviewer, newReviewerData);
             if (diffMap.isEmpty()) {
                 LOGGER.info("Diff: No diff detected.");
                 return null;

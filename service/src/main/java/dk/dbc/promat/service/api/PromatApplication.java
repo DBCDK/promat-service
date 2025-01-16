@@ -1,5 +1,6 @@
 package dk.dbc.promat.service.api;
 
+import dk.dbc.promat.service.persistence.JsonMapperProvider;
 import dk.dbc.promat.service.persistence.SubjectNote;
 import org.glassfish.jersey.jackson.JacksonFeature;
 
@@ -14,7 +15,7 @@ public class PromatApplication extends Application {
     private static final Set<Class<?>> classes = Set.of(
             Cases.class, Editors.class, JacksonFeature.class, Records.class, Reviewers.class, Subjects.class,
             Users.class, Tasks.class, PersistenceExceptionMapper.class, Messages.class, Payments.class, SubjectNote.class,
-            LocalDateConverterProvider.class, JsonMapperProvider.class);
+            LocalDateConverterProvider.class, JsonMapperProvider.class, Batch.class);
 
     @Override
     public Set<Class<?>> getClasses() {

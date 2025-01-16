@@ -141,7 +141,7 @@ public class RendererTestIT extends ContainerTest {
                 .withPrivateEmail("hans@hansen.dk");
         LocalDate somedaysahead = LocalDate.now().plusDays(3);
         LocalDate alittlelater = LocalDate.now().plusDays(5);
-        ReviewerRequest reviewerRequest = new ReviewerRequest()
+        Reviewer reviewerRequest = new Reviewer()
                 .withFirstName("Hans")
                 .withLastName("Hansen")
                 .withHiatusBegin(somedaysahead)
@@ -213,7 +213,7 @@ public class RendererTestIT extends ContainerTest {
                                 .withAddress1("Rådhuspladsen 1")
                                 .withZip("1550"))
                 .withPrivateEmail("m-privat@olsen.dk");
-        ReviewerRequest reviewerRequest = new ReviewerRequest()
+        Reviewer newReviewer = new Reviewer()
                 .withAddress(new Address()
                         .withAddress1("Frederiksgårds Allé").withAddress2("166 B, 19.mf")
                         .withZip("2720")
@@ -229,7 +229,7 @@ public class RendererTestIT extends ContainerTest {
         Notification notification = notificationFactory.notificationOf(
                 new ReviewerDataChanged()
                 .withReviewer(reviewer)
-                .withReviewerRequest(reviewerRequest));
+                .withNewReviewer(newReviewer));
         String actual = stripTrailingAndLeading(notification.getBodyText());
         String expected = stripTrailingAndLeading(
                 Files.readString(Path.of(RendererTestIT.class.getResource("/mailBodys/reviewerDataChanged.html").getPath()))
