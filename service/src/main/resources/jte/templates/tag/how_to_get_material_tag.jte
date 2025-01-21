@@ -18,7 +18,7 @@
 @endif
 
 @if (material.equals("Printfile"))
-    Link til åbning af fil findes i promat.
+    Link til åbning af fil findes i promat, og den trykte bog er på vej i posten.
 @elseif (material.equals("Ebog"))
     Link til åbning af Ebog findes i promat.
 @else
