@@ -111,6 +111,22 @@ public class RendererTestIT extends ContainerTest {
     }
 
     @Test
+    public void testMailWithMaterialThatShouldBeDownloadedOrReadFromPrintedBook() throws OpenFormatConnectorException, NotificationFactory.ValidateException, IOException {
+        Notification notification = notificationFactory.notificationOf(new AssignReviewer()
+                .withPromatCase(aCase
+                        .withFulltextLink("Alink")
+                        .withDetails("VENTER PÅ ACT POST 140195596 28/2/2025 BKM:V")
+                        .withTasks(List.of(new PromatTask()
+                                .withTaskFieldType(TaskFieldType.METAKOMPAS)))));
+        String expected = stripTrailingAndLeading(
+                Files.readString(
+                        Path.of(RendererTestIT.class.getResource("/mailBodys/printfileReviewForAct.html").getPath())));
+        String actual = stripTrailingAndLeading(notification.getBodyText());
+
+        assertThat("Mailtext", actual, is(expected));
+    }
+
+    @Test
     public void testMailWithMaterialEbookAndExpress() throws OpenFormatConnectorException, NotificationFactory.ValidateException, IOException {
         Notification notification = notificationFactory.notificationOf(new AssignReviewer()
                 .withPromatCase(aCase
