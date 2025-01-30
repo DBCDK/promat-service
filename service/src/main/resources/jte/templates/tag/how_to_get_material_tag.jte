@@ -19,12 +19,12 @@
 
 @if (material.equals("Printfile"))
     @if (promatCase.getDetails() != null && promatCase.getDetails().contains("VENTER PÅ ACT POST"))
-        Link til åbning af Ebog findes i promat, og den trykte bog er på vej med posten.
+        Link til åbning af e-bog findes i promat, og den trykte bog er på vej med posten.
     @else
-        Link til åbning af Ebog findes i promat.
+        Link til åbning af e-bog findes i promat.
     @endif
 @elseif (material.equals("Ebog"))
-    Link til åbning af Ebog findes i promat.
+    Link til åbning af e-bog findes i promat.
 @else
-    Materialet er på vej til dig i posten.
+    Materialet er på vej med posten.
 @endif
