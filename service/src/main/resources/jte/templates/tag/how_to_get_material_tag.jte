@@ -5,7 +5,7 @@
 
 !{PromatCase promatCase = model.getPromatCase(); }
 
-!{ String material = "Book" }
+!{ String material = "Book"; }
 
 @if (promatCase.getFulltextLink() != null)
     !{material = "Printfile"; }
@@ -19,12 +19,12 @@
 
 @if (material.equals("Printfile"))
     @if (promatCase.getDetails() != null && promatCase.getDetails().contains("VENTER PÅ ACT POST"))
-        Link til åbning af e-bog findes i promat, og den trykte bog er på vej med posten.
+        Link til åbning af e-bog findes i Promat, og den trykte bog er på vej med posten.
     @else
-        Link til åbning af e-bog findes i promat.
+        Link til åbning af e-bog findes i Promat.
     @endif
 @elseif (material.equals("Ebog"))
-    Link til åbning af e-bog findes i promat.
+    Link til åbning af e-bog findes i Promat.
 @else
     Materialet er på vej med posten.
 @endif
