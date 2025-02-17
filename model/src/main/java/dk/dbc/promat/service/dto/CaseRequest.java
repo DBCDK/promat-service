@@ -7,6 +7,7 @@ import dk.dbc.promat.service.persistence.PromatCase;
 
 import dk.dbc.promat.service.persistence.Subject;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -79,6 +80,8 @@ public class CaseRequest implements Dto {
     private String fulltextLink;
 
     private String reminderSent;
+
+    private Boolean keepEditor;
 
     // Todo: This could/should be removed when DMatV2 e2e test is completed.  (See note in Cases.java@703 or thereabouts)
     //       Do note that we specifically do NOT change the model version even though we have added a field. This
@@ -354,9 +357,22 @@ public class CaseRequest implements Dto {
         return this;
     }
 
+    public Boolean getKeepEditor() {
+        return keepEditor;
+    }
+
+    public void setKeepEditor(Boolean keepEditor) {
+        this.keepEditor = keepEditor;
+    }
+
+    public CaseRequest withKeepEditor(Boolean keepEditor) {
+        this.keepEditor = keepEditor;
+        return this;
+    }
+
     @Override
     public String toString() {
-        return "CaseRequestDto{" +
+        return "CaseRequest{" +
                 "title='" + title + '\'' +
                 ", details='" + details + '\'' +
                 ", primaryFaust='" + primaryFaust + '\'' +
@@ -375,6 +391,7 @@ public class CaseRequest implements Dto {
                 ", note='" + note + '\'' +
                 ", fulltextLink='" + fulltextLink + '\'' +
                 ", reminderSent='" + reminderSent + '\'' +
+                ", keepEditor=" + keepEditor +
                 ", codes=" + codes +
                 ", internalNote='" + internalNote + '\'' +
                 '}';
@@ -448,6 +465,9 @@ public class CaseRequest implements Dto {
         if (codes != null ? !codes.equals(that.codes) : that.codes != null) {
             return false;
         }
+        if (keepEditor != null ? !keepEditor.equals(that.keepEditor) : that.keepEditor != null) {
+            return false;
+        }
         return reminderSent != null ? reminderSent.equals(that.reminderSent) : that.reminderSent == null;
     }
 
@@ -473,6 +493,7 @@ public class CaseRequest implements Dto {
         result = 31 * result + (fulltextLink != null ? fulltextLink.hashCode() : 0);
         result = 31 * result + (reminderSent != null ? reminderSent.hashCode() : 0);
         result = 31 * result + (codes != null ? codes.hashCode() : 0);
+        result = 31 * result + (keepEditor != null ? keepEditor.hashCode() : 0);
         return result;
     }
 }

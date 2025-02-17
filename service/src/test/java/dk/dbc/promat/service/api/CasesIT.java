@@ -24,6 +24,7 @@ import dk.dbc.promat.service.persistence.TaskType;
 import org.eclipse.jetty.http.HttpStatus;
 import org.hamcrest.core.IsNull;
 import org.jsoup.Jsoup;
+import org.junit.experimental.theories.Theories;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
@@ -2988,12 +2989,7 @@ public class CasesIT extends ContainerTest {
 
     @Test
     public void testSetKeepEditor() throws IOException {
-
-        // Note: Since the keepEditor flag is not exposed (it is a strictly internal value
-        //       which should never be used or set from outside - and may change if we decide
-        //       to handle the editor-reassignment differently in the future), we cannot check
-        //       that it actually gets set.. so this test only checks that the service does not
-        //       blow up in a spectacular fashion when changing status to PENDING_ISSUES
+        String caseUrl;
 
         // Create case.
         CaseRequest dto = new CaseRequest()
@@ -3016,24 +3012,50 @@ public class CasesIT extends ContainerTest {
                                 .withTargetFausts(Arrays.asList(new String[] {"5004522"}))
                 ));
 
-        // Create the case and check that the keepEditor field is not exposed
+        // Create the case
         Response response = postResponse("v1/api/cases", dto);
         assertThat("status code", response.getStatus(), is(201));
-        String caseAsString = response.readEntity(String.class);
-        assertThat("keepEditor is not exposed", caseAsString.contains("keepEditor"), is(false));
-        PromatCase aCase = mapper.readValue(caseAsString, PromatCase.class);
+        PromatCase aCase = response.readEntity(PromatCase.class);
+        caseUrl = "v1/api/cases/" + aCase.getId();
 
         // Send case to approval, then back to the reviewer
         dto = new CaseRequest().withStatus(CaseStatus.PENDING_APPROVAL);
-        assertThat("status code", postResponse("v1/api/cases/" + aCase.getId(), dto)
-                .getStatus(), is(200));
-        dto.setStatus(CaseStatus.PENDING_ISSUES);
-        assertThat("status code", postResponse("v1/api/cases/" + aCase.getId(), dto)
+        assertThat("status code", postResponse(caseUrl, dto)
                 .getStatus(), is(200));
 
+        // Assume same editor sends it back to reviewer.
+        dto.withStatus(CaseStatus.PENDING_ISSUES).withEditor(11);
+        aCase = postAndAssert(caseUrl, dto, null, PromatCase.class, OK);
+        assertThat("keepEditor", aCase.getKeepEditor(), is(true));
+
+        // When the reviewer sends it back for approval, the nightly job that removes all editors for
+        // cases in PENDING_APPROVAL, should pass on this one, because of the "sticky" editor.
+        dto.setStatus(CaseStatus.PENDING_APPROVAL);
+        postAndAssert(caseUrl, dto, null, PromatCase.class, OK);
+
+        nightlyReset();
+
+        aCase = get(caseUrl, PromatCase.class);
+        assertThat("keep editor", aCase.getKeepEditor(), is(true));
+        assertThat("editor still the same", aCase.getEditor().getId(), is(11));
+
+        // Now remove the keepEditor flag, and fake nightly reset.
+        postAndAssert(caseUrl, new CaseRequest().withKeepEditor(false), null, PromatCase.class, OK);
+
+        nightlyReset();
+
+        // KeepEditor and editor should be cleared.
+        aCase = get(caseUrl, PromatCase.class);
+        assertThat("keep editor", aCase.getKeepEditor(), is(false));
+        assertThat("editor now removed", aCase.getEditor(), is(nullValue()));
+
         // Cleanup
-        response = deleteResponse("v1/api/cases/" + aCase.getId());
+        response = deleteResponse(caseUrl);
         assertThat("status code", response.getStatus(), is(200));
+    }
+
+    public void nightlyReset() {
+        assertThat("Nightly reset", getResponse("v1/api/cases/forceeditorreset").getStatus(), is(200));
     }
 
     @Test

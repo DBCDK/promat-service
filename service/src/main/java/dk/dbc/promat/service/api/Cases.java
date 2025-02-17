@@ -665,7 +665,7 @@ public class Cases {
                 // If status is changing from ASSIGNED to PENDING_APPROVAL, it means that the reviewer assumes his/her
                 // part is done, and that the case is ready to be reviewed by an editor. And not necessarily the one
                 // that created the case. SO editor must be removed from the case.
-                if( existing.in(CaseStatus.ASSIGNED) && status.in(CaseStatus.PENDING_APPROVAL)) {
+                if( existing.in(CaseStatus.ASSIGNED) && status.in(CaseStatus.PENDING_APPROVAL) && !existing.getKeepEditor()) {
                     if( existing.getEditor() != null ) {
                         existing.setEditor(null);
                     }
@@ -686,6 +686,18 @@ public class Cases {
                     repository.assignFaustnumber(existing);
                 }
             }
+
+            // Somewhat higher up most cases of "pin editor to case" are covered.
+            // BUT
+            // Sometimes it is important for the editor group to actively, regardless of case status, to be
+            // able to pin the current editor to the case.
+            // For now:
+            // It is also possible to "unpin".
+            if (dto.getKeepEditor() != null) {
+                LOGGER.info("Setting keepEditor to {}", dto.getKeepEditor());
+                existing.setKeepEditor(dto.getKeepEditor());
+            }
+
             if(dto.getCreator() != null) {
                 if (existing.getCreator() != null && !existing.getCreator().getId().equals(dto.getCreator())) {
                     return ServiceErrorDto.Forbidden("Change in 'creator'","'Creator' cannot be changed, once set.");
@@ -859,6 +871,32 @@ public class Cases {
         // force case draft status to CREATED
         caseRequest.setStatus(CaseStatus.CREATED);
         return createCase(caseRequest);
+    }
+
+    // Convenience method (for testing purposes) to force a reset of editors .
+    @GET
+    @Path("cases/forceeditorreset")
+    public Response forceEditorReset() {
+        LOGGER.info("GET /forceeditorreset");
+        try {
+            List<PromatCase> casesForUpdate = getCasesWithInactiveEditor();
+            if (casesForUpdate != null && !casesForUpdate.isEmpty()) {
+                for (PromatCase promatCase : casesForUpdate) {
+                    LOGGER.info("Clearing editor on case with id {}", promatCase.getId());
+                    promatCase.setEditor(null);
+                }
+            }
+        } catch (Exception e) {
+            return Response.serverError().entity(e.getMessage()).build();
+        } finally {
+            entityManager.flush();
+        }
+        return Response.ok().build();
+    }
+
+    public List<PromatCase> getCasesWithInactiveEditor() {
+        TypedQuery<PromatCase> query = entityManager.createNamedQuery(PromatCase.GET_CASES_WITH_INACTIVE_EDITOR_NAME, PromatCase.class);
+        return query.getResultList();
     }
 
     public Reviewer resolveReviewer(Integer reviewerId) throws ServiceErrorException {
