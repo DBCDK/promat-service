@@ -3055,7 +3055,7 @@ public class CasesIT extends ContainerTest {
     }
 
     public void nightlyReset() {
-        assertThat("Nightly reset", getResponse("v1/api/cases/forceeditorreset").getStatus(), is(200));
+        assertThat("Nightly reset", putResponse("v1/api/cases/forceeditorreset", null).getStatus(), is(200));
     }
 
     @Test

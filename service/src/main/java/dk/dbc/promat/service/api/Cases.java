@@ -35,6 +35,7 @@ import dk.dbc.promat.service.templating.CaseviewXmlTransformer;
 import dk.dbc.promat.service.templating.NotificationFactory;
 import dk.dbc.promat.service.templating.Renderer;
 import dk.dbc.promat.service.templating.model.AssignReviewer;
+import jakarta.ws.rs.PUT;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -874,7 +875,7 @@ public class Cases {
     }
 
     // Convenience method (for testing purposes) to force a reset of editors .
-    @GET
+    @PUT
     @Path("cases/forceeditorreset")
     public Response forceEditorReset() {
         LOGGER.info("GET /forceeditorreset");
