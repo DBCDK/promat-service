@@ -6,6 +6,7 @@ import dk.dbc.httpclient.HttpClient;
 import dk.dbc.httpclient.HttpGet;
 import dk.dbc.promat.service.db.DatabaseMigrator;
 import dk.dbc.promat.service.persistence.Notification;
+import org.glassfish.jersey.client.ClientProperties;
 import org.junit.jupiter.api.BeforeAll;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,6 +45,7 @@ public class IntegrationTestIT {
 
     static {
         httpClient = HttpClient.create(HttpClient.newClient());
+        httpClient.getClient().property(ClientProperties.SUPPRESS_HTTP_COMPLIANCE_VALIDATION, true);
         LOGGER.info("Postres url is:{}", String.format("postgres:@host.testcontainers.internal:%s/postgres",
                 promatDBContainer.getHostPort()));
     }

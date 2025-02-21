@@ -262,7 +262,7 @@ public class PromatCase {
     @JsonView({CaseView.Export.class, CaseView.Summary.class, CaseView.Case.class})
     private List<String> codes;
 
-    @JsonIgnore
+    @JsonView({CaseView.Case.class, CaseView.Summary.class})
     private Boolean keepEditor = false;
 
     @JsonIgnore
