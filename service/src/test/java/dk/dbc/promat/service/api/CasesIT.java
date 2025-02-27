@@ -2267,7 +2267,7 @@ public class CasesIT extends ContainerTest {
         assertThat("status code", response.getStatus(), is(200));
 
         updated = mapper.readValue(response.readEntity(String.class), PromatCase.class);
-        assertThat("faust", updated.getTasks().get(0).getRecordId(), is("131990219"));
+        assertThat("faust", updated.getTasks().get(0).getRecordId(), is("140357316"));
 
         // Delete the case
         response = deleteResponse("v1/api/cases/" + created.getId());

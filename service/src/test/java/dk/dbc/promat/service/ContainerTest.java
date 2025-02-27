@@ -228,7 +228,7 @@ public abstract class ContainerTest extends IntegrationTestIT {
                 .withEnv("MAIL_FROM", "some@address.dk")
                 .withEnv("OPENFORMAT_SERVICE_URL", getOpenFormatBaseUrl("http://host.testcontainers.internal:" + wireMockServer.port() + "/api/v2"))
                 .withEnv("LU_MAILADDRESS", "lumailaddress-test@dbc.dk")
-                .withEnv("OPENNUMBERROLL_SERVICE_URL", "http://host.testcontainers.internal:" + wireMockServer.port() + "/")
+                .withEnv("OPENNUMBERROLL_SERVICE_URL", "http://host.testcontainers.internal:" + wireMockServer.port() + "/1.1")
                 .withEnv("EMATERIAL_CONTENT_REPO", "http://host.testcontainers.internal:" + wireMockServer.port() +
                         "?faust=%s")
                 .withEnv("OPENNUMBERROLL_NUMBERROLLNAME", "faust")
