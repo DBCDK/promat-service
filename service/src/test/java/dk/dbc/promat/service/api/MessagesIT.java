@@ -275,6 +275,17 @@ public class MessagesIT extends ContainerTest {
                 size(getMessageList(aCase), PromatMessage.Direction.EDITOR_TO_REVIEWER, true),
                 is(2L));
 
+        // ..and 4 messages from reviewer to editor
+        assertThat("Editor to reviewer messages",
+                size(getMessageList(aCase), PromatMessage.Direction.EDITOR_TO_REVIEWER, true),
+                is(2L));
+
+        // ...and 6 messages all in all. Including deleted ones.
+        assertThat("Messages all in all",
+                getAllMessageList(aCase).getPromatMessages().size(),
+                is(6));
+
+
         // and 2 nice messages from the reviewer to the editor
         PromatMessagesList messages = getMessageList(aCase);
         assertThat("Reviewer to editor messages",
@@ -607,6 +618,13 @@ public class MessagesIT extends ContainerTest {
 
     private PromatMessagesList getMessageList(PromatCase aCase) throws JsonProcessingException {
         Response response = getResponse(String.format("v1/api/cases/%s/messages", aCase.getId()));
+        assertThat("status code", response.getStatus(), is(200));
+
+        return mapper.readValue(response.readEntity(String.class), PromatMessagesList.class);
+    }
+
+    private PromatMessagesList getAllMessageList(PromatCase aCase) throws JsonProcessingException {
+        Response response = getResponse(String.format("v1/api/cases/%s/audit/messages", aCase.getId()), "1-2-3-4-5" );
         assertThat("status code", response.getStatus(), is(200));
 
         return mapper.readValue(response.readEntity(String.class), PromatMessagesList.class);

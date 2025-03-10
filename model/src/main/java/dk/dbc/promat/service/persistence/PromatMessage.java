@@ -20,6 +20,10 @@ import jakarta.persistence.NamedQuery;
                 query = PromatMessage.GET_MESSAGES_FOR_CASE_QUERY
         ),
         @NamedQuery(
+                name = PromatMessage.GET_ALL_MESSAGES_FOR_CASE,
+                query = PromatMessage.GET_ALL_MESSAGES_FOR_CASE_QUERY
+        ),
+        @NamedQuery(
                 name = PromatMessage.UPDATE_READ_STATE,
                 query = PromatMessage.UPDATE_READ_STATE_QUERY
         ),
@@ -129,6 +133,11 @@ public class PromatMessage {
             "SELECT promatmessage FROM PromatMessage promatmessage " +
                     "WHERE promatmessage.caseId = :caseId " +
                     "AND NOT promatmessage.isDeleted " +
+                    "ORDER BY promatmessage.id DESC";
+    public static final String GET_ALL_MESSAGES_FOR_CASE = "PromatMessage.getAllMessagesForCase";
+    public static final String GET_ALL_MESSAGES_FOR_CASE_QUERY =
+            "SELECT promatmessage FROM PromatMessage promatmessage " +
+                    "WHERE promatmessage.caseId = :caseId " +
                     "ORDER BY promatmessage.id DESC";
     public static final String UPDATE_READ_STATE = "PromatMessage.updateReadState";
     public static final String UPDATE_READ_STATE_QUERY =

@@ -15,6 +15,8 @@ import dk.dbc.promat.service.persistence.Reviewer;
 import dk.dbc.promat.service.templating.NotificationFactory;
 import dk.dbc.promat.service.templating.model.MailToReviewerOnNewMessage;
 import java.time.LocalDateTime;
+
+import jakarta.annotation.security.RolesAllowed;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -116,6 +118,25 @@ public class Messages {
             }
 
             return Response.ok().entity(message).build();
+        } catch (Exception e) {
+            LOGGER.error("Caught exception: {}", e.getMessage());
+            return ServiceErrorDto.Failed(e.getMessage());
+        }
+    }
+
+    @GET
+    @Path("cases/{id}/audit/messages")
+    @Produces({MediaType.APPLICATION_JSON})
+    @RolesAllowed({"authenticated-user"})
+    public Response getAllMessagesForcase(@PathParam("id") Integer id) {
+        try {
+            TypedQuery<PromatMessage> query = entityManager
+                    .createNamedQuery(PromatMessage.GET_ALL_MESSAGES_FOR_CASE, PromatMessage.class);
+            query.setParameter("caseId", id);
+            final List<PromatMessage> messages = query.getResultList();
+
+            return Response.ok().entity(new PromatMessagesList().withPromatMessages(messages)).build();
+
         } catch (Exception e) {
             LOGGER.error("Caught exception: {}", e.getMessage());
             return ServiceErrorDto.Failed(e.getMessage());
