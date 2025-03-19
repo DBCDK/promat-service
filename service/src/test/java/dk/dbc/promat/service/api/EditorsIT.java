@@ -26,6 +26,7 @@ class EditorsIT extends ContainerTest {
     void getEditor() throws JsonProcessingException {
         final Editor expectedEditor = new Editor();
         expectedEditor.setId(10);
+        expectedEditor.setCulrId("51");
         expectedEditor.setActive(true);
         expectedEditor.setFirstName("Ed");
         expectedEditor.setLastName("Itor");
@@ -75,6 +76,7 @@ class EditorsIT extends ContainerTest {
         // Check that we have the expected start-state
         final Editor expectedEditor = new Editor();
         expectedEditor.setId(12);
+        expectedEditor.setCulrId("53");
         expectedEditor.setActive(true);
         expectedEditor.setFirstName("Edi");
         expectedEditor.setLastName("tor");
@@ -133,7 +135,8 @@ class EditorsIT extends ContainerTest {
         Response response = postResponse("v1/api/editors", editorRequest, "1-2-3-4-5");
         assertThat("response status", response.getStatus(), is(400));
 
-        // Add agency and userId fields
+        // Add cpr, agency and userId fields
+        editorRequest.setCprNumber("2201211154");
         editorRequest.setAgency("790900");
         editorRequest.setUserId("etre");
 

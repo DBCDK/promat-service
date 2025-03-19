@@ -16,6 +16,7 @@ class EditorsTest {
     void editorEquals() {
         final Editor expectedEditor = new Editor();
         expectedEditor.setId(10);
+        expectedEditor.setCulrId("1123-456-789");
         expectedEditor.setActive(true);
         expectedEditor.setFirstName("Ed");
         expectedEditor.setLastName("Itor");
@@ -26,6 +27,10 @@ class EditorsTest {
 
         final Editor actual = new Editor();
         actual.setId(expectedEditor.getId());
+        assertThat(actual, is(not(expectedEditor)));
+        assertThat(expectedEditor, is(not(actual)));
+
+        actual.setCulrId(expectedEditor.getCulrId());
         assertThat(actual, is(not(expectedEditor)));
         assertThat(expectedEditor, is(not(actual)));
 

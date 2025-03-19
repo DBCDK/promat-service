@@ -1,6 +1,7 @@
 package dk.dbc.promat.service.api;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import dk.dbc.connector.culr.CulrConnectorException;
 import dk.dbc.promat.service.dto.EditorList;
 import dk.dbc.promat.service.dto.EditorRequest;
 import dk.dbc.promat.service.dto.ServiceErrorDto;
@@ -42,13 +43,16 @@ public class Editors {
     EntityManager entityManager;
 
     @Inject
+    CulrHandler culrHandler;
+
+    @Inject
     AuditLogHandler auditLogHandler;
 
     @POST
     @Path("editors")
     @Produces({MediaType.APPLICATION_JSON})
     @RolesAllowed({"authenticated-user"})
-    public Response createEditor(EditorRequest editorRequest, @Context UriInfo uriInfo) {
+    public Response createEditor(EditorRequest editorRequest, @Context UriInfo uriInfo) throws CulrConnectorException {
         LOGGER.info("editors (POST)");
 
         final String firstName = editorRequest.getFirstName();
@@ -69,10 +73,24 @@ public class Editors {
                     "Field 'email' must be supplied and not be blank when creating a new reviewer");
         }
 
+        final String cprNumber = editorRequest.getCprNumber();
+        if (cprNumber == null || cprNumber.isBlank()) {
+            return ServiceErrorDto.InvalidRequest("Missing required field in the request data",
+                    "Field 'cprNumber' must be supplied when creating a new reviewer");
+        }
+
         final Integer paycode = editorRequest.getPaycode();
         if (paycode == null) {
             return ServiceErrorDto.InvalidRequest("Missing required field in the request data",
                     "Field 'paycode' must be supplied when creating a new reviewer");
+        }
+
+        final String culrId;
+        try {
+            culrId = culrHandler.createCulrAccount(cprNumber, String.valueOf(paycode));
+            LOGGER.info("Obtained CulrId {} for new editor", culrId);
+        } catch (ServiceErrorException e) {
+            return Response.status(500).entity(e.getServiceErrorDto()).build();
         }
 
         final String agency = editorRequest.getAgency();
@@ -95,6 +113,7 @@ public class Editors {
                     .withEmail(email)
                     .withAgency(agency)
                     .withUserId(userId);
+            entity.setCulrId(culrId);
 
             entityManager.persist(entity);
             entityManager.flush();
