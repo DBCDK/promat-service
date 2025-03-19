@@ -40,7 +40,7 @@ import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 @TestMethodOrder(OrderAnnotation.class)
-public class ReviewersIT extends ContainerTest {
+class ReviewersIT extends ContainerTest {
 
     @Test
     void createReviewer()  {
@@ -124,7 +124,7 @@ public class ReviewersIT extends ContainerTest {
     }
 
     @Test
-    void getReviewerWithoutAuthToken() throws JsonProcessingException {
+    void getReviewerWithoutAuthToken() {
         final Response response = getResponse("v1/api/reviewers/1");
         assertThat("response status", response.getStatus(), is(401));
 
@@ -132,7 +132,7 @@ public class ReviewersIT extends ContainerTest {
     }
 
     @Test
-    void getReviewerWithInactiveAuthToken() throws JsonProcessingException {
+    void getReviewerWithInactiveAuthToken() {
         final Response response = getResponse("v1/api/reviewers/1", "6-7-8-9-0");
         assertThat("response status", response.getStatus(), is(401));
 
@@ -142,7 +142,7 @@ public class ReviewersIT extends ContainerTest {
     }
 
     @Test
-    void getReviewer() throws JsonProcessingException, NoSuchAlgorithmException, KeyManagementException {
+    void getReviewer() throws JsonProcessingException {
         final Reviewer expectedReviewer = new Reviewer();
         loadReviewer1(expectedReviewer, ReviewerView.Reviewer.class);
 
@@ -439,6 +439,8 @@ public class ReviewersIT extends ContainerTest {
                             .withZip("9999")
                             .withCity("Lilleved")
                             .withSelected(true));
+            reviewer.setAgency("300100");
+            reviewer.setUserId("knud1");
         }
         reviewer.setActiveChanged(Date.from(Instant.ofEpochSecond(1629900636)));
     }
@@ -471,6 +473,8 @@ public class ReviewersIT extends ContainerTest {
                             .withZip("1111")
                             .withCity("Storeved")
                             .withSelected(true));
+            reviewer.setAgency("820010");
+            reviewer.setUserId("axel52");
         }
         reviewer.setActiveChanged(Date.from(Instant.ofEpochSecond(1629900636)));
     }

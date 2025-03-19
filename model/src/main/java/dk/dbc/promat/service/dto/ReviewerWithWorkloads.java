@@ -64,6 +64,8 @@ public class ReviewerWithWorkloads extends Reviewer {
                 ", subjects=" + subjects +
                 ", accepts=" + accepts +
                 ", note=" + note +
+                ", agency=" + agency +
+                ", userId=" + userId +
                 ", weekWorkload=" + weekWorkload +
                 ", weekBeforeWorkload=" + weekBeforeWorkload +
                 ", weekAfterWorkload=" + weekAfterWorkload +
