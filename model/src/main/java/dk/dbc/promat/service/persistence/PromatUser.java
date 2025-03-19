@@ -148,11 +148,6 @@ public abstract class PromatUser {
         this.activeChanged = activeChanged;
     }
 
-    public PromatUser withActiveChanged(Date activeChanged) {
-        this.activeChanged = activeChanged;
-        return this;
-    }
-
     public Date getDeactivated()  {
         return deactivated;
     }
@@ -161,8 +156,37 @@ public abstract class PromatUser {
         this.deactivated = deactivated;
     }
 
-    public PromatUser withDeactivated(Date deactivated) {
-        this.deactivated = deactivated;
-        return this;
+    public String getAgency() {
+        return agency;
+    }
+
+    public void setAgency(String agency) {
+        this.agency = agency;
+    }
+
+    public String getUserId() {
+        return userId;
+    }
+
+    public void setUserId(String userId) {
+        this.userId = userId;
+    }
+
+    @Override
+    public String toString() {
+        return "PromatUser{" +
+                "id=" + id +
+                ", role=" + role +
+                ", active=" + active +
+                ", culrId='" + culrId + '\'' +
+                ", firstName='" + firstName + '\'' +
+                ", lastName='" + lastName + '\'' +
+                ", email='" + email + '\'' +
+                ", phone='" + phone + '\'' +
+                ", activeChanged=" + activeChanged +
+                ", deactivated=" + deactivated +
+                ", agency='" + agency + '\'' +
+                ", userId='" + userId + '\'' +
+                '}';
     }
 }

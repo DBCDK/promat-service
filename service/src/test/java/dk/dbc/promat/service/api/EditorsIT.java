@@ -16,9 +16,10 @@ import org.slf4j.LoggerFactory;
 import jakarta.ws.rs.core.Response;
 
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.MatcherAssert.assertThat;
 
-public class EditorsIT extends ContainerTest {
+class EditorsIT extends ContainerTest {
     private static final Logger LOGGER = LoggerFactory.getLogger(EditorsIT.class);
 
     @Test
@@ -30,6 +31,8 @@ public class EditorsIT extends ContainerTest {
         expectedEditor.setLastName("Itor");
         expectedEditor.setEmail("ed.itor@dbc.dk");
         expectedEditor.setActiveChanged(Date.from(Instant.ofEpochSecond(1629900636)));
+        expectedEditor.setAgency("790900");
+        expectedEditor.setUserId("jcba");
 
         Response response = getResponse("v1/api/editors/10", "1-2-3-4-5");
         final Editor actual = mapper.readValue(response.readEntity(String.class), Editor.class);
@@ -69,23 +72,51 @@ public class EditorsIT extends ContainerTest {
     @Test
     void updateEditor() throws JsonProcessingException {
 
+        // Check that we have the expected start-state
+        final Editor expectedEditor = new Editor();
+        expectedEditor.setId(12);
+        expectedEditor.setActive(true);
+        expectedEditor.setFirstName("Edi");
+        expectedEditor.setLastName("tor");
+        expectedEditor.setEmail("edi.tor@dbc.dk");
+        expectedEditor.setActiveChanged(Date.from(Instant.ofEpochSecond(1629900636)));
+        expectedEditor.setAgency("097900");
+        expectedEditor.setUserId("toredi");
+
+        Response response = getResponse("v1/api/editors/12", "1-2-3-4-5");
+        final Editor actual = mapper.readValue(response.readEntity(String.class), Editor.class);
+        actual.setActiveChanged(Date.from(Instant.ofEpochSecond(1629900636)));
+        actual.setDeactivated(null);
+        assertThat(actual, is(expectedEditor));
+
+        // Change editor values
         final EditorRequest editorRequest = new EditorRequest()
                 .withActive(false)
                 .withEmail("edito.r@dbc.dk")
                 .withFirstName("Edito")
-                .withLastName("r");
+                .withLastName("r")
+                .withAgency("790900")
+                .withUserId("editor");
 
-        final Response response = putResponse("v1/api/editors/12", editorRequest, "1-2-3-4-5");
+        response = putResponse("v1/api/editors/12", editorRequest, "1-2-3-4-5");
         assertThat("response status", response.getStatus(), is(200));
         final Editor updated = mapper.readValue(response.readEntity(String.class), Editor.class);
 
-        final Editor expected = new Editor();
-        loadUpdatedEditor(expected);
+        // Change expected updated-state
+        expectedEditor.setActive(false);
+        expectedEditor.setFirstName("Edito");
+        expectedEditor.setLastName("r");
+        expectedEditor.setEmail("edito.r@dbc.dk");
+        expectedEditor.setActiveChanged(Date.from(Instant.ofEpochSecond(1629900636)));
+        expectedEditor.setAgency("790900");
+        expectedEditor.setUserId("editor");
 
+        // Verify correct update
         updated.setActiveChanged(Date.from(Instant.ofEpochSecond(1629900636)));
         updated.setDeactivated(null);
-        assertThat("Editor has been updated", updated.equals(expected));
+        assertThat(updated, is(expectedEditor));
 
+        // Check that we got an auditlog entry
         assertThat("auditlog update", promatServiceContainer.getLogs().contains("{\"Update and view full editor profile\":\"editors/12\",\"Response\":\"200\"}"));
     }
 
@@ -93,48 +124,43 @@ public class EditorsIT extends ContainerTest {
     void createEditor() throws JsonProcessingException {
 
         final EditorRequest editorRequest = new EditorRequest()
-                .withCprNumber("2201211154")
                 .withFirstName("Edi")
                 .withLastName("Tore")
                 .withEmail("edi.tore@dbc.dk")
                 .withPaycode(9999);
 
+        // First attempt without required agency and userId fields
         Response response = postResponse("v1/api/editors", editorRequest, "1-2-3-4-5");
+        assertThat("response status", response.getStatus(), is(400));
+
+        // Add agency and userId fields
+        editorRequest.setAgency("790900");
+        editorRequest.setUserId("etre");
+
+        response = postResponse("v1/api/editors", editorRequest, "1-2-3-4-5");
         assertThat("response status", response.getStatus(), is(201));
         final Editor created = mapper.readValue(response.readEntity(String.class), Editor.class);
 
+        // Check that the editor was created with all values
         final Editor expected = new Editor();
         expected.setId(created.getId());
-        loadCreatedEditor(expected);
-
-        assertThat("Editor has been created", created.equals(expected));
+        expected.setActive(true);
+        expected.setCulrId("9eb694d3-e734-43f5-b30c-b03d1db1b523");
+        expected.setFirstName("Edi");
+        expected.setLastName("Tore");
+        expected.setEmail("edi.tore@dbc.dk");
+        expected.setAgency("790900");
+        expected.setUserId("etre");
+        assertThat(created, is(expected));
 
         response = getResponse("v1/api/editors/" + created.getId(), "1-2-3-4-5");
         assertThat("response status", response.getStatus(), is(200));
         final Editor existing = mapper.readValue(response.readEntity(String.class), Editor.class);
 
-        assertThat("Editor has been persisted", created.equals(existing));
+        // Check that the editor has been persisted and has all values
+        assertThat(created, is(existing));
+        assertThat(existing, is(expected));
     }
-
-    private void loadUpdatedEditor(Editor editor) {
-        editor.setId(12);
-        editor.setActive(false);
-        editor.setCulrId("53");
-        editor.setFirstName("Edito");
-        editor.setLastName("r");
-        editor.setEmail("edito.r@dbc.dk");
-        editor.setActiveChanged(Date.from(Instant.ofEpochSecond(1629900636)));
-        editor.setDeactivated(null);
-    }
-
-    private void loadCreatedEditor(Editor editor) {
-        editor.setActive(true);
-        editor.setCulrId("9eb694d3-e734-43f5-b30c-b03d1db1b523");
-        editor.setFirstName("Edi");
-        editor.setLastName("Tore");
-        editor.setEmail("edi.tore@dbc.dk");
-    }
-
 
     @Test
     public void testEditorFormat() {
