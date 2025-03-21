@@ -37,7 +37,7 @@ public abstract class PromatUser {
     public static final String GET_USER_ROLE =
             "PromatUser.getUserRole";
     public static final String GET_USER_ROLE_QUERY =
-            "SELECT id,role,CAST(paycode AS TEXT) AS localid FROM promatuser WHERE culrId=?1";
+            "SELECT id,role,CAST(paycode AS TEXT) AS localid FROM promatuser WHERE culrId=?1 OR userId=?1";
 
     public enum Role {
         EDITOR, REVIEWER
