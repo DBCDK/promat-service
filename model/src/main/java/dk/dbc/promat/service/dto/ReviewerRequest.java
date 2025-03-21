@@ -17,6 +17,7 @@ import java.util.Objects;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class ReviewerRequest implements Dto {
     private Boolean active;
+    @Deprecated(since = "Will not be used for reviewer creation after switch to professional login")
     private String cprNumber;
     private String firstName;
     private String lastName;

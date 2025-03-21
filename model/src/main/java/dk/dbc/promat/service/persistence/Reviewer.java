@@ -384,6 +384,16 @@ public class Reviewer extends PromatUser {
         return this;
     }
 
+    public Reviewer withAgency(String agency) {
+        this.agency = agency;
+        return this;
+    }
+
+    public Reviewer withUserId(String userId) {
+        this.userId = userId;
+        return this;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) {

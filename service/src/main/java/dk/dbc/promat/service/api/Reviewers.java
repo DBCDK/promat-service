@@ -93,6 +93,8 @@ public class Reviewers {
         }
     }
 
+    private final static String MISSING_REQUIRED_FIELD = "Missing required field in the request data";
+
     @POST
     @Path("reviewers")
     @Produces({MediaType.APPLICATION_JSON})
@@ -102,19 +104,31 @@ public class Reviewers {
 
         final String cprNumber = reviewerRequest.getCprNumber();
         if (cprNumber == null || cprNumber.isBlank()) {
-            return ServiceErrorDto.InvalidRequest("Missing required field in the request data",
+            return ServiceErrorDto.InvalidRequest(MISSING_REQUIRED_FIELD,
                     "Field 'cprNumber' must be supplied when creating a new reviewer");
         }
 
         final Integer paycode = reviewerRequest.getPaycode();
         if (paycode == null) {
-            return ServiceErrorDto.InvalidRequest("Missing required field in the request data",
+            return ServiceErrorDto.InvalidRequest(MISSING_REQUIRED_FIELD,
                     "Field 'paycode' must be supplied when creating a new reviewer");
         }
 
         if (reviewerRequest.getEmail() == null && reviewerRequest.getPrivateEmail() == null) {
-            return ServiceErrorDto.InvalidRequest("Missing required field in the request data",
+            return ServiceErrorDto.InvalidRequest(MISSING_REQUIRED_FIELD,
                     "Field 'email' or 'private email' must be supplied when creating a new reviewer");
+        }
+
+        final String agency = reviewerRequest.getAgency();
+        if ( agency == null || agency.isBlank()) {
+            return ServiceErrorDto.InvalidRequest(MISSING_REQUIRED_FIELD,
+                    "Field 'agency' must be supplied and not be blank when creating a new reviewer");
+        }
+
+        final String userId = reviewerRequest.getUserId();
+        if ( userId == null || userId.isBlank()) {
+            return ServiceErrorDto.InvalidRequest(MISSING_REQUIRED_FIELD,
+                    "Field 'userId' must be supplied and not be blank when creating a new reviewer");
         }
 
         final String culrId;
@@ -126,7 +140,7 @@ public class Reviewers {
 
         try {
             final Reviewer entity = new Reviewer()
-                    .withActive(reviewerRequest.isActive() != null ? reviewerRequest.isActive() : true)  // New users defaults to active
+                    .withActive(reviewerRequest.isActive() == null || reviewerRequest.isActive())  // New users defaults to active
                     .withFirstName(reviewerRequest.getFirstName())
                     .withLastName(reviewerRequest.getLastName())
                     .withEmail(reviewerRequest.getEmail())
@@ -142,7 +156,9 @@ public class Reviewers {
                     .withSubjects(repository.resolveSubjects(reviewerRequest.getSubjects()))
                     .withAccepts(reviewerRequest.getAccepts())
                     .withCapacity(reviewerRequest.getCapacity())
-                    .withSubjectNotes(repository.checkSubjectNotes(reviewerRequest.getSubjectNotes(), reviewerRequest.getSubjects()));
+                    .withSubjectNotes(repository.checkSubjectNotes(reviewerRequest.getSubjectNotes(), reviewerRequest.getSubjects()))
+                    .withAgency(agency)
+                    .withUserId(userId);
 
 
             entity.setCulrId(culrId);
@@ -209,7 +225,6 @@ public class Reviewers {
                                    @Context UriInfo uriInfo) {
 
         LOGGER.info("reviewers/{} (PUT), notify:{} request:{}", id, notify, reviewerRequest);
-
         try {
 
             // Find the existing user
@@ -304,6 +319,12 @@ public class Reviewers {
             }
             if (reviewerRequest.getNote() != null) {
                 reviewer.setNote(reviewerRequest.getNote());
+            }
+            if (reviewerRequest.getAgency() != null) {
+                reviewer.setAgency(reviewerRequest.getAgency());
+            }
+            if (reviewerRequest.getUserId() != null) {
+                reviewer.setUserId(reviewerRequest.getUserId());
             }
 
             auditLogHandler.logTraceUpdateForToken("Update and view full reviewer profile", uriInfo, reviewer.getPaycode(), 200);

@@ -1,5 +1,7 @@
 package dk.dbc.promat.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder;
@@ -8,9 +10,11 @@ import dk.dbc.httpclient.HttpDelete;
 import dk.dbc.httpclient.HttpGet;
 import dk.dbc.httpclient.HttpPost;
 import dk.dbc.httpclient.HttpPut;
+import dk.dbc.promat.service.dto.ServiceErrorCode;
 import dk.dbc.promat.service.persistence.JsonMapperProvider;
 import dk.dbc.promat.service.connector.PromatServiceConnector;
 import dk.dbc.promat.service.connector.PromatServiceConnectorFactory;
+import jakarta.json.bind.Jsonb;
 import org.junit.jupiter.api.Assertions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -84,11 +88,24 @@ public abstract class ContainerTest extends IntegrationTestIT {
         return postAndAssert(path, body, null, responseClass, expectedStatus);
     }
 
-    public <T, R> R postAndAssert(String path, T body, String authToken, Class<R> responseClass, Response.Status expectedStatus) {
-        try (Response response = postResponse(path, body, authToken)) {
-            Assertions.assertEquals(expectedStatus, response.getStatusInfo().toEnum(), "Response to call " + path
-                    + " was expected to be: " + expectedStatus);
-            return response.readEntity(responseClass);
+    public <T, R> R postAndAssert(String path, T requestBody, String authToken, Class<R> responseClass, Response.Status expectedStatus) {
+        try (Response response = postResponse(path, requestBody, authToken)) {
+
+            Response.StatusType status = response.getStatusInfo().toEnum();
+            String responseBody = response.readEntity(String.class);
+
+            Assertions.assertEquals(expectedStatus, status, "Response to call " + path
+                    + " was expected to be: " + expectedStatus + " but was: " + status
+                    + "\nResponse body was: " + responseBody);
+
+            if (responseBody.getClass() == responseClass) {
+                // Typical use is: responseClass == String.class, then prevent "uncheck cast from type xxx" warnings by use of convertValue
+                return mapper.convertValue(responseBody, responseClass);
+            } else {
+                return mapper.readValue(responseBody, responseClass);
+            }
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
         }
     }
 

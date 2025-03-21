@@ -11,6 +11,7 @@ import java.util.Objects;
 public class EditorRequest implements Dto {
 
     private Boolean active;
+    @Deprecated(since = "Will not be used for editor creation after switch to professional login")
     private String cprNumber;
     private String firstName;
     private String lastName;

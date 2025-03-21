@@ -48,6 +48,8 @@ public class Editors {
     @Inject
     AuditLogHandler auditLogHandler;
 
+    private final static String MISSING_REQUIRED_FIELD = "Missing required field in the request data";
+
     @POST
     @Path("editors")
     @Produces({MediaType.APPLICATION_JSON})
@@ -57,26 +59,26 @@ public class Editors {
 
         final String firstName = editorRequest.getFirstName();
         if ( firstName == null || firstName.isBlank()) {
-            return ServiceErrorDto.InvalidRequest("Missing required field in the request data",
-                    "Field 'firstName' must be supplied and not be blank when creating a new reviewer");
+            return ServiceErrorDto.InvalidRequest(MISSING_REQUIRED_FIELD,
+                    "Field 'firstName' must be supplied and not be blank when creating a new editor");
         }
 
         final String lastName = editorRequest.getLastName();
         if ( lastName == null || lastName.isBlank()) {
-            return ServiceErrorDto.InvalidRequest("Missing required field in the request data",
-                    "Field 'lastName' must be supplied and not be blank when creating a new reviewer");
+            return ServiceErrorDto.InvalidRequest(MISSING_REQUIRED_FIELD,
+                    "Field 'lastName' must be supplied and not be blank when creating a new editor");
         }
 
         final String email = editorRequest.getEmail();
         if ( email == null || email.isBlank()) {
-            return ServiceErrorDto.InvalidRequest("Missing required field in the request data",
-                    "Field 'email' must be supplied and not be blank when creating a new reviewer");
+            return ServiceErrorDto.InvalidRequest(MISSING_REQUIRED_FIELD,
+                    "Field 'email' must be supplied and not be blank when creating a new editor");
         }
 
         final String cprNumber = editorRequest.getCprNumber();
         if (cprNumber == null || cprNumber.isBlank()) {
-            return ServiceErrorDto.InvalidRequest("Missing required field in the request data",
-                    "Field 'cprNumber' must be supplied when creating a new reviewer");
+            return ServiceErrorDto.InvalidRequest(MISSING_REQUIRED_FIELD,
+                    "Field 'cprNumber' must be supplied when creating a new editor");
         }
 
         final Integer paycode = editorRequest.getPaycode();
@@ -85,24 +87,24 @@ public class Editors {
                     "Field 'paycode' must be supplied when creating a new reviewer");
         }
 
+        final String agency = editorRequest.getAgency();
+        if ( agency == null || agency.isBlank()) {
+            return ServiceErrorDto.InvalidRequest(MISSING_REQUIRED_FIELD,
+                    "Field 'agency' must be supplied and not be blank when creating a new editor");
+        }
+
+        final String userId = editorRequest.getUserId();
+        if ( userId == null || userId.isBlank()) {
+            return ServiceErrorDto.InvalidRequest(MISSING_REQUIRED_FIELD,
+                    "Field 'userId' must be supplied and not be blank when creating a new editor");
+        }
+
         final String culrId;
         try {
             culrId = culrHandler.createCulrAccount(cprNumber, String.valueOf(paycode));
             LOGGER.info("Obtained CulrId {} for new editor", culrId);
         } catch (ServiceErrorException e) {
             return Response.status(500).entity(e.getServiceErrorDto()).build();
-        }
-
-        final String agency = editorRequest.getAgency();
-        if ( agency == null || agency.isBlank()) {
-            return ServiceErrorDto.InvalidRequest("Missing required field in the request data",
-                    "Field 'agency' must be supplied and not be blank when creating a new reviewer");
-        }
-
-        final String userId = editorRequest.getUserId();
-        if ( userId == null || userId.isBlank()) {
-            return ServiceErrorDto.InvalidRequest("Missing required field in the request data",
-                    "Field 'userId' must be supplied and not be blank when creating a new reviewer");
         }
 
         try {
