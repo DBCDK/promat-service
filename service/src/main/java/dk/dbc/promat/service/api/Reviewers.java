@@ -49,6 +49,10 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import static dk.dbc.promat.service.api.Users.IDP_EDITOR_RIGHT_NAME;
+import static dk.dbc.promat.service.api.Users.IDP_PRODUCT_NAME;
+import static dk.dbc.promat.service.api.Users.IDP_REVIEWER_RIGHT_NAME;
+
 @Stateless
 @Path("")
 public class Reviewers {
@@ -73,7 +77,7 @@ public class Reviewers {
     @GET
     @Path("reviewers/{id}")
     @Produces({MediaType.APPLICATION_JSON})
-    @RolesAllowed({"authenticated-user", "PROMAT-EDITOR", "PROMAT-LECTOR"})
+    @RolesAllowed({"authenticated-user", IDP_PRODUCT_NAME + "-" + IDP_EDITOR_RIGHT_NAME, IDP_PRODUCT_NAME + "-" + IDP_REVIEWER_RIGHT_NAME})
     public Response getReviewer(@PathParam("id") Integer id, @Context UriInfo uriInfo) {
         LOGGER.info("reviewers/{} (GET)", id);
 
@@ -98,7 +102,7 @@ public class Reviewers {
     @POST
     @Path("reviewers")
     @Produces({MediaType.APPLICATION_JSON})
-    @RolesAllowed({"authenticated-user", "PROMAT-EDITOR"})
+    @RolesAllowed({"authenticated-user", IDP_PRODUCT_NAME + "-" + IDP_EDITOR_RIGHT_NAME})
     public Response createReviewer(ReviewerRequest reviewerRequest, @Context UriInfo uriInfo) throws CulrConnectorException {
         LOGGER.info("reviewers (POST)");
 
@@ -219,7 +223,7 @@ public class Reviewers {
     @PUT
     @Path("reviewers/{id}")
     @Produces({MediaType.APPLICATION_JSON})
-    @RolesAllowed({"authenticated-user", "PROMAT-EDITOR", "PROMAT-LECTOR"})
+    @RolesAllowed({"authenticated-user", IDP_PRODUCT_NAME + "-" + IDP_EDITOR_RIGHT_NAME, IDP_PRODUCT_NAME + "-" + IDP_REVIEWER_RIGHT_NAME})
     public Response updateReviewer(@PathParam("id") final Integer id, ReviewerRequest reviewerRequest,
                                    @QueryParam("notify") @DefaultValue("false") final Boolean notify,
                                    @Context UriInfo uriInfo) {
@@ -447,7 +451,7 @@ public class Reviewers {
     @POST
     @Path("reviewers/{id}/resethiatus")
     @Produces({MediaType.APPLICATION_JSON})
-    @RolesAllowed({"authenticated-user", "PROMAT-EDITOR", "PROMAT-LECTOR"})
+    @RolesAllowed({"authenticated-user", IDP_PRODUCT_NAME + "-" + IDP_EDITOR_RIGHT_NAME, IDP_PRODUCT_NAME + "-" + IDP_REVIEWER_RIGHT_NAME})
     public Response resetHiatus(@PathParam("id") final Integer id,
                                 @QueryParam("notify") @DefaultValue("false") final Boolean notify,
                                 @Context UriInfo uriInfo) {

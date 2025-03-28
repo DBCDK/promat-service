@@ -33,6 +33,9 @@ import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
+import static dk.dbc.promat.service.api.Users.IDP_EDITOR_RIGHT_NAME;
+import static dk.dbc.promat.service.api.Users.IDP_PRODUCT_NAME;
+
 @Stateless
 @Path("")
 public class Editors {
@@ -53,7 +56,7 @@ public class Editors {
     @POST
     @Path("editors")
     @Produces({MediaType.APPLICATION_JSON})
-    @RolesAllowed({"authenticated-user", "PROMAT-EDITOR", "PROMAT-LECTOR"})
+    @RolesAllowed({"authenticated-user", IDP_PRODUCT_NAME + "-" + IDP_EDITOR_RIGHT_NAME})
     public Response createEditor(EditorRequest editorRequest, @Context UriInfo uriInfo) throws CulrConnectorException {
         LOGGER.info("editors (POST)");
 
@@ -133,7 +136,7 @@ public class Editors {
     @GET
     @Path("editors/{id}")
     @Produces({MediaType.APPLICATION_JSON})
-    @RolesAllowed({"authenticated-user", "PROMAT-EDITOR"})
+    @RolesAllowed({"authenticated-user", IDP_PRODUCT_NAME + "-" + IDP_EDITOR_RIGHT_NAME})
     public Response getEditor(@PathParam("id") Integer id, @Context UriInfo uriInfo) {
         final Editor editor = entityManager.find(Editor.class, id);
         if (editor == null) {
@@ -162,7 +165,7 @@ public class Editors {
     @PUT
     @Path("editors/{id}")
     @Produces({MediaType.APPLICATION_JSON})
-    @RolesAllowed({"authenticated-user", "PROMAT-EDITOR"})
+    @RolesAllowed({"authenticated-user", IDP_PRODUCT_NAME + "-" + IDP_EDITOR_RIGHT_NAME})
     public Response updateEditor(@PathParam("id") final Integer id, EditorRequest editorRequest, @Context UriInfo uriInfo) {
         LOGGER.info("editors/{} (PUT)", id);
 

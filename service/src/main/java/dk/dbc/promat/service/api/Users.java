@@ -48,7 +48,7 @@ public class Users {
     @GET
     @Path("{culrId}/role")
     @Produces({MediaType.APPLICATION_JSON})
-    @RolesAllowed({"authenticated-user", "PROMAT-EDITOR", "PROMAT-LECTOR"})
+    @RolesAllowed({"authenticated-user", IDP_PRODUCT_NAME + "-" + IDP_EDITOR_RIGHT_NAME, IDP_PRODUCT_NAME + "-" + IDP_REVIEWER_RIGHT_NAME})
     public Response getUserRole(@PathParam("culrId") String culrId) throws CulrConnectorException {
         final TypedQuery<UserRole> query = entityManager.createNamedQuery(PromatUser.GET_USER_ROLE, UserRole.class);
         query.setParameter(1, culrId);
@@ -75,7 +75,7 @@ public class Users {
     @GET
     @Path("role")
     @Produces({MediaType.APPLICATION_JSON})
-    @RolesAllowed({"authenticated-user", "PROMAT-EDITOR", "PROMAT-LECTOR"})
+    @RolesAllowed({"authenticated-user", IDP_PRODUCT_NAME + "-" + IDP_EDITOR_RIGHT_NAME, IDP_PRODUCT_NAME + "-" + IDP_REVIEWER_RIGHT_NAME})
     public Response getUserRoleFromAuthToken() {
 
         // Check if we got no authtoken - this should not be possible since a role is required
