@@ -73,7 +73,7 @@ public class Reviewers {
     @GET
     @Path("reviewers/{id}")
     @Produces({MediaType.APPLICATION_JSON})
-    @RolesAllowed({"authenticated-user"})
+    @RolesAllowed({"authenticated-user", "PROMAT-EDITOR", "PROMAT-LECTOR"})
     public Response getReviewer(@PathParam("id") Integer id, @Context UriInfo uriInfo) {
         LOGGER.info("reviewers/{} (GET)", id);
 
@@ -98,7 +98,7 @@ public class Reviewers {
     @POST
     @Path("reviewers")
     @Produces({MediaType.APPLICATION_JSON})
-    @RolesAllowed({"authenticated-user"})
+    @RolesAllowed({"authenticated-user", "PROMAT-EDITOR"})
     public Response createReviewer(ReviewerRequest reviewerRequest, @Context UriInfo uriInfo) throws CulrConnectorException {
         LOGGER.info("reviewers (POST)");
 
@@ -219,7 +219,7 @@ public class Reviewers {
     @PUT
     @Path("reviewers/{id}")
     @Produces({MediaType.APPLICATION_JSON})
-    @RolesAllowed({"authenticated-user"})
+    @RolesAllowed({"authenticated-user", "PROMAT-EDITOR", "PROMAT-LECTOR"})
     public Response updateReviewer(@PathParam("id") final Integer id, ReviewerRequest reviewerRequest,
                                    @QueryParam("notify") @DefaultValue("false") final Boolean notify,
                                    @Context UriInfo uriInfo) {
@@ -447,7 +447,7 @@ public class Reviewers {
     @POST
     @Path("reviewers/{id}/resethiatus")
     @Produces({MediaType.APPLICATION_JSON})
-    @RolesAllowed({"authenticated-user"})
+    @RolesAllowed({"authenticated-user", "PROMAT-EDITOR", "PROMAT-LECTOR"})
     public Response resetHiatus(@PathParam("id") final Integer id,
                                 @QueryParam("notify") @DefaultValue("false") final Boolean notify,
                                 @Context UriInfo uriInfo) {

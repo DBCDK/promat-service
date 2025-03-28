@@ -53,7 +53,7 @@ public class Editors {
     @POST
     @Path("editors")
     @Produces({MediaType.APPLICATION_JSON})
-    @RolesAllowed({"authenticated-user"})
+    @RolesAllowed({"authenticated-user", "PROMAT-EDITOR", "PROMAT-LECTOR"})
     public Response createEditor(EditorRequest editorRequest, @Context UriInfo uriInfo) throws CulrConnectorException {
         LOGGER.info("editors (POST)");
 
@@ -133,7 +133,7 @@ public class Editors {
     @GET
     @Path("editors/{id}")
     @Produces({MediaType.APPLICATION_JSON})
-    @RolesAllowed({"authenticated-user"})
+    @RolesAllowed({"authenticated-user", "PROMAT-EDITOR"})
     public Response getEditor(@PathParam("id") Integer id, @Context UriInfo uriInfo) {
         final Editor editor = entityManager.find(Editor.class, id);
         if (editor == null) {
@@ -162,7 +162,7 @@ public class Editors {
     @PUT
     @Path("editors/{id}")
     @Produces({MediaType.APPLICATION_JSON})
-    @RolesAllowed({"authenticated-user"})
+    @RolesAllowed({"authenticated-user", "PROMAT-EDITOR"})
     public Response updateEditor(@PathParam("id") final Integer id, EditorRequest editorRequest, @Context UriInfo uriInfo) {
         LOGGER.info("editors/{} (PUT)", id);
 

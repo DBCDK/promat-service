@@ -43,6 +43,26 @@ class EditorsIT extends ContainerTest {
     }
 
     @Test
+    void getEditorByProfessionalLogin() throws JsonProcessingException {
+        final Editor expectedEditor = new Editor();
+        expectedEditor.setId(13);
+        expectedEditor.setCulrId("klnp");
+        expectedEditor.setActive(true);
+        expectedEditor.setFirstName("Editte");
+        expectedEditor.setLastName("Ore");
+        expectedEditor.setEmail("editte.ore@dbc.dk");
+        expectedEditor.setActiveChanged(Date.from(Instant.ofEpochSecond(1629900636)));
+        expectedEditor.setAgency("790900");
+        expectedEditor.setUserId("klnp");
+
+        Response response = getResponse("v1/api/editors/13", "2-3-4-5-6");
+        final Editor actual = mapper.readValue(response.readEntity(String.class), Editor.class);
+        actual.setActiveChanged(Date.from(Instant.ofEpochSecond(1629900636)));
+        actual.setDeactivated(null);
+        assertThat(actual, is(expectedEditor));
+    }
+
+    @Test
     void getAllEditors() throws JsonProcessingException {
         Response response = getResponse("v1/api/editors");
 
@@ -123,6 +143,21 @@ class EditorsIT extends ContainerTest {
     }
 
     @Test
+    void updateEditorByProfessionalLogin() throws JsonProcessingException {
+
+        // Request is a no-change, we just need to check that we pass authentication
+        final EditorRequest editorRequest = new EditorRequest()
+                .withFirstName("Editte")
+                .withLastName("Ore");
+
+        Response response = putResponse("v1/api/editors/13", editorRequest, "2-3-4-5-6");
+        assertThat("response status", response.getStatus(), is(200));
+
+        // Check that we got an auditlog entry
+        assertThat("auditlog update", promatServiceContainer.getLogs().contains("{\"Update and view full editor profile\":\"editors/13\",\"Response\":\"200\"}"));
+    }
+
+    @Test
     void createEditor() throws JsonProcessingException {
 
         final EditorRequest editorRequest = new EditorRequest()
@@ -192,5 +227,15 @@ class EditorsIT extends ContainerTest {
                 .withLastName("Hansen");
         actual = Formatting.format(editor);
         assertThat("name is correct formatted", actual.equals("Hans Hansen"));
+    }
+
+    @Test
+    void getEditorWithInactiveAuthToken() {
+        final Response response = getResponse("v1/api/reviewers/13", "6-7-8-9-0");
+        assertThat("response status", response.getStatus(), is(401));
+
+        // Example log entry:
+        // [docker-java-stream--208115991] INFO dk.dbc.promat.service.ContainerTest - STDOUT: 14:14:47.700 [INFO] [http-thread-pool::http-listener(18)] dk.dbc.commons.rs.auth.DBCAuthenticationMechanism - Token is invalid: 6-7-8-9-0
+        assertThat("rs-auth log entry", promatServiceContainer.getLogs().contains("Session 6-7-8-9-0 is not active"));
     }
 }

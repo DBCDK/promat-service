@@ -1,7 +1,7 @@
 -- reviewers (IDs 1-9)
 insert into promatuser(id, role, active, culrid, firstname, lastname, email, address1, zip, city, institution, paycode, hiatus_begin, hiatus_end, accepts, note, capacity, activeChanged, deactivated, agency, userId)
 values (1, 'REVIEWER', true, '41', 'Hans', 'Hansen', 'hans@hansen.dk', 'Lillegade 1', '9999', 'Lilleved', 'Hans Hansens Bix', 123, '2020-10-28', '2020-11-01', '["MULTIMEDIA", "PS4", "PS5"]', 'note1', 1, CURRENT_TIMESTAMP - INTERVAL '6 years', null, '300100', 'knud1'),
-       (2, 'REVIEWER', true, '42', 'Ole', 'Olsen', 'ole@olsen.dk', 'Storegade 99', '1111', 'Storeved', 'Ole Olsens Goodies', 456, '2020-11-28', '2020-12-01', '["MULTIMEDIA", "PS4", "PS5"]', 'note2', 2, CURRENT_TIMESTAMP - INTERVAL '3 years', null, '820010', 'axel52');
+       (2, 'REVIEWER', true, 'axel52', 'Ole', 'Olsen', 'ole@olsen.dk', 'Storegade 99', '1111', 'Storeved', 'Ole Olsens Goodies', 456, '2020-11-28', '2020-12-01', '["MULTIMEDIA", "PS4", "PS5"]', 'note2', 2, CURRENT_TIMESTAMP - INTERVAL '3 years', null, '820010', 'axel52');
 
 -- These reviewers is used for update tests. Please do not rely on the value of these reviewers in other tests
 insert into promatuser(id, role, active, culrid, firstname, lastname, email, address1, zip, city, institution, paycode, hiatus_begin, hiatus_end, accepts, note, phone, capacity, selected, privateSelected, activeChanged, deactivated, agency, userid)
@@ -34,7 +34,7 @@ insert into reviewersubjectnotes(subjectnote_id, reviewer_id) values(2,6);
 insert into promatuser(id, role, active, culrid, firstname, lastname, email, paycode, activeChanged, deactivated, agency, userId)
 values  (10, 'EDITOR', true, '51', 'Ed', 'Itor', 'ed.itor@dbc.dk', 5678, CURRENT_TIMESTAMP - INTERVAL '6 years', null, '790900', 'jcba'),
         (11, 'EDITOR', true, '52', 'Edit', 'Or', 'edit.or@dbc.dk', 1111, CURRENT_TIMESTAMP - INTERVAL '3 years', null, '790900', 'adfg'),
-        (13, 'EDITOR', true, '54', 'Editte', 'Ore', 'editte.ore@dbc.dk', 2222, CURRENT_TIMESTAMP, null, '790900', 'klnp');
+        (13, 'EDITOR', true, 'klnp', 'Editte', 'Ore', 'editte.ore@dbc.dk', 2222, CURRENT_TIMESTAMP, null, '790900', 'klnp');
 
 -- This editor is used for update tests. Please do not rely on the value of this editor in other tests
 insert into promatuser(id, role, active, culrid, firstname, lastname, email, activeChanged, deactivated, agency, userId)

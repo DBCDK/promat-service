@@ -144,7 +144,7 @@ class ReviewersIT extends ContainerTest {
 
         // Example log entry:
         // [docker-java-stream--208115991] INFO dk.dbc.promat.service.ContainerTest - STDOUT: 14:14:47.700 [INFO] [http-thread-pool::http-listener(18)] dk.dbc.commons.rs.auth.DBCAuthenticationMechanism - Token is invalid: 6-7-8-9-0
-        assertThat("rs-auth log entry", promatServiceContainer.getLogs().contains("Token is invalid: 6-7-8-9-0"));
+        assertThat("rs-auth log entry", promatServiceContainer.getLogs().contains("Session 6-7-8-9-0 is not active"));
     }
 
     @Test
@@ -163,6 +163,24 @@ class ReviewersIT extends ContainerTest {
         // Example log entry:
         // [docker-java-stream--208115991] INFO dk.dbc.promat.service.ContainerTest - STDOUT: {"timestamp":"2021-08-04T14:14:48.151178+02:00","sys_event_type":"audit","client_ip":["172.17.0.1"],"app_name":"PROMAT","action":"READ","accessing_user":{"token":"1-2-3-4-5"},"owning_user":"123/190976","PROMAT":{"View full profile":"reviewers/1","Response":"200"}}
         assertThat("auditlog entry", promatServiceContainer.getLogs().contains("{\"View full reviewer profile\":\"reviewers/1\",\"Response\":\"200\"}"));
+    }
+
+    @Test
+    void getReviewerByProfessionalLogin() throws JsonProcessingException {
+        final Reviewer expectedReviewer = new Reviewer();
+        loadReviewer2(expectedReviewer, ReviewerView.Reviewer.class);
+
+        final Response response = getResponse("v1/api/reviewers/2", "3-4-5-6-7");
+        assertThat("response status", response.getStatus(), is(200));
+
+        final Reviewer reviewer = mapper.readValue(response.readEntity(String.class), Reviewer.class);
+        reviewer.setActiveChanged(Date.from(Instant.ofEpochSecond(1629900636)));
+
+        assertThat("reviewer", reviewer, is(expectedReviewer));
+
+        // Example log entry:
+        // [docker-java-stream--208115991] INFO dk.dbc.promat.service.ContainerTest - STDOUT: {"timestamp":"2021-08-04T14:14:48.151178+02:00","sys_event_type":"audit","client_ip":["172.17.0.1"],"app_name":"PROMAT","action":"READ","accessing_user":{"token":"1-2-3-4-5"},"owning_user":"123/190976","PROMAT":{"View full profile":"reviewers/1","Response":"200"}}
+        assertThat("auditlog entry", promatServiceContainer.getLogs().contains("{\"View full reviewer profile\":\"reviewers/2\",\"Response\":\"200\"}"));
     }
 
     @Test
@@ -473,7 +491,7 @@ class ReviewersIT extends ContainerTest {
         reviewer.setCapacity(2);
         reviewer.setSubjectNotes(List.of());
         if( view == ReviewerView.Reviewer.class) {
-            reviewer.setCulrId("42");
+            reviewer.setCulrId("axel52");
             reviewer.setEmail("ole@olsen.dk");
             reviewer.setAddress(
                     new Address()

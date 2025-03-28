@@ -10,11 +10,13 @@ import dk.dbc.httpclient.HttpDelete;
 import dk.dbc.httpclient.HttpGet;
 import dk.dbc.httpclient.HttpPost;
 import dk.dbc.httpclient.HttpPut;
+import dk.dbc.promat.service.api.Users;
 import dk.dbc.promat.service.dto.ServiceErrorCode;
 import dk.dbc.promat.service.persistence.JsonMapperProvider;
 import dk.dbc.promat.service.connector.PromatServiceConnector;
 import dk.dbc.promat.service.connector.PromatServiceConnectorFactory;
 import jakarta.json.bind.Jsonb;
+import org.apache.hc.client5.http.impl.Wire;
 import org.junit.jupiter.api.Assertions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,6 +35,9 @@ import java.util.function.Function;
 import static com.github.tomakehurst.wiremock.client.WireMock.configureFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.requestMatching;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options;
+import static dk.dbc.promat.service.api.Users.IDP_EDITOR_RIGHT_NAME;
+import static dk.dbc.promat.service.api.Users.IDP_PRODUCT_NAME;
+import static dk.dbc.promat.service.api.Users.IDP_REVIEWER_RIGHT_NAME;
 
 public abstract class ContainerTest extends IntegrationTestIT {
     protected static final Logger LOGGER = LoggerFactory.getLogger(ContainerTest.class);
@@ -192,29 +197,7 @@ public abstract class ContainerTest extends IntegrationTestIT {
     private static WireMockServer makeWireMockServer() {
         WireMockServer wireMockServer = new WireMockServer(options().dynamicPort());
 
-        // Add two catch-all responses for AdgangsPlatformens introspect endpoint.
-        // ...
-        // It is not possible to record the request/response using an external wiremock
-        // unless ssl certificate validation is disabled for the service application.
-        // Instead, use regular http for the introspection endpoint and mock the response here
-        wireMockServer.stubFor(requestMatching(request ->
-                MatchResult.of(
-                        request.queryParameter("access_token").isPresent() &&
-                                request.queryParameter("access_token").containsValue("1-2-3-4-5")
-                ))
-                .willReturn(ResponseDefinitionBuilder
-                        .responseDefinition()
-                        .withStatus(200)
-                        .withBody("{\"active\":true}")));
-        wireMockServer.stubFor(requestMatching(request ->
-                MatchResult.of(
-                        request.queryParameter("access_token").isPresent() &&
-                                request.queryParameter("access_token").containsValue("6-7-8-9-0")
-                ))
-                .willReturn(ResponseDefinitionBuilder
-                        .responseDefinition()
-                        .withStatus(200)
-                        .withBody("{\"active\":false}")));
+        mockAuthenticationResponses(wireMockServer);
 
         wireMockServer.start();
         configureFor("localhost", wireMockServer.port());
@@ -253,7 +236,8 @@ public abstract class ContainerTest extends IntegrationTestIT {
                 .withEnv("CC_MAILADDRESS", "ccmailaddress-test@dbc.dk")
                 .withEnv("OAUTH2_CLIENT_ID", "123456789")
                 .withEnv("OAUTH2_CLIENT_SECRET", "abcdef")
-                .withEnv("OAUTH2_INTROSPECTION_URL", "http://host.testcontainers.internal:" + wireMockServer.port())
+                .withEnv("OAUTH2_INTROSPECTION_URL", "http://host.testcontainers.internal:" + wireMockServer.port() + "/oauth/introspection")
+                .withEnv("OAUTH2_USERINFO_URL", "http://host.testcontainers.internal:" + wireMockServer.port() + "/userinfo")
                 .withExposedPorts(8080)
                 .waitingFor(Wait.forHttp("/health"))
                 .withStartupTimeout(Duration.ofMinutes(2));
@@ -286,5 +270,601 @@ public abstract class ContainerTest extends IntegrationTestIT {
 
         // Use default server value as given by the various tests.
         return server;
+    }
+
+
+    /**
+     * Helper method to mock responses to various authentication requests with
+     * 'AdgangsPlatformen'
+     *
+     * @param wireMockServer The wiremock server instance
+     *
+     * authtoken         status          usertype      promatId     culr-id          login-type
+     * ----------------------------------------------------------------------------------------
+     * 1-2-3-4-5         active=true     EDITOR        12           53               bibliotek
+     * 2-3-4-5-6         active=true     EDITOR        13           klnp             netpunkt
+     * 6-7-8-9-0         active=false
+     */
+    public static void mockAuthenticationResponses(WireMockServer wireMockServer) {
+
+        // Mock logged-in editor with id=12, using 'biblioteks login' (cpr number)
+        mockAuthenticationResponseForEditor12(wireMockServer);
+
+        // Mock logged-in editor with id=13, using 'netpunkt login' (userid+agency)
+        mockAuthenticationResponseForEditor13(wireMockServer);
+
+        // Mock logged-in reviewer with id=2, using 'netpunkt login' (userid+agency)
+        mockAuthenticationResponseForReviewer2(wireMockServer);
+
+        // Mock logged-in user not found in promat, using 'netpunkt login' (userid+agency)
+        mockAuthenticationResponseForUnknownReviewerUserId(wireMockServer);
+
+        // Mock logged-in user not found in promat, using 'netpunkt login' (userid+agency)
+        mockAuthenticationResponseForUnknownReviewerAgency(wireMockServer);
+
+        // Mock logged-in reviewer with id=2 having no promat rights, using 'netpunkt login' (userid+agency)
+        mockAuthenticationResponseForReviewer2WithRevokedRights(wireMockServer);
+
+        // Mock logged-in editor with id=13 with incorrect right as reviewer, using 'netpunkt login' (userid+agency)
+        mockAuthenticationResponseForEditor13WithReviewerRights(wireMockServer);
+
+        // Mock logged-in reviewer with id=2 with incorrect right as editor, using 'netpunkt login' (userid+agency)
+        mockAuthenticationResponseForReviewer2WithEditorRights(wireMockServer);
+
+        // Mock logged-out user
+        mockAuthenticationResponseForLoggedOutUser(wireMockServer);
+    }
+
+    public static void mockAuthenticationResponseForEditor12(WireMockServer wireMockServer) {
+        wireMockServer.stubFor(requestMatching(request ->
+                MatchResult.of(
+                        request.getUrl().contains("/oauth/introspection") &&
+                                request.queryParameter("access_token").isPresent() &&
+                                request.queryParameter("access_token").containsValue("1-2-3-4-5")
+                ))
+                .willReturn(ResponseDefinitionBuilder
+                        .responseDefinition()
+                        .withStatus(200)
+                        .withBody("{" +
+                                "  \"active\": true," +
+                                "  \"clientId\": \"123-456-789-12345\"," +
+                                "  \"expires\": \"2029-01-13T12:58:53.967Z\"," +
+                                "  \"agency\": \"790900\"," +
+                                "  \"uniqueId\": \"53\"," +
+                                "  \"search\": {" +
+                                "    \"profile\": \"opac\"," +
+                                "    \"agency\": \"790900\"" +
+                                "  }," +
+                                "  \"type\": \"authorized\"," +
+                                "  \"name\": \"promat prod\"," +
+                                "  \"contact\": {" +
+                                "    \"owner\": {" +
+                                "      \"name\": \"Henrik Witt Hansen\"," +
+                                "      \"email\": \"hwha@dbc.dk\"," +
+                                "      \"phone\": \"\"" +
+                                "    }" +
+                                "  }" +
+                                "}")));
+
+        // Editor authorized using 'biblioteks login', so no IDP field
+        wireMockServer.stubFor(requestMatching(request ->
+                MatchResult.of(
+                        request.getUrl().contains("/userinfo") &&
+                                request.queryParameter("access_token").isPresent() &&
+                                request.queryParameter("access_token").containsValue("1-2-3-4-5")
+                ))
+                .willReturn(ResponseDefinitionBuilder
+                        .responseDefinition()
+                        .withStatus(200)
+                        .withBody("{" +
+                                "  \"attributes\": {" +
+                                "    \"serviceStatus\": {" +
+                                "      \"borchk\": \"ok\"," +
+                                "      \"culr\": \"ok\"" +
+                                "    }," +
+                                "    \"uniqueId\": \"456-789-012-12345\"," +
+                                "    \"municipality\": \"101\"," +
+                                "    \"municipalityAgencyId\": \"790900\"" +
+                                "  }" +
+                                "}")));
+    }
+
+    public static void mockAuthenticationResponseForEditor13(WireMockServer wireMockServer) {
+        wireMockServer.stubFor(requestMatching(request ->
+                MatchResult.of(
+                        request.getUrl().contains("/oauth/introspection") &&
+                                request.queryParameter("access_token").isPresent() &&
+                                request.queryParameter("access_token").containsValue("2-3-4-5-6")
+                ))
+                .willReturn(ResponseDefinitionBuilder
+                        .responseDefinition()
+                        .withStatus(200)
+                        .withBody("{" +
+                                "  \"active\": true," +
+                                "  \"clientId\": \"123-456-789-23456\"," +
+                                "  \"expires\": \"2029-01-13T12:58:53.967Z\"," +
+                                "  \"agency\": \"790900\"," +
+                                "  \"uniqueId\": null," +
+                                "  \"search\": {" +
+                                "    \"profile\": \"opac\"," +
+                                "    \"agency\": \"790900\"" +
+                                "  }," +
+                                "  \"type\": \"authorized\"," +
+                                "  \"name\": \"Promat prod\"," +
+                                "  \"contact\": {" +
+                                "    \"owner\": {" +
+                                "      \"name\": \"Henrik Witt Hansen\"," +
+                                "      \"email\": \"hwha@dbc.dk\"," +
+                                "      \"phone\": \"\"" +
+                                "    }" +
+                                "  }" +
+                                "}")));
+
+        // Editor authorized using 'netpunkts login', so we have the IDP field
+        wireMockServer.stubFor(requestMatching(request ->
+                MatchResult.of(
+                        request.getUrl().contains("/userinfo") &&
+                                request.queryParameter("access_token").isPresent() &&
+                                request.queryParameter("access_token").containsValue("2-3-4-5-6")
+                ))
+                .willReturn(ResponseDefinitionBuilder
+                        .responseDefinition()
+                        .withStatus(200)
+                        .withBody("{" +
+                                "  \"attributes\": {" +
+                                "    \"serviceStatus\": {" +
+                                "      \"borchk\": \"ok\"," +
+                                "      \"culr\": \"ok\"" +
+                                "    }," +
+                                "    \"userId\": \"klnp\"," +
+                                "    \"municipality\": \"909\"," +
+                                "    \"netpunktAgency\": \"790900\"," +
+                                "    \"municipalityAgencyId\": \"790900\"," +
+                                "    \"dbcidp\": [" +
+                                "      {" +
+                                "        \"agencyId\": \"790900\"," +
+                                "        \"rights\": [" +
+                                "          {" +
+                                "            \"productName\": \"" + IDP_PRODUCT_NAME + "\"," +
+                                "            \"name\": \"" + IDP_EDITOR_RIGHT_NAME + "\"," +
+                                "            \"description\": \"adgang til Promat som DBC redaktør\"" +
+                                "          }" +
+                                "        ]" +
+                                "      }" +
+                                "    ]" +
+                                "  }" +
+                                "}")));
+    }
+
+    public static void mockAuthenticationResponseForReviewer2(WireMockServer wireMockServer) {
+        wireMockServer.stubFor(requestMatching(request ->
+                MatchResult.of(
+                        request.getUrl().contains("/oauth/introspection") &&
+                                request.queryParameter("access_token").isPresent() &&
+                                request.queryParameter("access_token").containsValue("3-4-5-6-7")
+                ))
+                .willReturn(ResponseDefinitionBuilder
+                        .responseDefinition()
+                        .withStatus(200)
+                        .withBody("{" +
+                                "  \"active\": true," +
+                                "  \"clientId\": \"123-456-789-34567\"," +
+                                "  \"expires\": \"2029-01-13T12:58:53.967Z\"," +
+                                "  \"agency\": \"790900\"," +
+                                "  \"uniqueId\": null," +
+                                "  \"search\": {" +
+                                "    \"profile\": \"opac\"," +
+                                "    \"agency\": \"790900\"" +
+                                "  }," +
+                                "  \"type\": \"authorized\"," +
+                                "  \"name\": \"Promat prod\"," +
+                                "  \"contact\": {" +
+                                "    \"owner\": {" +
+                                "      \"name\": \"Henrik Witt Hansen\"," +
+                                "      \"email\": \"hwha@dbc.dk\"," +
+                                "      \"phone\": \"\"" +
+                                "    }" +
+                                "  }" +
+                                "}")));
+
+        // Editor authorized using 'netpunkts login', so we have the IDP field
+        wireMockServer.stubFor(requestMatching(request ->
+                MatchResult.of(
+                        request.getUrl().contains("/userinfo") &&
+                                request.queryParameter("access_token").isPresent() &&
+                                request.queryParameter("access_token").containsValue("3-4-5-6-7")
+                ))
+                .willReturn(ResponseDefinitionBuilder
+                        .responseDefinition()
+                        .withStatus(200)
+                        .withBody("{" +
+                                "  \"attributes\": {" +
+                                "    \"serviceStatus\": {" +
+                                "      \"borchk\": \"ok\"," +
+                                "      \"culr\": \"ok\"" +
+                                "    }," +
+                                "    \"userId\": \"axel52\"," +
+                                "    \"municipality\": \"909\"," +
+                                "    \"netpunktAgency\": \"820010\"," +
+                                "    \"municipalityAgencyId\": \"820020\"," +
+                                "    \"dbcidp\": [" +
+                                "      {" +
+                                "        \"agencyId\": \"820010\"," +
+                                "        \"rights\": [" +
+                                "          {" +
+                                "            \"productName\": \"" + IDP_PRODUCT_NAME + "\"," +
+                                "            \"name\": \"" + IDP_REVIEWER_RIGHT_NAME + "\"," +
+                                "            \"description\": \"adgang til Promat som DBC lektør\"" +
+                                "          }" +
+                                "        ]" +
+                                "      }" +
+                                "    ]" +
+                                "  }" +
+                                "}")));
+    }
+
+    public static void mockAuthenticationResponseForUnknownReviewerUserId(WireMockServer wireMockServer) {
+        wireMockServer.stubFor(requestMatching(request ->
+                MatchResult.of(
+                        request.getUrl().contains("/oauth/introspection") &&
+                                request.queryParameter("access_token").isPresent() &&
+                                request.queryParameter("access_token").containsValue("4-5-6-7-8")
+                ))
+                .willReturn(ResponseDefinitionBuilder
+                        .responseDefinition()
+                        .withStatus(200)
+                        .withBody("{" +
+                                "  \"active\": true," +
+                                "  \"clientId\": \"123-456-789-34567\"," +
+                                "  \"expires\": \"2029-01-13T12:58:53.967Z\"," +
+                                "  \"agency\": \"790900\"," +
+                                "  \"uniqueId\": null," +
+                                "  \"search\": {" +
+                                "    \"profile\": \"opac\"," +
+                                "    \"agency\": \"790900\"" +
+                                "  }," +
+                                "  \"type\": \"authorized\"," +
+                                "  \"name\": \"Promat prod\"," +
+                                "  \"contact\": {" +
+                                "    \"owner\": {" +
+                                "      \"name\": \"Henrik Witt Hansen\"," +
+                                "      \"email\": \"hwha@dbc.dk\"," +
+                                "      \"phone\": \"\"" +
+                                "    }" +
+                                "  }" +
+                                "}")));
+
+        // Editor authorized using 'netpunkts login', so we have the IDP field
+        wireMockServer.stubFor(requestMatching(request ->
+                MatchResult.of(
+                        request.getUrl().contains("/userinfo") &&
+                                request.queryParameter("access_token").isPresent() &&
+                                request.queryParameter("access_token").containsValue("4-5-6-7-8")
+                ))
+                .willReturn(ResponseDefinitionBuilder
+                        .responseDefinition()
+                        .withStatus(200)
+                        .withBody("{" +
+                                "  \"attributes\": {" +
+                                "    \"serviceStatus\": {" +
+                                "      \"borchk\": \"ok\"," +
+                                "      \"culr\": \"ok\"" +
+                                "    }," +
+                                "    \"userId\": \"axel53\"," +
+                                "    \"municipality\": \"909\"," +
+                                "    \"netpunktAgency\": \"820010\"," +
+                                "    \"municipalityAgencyId\": \"820020\"," +
+                                "    \"dbcidp\": [" +
+                                "      {" +
+                                "        \"agencyId\": \"820010\"," +
+                                "        \"rights\": [" +
+                                "          {" +
+                                "            \"productName\": \"" + IDP_PRODUCT_NAME + "\"," +
+                                "            \"name\": \"" + IDP_REVIEWER_RIGHT_NAME + "\"," +
+                                "            \"description\": \"adgang til Promat som DBC lektør\"" +
+                                "          }" +
+                                "        ]" +
+                                "      }" +
+                                "    ]" +
+                                "  }" +
+                                "}")));
+    }
+
+    public static void mockAuthenticationResponseForUnknownReviewerAgency(WireMockServer wireMockServer) {
+        wireMockServer.stubFor(requestMatching(request ->
+                MatchResult.of(
+                        request.getUrl().contains("/oauth/introspection") &&
+                                request.queryParameter("access_token").isPresent() &&
+                                request.queryParameter("access_token").containsValue("5-6-7-8-9")
+                ))
+                .willReturn(ResponseDefinitionBuilder
+                        .responseDefinition()
+                        .withStatus(200)
+                        .withBody("{" +
+                                "  \"active\": true," +
+                                "  \"clientId\": \"123-456-789-34567\"," +
+                                "  \"expires\": \"2029-01-13T12:58:53.967Z\"," +
+                                "  \"agency\": \"790900\"," +
+                                "  \"uniqueId\": null," +
+                                "  \"search\": {" +
+                                "    \"profile\": \"opac\"," +
+                                "    \"agency\": \"790900\"" +
+                                "  }," +
+                                "  \"type\": \"authorized\"," +
+                                "  \"name\": \"Promat prod\"," +
+                                "  \"contact\": {" +
+                                "    \"owner\": {" +
+                                "      \"name\": \"Henrik Witt Hansen\"," +
+                                "      \"email\": \"hwha@dbc.dk\"," +
+                                "      \"phone\": \"\"" +
+                                "    }" +
+                                "  }" +
+                                "}")));
+
+        // Editor authorized using 'netpunkts login', so we have the IDP field
+        wireMockServer.stubFor(requestMatching(request ->
+                MatchResult.of(
+                        request.getUrl().contains("/userinfo") &&
+                                request.queryParameter("access_token").isPresent() &&
+                                request.queryParameter("access_token").containsValue("5-6-7-8-9")
+                ))
+                .willReturn(ResponseDefinitionBuilder
+                        .responseDefinition()
+                        .withStatus(200)
+                        .withBody("{" +
+                                "  \"attributes\": {" +
+                                "    \"serviceStatus\": {" +
+                                "      \"borchk\": \"ok\"," +
+                                "      \"culr\": \"ok\"" +
+                                "    }," +
+                                "    \"userId\": \"axel52\"," +
+                                "    \"municipality\": \"909\"," +
+                                "    \"netpunktAgency\": \"820030\"," +
+                                "    \"municipalityAgencyId\": \"820020\"," +
+                                "    \"dbcidp\": [" +
+                                "      {" +
+                                "        \"agencyId\": \"820010\"," +
+                                "        \"rights\": [" +
+                                "          {" +
+                                "            \"productName\": \"" + IDP_PRODUCT_NAME + "\"," +
+                                "            \"name\": \"" + IDP_REVIEWER_RIGHT_NAME + "\"," +
+                                "            \"description\": \"adgang til Promat som DBC lektør\"" +
+                                "          }" +
+                                "        ]" +
+                                "      }" +
+                                "    ]" +
+                                "  }" +
+                                "}")));
+    }
+
+    public static void mockAuthenticationResponseForReviewer2WithRevokedRights(WireMockServer wireMockServer) {
+        wireMockServer.stubFor(requestMatching(request ->
+                MatchResult.of(
+                        request.getUrl().contains("/oauth/introspection") &&
+                                request.queryParameter("access_token").isPresent() &&
+                                request.queryParameter("access_token").containsValue("5-4-3-2-1")
+                ))
+                .willReturn(ResponseDefinitionBuilder
+                        .responseDefinition()
+                        .withStatus(200)
+                        .withBody("{" +
+                                "  \"active\": true," +
+                                "  \"clientId\": \"123-456-789-34567\"," +
+                                "  \"expires\": \"2029-01-13T12:58:53.967Z\"," +
+                                "  \"agency\": \"790900\"," +
+                                "  \"uniqueId\": null," +
+                                "  \"search\": {" +
+                                "    \"profile\": \"opac\"," +
+                                "    \"agency\": \"790900\"" +
+                                "  }," +
+                                "  \"type\": \"authorized\"," +
+                                "  \"name\": \"Promat prod\"," +
+                                "  \"contact\": {" +
+                                "    \"owner\": {" +
+                                "      \"name\": \"Henrik Witt Hansen\"," +
+                                "      \"email\": \"hwha@dbc.dk\"," +
+                                "      \"phone\": \"\"" +
+                                "    }" +
+                                "  }" +
+                                "}")));
+
+        // Editor authorized using 'netpunkts login', so we have the IDP field
+        wireMockServer.stubFor(requestMatching(request ->
+                MatchResult.of(
+                        request.getUrl().contains("/userinfo") &&
+                                request.queryParameter("access_token").isPresent() &&
+                                request.queryParameter("access_token").containsValue("5-4-3-2-1")
+                ))
+                .willReturn(ResponseDefinitionBuilder
+                        .responseDefinition()
+                        .withStatus(200)
+                        .withBody("{" +
+                                "  \"attributes\": {" +
+                                "    \"serviceStatus\": {" +
+                                "      \"borchk\": \"ok\"," +
+                                "      \"culr\": \"ok\"" +
+                                "    }," +
+                                "    \"userId\": \"axel52\"," +
+                                "    \"municipality\": \"909\"," +
+                                "    \"netpunktAgency\": \"820010\"," +
+                                "    \"municipalityAgencyId\": \"820020\"," +
+                                "    \"dbcidp\": [" +
+                                "      {" +
+                                "        \"agencyId\": \"820010\"," +
+                                "        \"rights\": [" +
+                                "          {" +
+                                "            \"productName\": \"DMAT\"," +
+                                "            \"name\": \"READ\"," +
+                                "            \"description\": \"adgang til dmat\"" +
+                                //           No Promat rights
+                                "          }" +
+                                "        ]" +
+                                "      }" +
+                                "    ]" +
+                                "  }" +
+                                "}")));
+    }
+
+    public static void mockAuthenticationResponseForEditor13WithReviewerRights(WireMockServer wireMockServer) {
+        wireMockServer.stubFor(requestMatching(request ->
+                MatchResult.of(
+                        request.getUrl().contains("/oauth/introspection") &&
+                                request.queryParameter("access_token").isPresent() &&
+                                request.queryParameter("access_token").containsValue("4-3-2-1-0")
+                ))
+                .willReturn(ResponseDefinitionBuilder
+                        .responseDefinition()
+                        .withStatus(200)
+                        .withBody("{" +
+                                "  \"active\": true," +
+                                "  \"clientId\": \"123-456-789-23456\"," +
+                                "  \"expires\": \"2029-01-13T12:58:53.967Z\"," +
+                                "  \"agency\": \"790900\"," +
+                                "  \"uniqueId\": null," +
+                                "  \"search\": {" +
+                                "    \"profile\": \"opac\"," +
+                                "    \"agency\": \"790900\"" +
+                                "  }," +
+                                "  \"type\": \"authorized\"," +
+                                "  \"name\": \"Promat prod\"," +
+                                "  \"contact\": {" +
+                                "    \"owner\": {" +
+                                "      \"name\": \"Henrik Witt Hansen\"," +
+                                "      \"email\": \"hwha@dbc.dk\"," +
+                                "      \"phone\": \"\"" +
+                                "    }" +
+                                "  }" +
+                                "}")));
+
+        // Editor authorized using 'netpunkts login', so we have the IDP field
+        wireMockServer.stubFor(requestMatching(request ->
+                MatchResult.of(
+                        request.getUrl().contains("/userinfo") &&
+                                request.queryParameter("access_token").isPresent() &&
+                                request.queryParameter("access_token").containsValue("4-3-2-1-0")
+                ))
+                .willReturn(ResponseDefinitionBuilder
+                        .responseDefinition()
+                        .withStatus(200)
+                        .withBody("{" +
+                                "  \"attributes\": {" +
+                                "    \"serviceStatus\": {" +
+                                "      \"borchk\": \"ok\"," +
+                                "      \"culr\": \"ok\"" +
+                                "    }," +
+                                "    \"userId\": \"klnp\"," +
+                                "    \"municipality\": \"909\"," +
+                                "    \"netpunktAgency\": \"790900\"," +
+                                "    \"municipalityAgencyId\": \"790900\"," +
+                                "    \"dbcidp\": [" +
+                                "      {" +
+                                "        \"agencyId\": \"790900\"," +
+                                "        \"rights\": [" +
+                                "          {" +
+                                "            \"productName\": \"" + IDP_PRODUCT_NAME + "\"," +
+                                "            \"name\": \"" + IDP_REVIEWER_RIGHT_NAME + "\"," +
+                                "            \"description\": \"adgang til Promat som DBC lektør\"" +
+                                "          }" +
+                                "        ]" +
+                                "      }" +
+                                "    ]" +
+                                "  }" +
+                                "}")));
+    }
+
+    public static void mockAuthenticationResponseForReviewer2WithEditorRights(WireMockServer wireMockServer) {
+        wireMockServer.stubFor(requestMatching(request ->
+                MatchResult.of(
+                        request.getUrl().contains("/oauth/introspection") &&
+                                request.queryParameter("access_token").isPresent() &&
+                                request.queryParameter("access_token").containsValue("3-2-1-0-9")
+                ))
+                .willReturn(ResponseDefinitionBuilder
+                        .responseDefinition()
+                        .withStatus(200)
+                        .withBody("{" +
+                                "  \"active\": true," +
+                                "  \"clientId\": \"123-456-789-34567\"," +
+                                "  \"expires\": \"2029-01-13T12:58:53.967Z\"," +
+                                "  \"agency\": \"790900\"," +
+                                "  \"uniqueId\": null," +
+                                "  \"search\": {" +
+                                "    \"profile\": \"opac\"," +
+                                "    \"agency\": \"790900\"" +
+                                "  }," +
+                                "  \"type\": \"authorized\"," +
+                                "  \"name\": \"Promat prod\"," +
+                                "  \"contact\": {" +
+                                "    \"owner\": {" +
+                                "      \"name\": \"Henrik Witt Hansen\"," +
+                                "      \"email\": \"hwha@dbc.dk\"," +
+                                "      \"phone\": \"\"" +
+                                "    }" +
+                                "  }" +
+                                "}")));
+
+        // Editor authorized using 'netpunkts login', so we have the IDP field
+        wireMockServer.stubFor(requestMatching(request ->
+                MatchResult.of(
+                        request.getUrl().contains("/userinfo") &&
+                                request.queryParameter("access_token").isPresent() &&
+                                request.queryParameter("access_token").containsValue("3-2-1-0-9")
+                ))
+                .willReturn(ResponseDefinitionBuilder
+                        .responseDefinition()
+                        .withStatus(200)
+                        .withBody("{" +
+                                "  \"attributes\": {" +
+                                "    \"serviceStatus\": {" +
+                                "      \"borchk\": \"ok\"," +
+                                "      \"culr\": \"ok\"" +
+                                "    }," +
+                                "    \"userId\": \"axel52\"," +
+                                "    \"municipality\": \"909\"," +
+                                "    \"netpunktAgency\": \"820010\"," +
+                                "    \"municipalityAgencyId\": \"820020\"," +
+                                "    \"dbcidp\": [" +
+                                "      {" +
+                                "        \"agencyId\": \"820010\"," +
+                                "        \"rights\": [" +
+                                "          {" +
+                                "            \"productName\": \"" + IDP_PRODUCT_NAME + "\"," +
+                                "            \"name\": \"" + IDP_EDITOR_RIGHT_NAME + "\"," +
+                                "            \"description\": \"adgang til Promat som DBC redaktør\"" +
+                                "          }" +
+                                "        ]" +
+                                "      }" +
+                                "    ]" +
+                                "  }" +
+                                "}")));
+    }
+
+    private static void mockAuthenticationResponseForLoggedOutUser(WireMockServer wireMockServer) {
+
+        // Mock /introspection endpoint
+        wireMockServer.stubFor(requestMatching(request ->
+                MatchResult.of(
+                        request.queryParameter("access_token").isPresent() &&
+                                request.queryParameter("access_token").containsValue("6-7-8-9-0")
+                ))
+                .willReturn(ResponseDefinitionBuilder
+                        .responseDefinition()
+                        .withStatus(200)
+                        .withBody("{\"active\":false}")));
+
+        // Mock /userinfo endpoint
+        wireMockServer.stubFor(requestMatching(request ->
+                MatchResult.of(
+                        request.getUrl().contains("/userinfo") &&
+                                request.queryParameter("access_token").isPresent() &&
+                                request.queryParameter("access_token").containsValue("6-7-8-9-0")
+                ))
+                .willReturn(ResponseDefinitionBuilder
+                        .responseDefinition()
+                        .withStatus(401)
+                        .withBody("{" +
+                                "  \"error\": \"invalid_token\"," +
+                                "  \"error_description\": \"Invalid token: access token is invalid\"" +
+                                "}")));
     }
 }
