@@ -242,7 +242,7 @@
     <dependency>
       <groupId>dk.dbc</groupId>
       <artifactId>dbc-commons-rs-auth</artifactId>
-      <version>2.0-SNAPSHOT</version>
+      <version>2.2-SNAPSHOT</version>
       <exclusions>
         <exclusion>
           <groupId>jakarta.enterprise</groupId>

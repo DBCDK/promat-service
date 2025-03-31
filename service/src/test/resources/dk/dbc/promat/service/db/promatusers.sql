@@ -1,14 +1,14 @@
 -- reviewers (IDs 1-9)
-insert into promatuser(id, role, active, culrid, firstname, lastname, email, address1, zip, city, institution, paycode, hiatus_begin, hiatus_end, accepts, note, capacity, activeChanged, deactivated)
-values (1, 'REVIEWER', true, '41', 'Hans', 'Hansen', 'hans@hansen.dk', 'Lillegade 1', '9999', 'Lilleved', 'Hans Hansens Bix', 123, '2020-10-28', '2020-11-01', '["MULTIMEDIA", "PS4", "PS5"]', 'note1', 1, CURRENT_TIMESTAMP - INTERVAL '6 years', null),
-       (2, 'REVIEWER', true, '42', 'Ole', 'Olsen', 'ole@olsen.dk', 'Storegade 99', '1111', 'Storeved', 'Ole Olsens Goodies', 456, '2020-11-28', '2020-12-01', '["MULTIMEDIA", "PS4", "PS5"]', 'note2', 2, CURRENT_TIMESTAMP - INTERVAL '3 years', null);
+insert into promatuser(id, role, active, culrid, firstname, lastname, email, address1, zip, city, institution, paycode, hiatus_begin, hiatus_end, accepts, note, capacity, activeChanged, deactivated, agency, userId)
+values (1, 'REVIEWER', true, '41', 'Hans', 'Hansen', 'hans@hansen.dk', 'Lillegade 1', '9999', 'Lilleved', 'Hans Hansens Bix', 123, '2020-10-28', '2020-11-01', '["MULTIMEDIA", "PS4", "PS5"]', 'note1', 1, CURRENT_TIMESTAMP - INTERVAL '6 years', null, '300100', 'knud1'),
+       (2, 'REVIEWER', true, 'axel52', 'Ole', 'Olsen', 'ole@olsen.dk', 'Storegade 99', '1111', 'Storeved', 'Ole Olsens Goodies', 456, '2020-11-28', '2020-12-01', '["MULTIMEDIA", "PS4", "PS5"]', 'note2', 2, CURRENT_TIMESTAMP - INTERVAL '3 years', null, '820010', 'axel52');
 
 -- These reviewers is used for update tests. Please do not rely on the value of these reviewers in other tests
-insert into promatuser(id, role, active, culrid, firstname, lastname, email, address1, zip, city, institution, paycode, hiatus_begin, hiatus_end, accepts, note, phone, capacity, selected, privateSelected, activeChanged, deactivated)
-values (3, 'REVIEWER', true, '43', 'Peter', 'Petersen', 'peter@petersen.dk', 'Mellemgade 50', '5555', 'Mellemved', 'Peter Petersens pedaler', 22, null, null, '["BOOK"]', 'note3', '12345678', 2, true, null, CURRENT_TIMESTAMP, null),
-       (5, 'REVIEWER', true, '44', 'Boe', 'Boesen', 'boe@boesen.dk', null, null, null, 'Boe Boesens Bøjler', 23, null, null, '["BOOK"]', 'note5', '9123456789', 2, null, null, CURRENT_TIMESTAMP, null),
+insert into promatuser(id, role, active, culrid, firstname, lastname, email, address1, zip, city, institution, paycode, hiatus_begin, hiatus_end, accepts, note, phone, capacity, selected, privateSelected, activeChanged, deactivated, agency, userid)
+values (3, 'REVIEWER', true, '43', 'Peter', 'Petersen', 'peter@petersen.dk', 'Mellemgade 50', '5555', 'Mellemved', 'Peter Petersens pedaler', 22, null, null, '["BOOK"]', 'note3', '12345678', 2, true, null, CURRENT_TIMESTAMP, null, '097900', 'epep'),
+       (5, 'REVIEWER', true, '44', 'Boe', 'Boesen', 'boe@boesen.dk', null, null, null, 'Boe Boesens Bøjler', 23, null, null, '["BOOK"]', 'note5', '9123456789', 2, null, null, CURRENT_TIMESTAMP, null, '790900', 'bobo'),
 -- This reviewer is used for message testing. Hands off.
-       (4, 'REVIEWER', true, '55', 'Kirsten', 'Kirstensen', 'kirsten@kirstensen.dk', 'Overgade 50', '5432', 'Overlev', 'Kirstens Bix', 0, '2021-01-11', '2021-01-12', '["BOOK"]', 'note4', '123456789010', 2, true, null, CURRENT_TIMESTAMP, null);
+       (4, 'REVIEWER', true, '55', 'Kirsten', 'Kirstensen', 'kirsten@kirstensen.dk', 'Overgade 50', '5432', 'Overlev', 'Kirstens Bix', 0, '2021-01-11', '2021-01-12', '["BOOK"]', 'note4', '123456789010', 2, true, null, CURRENT_TIMESTAMP, null, '790900', 'kiki');
 
 -- This reviewer is used for subjectNote testing. Hands off.
 insert into promatuser(id, role, active, culrid, firstname, lastname, email, institution, paycode, hiatus_begin, hiatus_end, accepts, note, phone, capacity, privateSelected, activeChanged, deactivated)
@@ -31,14 +31,14 @@ insert into reviewersubjectnotes(subjectnote_id, reviewer_id) values(1,6);
 insert into reviewersubjectnotes(subjectnote_id, reviewer_id) values(2,6);
 
 -- editors (IDs 10-19)
-insert into promatuser(id, role, active, culrid, firstname, lastname, email, paycode, activeChanged, deactivated)
-values  (10, 'EDITOR', true, '51', 'Ed', 'Itor', 'ed.itor@dbc.dk', 5678, CURRENT_TIMESTAMP - INTERVAL '6 years', null),
-        (11, 'EDITOR', true, '52', 'Edit', 'Or', 'edit.or@dbc.dk', 1111, CURRENT_TIMESTAMP - INTERVAL '3 years', null),
-        (13, 'EDITOR', true, '54', 'Editte', 'Ore', 'editte.ore@dbc.dk', 2222, CURRENT_TIMESTAMP, null);
+insert into promatuser(id, role, active, culrid, firstname, lastname, email, paycode, activeChanged, deactivated, agency, userId)
+values  (10, 'EDITOR', true, '51', 'Ed', 'Itor', 'ed.itor@dbc.dk', 5678, CURRENT_TIMESTAMP - INTERVAL '6 years', null, '790900', 'jcba'),
+        (11, 'EDITOR', true, '52', 'Edit', 'Or', 'edit.or@dbc.dk', 1111, CURRENT_TIMESTAMP - INTERVAL '3 years', null, '790900', 'adfg'),
+        (13, 'EDITOR', true, 'klnp', 'Editte', 'Ore', 'editte.ore@dbc.dk', 2222, CURRENT_TIMESTAMP, null, '790900', 'klnp');
 
 -- This editor is used for update tests. Please do not rely on the value of this editor in other tests
-insert into promatuser(id, role, active, culrid, firstname, lastname, email, activeChanged, deactivated)
-values(12, 'EDITOR', true, '53', 'Edi', 'tor', 'edi.tor@dbc.dk', CURRENT_TIMESTAMP, null);
+insert into promatuser(id, role, active, culrid, firstname, lastname, email, activeChanged, deactivated, agency, userId)
+values(12, 'EDITOR', true, '53', 'Edi', 'tor', 'edi.tor@dbc.dk', CURRENT_TIMESTAMP, null, '097900', 'toredi');
 -- This editor is used for message testing. Hands off.
 insert into promatuser(id, role, active, culrid, firstname, lastname, email, activeChanged, deactivated)
 values(14, 'EDITOR', true, '56', 'E', 'ditor', 'e.ditor@dbc.dk', CURRENT_TIMESTAMP, null);
@@ -59,4 +59,3 @@ insert into promatuser(id, role, active, culrid, firstname, lastname,
                values (10001, 'REVIEWER', true, '11f2b775-dc2c-42da-bf45-0f906039a931', 'Michelle', 'Hoffmann',
                        'promat-gui-aaaadjsmda6dkoc33u62545hvy@dbcdk.slack.com,jbr@dbc.dk', 'Her', 10001, '2021-08-02', '2021-08-16',
                        '["BOOK"]', '', '', null, null, CURRENT_TIMESTAMP, null);
-

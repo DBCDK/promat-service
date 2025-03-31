@@ -1,11 +1,14 @@
 package dk.dbc.promat.service.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonView;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateSerializer;
 import dk.dbc.promat.service.persistence.Address;
+import dk.dbc.promat.service.persistence.EditorView;
 import dk.dbc.promat.service.persistence.Reviewer;
 
+import dk.dbc.promat.service.persistence.ReviewerView;
 import dk.dbc.promat.service.persistence.SubjectNote;
 import java.time.LocalDate;
 import java.util.List;
@@ -14,6 +17,7 @@ import java.util.Objects;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class ReviewerRequest implements Dto {
     private Boolean active;
+    @Deprecated(since = "Will not be used for reviewer creation after switch to professional login")
     private String cprNumber;
     private String firstName;
     private String lastName;
@@ -37,6 +41,9 @@ public class ReviewerRequest implements Dto {
 
     @JsonSerialize(using = LocalDateSerializer.class)
     private LocalDate hiatusEnd;
+
+    protected String agency;
+    protected String userId;
 
     public Boolean isActive() {
         return active;
@@ -285,52 +292,42 @@ public class ReviewerRequest implements Dto {
         return this;
     }
 
+    public String getAgency() {
+        return agency;
+    }
+
+    public void setAgency(String agency) {
+        this.agency = agency;
+    }
+
+    public ReviewerRequest withAgency(String agency) {
+        this.agency = agency;
+        return this;
+    }
+
+    public String getUserId() {
+        return userId;
+    }
+
+    public void setUserId(String userId) {
+        this.userId = userId;
+    }
+
+    public ReviewerRequest withUserId(String userId) {
+        this.userId = userId;
+        return this;
+    }
+
     @Override
     public boolean equals(Object o) {
-        if(this == o) return true;
-        if(o == null || getClass() != o.getClass()) return false;
+        if (o == null || getClass() != o.getClass()) return false;
         ReviewerRequest that = (ReviewerRequest) o;
-        return Objects.equals(active, that.active) &&
-                Objects.equals(cprNumber, that.cprNumber) &&
-                Objects.equals(firstName, that.firstName) &&
-                Objects.equals(lastName, that.lastName) &&
-                Objects.equals(email, that.email) &&
-                Objects.equals(phone, that.phone) &&
-                Objects.equals(privateEmail, that.privateEmail) &&
-                Objects.equals(privatePhone, that.privatePhone) &&
-                Objects.equals(institution, that.institution) &&
-                Objects.equals(paycode, that.paycode) &&
-                Objects.equals(address, that.address) &&
-                Objects.equals(privateAddress, that.privateAddress) &&
-                Objects.equals(note, that.note) &&
-                Objects.equals(subjects, that.subjects) &&
-                Objects.equals(accepts, that.accepts) &&
-                Objects.equals(capacity, that.capacity) &&
-                Objects.equals(hiatusBegin, that.hiatusBegin) &&
-                Objects.equals(hiatusEnd, that.hiatusEnd);
+        return Objects.equals(active, that.active) && Objects.equals(cprNumber, that.cprNumber) && Objects.equals(firstName, that.firstName) && Objects.equals(lastName, that.lastName) && Objects.equals(email, that.email) && Objects.equals(phone, that.phone) && Objects.equals(privateEmail, that.privateEmail) && Objects.equals(privatePhone, that.privatePhone) && Objects.equals(institution, that.institution) && Objects.equals(paycode, that.paycode) && Objects.equals(address, that.address) && Objects.equals(note, that.note) && Objects.equals(privateAddress, that.privateAddress) && Objects.equals(subjects, that.subjects) && Objects.equals(subjectNotes, that.subjectNotes) && Objects.equals(accepts, that.accepts) && Objects.equals(capacity, that.capacity) && Objects.equals(hiatusBegin, that.hiatusBegin) && Objects.equals(hiatusEnd, that.hiatusEnd) && Objects.equals(agency, that.agency) && Objects.equals(userId, that.userId);
     }
 
     @Override
     public int hashCode() {
-        int result = (active ? 1 : 0);
-
-        result = 31 * result + (firstName != null ? firstName.hashCode() : 0);
-        result = 31 * result + (lastName != null ? lastName.hashCode() : 0);
-        result = 31 * result + (email != null ? email.hashCode() : 0);
-        result = 31 * result + (phone != null ? phone.hashCode() : 0);
-        result = 31 * result + (privateEmail != null ? privateEmail.hashCode() : 0);
-        result = 31 * result + (privatePhone != null ? privatePhone.hashCode() : 0);
-        result = 31 * result + (institution != null ? institution.hashCode() : 0);
-        result = 31 * result + (paycode != null ? paycode.hashCode() : 0);
-        result = 31 * result + (address != null ? address.hashCode() : 0);
-        result = 31 * result + (privateAddress != null ? address.hashCode() : 0);
-        result = 31 * result + (hiatusBegin != null ? hiatusBegin.hashCode() : 0);
-        result = 31 * result + (hiatusEnd != null ? hiatusEnd.hashCode() : 0);
-        result = 31 * result + (capacity != null ? note.hashCode() : 0);
-        result = 31 * result + (subjects != null ? subjects.hashCode() : 0);
-        result = 31 * result + (accepts != null ? accepts.hashCode() : 0);
-        result = 31 * result + (capacity != null ? capacity.hashCode() : 0);
-        return result;
+        return Objects.hash(active, cprNumber, firstName, lastName, email, phone, privateEmail, privatePhone, institution, paycode, address, note, privateAddress, subjects, subjectNotes, accepts, capacity, hiatusBegin, hiatusEnd, agency, userId);
     }
 
     @Override
@@ -347,13 +344,16 @@ public class ReviewerRequest implements Dto {
                 ", institution='" + institution + '\'' +
                 ", paycode=" + paycode +
                 ", address=" + address +
-                ", address=" + privateAddress +
                 ", note='" + note + '\'' +
+                ", privateAddress=" + privateAddress +
                 ", subjects=" + subjects +
+                ", subjectNotes=" + subjectNotes +
                 ", accepts=" + accepts +
                 ", capacity=" + capacity +
                 ", hiatusBegin=" + hiatusBegin +
                 ", hiatusEnd=" + hiatusEnd +
+                ", agency='" + agency + '\'' +
+                ", userId='" + userId + '\'' +
                 '}';
     }
 }

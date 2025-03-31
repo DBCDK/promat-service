@@ -26,7 +26,9 @@ import jakarta.persistence.SqlResultSetMapping;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Collection;
+import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 
 @SqlResultSetMapping(
         name = "ReviewerWithWorkloadMapping",
@@ -372,6 +374,26 @@ public class Reviewer extends PromatUser {
         return this;
     }
 
+    public Reviewer withDeactivated(Date deactivated) {
+        this.deactivated = deactivated;
+        return this;
+    }
+
+    public Reviewer withActiveChanged(Date activeChanged) {
+        this.activeChanged = activeChanged;
+        return this;
+    }
+
+    public Reviewer withAgency(String agency) {
+        this.agency = agency;
+        return this;
+    }
+
+    public Reviewer withUserId(String userId) {
+        this.userId = userId;
+        return this;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) {
@@ -386,67 +408,73 @@ public class Reviewer extends PromatUser {
         if (active != reviewer.active) {
             return false;
         }
-        if (id != null ? !id.equals(reviewer.id) : reviewer.id != null) {
+        if (!Objects.equals(id, reviewer.id)) {
             return false;
         }
-        if (culrId != null ? !culrId.equals(reviewer.culrId) : reviewer.culrId != null) {
+        if (!Objects.equals(culrId, reviewer.culrId)) {
             return false;
         }
-        if (firstName != null ? !firstName.equals(reviewer.firstName) : reviewer.firstName != null) {
+        if (!Objects.equals(firstName, reviewer.firstName)) {
             return false;
         }
-        if (lastName != null ? !lastName.equals(reviewer.lastName) : reviewer.lastName != null) {
+        if (!Objects.equals(lastName, reviewer.lastName)) {
             return false;
         }
-        if (email != null ? !email.equals(reviewer.email) : reviewer.email != null) {
+        if (!Objects.equals(email, reviewer.email)) {
             return false;
         }
-        if (phone != null ? !phone.equals(reviewer.phone) : reviewer.phone != null) {
+        if (!Objects.equals(phone, reviewer.phone)) {
             return false;
         }
-        if (privateEmail != null ? !privateEmail.equals(reviewer.privateEmail) : reviewer.privateEmail != null) {
+        if (!Objects.equals(privateEmail, reviewer.privateEmail)) {
             return false;
         }
-        if (privatePhone != null ? !privatePhone.equals(reviewer.privatePhone) : reviewer.privatePhone != null) {
+        if (!Objects.equals(privatePhone, reviewer.privatePhone)) {
             return false;
         }
-        if (address != null ? !address.equals(reviewer.address) : reviewer.address != null) {
+        if (!Objects.equals(address, reviewer.address)) {
             return false;
         }
-        if (privateAddress != null ? !privateAddress.equals(reviewer.privateAddress) : reviewer.privateAddress != null) {
+        if (!Objects.equals(privateAddress, reviewer.privateAddress)) {
             return false;
         }
-        if (institution != null ? !institution.equals(reviewer.institution) : reviewer.institution != null) {
+        if (!Objects.equals(institution, reviewer.institution)) {
             return false;
         }
-        if (paycode != null ? !paycode.equals(reviewer.paycode) : reviewer.paycode != null) {
+        if (!Objects.equals(paycode, reviewer.paycode)) {
             return false;
         }
-        if (hiatusBegin != null ? !hiatusBegin.equals(reviewer.hiatusBegin) : reviewer.hiatusBegin != null) {
+        if (!Objects.equals(hiatusBegin, reviewer.hiatusBegin)) {
             return false;
         }
-        if (hiatusEnd != null ? !hiatusEnd.equals(reviewer.hiatusEnd) : reviewer.hiatusEnd != null) {
+        if (!Objects.equals(hiatusEnd, reviewer.hiatusEnd)) {
             return false;
         }
-        if (note != null ? !note.equals(reviewer.note) : reviewer.note != null) {
+        if (!Objects.equals(note, reviewer.note)) {
             return false;
         }
-        if (capacity != null ? !capacity.equals(reviewer.capacity) : reviewer.capacity != null) {
+        if (!Objects.equals(capacity, reviewer.capacity)) {
             return false;
         }
-        if (subjects != null ? !subjects.equals(reviewer.subjects) : reviewer.subjects != null) {
+        if (!Objects.equals(subjects, reviewer.subjects)) {
             return false;
         }
-        if (accepts != null ? !accepts.equals(reviewer.accepts) : reviewer.accepts != null) {
+        if (!Objects.equals(accepts, reviewer.accepts)) {
             return false;
         }
-        if (activeChanged != null ? !activeChanged.equals(reviewer.activeChanged) : reviewer.activeChanged != null) {
+        if (!Objects.equals(activeChanged, reviewer.activeChanged)) {
             return false;
         }
-        if (deactivated != null ? !deactivated.equals(reviewer.activeChanged) : reviewer.deactivated != null) {
+        if (!Objects.equals(deactivated, reviewer.deactivated)) {
             return false;
         }
-        return subjectNotes != null ? subjectNotes.equals(reviewer.subjectNotes) : reviewer.subjectNotes == null;
+        if (!Objects.equals(agency, reviewer.agency)) {
+            return false;
+        }
+        if (!Objects.equals(userId, reviewer.userId)) {
+            return false;
+        }
+        return Objects.equals(subjectNotes, reviewer.subjectNotes);
     }
 
 
@@ -474,6 +502,8 @@ public class Reviewer extends PromatUser {
         result = 31 * result + (subjectNotes != null ? subjectNotes.hashCode() : 0);
         result = 31 * result + (activeChanged != null ? activeChanged.hashCode() : 0);
         result = 31 * result + (deactivated != null ? deactivated.hashCode() : 0);
+        result = 31 * result + (agency != null ? agency.hashCode() : 0);
+        result = 31 * result + (userId != null ? userId.hashCode() : 0);
         return result;
     }
 
@@ -502,6 +532,8 @@ public class Reviewer extends PromatUser {
                 ", subjectNotes=" + subjectNotes +
                 ", activeChanged='" + activeChanged + '\'' +
                 ", deactivated='" + deactivated + '\'' +
+                ", agency='" + agency + '\'' +
+                ", userId='" + userId + '\'' +
                 '}';
     }
 
@@ -527,6 +559,8 @@ public class Reviewer extends PromatUser {
         reviewerWithWorkloads.setPhone(phone);
         reviewerWithWorkloads.setPrivatePhone(privatePhone);
         reviewerWithWorkloads.setSubjectNotes(subjectNotes);
+        reviewerWithWorkloads.setAgency(agency);
+        reviewerWithWorkloads.setUserId(userId);
         return reviewerWithWorkloads;
     }
 }

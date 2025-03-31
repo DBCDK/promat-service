@@ -33,6 +33,9 @@ import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
+import static dk.dbc.promat.service.api.Users.IDP_EDITOR_RIGHT_NAME;
+import static dk.dbc.promat.service.api.Users.IDP_PRODUCT_NAME;
+
 @Stateless
 @Path("")
 public class Editors {
@@ -48,41 +51,55 @@ public class Editors {
     @Inject
     AuditLogHandler auditLogHandler;
 
+    private final static String MISSING_REQUIRED_FIELD = "Missing required field in the request data";
+
     @POST
     @Path("editors")
     @Produces({MediaType.APPLICATION_JSON})
-    @RolesAllowed({"authenticated-user"})
+    @RolesAllowed({"authenticated-user", IDP_PRODUCT_NAME + "-" + IDP_EDITOR_RIGHT_NAME})
     public Response createEditor(EditorRequest editorRequest, @Context UriInfo uriInfo) throws CulrConnectorException {
         LOGGER.info("editors (POST)");
 
         final String firstName = editorRequest.getFirstName();
         if ( firstName == null || firstName.isBlank()) {
-            return ServiceErrorDto.InvalidRequest("Missing required field in the request data",
-                    "Field 'firstName' must be supplied and not be blank when creating a new reviewer");
+            return ServiceErrorDto.InvalidRequest(MISSING_REQUIRED_FIELD,
+                    "Field 'firstName' must be supplied and not be blank when creating a new editor");
         }
 
         final String lastName = editorRequest.getLastName();
         if ( lastName == null || lastName.isBlank()) {
-            return ServiceErrorDto.InvalidRequest("Missing required field in the request data",
-                    "Field 'lastName' must be supplied and not be blank when creating a new reviewer");
+            return ServiceErrorDto.InvalidRequest(MISSING_REQUIRED_FIELD,
+                    "Field 'lastName' must be supplied and not be blank when creating a new editor");
         }
 
         final String email = editorRequest.getEmail();
         if ( email == null || email.isBlank()) {
-            return ServiceErrorDto.InvalidRequest("Missing required field in the request data",
-                    "Field 'email' must be supplied and not be blank when creating a new reviewer");
+            return ServiceErrorDto.InvalidRequest(MISSING_REQUIRED_FIELD,
+                    "Field 'email' must be supplied and not be blank when creating a new editor");
         }
 
         final String cprNumber = editorRequest.getCprNumber();
         if (cprNumber == null || cprNumber.isBlank()) {
-            return ServiceErrorDto.InvalidRequest("Missing required field in the request data",
-                    "Field 'cprNumber' must be supplied when creating a new reviewer");
+            return ServiceErrorDto.InvalidRequest(MISSING_REQUIRED_FIELD,
+                    "Field 'cprNumber' must be supplied when creating a new editor");
         }
 
         final Integer paycode = editorRequest.getPaycode();
         if (paycode == null) {
             return ServiceErrorDto.InvalidRequest("Missing required field in the request data",
                     "Field 'paycode' must be supplied when creating a new reviewer");
+        }
+
+        final String agency = editorRequest.getAgency();
+        if ( agency == null || agency.isBlank()) {
+            return ServiceErrorDto.InvalidRequest(MISSING_REQUIRED_FIELD,
+                    "Field 'agency' must be supplied and not be blank when creating a new editor");
+        }
+
+        final String userId = editorRequest.getUserId();
+        if ( userId == null || userId.isBlank()) {
+            return ServiceErrorDto.InvalidRequest(MISSING_REQUIRED_FIELD,
+                    "Field 'userId' must be supplied and not be blank when creating a new editor");
         }
 
         final String culrId;
@@ -95,11 +112,12 @@ public class Editors {
 
         try {
             final Editor entity = new Editor()
-                    .withActive(editorRequest.isActive() != null ? editorRequest.isActive() : true)  // New users defaults to active
+                    .withActive(editorRequest.isActive() == null || editorRequest.isActive())  // New users defaults to active
                     .withFirstName(firstName)
                     .withLastName(lastName)
-                    .withEmail(email);
-
+                    .withEmail(email)
+                    .withAgency(agency)
+                    .withUserId(userId);
             entity.setCulrId(culrId);
 
             entityManager.persist(entity);
@@ -118,7 +136,7 @@ public class Editors {
     @GET
     @Path("editors/{id}")
     @Produces({MediaType.APPLICATION_JSON})
-    @RolesAllowed({"authenticated-user"})
+    @RolesAllowed({"authenticated-user", IDP_PRODUCT_NAME + "-" + IDP_EDITOR_RIGHT_NAME})
     public Response getEditor(@PathParam("id") Integer id, @Context UriInfo uriInfo) {
         final Editor editor = entityManager.find(Editor.class, id);
         if (editor == null) {
@@ -147,7 +165,7 @@ public class Editors {
     @PUT
     @Path("editors/{id}")
     @Produces({MediaType.APPLICATION_JSON})
-    @RolesAllowed({"authenticated-user"})
+    @RolesAllowed({"authenticated-user", IDP_PRODUCT_NAME + "-" + IDP_EDITOR_RIGHT_NAME})
     public Response updateEditor(@PathParam("id") final Integer id, EditorRequest editorRequest, @Context UriInfo uriInfo) {
         LOGGER.info("editors/{} (PUT)", id);
 
@@ -176,6 +194,12 @@ public class Editors {
             }
             if(editorRequest.getLastName() != null) {
                 editor.setLastName(editorRequest.getLastName());
+            }
+            if(editorRequest.getAgency() != null) {
+                editor.setAgency(editorRequest.getAgency());
+            }
+            if(editorRequest.getUserId() != null) {
+                editor.setUserId(editorRequest.getUserId());
             }
 
             auditLogHandler.logTraceUpdateForToken("Update and view full editor profile", uriInfo, editor.getId(), 200);

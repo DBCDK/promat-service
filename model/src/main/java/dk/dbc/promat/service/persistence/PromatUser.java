@@ -30,6 +30,10 @@ import java.util.Date;
         name = PromatUser.GET_USER_ROLE,
         query = PromatUser.GET_USER_ROLE_QUERY,
         resultSetMapping = "PromatUser.UserRoleMapping")
+@NamedNativeQuery(
+        name = PromatUser.GET_USER_ROLE_BY_AGENCY_AND_USERID,
+        query = PromatUser.GET_USER_ROLE_BY_AGENCY_AND_USERID_QUERY,
+        resultSetMapping = "PromatUser.UserRoleMapping")
 @Entity
 @Inheritance(strategy= InheritanceType.SINGLE_TABLE)
 @DiscriminatorColumn(name="role")
@@ -38,6 +42,10 @@ public abstract class PromatUser {
             "PromatUser.getUserRole";
     public static final String GET_USER_ROLE_QUERY =
             "SELECT id,role,CAST(paycode AS TEXT) AS localid FROM promatuser WHERE culrId=?1";
+    public static final String GET_USER_ROLE_BY_AGENCY_AND_USERID =
+            "PromatUser.getUserRoleByAuthToken";
+    public static final String GET_USER_ROLE_BY_AGENCY_AND_USERID_QUERY =
+            "SELECT id,role,CAST(paycode AS TEXT) AS localid FROM promatuser WHERE userId=?1 AND agency=?2";
 
     public enum Role {
         EDITOR, REVIEWER
@@ -148,11 +156,6 @@ public abstract class PromatUser {
         this.activeChanged = activeChanged;
     }
 
-    public PromatUser withActiveChanged(Date activeChanged) {
-        this.activeChanged = activeChanged;
-        return this;
-    }
-
     public Date getDeactivated()  {
         return deactivated;
     }
@@ -161,8 +164,37 @@ public abstract class PromatUser {
         this.deactivated = deactivated;
     }
 
-    public PromatUser withDeactivated(Date deactivated) {
-        this.deactivated = deactivated;
-        return this;
+    public String getAgency() {
+        return agency;
+    }
+
+    public void setAgency(String agency) {
+        this.agency = agency;
+    }
+
+    public String getUserId() {
+        return userId;
+    }
+
+    public void setUserId(String userId) {
+        this.userId = userId;
+    }
+
+    @Override
+    public String toString() {
+        return "PromatUser{" +
+                "id=" + id +
+                ", role=" + role +
+                ", active=" + active +
+                ", culrId='" + culrId + '\'' +
+                ", firstName='" + firstName + '\'' +
+                ", lastName='" + lastName + '\'' +
+                ", email='" + email + '\'' +
+                ", phone='" + phone + '\'' +
+                ", activeChanged=" + activeChanged +
+                ", deactivated=" + deactivated +
+                ", agency='" + agency + '\'' +
+                ", userId='" + userId + '\'' +
+                '}';
     }
 }
