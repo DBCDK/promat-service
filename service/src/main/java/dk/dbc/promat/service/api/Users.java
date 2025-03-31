@@ -99,11 +99,11 @@ public class Users {
                             .withCode(ServiceErrorCode.FORBIDDEN)).build();
         }
 
-        // Extra verbose logging while transitioning from 'bibliotekslogin' to 'netpunktslogin'
+        // Extra verbose logging while transitioning from 'biblioteks login' to 'professional login'
         // Todo: Remove when transitioned
         LOGGER.info("getUserRoleFromAuthToken: userId={}, agency={}", userId, agency);
 
-        final TypedQuery<UserRole> query = entityManager.createNamedQuery(PromatUser.GET_USER_ROLE_BY_AUTHTOKEN, UserRole.class);
+        final TypedQuery<UserRole> query = entityManager.createNamedQuery(PromatUser.GET_USER_ROLE_BY_AGENCY_AND_USERID, UserRole.class);
         query.setParameter(1, userId.get());
         query.setParameter(2, agency.get());
 

@@ -31,8 +31,8 @@ import java.util.Date;
         query = PromatUser.GET_USER_ROLE_QUERY,
         resultSetMapping = "PromatUser.UserRoleMapping")
 @NamedNativeQuery(
-        name = PromatUser.GET_USER_ROLE_BY_AUTHTOKEN,
-        query = PromatUser.GET_USER_ROLE_BY_AUTHTOKEN_QUERY,
+        name = PromatUser.GET_USER_ROLE_BY_AGENCY_AND_USERID,
+        query = PromatUser.GET_USER_ROLE_BY_AGENCY_AND_USERID_QUERY,
         resultSetMapping = "PromatUser.UserRoleMapping")
 @Entity
 @Inheritance(strategy= InheritanceType.SINGLE_TABLE)
@@ -42,9 +42,9 @@ public abstract class PromatUser {
             "PromatUser.getUserRole";
     public static final String GET_USER_ROLE_QUERY =
             "SELECT id,role,CAST(paycode AS TEXT) AS localid FROM promatuser WHERE culrId=?1";
-    public static final String GET_USER_ROLE_BY_AUTHTOKEN =
+    public static final String GET_USER_ROLE_BY_AGENCY_AND_USERID =
             "PromatUser.getUserRoleByAuthToken";
-    public static final String GET_USER_ROLE_BY_AUTHTOKEN_QUERY =
+    public static final String GET_USER_ROLE_BY_AGENCY_AND_USERID_QUERY =
             "SELECT id,role,CAST(paycode AS TEXT) AS localid FROM promatuser WHERE userId=?1 AND agency=?2";
 
     public enum Role {
