@@ -58,6 +58,7 @@ class ReviewersIT extends ContainerTest {
         loadCreatedReviewer(expectedReviewer);
 
         Reviewer reviewer = postAndAssert("v1/api/reviewers", reviewerRequest, "1-2-3-4-5", Reviewer.class, Response.Status.CREATED);
+        expectedReviewer.setId(reviewer.getId());
         assertThat(reviewer, is(expectedReviewer));
 
         // Example log entry:
