@@ -494,7 +494,7 @@ public abstract class ContainerTest extends IntegrationTestIT {
                                 "          {" +
                                 "            \"productName\": \"" + IDP_PRODUCT_NAME + "\"," +
                                 "            \"name\": \"" + IDP_REVIEWER_RIGHT_NAME + "\"," +
-                                "            \"description\": \"adgang til Promat som DBC lektør\"" +
+                                "            \"description\": \"adgang til Promat som ekstern anmelder\"" +
                                 "          }" +
                                 "        ]" +
                                 "      }" +
@@ -561,7 +561,7 @@ public abstract class ContainerTest extends IntegrationTestIT {
                                 "          {" +
                                 "            \"productName\": \"" + IDP_PRODUCT_NAME + "\"," +
                                 "            \"name\": \"" + IDP_REVIEWER_RIGHT_NAME + "\"," +
-                                "            \"description\": \"adgang til Promat som DBC lektør\"" +
+                                "            \"description\": \"adgang til Promat som ekstern anmelder\"" +
                                 "          }" +
                                 "        ]" +
                                 "      }" +
@@ -628,7 +628,7 @@ public abstract class ContainerTest extends IntegrationTestIT {
                                 "          {" +
                                 "            \"productName\": \"" + IDP_PRODUCT_NAME + "\"," +
                                 "            \"name\": \"" + IDP_REVIEWER_RIGHT_NAME + "\"," +
-                                "            \"description\": \"adgang til Promat som DBC lektør\"" +
+                                "            \"description\": \"adgang til Promat som ekstern anmelder\"" +
                                 "          }" +
                                 "        ]" +
                                 "      }" +
@@ -763,7 +763,7 @@ public abstract class ContainerTest extends IntegrationTestIT {
                                 "          {" +
                                 "            \"productName\": \"" + IDP_PRODUCT_NAME + "\"," +
                                 "            \"name\": \"" + IDP_REVIEWER_RIGHT_NAME + "\"," +
-                                "            \"description\": \"adgang til Promat som DBC lektør\"" +
+                                "            \"description\": \"adgang til Promat som ekstern anmelder\"" +
                                 "          }" +
                                 "        ]" +
                                 "      }" +

@@ -43,7 +43,7 @@ public class Users {
 
     public static final String IDP_PRODUCT_NAME = "PROMAT";
     public static final String IDP_EDITOR_RIGHT_NAME = "EDITOR";
-    public static final String IDP_REVIEWER_RIGHT_NAME = "LEKTOR";  // Todo: This is not correct, fix when known
+    public static final String IDP_REVIEWER_RIGHT_NAME = "REVIEWER";
 
     @GET
     @Path("{culrId}/role")
