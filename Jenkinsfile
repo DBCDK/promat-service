@@ -143,7 +143,7 @@ pipeline {
         fixed {
             script {
                 if ("${env.BRANCH_NAME}" == 'main') {
-                    slackSend(channel: teamSlackNotice,
+                    slackSend(channel: teamSlackWarning,
                             color: 'good',
                             message: "${env.JOB_NAME} #${env.BUILD_NUMBER} back to normal: ${env.BUILD_URL}",
                             tokenCredentialId: 'slack-global-integration-token')
