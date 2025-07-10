@@ -20,7 +20,7 @@ pipeline {
 		SONAR_TESTS="test"
 	}
   triggers {
-    cron(env.BRANCH_NAME == 'main' ? "H 3 * * 17" : "")
+    pollSCM("*/3 8-16  * *  *")
     upstream('/Docker-payara6-bump-trigger')
   }
 	options {
@@ -125,10 +125,6 @@ pipeline {
         }
     }
     post {
-        always {
-            archiveArtifacts 'e2e/cypress/screenshots/*, e2e/cypress/videos/*, logs/*'
-        }
-
         success {
             script {
                 if (BRANCH_NAME == 'main') {
