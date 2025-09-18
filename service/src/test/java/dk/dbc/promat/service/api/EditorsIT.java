@@ -10,23 +10,18 @@ import dk.dbc.promat.service.templating.Formatting;
 import java.sql.Date;
 import java.time.Instant;
 import org.junit.jupiter.api.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import jakarta.ws.rs.core.Response;
 
 import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 class EditorsIT extends ContainerTest {
-    private static final Logger LOGGER = LoggerFactory.getLogger(EditorsIT.class);
 
     @Test
     void getEditor() throws JsonProcessingException {
         final Editor expectedEditor = new Editor();
         expectedEditor.setId(10);
-        expectedEditor.setCulrId("51");
         expectedEditor.setActive(true);
         expectedEditor.setFirstName("Ed");
         expectedEditor.setLastName("Itor");
@@ -35,7 +30,7 @@ class EditorsIT extends ContainerTest {
         expectedEditor.setAgency("790900");
         expectedEditor.setUserId("jcba");
 
-        Response response = getResponse("v1/api/editors/10", "1-2-3-4-5");
+        Response response = getResponse("v1/api/editors/10", "2-3-4-5-6");
         final Editor actual = mapper.readValue(response.readEntity(String.class), Editor.class);
         actual.setActiveChanged(Date.from(Instant.ofEpochSecond(1629900636)));
         actual.setDeactivated(null);
@@ -46,7 +41,6 @@ class EditorsIT extends ContainerTest {
     void getEditorByProfessionalLogin() throws JsonProcessingException {
         final Editor expectedEditor = new Editor();
         expectedEditor.setId(13);
-        expectedEditor.setCulrId("klnp");
         expectedEditor.setActive(true);
         expectedEditor.setFirstName("Editte");
         expectedEditor.setLastName("Ore");
@@ -85,7 +79,7 @@ class EditorsIT extends ContainerTest {
 
     @Test
     void editorNotFound() {
-        final Response response = getResponse("v1/api/editors/4242", "1-2-3-4-5");
+        final Response response = getResponse("v1/api/editors/4242", "2-3-4-5-6");
 
         assertThat(response.getStatus(), is(404));
     }
@@ -96,7 +90,6 @@ class EditorsIT extends ContainerTest {
         // Check that we have the expected start-state
         final Editor expectedEditor = new Editor();
         expectedEditor.setId(12);
-        expectedEditor.setCulrId("53");
         expectedEditor.setActive(true);
         expectedEditor.setFirstName("Edi");
         expectedEditor.setLastName("tor");
@@ -105,7 +98,7 @@ class EditorsIT extends ContainerTest {
         expectedEditor.setAgency("097900");
         expectedEditor.setUserId("toredi");
 
-        Response response = getResponse("v1/api/editors/12", "1-2-3-4-5");
+        Response response = getResponse("v1/api/editors/12", "2-3-4-5-6");
         final Editor actual = mapper.readValue(response.readEntity(String.class), Editor.class);
         actual.setActiveChanged(Date.from(Instant.ofEpochSecond(1629900636)));
         actual.setDeactivated(null);
@@ -120,7 +113,7 @@ class EditorsIT extends ContainerTest {
                 .withAgency("790900")
                 .withUserId("editor");
 
-        response = putResponse("v1/api/editors/12", editorRequest, "1-2-3-4-5");
+        response = putResponse("v1/api/editors/12", editorRequest, "2-3-4-5-6");
         assertThat("response status", response.getStatus(), is(200));
         final Editor updated = mapper.readValue(response.readEntity(String.class), Editor.class);
 
@@ -167,15 +160,14 @@ class EditorsIT extends ContainerTest {
                 .withPaycode(9999);
 
         // First attempt without required agency and userId fields
-        Response response = postResponse("v1/api/editors", editorRequest, "1-2-3-4-5");
+        Response response = postResponse("v1/api/editors", editorRequest, "2-3-4-5-6");
         assertThat("response status", response.getStatus(), is(400));
 
         // Add cpr, agency and userId fields
-        editorRequest.setCprNumber("2201211154");
         editorRequest.setAgency("790900");
         editorRequest.setUserId("etre");
 
-        response = postResponse("v1/api/editors", editorRequest, "1-2-3-4-5");
+        response = postResponse("v1/api/editors", editorRequest, "2-3-4-5-6");
         assertThat("response status", response.getStatus(), is(201));
         final Editor created = mapper.readValue(response.readEntity(String.class), Editor.class);
 
@@ -183,7 +175,6 @@ class EditorsIT extends ContainerTest {
         final Editor expected = new Editor();
         expected.setId(created.getId());
         expected.setActive(true);
-        expected.setCulrId("9eb694d3-e734-43f5-b30c-b03d1db1b523");
         expected.setFirstName("Edi");
         expected.setLastName("Tore");
         expected.setEmail("edi.tore@dbc.dk");
@@ -191,7 +182,7 @@ class EditorsIT extends ContainerTest {
         expected.setUserId("etre");
         assertThat(created, is(expected));
 
-        response = getResponse("v1/api/editors/" + created.getId(), "1-2-3-4-5");
+        response = getResponse("v1/api/editors/" + created.getId(), "2-3-4-5-6");
         assertThat("response status", response.getStatus(), is(200));
         final Editor existing = mapper.readValue(response.readEntity(String.class), Editor.class);
 

@@ -2,7 +2,6 @@ package dk.dbc.promat.service.api;
 
 import dk.dbc.audittrace.Action;
 import dk.dbc.audittrace.AuditTrace;
-import static dk.dbc.audittrace.Action.READ;
 import static dk.dbc.audittrace.AuditTrace.accessingToken;
 import static dk.dbc.audittrace.AuditTrace.kv;
 import static dk.dbc.audittrace.AuditTrace.owningLenderId;
@@ -10,8 +9,6 @@ import static dk.dbc.audittrace.AuditTrace.owningLenderId;
 import dk.dbc.audittrace.KeyValue;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.jwt.JsonWebToken;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.servlet.http.HttpServletRequest;
@@ -23,7 +20,6 @@ import java.util.stream.Collectors;
 
 @ApplicationScoped
 public class AuditLogHandler {
-    private static final Logger LOGGER = LoggerFactory.getLogger(AuditLogHandler.class);
 
     @Inject
     private JsonWebToken callerPrincipal;

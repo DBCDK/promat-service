@@ -24,8 +24,6 @@ import org.junit.jupiter.api.TestMethodOrder;
 import jakarta.ws.rs.core.GenericType;
 import jakarta.ws.rs.core.Response;
 
-import java.security.KeyManagementException;
-import java.security.NoSuchAlgorithmException;
 import java.sql.Date;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -45,7 +43,6 @@ class ReviewersIT extends ContainerTest {
     @Test
     void createReviewer()  {
         final ReviewerRequest reviewerRequest = new ReviewerRequest()
-                .withCprNumber("2407776666")
                 .withPaycode(6666)
                 .withFirstName("Peder")
                 .withLastName("Pedersen")
@@ -57,76 +54,72 @@ class ReviewersIT extends ContainerTest {
         final Reviewer expectedReviewer = new Reviewer();
         loadCreatedReviewer(expectedReviewer);
 
-        Reviewer reviewer = postAndAssert("v1/api/reviewers", reviewerRequest, "1-2-3-4-5", Reviewer.class, Response.Status.CREATED);
+        Reviewer reviewer = postAndAssert("v1/api/reviewers", reviewerRequest, "2-3-4-5-6", Reviewer.class, Response.Status.CREATED);
         expectedReviewer.setId(reviewer.getId());
         assertThat(reviewer, is(expectedReviewer));
 
         // Example log entry:
-        // [docker-java-stream-2022862423] INFO dk.dbc.promat.service.ContainerTest - STDOUT: {"timestamp":"2021-08-04T23:41:34.661920+02:00","sys_event_type":"audit","client_ip":["172.17.0.1"],"app_name":"PROMAT","action":"CREATE","accessing_user":{"token":"1-2-3-4-5"},"owning_user":"6666/190976","PROMAT":{"Created new user":"reviewers","Response":"200"}}
+        // [docker-java-stream-2022862423] INFO dk.dbc.promat.service.ContainerTest - STDOUT: {"timestamp":"2021-08-04T23:41:34.661920+02:00","sys_event_type":"audit","client_ip":["172.17.0.1"],"app_name":"PROMAT","action":"CREATE","accessing_user":{"token":"2-3-4-5-6"},"owning_user":"6666/190976","PROMAT":{"Created new user":"reviewers","Response":"200"}}
         assertThat("auditlog entry", promatServiceContainer.getLogs().contains("{\"Created new reviewer\":\"reviewers\",\"Response\":\"201\"}"));
     }
 
     @Test
     void createReviewerWithoutEmail() {
         ReviewerRequest reviewerRequest = new ReviewerRequest()
-                .withCprNumber("2407776666")
                 .withPaycode(6666)
                 .withFirstName("John")
                 .withLastName("Doe");
 
-        postAndAssert("v1/api/reviewers", reviewerRequest, "1-2-3-4-5", ServiceErrorDto.class, Response.Status.BAD_REQUEST);
+        postAndAssert("v1/api/reviewers", reviewerRequest, "2-3-4-5-6", ServiceErrorDto.class, Response.Status.BAD_REQUEST);
     }
 
     @Test
     void createReviewerWithoutAgencyAndUserId() {
         ReviewerRequest reviewerRequest = new ReviewerRequest()
-                .withCprNumber("2407776666")
                 .withPaycode(6666)
                 .withFirstName("John")
                 .withLastName("Doe")
                 .withEmail("john@doe.com");
 
-        postAndAssert("v1/api/reviewers", reviewerRequest, "1-2-3-4-5", ServiceErrorDto.class, Response.Status.BAD_REQUEST);
+        postAndAssert("v1/api/reviewers", reviewerRequest, "2-3-4-5-6", ServiceErrorDto.class, Response.Status.BAD_REQUEST);
     }
 
     @Test
     void createReviewerWithoutCprNumber() {
         final ReviewerRequest reviewerRequest = new ReviewerRequest().withPaycode(42);
 
-        ServiceErrorDto serviceError = postAndAssert("v1/api/reviewers", reviewerRequest, "1-2-3-4-5", ServiceErrorDto.class, Response.Status.BAD_REQUEST);
+        ServiceErrorDto serviceError = postAndAssert("v1/api/reviewers", reviewerRequest, "2-3-4-5-6", ServiceErrorDto.class, Response.Status.BAD_REQUEST);
         assertThat("service error", serviceError.getCode(), is(ServiceErrorCode.INVALID_REQUEST));
     }
 
     @Test
     void createReviewerWithoutPaycode() {
-        final ReviewerRequest reviewerRequest = new ReviewerRequest().withCprNumber("1234567890");
+        final ReviewerRequest reviewerRequest = new ReviewerRequest();
 
-        ServiceErrorDto serviceError = postAndAssert("v1/api/reviewers", reviewerRequest, "1-2-3-4-5", ServiceErrorDto.class, Response.Status.BAD_REQUEST);
+        ServiceErrorDto serviceError = postAndAssert("v1/api/reviewers", reviewerRequest, "2-3-4-5-6", ServiceErrorDto.class, Response.Status.BAD_REQUEST);
         assertThat("service error", serviceError.getCode(), is(ServiceErrorCode.INVALID_REQUEST));
     }
 
     @Test
     void createReviewerWithNonExistingSubject() {
         final ReviewerRequest reviewerRequest = new ReviewerRequest()
-                .withCprNumber("2407776666")
                 .withPaycode(6666)
                 .withSubjects(List.of(4242));
 
-        ServiceErrorDto serviceError = postAndAssert("v1/api/reviewers", reviewerRequest, "1-2-3-4-5", ServiceErrorDto.class, Response.Status.BAD_REQUEST);
+        ServiceErrorDto serviceError = postAndAssert("v1/api/reviewers", reviewerRequest, "2-3-4-5-6", ServiceErrorDto.class, Response.Status.BAD_REQUEST);
         assertThat("service error", serviceError.getCode(), is(ServiceErrorCode.INVALID_REQUEST));
     }
 
     @Test
     void createReviewerWithoutNonNullField() {
         final ReviewerRequest reviewerRequest = new ReviewerRequest()
-                .withCprNumber("2407776666")
                 .withPaycode(6666)
                 .withFirstName("John")
                 .withLastName("Doe")
                 .withAccepts(Collections.emptyList());
                 // missing non-null email
 
-        ServiceErrorDto serviceError = postAndAssert("v1/api/reviewers", reviewerRequest, "1-2-3-4-5", ServiceErrorDto.class, Response.Status.BAD_REQUEST);
+        ServiceErrorDto serviceError = postAndAssert("v1/api/reviewers", reviewerRequest, "2-3-4-5-6", ServiceErrorDto.class, Response.Status.BAD_REQUEST);
         assertThat("service error", serviceError.getCode(), is(ServiceErrorCode.INVALID_REQUEST));
     }
 
@@ -153,7 +146,7 @@ class ReviewersIT extends ContainerTest {
         final Reviewer expectedReviewer = new Reviewer();
         loadReviewer1(expectedReviewer, ReviewerView.Reviewer.class);
 
-        final Response response = getResponse("v1/api/reviewers/1", "1-2-3-4-5");
+        final Response response = getResponse("v1/api/reviewers/1", "2-3-4-5-6");
         assertThat("response status", response.getStatus(), is(200));
 
         final Reviewer reviewer = mapper.readValue(response.readEntity(String.class), Reviewer.class);
@@ -162,7 +155,7 @@ class ReviewersIT extends ContainerTest {
         assertThat("reviewer", reviewer, is(expectedReviewer));
 
         // Example log entry:
-        // [docker-java-stream--208115991] INFO dk.dbc.promat.service.ContainerTest - STDOUT: {"timestamp":"2021-08-04T14:14:48.151178+02:00","sys_event_type":"audit","client_ip":["172.17.0.1"],"app_name":"PROMAT","action":"READ","accessing_user":{"token":"1-2-3-4-5"},"owning_user":"123/190976","PROMAT":{"View full profile":"reviewers/1","Response":"200"}}
+        // [docker-java-stream--208115991] INFO dk.dbc.promat.service.ContainerTest - STDOUT: {"timestamp":"2021-08-04T14:14:48.151178+02:00","sys_event_type":"audit","client_ip":["172.17.0.1"],"app_name":"PROMAT","action":"READ","accessing_user":{"token":"2-3-4-5-6"},"owning_user":"123/190976","PROMAT":{"View full profile":"reviewers/1","Response":"200"}}
         assertThat("auditlog entry", promatServiceContainer.getLogs().contains("{\"View full reviewer profile\":\"reviewers/1\",\"Response\":\"200\"}"));
     }
 
@@ -180,17 +173,17 @@ class ReviewersIT extends ContainerTest {
         assertThat("reviewer", reviewer, is(expectedReviewer));
 
         // Example log entry:
-        // [docker-java-stream--208115991] INFO dk.dbc.promat.service.ContainerTest - STDOUT: {"timestamp":"2021-08-04T14:14:48.151178+02:00","sys_event_type":"audit","client_ip":["172.17.0.1"],"app_name":"PROMAT","action":"READ","accessing_user":{"token":"1-2-3-4-5"},"owning_user":"123/190976","PROMAT":{"View full profile":"reviewers/1","Response":"200"}}
+        // [docker-java-stream--208115991] INFO dk.dbc.promat.service.ContainerTest - STDOUT: {"timestamp":"2021-08-04T14:14:48.151178+02:00","sys_event_type":"audit","client_ip":["172.17.0.1"],"app_name":"PROMAT","action":"READ","accessing_user":{"token":"2-3-4-5-6"},"owning_user":"123/190976","PROMAT":{"View full profile":"reviewers/1","Response":"200"}}
         assertThat("auditlog entry", promatServiceContainer.getLogs().contains("{\"View full reviewer profile\":\"reviewers/2\",\"Response\":\"200\"}"));
     }
 
     @Test
     void reviewerNotFound() {
-        final Response response = getResponse("v1/api/reviewers/4242", "1-2-3-4-5");
+        final Response response = getResponse("v1/api/reviewers/4242", "2-3-4-5-6");
         assertThat(response.getStatus(), is(404));
 
         // Example log entry:
-        // [docker-java-stream--208115991] INFO dk.dbc.promat.service.ContainerTest - STDOUT: {"timestamp":"2021-08-04T14:14:47.633206+02:00","sys_event_type":"audit","client_ip":["172.17.0.1"],"app_name":"PROMAT","action":"READ","accessing_user":{"token":"1-2-3-4-5"},"owning_user":"0/190976","PROMAT":{"Request for full profile":"reviewers/4242","Response":"404"}}
+        // [docker-java-stream--208115991] INFO dk.dbc.promat.service.ContainerTest - STDOUT: {"timestamp":"2021-08-04T14:14:47.633206+02:00","sys_event_type":"audit","client_ip":["172.17.0.1"],"app_name":"PROMAT","action":"READ","accessing_user":{"token":"2-3-4-5-6"},"owning_user":"0/190976","PROMAT":{"Request for full profile":"reviewers/4242","Response":"404"}}
         assertThat("auditlog entry", promatServiceContainer.getLogs().contains("{\"Request for full profile\":\"reviewers/4242\",\"Response\":\"404\"}"));
     }
 
@@ -287,14 +280,14 @@ class ReviewersIT extends ContainerTest {
         final ReviewerRequest reviewerRequest = new ReviewerRequest()
                 .withHiatusBegin(LocalDate.parse("2023-11-11"))
                 .withHiatusEnd(LocalDate.parse("2023-11-16"));
-        final Response responseInitial = putResponse("v1/api/reviewers/3", reviewerRequest, "1-2-3-4-5");
+        final Response responseInitial = putResponse("v1/api/reviewers/3", reviewerRequest, "2-3-4-5-6");
         String r = responseInitial.readEntity(String.class);
         final Reviewer initialReviewer = mapper.readValue(r, Reviewer.class);
         assertThat("Initial vacation begin", initialReviewer.getHiatusBegin(), is(LocalDate.parse("2023-11-11")));
         assertThat("Initial vacation end", initialReviewer.getHiatusEnd(), is(LocalDate.parse("2023-11-16")));
 
         // Reset begin and end hiatus
-        final Response responseReset = postResponse("v1/api/reviewers/3/resethiatus", null, Map.of("notify", true), "1-2-3-4-5");
+        final Response responseReset = postResponse("v1/api/reviewers/3/resethiatus", null, Map.of("notify", true), "2-3-4-5-6");
         assertThat("Response status", responseReset.getStatus(), is(Response.Status.OK.getStatusCode()));
 
         // Verify the effect of reset
@@ -327,11 +320,10 @@ class ReviewersIT extends ContainerTest {
                 .withPhone("87654321")
                 .withPrivatePhone("12345678")
                 .withSubjects(List.of(3))
-                .withCprNumber("123456-7890")  // Should not be used and not cause any conflict
                 .withAgency("790900")
                 .withUserId("pepe");
 
-        final Response response = putResponse("v1/api/reviewers/3", reviewerRequest, "1-2-3-4-5");
+        final Response response = putResponse("v1/api/reviewers/3", reviewerRequest, "2-3-4-5-6");
         assertThat("response status", response.getStatus(), is(200));
         final Reviewer updated = mapper.readValue(response.readEntity(String.class), Reviewer.class);
         updated.setActiveChanged(Date.from(Instant.ofEpochSecond(1629900636)));
@@ -344,8 +336,8 @@ class ReviewersIT extends ContainerTest {
         assertThat("Equals", updated.equals(expected));
 
         // Example log entries:
-        //[docker-java-stream-1861590606] INFO dk.dbc.promat.service.ContainerTest - STDOUT: {"timestamp":"2021-08-04T23:19:49.611132+02:00","sys_event_type":"audit","client_ip":["172.17.0.1"],"app_name":"PROMAT","action":"UPDATE","accessing_user":{"token":"1-2-3-4-5"},"owning_user":"22/190976","PROMAT":{"Change of paycode (owning id)":"reviewers/3","Current value":"22","New value":"7777"}}
-        //[docker-java-stream-1861590606] INFO dk.dbc.promat.service.ContainerTest - STDOUT: {"timestamp":"2021-08-04T23:19:49.614198+02:00","sys_event_type":"audit","client_ip":["172.17.0.1"],"app_name":"PROMAT","action":"UPDATE","accessing_user":{"token":"1-2-3-4-5"},"owning_user":"7777/190976","PROMAT":{"Update and view full profile":"reviewers/3","Response":"200"}}
+        //[docker-java-stream-1861590606] INFO dk.dbc.promat.service.ContainerTest - STDOUT: {"timestamp":"2021-08-04T23:19:49.611132+02:00","sys_event_type":"audit","client_ip":["172.17.0.1"],"app_name":"PROMAT","action":"UPDATE","accessing_user":{"token":"2-3-4-5-6"},"owning_user":"22/190976","PROMAT":{"Change of paycode (owning id)":"reviewers/3","Current value":"22","New value":"7777"}}
+        //[docker-java-stream-1861590606] INFO dk.dbc.promat.service.ContainerTest - STDOUT: {"timestamp":"2021-08-04T23:19:49.614198+02:00","sys_event_type":"audit","client_ip":["172.17.0.1"],"app_name":"PROMAT","action":"UPDATE","accessing_user":{"token":"2-3-4-5-6"},"owning_user":"7777/190976","PROMAT":{"Update and view full profile":"reviewers/3","Response":"200"}}
         assertThat("auditlog paycode change", promatServiceContainer.getLogs().contains("{\"Change of paycode (owning id)\":\"reviewers/3\",\"Current value\":\"22\",\"New value\":\"7777\"}"));
         assertThat("auditlog update", promatServiceContainer.getLogs().contains("{\"Update and view full reviewer profile\":\"reviewers/3\",\"Response\":\"200\"}"));
     }
@@ -368,10 +360,9 @@ class ReviewersIT extends ContainerTest {
                 .withPaycode(7777)
                 .withPhone("87654321")
                 .withPrivatePhone("12345678")
-                .withSubjects(List.of(3))
-                .withCprNumber("123456-7890");  // Should not be used and not cause any conflict
+                .withSubjects(List.of(3));
 
-        Response response = putResponse("v1/api/reviewers/3", reviewerRequest, "1-2-3-4-5");
+        Response response = putResponse("v1/api/reviewers/3", reviewerRequest, "2-3-4-5-6");
         assertThat("response status", response.getStatus(), is(200));
         Reviewer updated = mapper.readValue(response.readEntity(String.class), Reviewer.class);
         assertThat("work address is not selected", updated.getAddress().getSelected(), is(true));
@@ -379,7 +370,7 @@ class ReviewersIT extends ContainerTest {
 
         reviewerRequest.getAddress().setSelected(false);
         reviewerRequest.getPrivateAddress().setSelected(false);
-        response = putResponse("v1/api/reviewers/3", reviewerRequest, "1-2-3-4-5");
+        response = putResponse("v1/api/reviewers/3", reviewerRequest, "2-3-4-5-6");
         assertThat("response status", response.getStatus(), is(200));
         updated = mapper.readValue(response.readEntity(String.class), Reviewer.class);
         assertThat("work address is selected", updated.getAddress().getSelected(), is(true));
@@ -387,7 +378,7 @@ class ReviewersIT extends ContainerTest {
 
         reviewerRequest.getAddress().setSelected(true);
         reviewerRequest.getPrivateAddress().setSelected(null);
-        response = putResponse("v1/api/reviewers/3", reviewerRequest, "1-2-3-4-5");
+        response = putResponse("v1/api/reviewers/3", reviewerRequest, "2-3-4-5-6");
         assertThat("response status", response.getStatus(), is(200));
         updated = mapper.readValue(response.readEntity(String.class), Reviewer.class);
         assertThat("work address is selected", updated.getAddress().getSelected(), is(true));
@@ -395,7 +386,7 @@ class ReviewersIT extends ContainerTest {
 
         reviewerRequest.getAddress().setSelected(true);
         reviewerRequest.getPrivateAddress().setSelected(false);
-        response = putResponse("v1/api/reviewers/3", reviewerRequest, "1-2-3-4-5");
+        response = putResponse("v1/api/reviewers/3", reviewerRequest, "2-3-4-5-6");
         assertThat("response status", response.getStatus(), is(200));
         updated = mapper.readValue(response.readEntity(String.class), Reviewer.class);
         assertThat("work address is selected", updated.getAddress().getSelected(), is(true));
@@ -403,7 +394,7 @@ class ReviewersIT extends ContainerTest {
 
         reviewerRequest.getAddress().setSelected(true);
         reviewerRequest.getPrivateAddress().setSelected(true);
-        response = putResponse("v1/api/reviewers/3", reviewerRequest, "1-2-3-4-5");
+        response = putResponse("v1/api/reviewers/3", reviewerRequest, "2-3-4-5-6");
         assertThat("response status", response.getStatus(), is(200));
         updated = mapper.readValue(response.readEntity(String.class), Reviewer.class);
         assertThat("work address selected is prioritized above private address selected", updated.getAddress().getSelected(), is(true));
@@ -411,7 +402,7 @@ class ReviewersIT extends ContainerTest {
 
         reviewerRequest.getAddress().setSelected(false);
         reviewerRequest.getPrivateAddress().setSelected(true);
-        response = putResponse("v1/api/reviewers/3", reviewerRequest, "1-2-3-4-5");
+        response = putResponse("v1/api/reviewers/3", reviewerRequest, "2-3-4-5-6");
         assertThat("response status", response.getStatus(), is(200));
         updated = mapper.readValue(response.readEntity(String.class), Reviewer.class);
         assertThat("work address is not selected", updated.getAddress().getSelected(), is(false));
@@ -419,7 +410,7 @@ class ReviewersIT extends ContainerTest {
 
         reviewerRequest.getAddress().setSelected(null);
         reviewerRequest.getPrivateAddress().setSelected(true);
-        response = putResponse("v1/api/reviewers/3", reviewerRequest, "1-2-3-4-5");
+        response = putResponse("v1/api/reviewers/3", reviewerRequest, "2-3-4-5-6");
         assertThat("response status", response.getStatus(), is(200));
         updated = mapper.readValue(response.readEntity(String.class), Reviewer.class);
         assertThat("work address is not selected", updated.getAddress().getSelected(), is(false));
@@ -427,7 +418,7 @@ class ReviewersIT extends ContainerTest {
 
         reviewerRequest.getAddress().setSelected(null);
         reviewerRequest.getPrivateAddress().setSelected(false);
-        response = putResponse("v1/api/reviewers/3", reviewerRequest, "1-2-3-4-5");
+        response = putResponse("v1/api/reviewers/3", reviewerRequest, "2-3-4-5-6");
         assertThat("response status", response.getStatus(), is(200));
         updated = mapper.readValue(response.readEntity(String.class), Reviewer.class);
         assertThat("work address is selected", updated.getAddress().getSelected(), is(true));
@@ -458,7 +449,6 @@ class ReviewersIT extends ContainerTest {
         reviewer.setCapacity(1);
         reviewer.setSubjectNotes(List.of());
         if( view == ReviewerView.Reviewer.class ) {
-            reviewer.setCulrId("41");
             reviewer.setEmail("hans@hansen.dk");
             reviewer.setAddress(
                     new Address()
@@ -492,7 +482,6 @@ class ReviewersIT extends ContainerTest {
         reviewer.setCapacity(2);
         reviewer.setSubjectNotes(List.of());
         if( view == ReviewerView.Reviewer.class) {
-            reviewer.setCulrId("axel52");
             reviewer.setEmail("ole@olsen.dk");
             reviewer.setAddress(
                     new Address()
@@ -526,7 +515,6 @@ class ReviewersIT extends ContainerTest {
         reviewer.setCapacity(2);
         reviewer.setSubjectNotes(List.of());
         if( view == ReviewerView.Reviewer.class) {
-            reviewer.setCulrId("43");
             reviewer.setEmail("peter@petersen.dk");
             reviewer.setAddress(
                     new Address()
@@ -560,7 +548,6 @@ class ReviewersIT extends ContainerTest {
         reviewer.setCapacity(2);
         reviewer.setSubjectNotes(List.of());
         if( view == ReviewerView.Reviewer.class) {
-            reviewer.setCulrId("55");
             reviewer.setEmail("kirsten@kirstensen.dk");
             reviewer.setAddress(
                     new Address()
@@ -595,7 +582,6 @@ class ReviewersIT extends ContainerTest {
         reviewer.setCapacity(2);
         reviewer.setSubjectNotes(List.of());
         if( view == ReviewerView.Reviewer.class ) {
-            reviewer.setCulrId("44");
             reviewer.setEmail("boe@boesen.dk");
             reviewer.setPhone("9123456789");
             reviewer.setAgency("790900");
@@ -625,7 +611,6 @@ class ReviewersIT extends ContainerTest {
         reviewer.setCapacity(2);
         reviewer.setSubjectNotes(List.of());
         if( view == ReviewerView.Reviewer.class ) {
-            reviewer.setCulrId("43");
             reviewer.setEmail("peder@pedersen.dk");
             reviewer.setPrivateEmail("peder-pedersen@hjemme.dk");
             reviewer.setAddress(
@@ -676,7 +661,6 @@ class ReviewersIT extends ContainerTest {
                 new SubjectNote().withNote("(Hvis et eller andet underemne, så kommentar)").withId(2).withSubjectId(6)
         ));
         if( view == ReviewerView.Reviewer.class ) {
-            reviewer.setCulrId("56434241");
             reviewer.setEmail("mich@mich.dk");
             reviewer.setAddress(new Address().withSelected(true));
             reviewer.setPhone("912345678901");
@@ -700,7 +684,6 @@ class ReviewersIT extends ContainerTest {
         reviewer.setSubjects(List.of());
         reviewer.setSubjectNotes(List.of());
         if( view == ReviewerView.Reviewer.class ) {
-            reviewer.setCulrId("56434242");
             reviewer.setEmail("holg@holg.dk");
             reviewer.setPrivateEmail("holger.privat@holg.dk");
             reviewer.setAddress(new Address().withSelected(true));
@@ -728,7 +711,6 @@ class ReviewersIT extends ContainerTest {
         reviewer.setCapacity(2);
         reviewer.setSubjectNotes(List.of());
         if( view == ReviewerView.Reviewer.class) {
-            reviewer.setCulrId("88");
             reviewer.setEmail("soren@sorensen.dk");
             reviewer.setAddress(
                     new Address()
@@ -770,7 +752,6 @@ class ReviewersIT extends ContainerTest {
         reviewer.setCapacity(2);
         reviewer.setSubjectNotes(List.of());
         if( view == ReviewerView.Reviewer.class) {
-            reviewer.setCulrId("99");
             reviewer.setEmail("soren@sorensen.dk");
             reviewer.setAddress(
                     new Address()
@@ -809,7 +790,6 @@ class ReviewersIT extends ContainerTest {
         reviewer.setCapacity(null);
         reviewer.setSubjectNotes(List.of());
         if( view == ReviewerView.Reviewer.class) {
-            reviewer.setCulrId(null);
             reviewer.setEmail(null);
             reviewer.setAddress(null);
             reviewer.setPhone(null);
@@ -839,7 +819,6 @@ class ReviewersIT extends ContainerTest {
         reviewer.setCapacity(2);
         reviewer.setSubjectNotes(List.of());
         if( view == ReviewerView.Reviewer.class) {
-            reviewer.setCulrId("1515");
             reviewer.setEmail("soren@sorensen.dk");
             reviewer.setAddress(
                     new Address()
@@ -865,7 +844,6 @@ class ReviewersIT extends ContainerTest {
     private void loadCreatedReviewer(Reviewer reviewer) {
         reviewer.setId(5000);
         reviewer.setActive(true);
-        reviewer.setCulrId("8ed780d6-46eb-4706-a4dc-a59f412d16c0");
         reviewer.setFirstName("Peder");
         reviewer.setLastName("Pedersen");
         reviewer.setEmail("peder@pedersen.dk");
@@ -909,7 +887,7 @@ class ReviewersIT extends ContainerTest {
     @Test
     public void testUpdateReviewerWithNullAddress() throws JsonProcessingException {
 
-        Response response = getResponse("v1/api/reviewers/5", "1-2-3-4-5");
+        Response response = getResponse("v1/api/reviewers/5", "2-3-4-5-6");
         assertThat("response status", response.getStatus(), is(200));
 
         final Reviewer reviewer = mapper.readValue(response.readEntity(String.class), Reviewer.class);
@@ -917,7 +895,7 @@ class ReviewersIT extends ContainerTest {
 
         final ReviewerRequest reviewerUpdateRequest = new ReviewerRequest()
             .withAddress(new Address().withAddress1("Boesvej 1"));
-        response = putResponse("v1/api/reviewers/" + reviewer.getId(), reviewerUpdateRequest, "1-2-3-4-5");
+        response = putResponse("v1/api/reviewers/" + reviewer.getId(), reviewerUpdateRequest, "2-3-4-5-6");
         assertThat("response status", response.getStatus(), is(200));
     }
 
@@ -926,7 +904,7 @@ class ReviewersIT extends ContainerTest {
 
         final ReviewerRequest reviewerUpdateRequest = new ReviewerRequest()
                 .withCapacity(5);
-        Response response = putResponse("v1/api/reviewers/5", reviewerUpdateRequest, "1-2-3-4-5");
+        Response response = putResponse("v1/api/reviewers/5", reviewerUpdateRequest, "2-3-4-5-6");
         assertThat("response status", response.getStatus(), is(200));
 
         final Reviewer reviewer = mapper.readValue(response.readEntity(String.class), Reviewer.class);
@@ -938,7 +916,7 @@ class ReviewersIT extends ContainerTest {
 
         final ReviewerRequest reviewerUpdateRequest = new ReviewerRequest()
                 .withNote("newnote");
-        Response response = putResponse("v1/api/reviewers/5", reviewerUpdateRequest, "1-2-3-4-5");
+        Response response = putResponse("v1/api/reviewers/5", reviewerUpdateRequest, "2-3-4-5-6");
         assertThat("response status", response.getStatus(), is(200));
 
         final Reviewer reviewer = mapper.readValue(response.readEntity(String.class), Reviewer.class);
@@ -948,7 +926,7 @@ class ReviewersIT extends ContainerTest {
     @Test
     public void testUpdateSubjectNotes() throws JsonProcessingException {
         final ReviewerRequest reviewerUpdateRequest = new ReviewerRequest();
-        Response response = getResponse("v1/api/reviewers/6", "1-2-3-4-5");
+        Response response = getResponse("v1/api/reviewers/6", "2-3-4-5-6");
         assertThat("response status", response.getStatus(), is(200));
         Reviewer fetched = mapper.readValue(response.readEntity(String.class), Reviewer.class);
         Reviewer reviewer6 = new Reviewer();
@@ -967,7 +945,7 @@ class ReviewersIT extends ContainerTest {
                 new SubjectNote().withSubjectId(2).withNote("Some other note to subject 2: ('Roman')"));
 
         reviewerUpdateRequest.withSubjects(subjectIds).setSubjectNotes(notes);
-        response = putResponse("v1/api/reviewers/6", reviewerUpdateRequest, "1-2-3-4-5");
+        response = putResponse("v1/api/reviewers/6", reviewerUpdateRequest, "2-3-4-5-6");
         assertThat("response status", response.getStatus(), is(200));
         fetched = mapper.readValue(response.readEntity(String.class), Reviewer.class);
         fetched.setActiveChanged(Date.from(Instant.ofEpochSecond(1629900636)));
@@ -979,13 +957,13 @@ class ReviewersIT extends ContainerTest {
         // associated with this reviewer.
         reviewerUpdateRequest.withSubjectNotes(
                 List.of(new SubjectNote().withSubjectId(4).withNote("Some note")));
-        response = putResponse("v1/api/reviewers/6", reviewerUpdateRequest, "1-2-3-4-5");
+        response = putResponse("v1/api/reviewers/6", reviewerUpdateRequest, "2-3-4-5-6");
         assertThat("response status", response.getStatus(), is(400));
 
 
         // Check that if we delete a subject (1) that has a related note, this note is also removed.
         reviewerUpdateRequest.withSubjectNotes(null).withSubjects(List.of(2));
-        response = putResponse("v1/api/reviewers/6", reviewerUpdateRequest, "1-2-3-4-5");
+        response = putResponse("v1/api/reviewers/6", reviewerUpdateRequest, "2-3-4-5-6");
         assertThat("resonse status", response.getStatus(), is(200));
         fetched = mapper.readValue(response.readEntity(String.class), Reviewer.class);
 
@@ -1006,7 +984,7 @@ class ReviewersIT extends ContainerTest {
                         List.of(
                             new SubjectNote().withSubjectId(5).withNote("Anmelder det meste"),
                             new SubjectNote().withSubjectId(6).withNote("(Hvis et eller andet underemne, så kommentar)")));
-        response = putResponse("v1/api/reviewers/6", reviewerUpdateRequest, "1-2-3-4-5");
+        response = putResponse("v1/api/reviewers/6", reviewerUpdateRequest, "2-3-4-5-6");
         assertThat("response status", response.getStatus(), is(200));
         fetched = mapper.readValue(response.readEntity(String.class), Reviewer.class);
         fetched.setActiveChanged(Date.from(Instant.ofEpochSecond(1629900636)));

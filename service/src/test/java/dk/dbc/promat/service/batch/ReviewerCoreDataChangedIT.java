@@ -17,7 +17,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 public class ReviewerCoreDataChangedIT extends ContainerTest {
 
     @Test
-    public void testThatMailsAreOnlySentOnRealChangesAndWhenNotifyQueryParmIsTrue() throws InterruptedException {
+    public void testThatMailsAreOnlySentOnRealChangesAndWhenNotifyQueryParmIsTrue() {
 
         // Reset "inactiveInterval". Minus 1 means do perform creation of notifications now.
         clear();
@@ -139,7 +139,7 @@ public class ReviewerCoreDataChangedIT extends ContainerTest {
     }
 
     private List<Notification> performUpdateAndGetNotificationList(ReviewerRequest reviewerRequest, String bodyTextWildcard, String subjectWildCard, boolean notify) {
-        Response response = putResponse("v1/api/reviewers/7", reviewerRequest, notify ? Map.of("notify", true) : null, "1-2-3-4-5");
+        Response response = putResponse("v1/api/reviewers/7", reviewerRequest, notify ? Map.of("notify", true) : null, "2-3-4-5-6");
         assertThat("response status", response.getStatus(), is(200));
         response = postResponse("v1/api/batch/job/userupdater",null);
         assertThat("response status", response.getStatus(), is(200));

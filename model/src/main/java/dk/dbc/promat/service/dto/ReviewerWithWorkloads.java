@@ -51,7 +51,6 @@ public class ReviewerWithWorkloads extends Reviewer {
         return "ReviewerWithWorkloads{" +
                 "id=" + id +
                 ", active=" + active +
-                ", culrId'=" + culrId + '\'' +
                 ", firstName='" + firstName + '\'' +
                 ", lastName='" + lastName + '\'' +
                 ", email='" + email + '\'' +

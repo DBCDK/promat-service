@@ -38,6 +38,7 @@ import java.util.stream.Collectors;
 public class CaseInformationUpdater {
     private static final Logger LOGGER = LoggerFactory.getLogger(CaseInformationUpdater.class);
     protected static final String METAKOMPASDATA_PRESENT = "true";
+    protected static Locale dkLocale = new Locale("da", "DK");
 
     @Inject
     MetricRegistry metricRegistry;
@@ -126,7 +127,7 @@ public class CaseInformationUpdater {
             }
 
             // Add all catalog codes to the case since they are needed by dataIO when creating the final review record(s)
-            if( bibliographicInformation.getCatalogcodes() != null && bibliographicInformation.getCatalogcodes().size() > 0 ) {
+            if( bibliographicInformation.getCatalogcodes() != null && !bibliographicInformation.getCatalogcodes().isEmpty() ) {
                 LOGGER.info("Adding or updating catalog codes: {}", bibliographicInformation.getCatalogcodes());
                 promatCase.setCodes(bibliographicInformation.getCatalogcodes().stream()
                         .map(String::toUpperCase)
@@ -219,8 +220,8 @@ public class CaseInformationUpdater {
     }
 
     private Boolean weekcodeMatchOrBefore(PromatCase promatCase) {
-        DateTimeFormatter yearWeekFormatter = DateTimeFormatter.ofPattern("yyyyww", new Locale("da", "DK"));
-        DateTimeFormatter weekFormatter = DateTimeFormatter.ofPattern("ww", new Locale("da", "DK"));
+        DateTimeFormatter yearWeekFormatter = DateTimeFormatter.ofPattern("yyyyww", dkLocale);
+        DateTimeFormatter weekFormatter = DateTimeFormatter.ofPattern("ww", dkLocale);
 
         LocalDate date = dates.getCurrentDate();
         LOGGER.info("Today is {} weekcode {}", date, date.format(yearWeekFormatter));

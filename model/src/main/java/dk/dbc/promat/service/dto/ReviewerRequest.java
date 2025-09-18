@@ -1,14 +1,10 @@
 package dk.dbc.promat.service.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonView;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateSerializer;
 import dk.dbc.promat.service.persistence.Address;
-import dk.dbc.promat.service.persistence.EditorView;
 import dk.dbc.promat.service.persistence.Reviewer;
-
-import dk.dbc.promat.service.persistence.ReviewerView;
 import dk.dbc.promat.service.persistence.SubjectNote;
 import java.time.LocalDate;
 import java.util.List;
@@ -17,8 +13,6 @@ import java.util.Objects;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class ReviewerRequest implements Dto {
     private Boolean active;
-    @Deprecated(since = "Will not be used for reviewer creation after switch to professional login")
-    private String cprNumber;
     private String firstName;
     private String lastName;
     private String email;
@@ -58,18 +52,6 @@ public class ReviewerRequest implements Dto {
         return this;
     }
 
-    public String getCprNumber() {
-        return cprNumber;
-    }
-
-    public void setCprNumber(String cprNumber) {
-        this.cprNumber = cprNumber;
-    }
-
-    public ReviewerRequest withCprNumber(String cprNumber) {
-        this.cprNumber = cprNumber;
-        return this;
-    }
 
     public String getFirstName() {
         return firstName;
@@ -322,19 +304,18 @@ public class ReviewerRequest implements Dto {
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass()) return false;
         ReviewerRequest that = (ReviewerRequest) o;
-        return Objects.equals(active, that.active) && Objects.equals(cprNumber, that.cprNumber) && Objects.equals(firstName, that.firstName) && Objects.equals(lastName, that.lastName) && Objects.equals(email, that.email) && Objects.equals(phone, that.phone) && Objects.equals(privateEmail, that.privateEmail) && Objects.equals(privatePhone, that.privatePhone) && Objects.equals(institution, that.institution) && Objects.equals(paycode, that.paycode) && Objects.equals(address, that.address) && Objects.equals(note, that.note) && Objects.equals(privateAddress, that.privateAddress) && Objects.equals(subjects, that.subjects) && Objects.equals(subjectNotes, that.subjectNotes) && Objects.equals(accepts, that.accepts) && Objects.equals(capacity, that.capacity) && Objects.equals(hiatusBegin, that.hiatusBegin) && Objects.equals(hiatusEnd, that.hiatusEnd) && Objects.equals(agency, that.agency) && Objects.equals(userId, that.userId);
+        return Objects.equals(active, that.active) && Objects.equals(firstName, that.firstName) && Objects.equals(lastName, that.lastName) && Objects.equals(email, that.email) && Objects.equals(phone, that.phone) && Objects.equals(privateEmail, that.privateEmail) && Objects.equals(privatePhone, that.privatePhone) && Objects.equals(institution, that.institution) && Objects.equals(paycode, that.paycode) && Objects.equals(address, that.address) && Objects.equals(note, that.note) && Objects.equals(privateAddress, that.privateAddress) && Objects.equals(subjects, that.subjects) && Objects.equals(subjectNotes, that.subjectNotes) && Objects.equals(accepts, that.accepts) && Objects.equals(capacity, that.capacity) && Objects.equals(hiatusBegin, that.hiatusBegin) && Objects.equals(hiatusEnd, that.hiatusEnd) && Objects.equals(agency, that.agency) && Objects.equals(userId, that.userId);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(active, cprNumber, firstName, lastName, email, phone, privateEmail, privatePhone, institution, paycode, address, note, privateAddress, subjects, subjectNotes, accepts, capacity, hiatusBegin, hiatusEnd, agency, userId);
+        return Objects.hash(active, firstName, lastName, email, phone, privateEmail, privatePhone, institution, paycode, address, note, privateAddress, subjects, subjectNotes, accepts, capacity, hiatusBegin, hiatusEnd, agency, userId);
     }
 
     @Override
     public String toString() {
         return "ReviewerRequest{" +
                 "active=" + active +
-                ", cprNumber='" + cprNumber + '\'' +
                 ", firstName='" + firstName + '\'' +
                 ", lastName='" + lastName + '\'' +
                 ", email='" + email + '\'' +

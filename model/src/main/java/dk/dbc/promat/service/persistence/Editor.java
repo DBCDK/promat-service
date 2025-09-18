@@ -61,7 +61,6 @@ public class Editor extends PromatUser {
     public int hashCode() {
         int result = id.hashCode();
         result = 31 * result + (active ? 1 : 0);
-        result = 31 * result + culrId.hashCode();
         result = 31 * result + firstName.hashCode();
         result = 31 * result + lastName.hashCode();
         result = 31 * result + (email != null ? email.hashCode() : 0);
@@ -82,7 +81,6 @@ public class Editor extends PromatUser {
 
         if (!Objects.equals(id, editor.id)) return false;
         if (!Objects.equals(active, editor.active)) return false;
-        if (!Objects.equals(culrId, editor.culrId)) return false;
         if (!Objects.equals(firstName, editor.firstName)) return false;
         if (!Objects.equals(lastName, editor.lastName)) return false;
         if (!Objects.equals(email, editor.email)) return false;
@@ -97,7 +95,6 @@ public class Editor extends PromatUser {
     public String toString() {
         return "Editor{" +
                 "id=" + id +
-                ", culrId=" + active +
                 ", active=" + active +
                 ", firstName='" + firstName + '\'' +
                 ", lastName='" + lastName + '\'' +

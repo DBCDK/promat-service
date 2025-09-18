@@ -411,9 +411,6 @@ public class Reviewer extends PromatUser {
         if (!Objects.equals(id, reviewer.id)) {
             return false;
         }
-        if (!Objects.equals(culrId, reviewer.culrId)) {
-            return false;
-        }
         if (!Objects.equals(firstName, reviewer.firstName)) {
             return false;
         }
@@ -482,7 +479,6 @@ public class Reviewer extends PromatUser {
     public int hashCode() {
         int result = id.hashCode();
         result = 31 * result + (active ? 1 : 0);
-        result = 31 * result + (culrId != null ? culrId.hashCode() : 0);
         result = 31 * result + (firstName != null ? firstName.hashCode() : 0);
         result = 31 * result + (lastName != null ? lastName.hashCode() : 0);
         result = 31 * result + (email != null ? email.hashCode() : 0);
@@ -512,7 +508,6 @@ public class Reviewer extends PromatUser {
         return "Reviewer{" +
                 "id=" + id +
                 ", active=" + active +
-                ", culrId'=" + culrId + '\'' +
                 ", firstName='" + firstName + '\'' +
                 ", lastName='" + lastName + '\'' +
                 ", email='" + email + '\'' +
@@ -541,7 +536,6 @@ public class Reviewer extends PromatUser {
         final ReviewerWithWorkloads reviewerWithWorkloads = new ReviewerWithWorkloads();
         reviewerWithWorkloads.setId(id);
         reviewerWithWorkloads.setActive(active);
-        reviewerWithWorkloads.setCulrId(culrId);
         reviewerWithWorkloads.setFirstName(firstName);
         reviewerWithWorkloads.setLastName(lastName);
         reviewerWithWorkloads.setEmail(email);

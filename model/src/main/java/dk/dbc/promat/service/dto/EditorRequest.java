@@ -1,9 +1,6 @@
 package dk.dbc.promat.service.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonView;
-import dk.dbc.promat.service.persistence.EditorView;
-import dk.dbc.promat.service.persistence.ReviewerView;
 
 import java.util.Objects;
 
@@ -11,8 +8,6 @@ import java.util.Objects;
 public class EditorRequest implements Dto {
 
     private Boolean active;
-    @Deprecated(since = "Will not be used for editor creation after switch to professional login")
-    private String cprNumber;
     private String firstName;
     private String lastName;
     private String email;
@@ -31,19 +26,6 @@ public class EditorRequest implements Dto {
 
     public EditorRequest withActive(boolean active) {
         this.active = active;
-        return this;
-    }
-
-    public String getCprNumber() {
-        return cprNumber;
-    }
-
-    public void setCprNumber(String cprNumber) {
-        this.cprNumber = cprNumber;
-    }
-
-    public EditorRequest withCprNumber(String cprNumber) {
-        this.cprNumber = cprNumber;
         return this;
     }
 
@@ -129,12 +111,12 @@ public class EditorRequest implements Dto {
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass()) return false;
         EditorRequest that = (EditorRequest) o;
-        return Objects.equals(active, that.active) && Objects.equals(cprNumber, that.cprNumber) && Objects.equals(firstName, that.firstName) && Objects.equals(lastName, that.lastName) && Objects.equals(email, that.email) && Objects.equals(paycode, that.paycode) && Objects.equals(agency, that.agency) && Objects.equals(userId, that.userId);
+        return Objects.equals(active, that.active) && Objects.equals(firstName, that.firstName) && Objects.equals(lastName, that.lastName) && Objects.equals(email, that.email) && Objects.equals(paycode, that.paycode) && Objects.equals(agency, that.agency) && Objects.equals(userId, that.userId);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(active, cprNumber, firstName, lastName, email, paycode, agency, userId);
+        return Objects.hash(active, firstName, lastName, email, paycode, agency, userId);
     }
 
     @Override

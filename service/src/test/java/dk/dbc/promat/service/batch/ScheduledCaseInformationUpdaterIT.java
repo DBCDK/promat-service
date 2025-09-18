@@ -74,9 +74,10 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
     private static WireMockServer wireMockServer;
     private static String wiremockHost;
     private static final Logger LOGGER = LoggerFactory.getLogger(ScheduledCaseInformationUpdaterIT.class);
+    protected static Locale dkLocale = new Locale("da", "DK");
 
     @BeforeAll
-    public static void startWiremock() {
+    static void startWiremock() {
         wireMockServer = new WireMockServer(options().dynamicPort());
         wireMockServer.start();
         configureFor("localhost", wireMockServer.port());
@@ -84,12 +85,12 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
     }
 
     @AfterAll
-    public static void stopWiremock() {
+    static void stopWiremock() {
         wireMockServer.stop();
     }
 
     @BeforeEach
-    public void setup() {
+    void setup() {
         persistenceContext = new TransactionScopedPersistenceContext(entityManager);
         when(metricRegistry.timer(any(Metadata.class))).thenReturn(timer);
         when(metricRegistry.counter(any(Metadata.class))).thenReturn(gauge);
@@ -644,7 +645,7 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
             when(contentLookUpMock.lookUpContent(anyString())).thenReturn(Optional.empty());
 
             LocalDate date = LocalDate.now().plusWeeks(1);
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyww", new Locale("da", "DK"));
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyww", dkLocale);
 
             created.setStatus(CaseStatus.APPROVED);
             when(mockedHandler.format(anyString()))
@@ -837,7 +838,7 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
             upd.caseInformationUpdater.repository = mockedRepository;
 
             LocalDate date = LocalDate.now().minusWeeks(1);
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyww", new Locale("da", "DK"));
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyww", dkLocale);
 
             created.setStatus(CaseStatus.APPROVED);
             when(mockedHandler.format(anyString()))
@@ -903,7 +904,7 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
             when(contentLookUpMock.lookUpContent(anyString())).thenReturn(Optional.empty());
 
             LocalDate date = LocalDate.now().minusWeeks(1);
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyww", new Locale("da", "DK"));
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyww", dkLocale);
 
             created.setStatus(CaseStatus.APPROVED);
             when(mockedHandler.format(anyString()))
@@ -972,7 +973,7 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
             when(contentLookUpMock.lookUpContent(anyString())).thenReturn(Optional.empty());
 
             LocalDate date = LocalDate.now().minusWeeks(1);
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyww", new Locale("da", "DK"));
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyww", dkLocale);
 
             created.setStatus(CaseStatus.APPROVED);
             when(mockedHandler.format(anyString()))
@@ -1034,7 +1035,7 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
             upd.caseInformationUpdater.repository = mockedRepository;
 
             LocalDate date = LocalDate.now().minusWeeks(1);
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyww", new Locale("da", "DK"));
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyww", dkLocale);
 
             created.setStatus(CaseStatus.APPROVED);
             when(mockedHandler.format(anyString()))
@@ -1387,7 +1388,7 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
         upd.caseInformationUpdater.repository = mockedRepository;
 
         LocalDate date = LocalDate.now().plusWeeks(1);
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyww", new Locale("da", "DK"));
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyww", dkLocale);
 
         created.setStatus(CaseStatus.PENDING_EXPORT);
         when(mockedHandler.format(anyString()))
@@ -1678,7 +1679,7 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
     }
 
     @Test
-    public void testUpdateCaseWithWeekcodeSecondWeekOf2027() throws OpenFormatConnectorException, JsonProcessingException, OpennumberRollConnectorException {
+    public void testUpdateCaseWithWeekcodeSecondWeekOf2027() throws OpenFormatConnectorException, OpennumberRollConnectorException {
 
         // Create a case
         CaseRequest dto = new CaseRequest()
@@ -1737,7 +1738,7 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
     }
 
     private String getFormattedWeekcodeWithRollAroundCheck(LocalDate date) {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyww", new Locale("da", "DK"));
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyww", dkLocale);
         String weekcodeDate = date.format(formatter);
 
         int weekcodeYear = Integer.parseInt(weekcodeDate.substring(0, 4));
