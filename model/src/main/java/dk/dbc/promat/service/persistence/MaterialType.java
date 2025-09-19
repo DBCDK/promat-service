@@ -9,12 +9,12 @@ public enum MaterialType {
     MOVIE("MOVIE"),
     MULTIMEDIA("MULTIMEDIA");
 
-    private String materialName;
+    private final String materialName;
     MaterialType(String materialName) {
         this.materialName = materialName;
     }
 
-    private static final Map<String, MaterialType> lookup = new HashMap();
+    private static final Map<String, MaterialType> lookup = new HashMap<>();
 
     static {
         for (MaterialType materialType : MaterialType.values()) {

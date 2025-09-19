@@ -65,9 +65,6 @@ public abstract class PromatUser {
     @JsonView({CaseView.Summary.class, CaseView.Case.class, ReviewerView.Summary.class, ReviewerView.Reviewer.class, EditorView.Summary.class, EditorView.Editor.class})
     protected boolean active;
 
-    @JsonView({CaseView.Summary.class, CaseView.Case.class, ReviewerView.Reviewer.class, EditorView.Editor.class})
-    protected String culrId;
-
     @JsonView({CaseView.Export.class, CaseView.Summary.class, CaseView.Case.class, ReviewerView.Summary.class, ReviewerView.Reviewer.class, EditorView.Summary.class, EditorView.Editor.class})
     protected String firstName;
 
@@ -106,14 +103,6 @@ public abstract class PromatUser {
 
     public void setActive(boolean active) {
         this.active = active;
-    }
-
-    public String getCulrId() {
-        return culrId;
-    }
-
-    public void setCulrId(String culrId) {
-        this.culrId = culrId;
     }
 
     public String getFirstName() {
@@ -186,7 +175,6 @@ public abstract class PromatUser {
                 "id=" + id +
                 ", role=" + role +
                 ", active=" + active +
-                ", culrId='" + culrId + '\'' +
                 ", firstName='" + firstName + '\'' +
                 ", lastName='" + lastName + '\'' +
                 ", email='" + email + '\'' +

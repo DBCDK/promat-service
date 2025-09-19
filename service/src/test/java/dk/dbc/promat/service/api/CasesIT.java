@@ -24,7 +24,6 @@ import dk.dbc.promat.service.persistence.TaskType;
 import org.eclipse.jetty.http.HttpStatus;
 import org.hamcrest.core.IsNull;
 import org.jsoup.Jsoup;
-import org.junit.experimental.theories.Theories;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
@@ -54,7 +53,6 @@ import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
@@ -65,7 +63,6 @@ import static java.nio.file.StandardOpenOption.WRITE;
 import static jakarta.ws.rs.core.Response.Status.BAD_REQUEST;
 import static jakarta.ws.rs.core.Response.Status.CONFLICT;
 import static jakarta.ws.rs.core.Response.Status.CREATED;
-import static jakarta.ws.rs.core.Response.Status.NOT_FOUND;
 import static jakarta.ws.rs.core.Response.Status.OK;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
@@ -1206,7 +1203,7 @@ public class CasesIT extends ContainerTest {
         final String fulltextLink = getWiremockUrl("/testsite/downloads/downloadfile.php?file=Data16Bytes.dat&cd=attachment+filename");
         promatServiceConnector.updateCase(1, new CaseRequest().withFulltextLink(fulltextLink));
 
-        var apiLink = promatServiceBaseUrl + "/v1/api/cases/1/fulltext";
+        var apiLink = PROMATSERVICE_BASE_URL + "/v1/api/cases/1/fulltext";
 
         var client = HttpClient.newBuilder()
                 .version(HttpClient.Version.HTTP_1_1)
@@ -1230,7 +1227,7 @@ public class CasesIT extends ContainerTest {
         final String faust = "39482533";
 
 
-        var apiLink = promatServiceBaseUrl + String.format("/v1/api/cases/faust/%s/fulltext", faust);
+        var apiLink = PROMATSERVICE_BASE_URL + String.format("/v1/api/cases/faust/%s/fulltext", faust);
 
         var client = HttpClient.newBuilder()
                 .version(HttpClient.Version.HTTP_1_1)

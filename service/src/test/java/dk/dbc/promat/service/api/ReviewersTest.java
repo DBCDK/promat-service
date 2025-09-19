@@ -60,7 +60,6 @@ class ReviewersTest {
         expectedReviewer.setNote("note1");
         expectedReviewer.setCapacity(1);
         expectedReviewer.setSubjectNotes(List.of());
-        expectedReviewer.setCulrId("41");
         expectedReviewer.setEmail("hans@hansen.dk");
         expectedReviewer.setAddress(
                 new Address()
@@ -131,7 +130,6 @@ class ReviewersTest {
         assertThat(actual, is(not(expectedReviewer)));
         assertThat(expectedReviewer, is(not(actual)));
 
-        actual.setCulrId(expectedReviewer.getCulrId());
         assertThat(actual, is(not(expectedReviewer)));
         assertThat(expectedReviewer, is(not(actual)));
 
@@ -216,7 +214,6 @@ class ReviewersTest {
         reviewer.setNote("note1");
         reviewer.setCapacity(1);
         reviewer.setSubjectNotes(List.of());
-        reviewer.setCulrId("41");
         reviewer.setEmail("hans@hansen.dk");
         reviewer.setAddress(
                 new Address()
@@ -289,7 +286,6 @@ class ReviewersTest {
         assertThat(actual, is(not(expectedReviewerWithWorkloads)));
         assertThat(expectedReviewerWithWorkloads, is(not(actual)));
 
-        actual.setCulrId(expectedReviewerWithWorkloads.getCulrId());
         assertThat(actual, is(not(expectedReviewerWithWorkloads)));
         assertThat(expectedReviewerWithWorkloads, is(not(actual)));
 

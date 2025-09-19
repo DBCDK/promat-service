@@ -2,7 +2,6 @@ package dk.dbc.promat.service.api;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import dk.dbc.connector.culr.CulrConnectorException;
 import dk.dbc.promat.service.Repository;
 import dk.dbc.promat.service.dto.ReviewerList;
 import dk.dbc.promat.service.dto.ReviewerRequest;
@@ -69,9 +68,6 @@ public class Reviewers {
     Repository repository;
 
     @Inject
-    CulrHandler culrHandler;
-
-    @Inject
     AuditLogHandler auditLogHandler;
 
     @GET
@@ -97,20 +93,14 @@ public class Reviewers {
         }
     }
 
-    private final static String MISSING_REQUIRED_FIELD = "Missing required field in the request data";
+    private static final String MISSING_REQUIRED_FIELD = "Missing required field in the request data";
 
     @POST
     @Path("reviewers")
     @Produces({MediaType.APPLICATION_JSON})
     @RolesAllowed({"authenticated-user", IDP_PRODUCT_NAME + "-" + IDP_EDITOR_RIGHT_NAME})
-    public Response createReviewer(ReviewerRequest reviewerRequest, @Context UriInfo uriInfo) throws CulrConnectorException {
+    public Response createReviewer(ReviewerRequest reviewerRequest, @Context UriInfo uriInfo) {
         LOGGER.info("reviewers (POST)");
-
-        final String cprNumber = reviewerRequest.getCprNumber();
-        if (cprNumber == null || cprNumber.isBlank()) {
-            return ServiceErrorDto.InvalidRequest(MISSING_REQUIRED_FIELD,
-                    "Field 'cprNumber' must be supplied when creating a new reviewer");
-        }
 
         final Integer paycode = reviewerRequest.getPaycode();
         if (paycode == null) {
@@ -135,13 +125,6 @@ public class Reviewers {
                     "Field 'userId' must be supplied and not be blank when creating a new reviewer");
         }
 
-        final String culrId;
-        try {
-            culrId = culrHandler.createCulrAccount(cprNumber, String.valueOf(paycode));
-        } catch (ServiceErrorException e) {
-            return Response.status(500).entity(e.getServiceErrorDto()).build();
-        }
-
         try {
             final Reviewer entity = new Reviewer()
                     .withActive(reviewerRequest.isActive() == null || reviewerRequest.isActive())  // New users defaults to active
@@ -163,9 +146,6 @@ public class Reviewers {
                     .withSubjectNotes(repository.checkSubjectNotes(reviewerRequest.getSubjectNotes(), reviewerRequest.getSubjects()))
                     .withAgency(agency)
                     .withUserId(userId);
-
-
-            entity.setCulrId(culrId);
 
             entityManager.persist(entity);
             entityManager.flush();
@@ -225,7 +205,7 @@ public class Reviewers {
     @Produces({MediaType.APPLICATION_JSON})
     @RolesAllowed({"authenticated-user", IDP_PRODUCT_NAME + "-" + IDP_EDITOR_RIGHT_NAME, IDP_PRODUCT_NAME + "-" + IDP_REVIEWER_RIGHT_NAME})
     public Response updateReviewer(@PathParam("id") final Integer id, ReviewerRequest reviewerRequest,
-                                   @QueryParam("notify") @DefaultValue("false") final Boolean notify,
+                                   @QueryParam("notify") @DefaultValue("false") final boolean notify,
                                    @Context UriInfo uriInfo) {
 
         LOGGER.info("reviewers/{} (PUT), notify:{} request:{}", id, notify, reviewerRequest);
@@ -358,13 +338,11 @@ public class Reviewers {
 
 
         // If there is a stash: Settle for just updating the timestamp on reviewer data.
-        stash.ifPresentOrElse(reviewerDataStash -> {
-            reviewer.withLastChanged(LocalDateTime.now());
-        }, () -> {
+        stash.ifPresentOrElse(reviewerDataStash -> reviewer.withLastChanged(LocalDateTime.now()), () -> {
 
             // else create a new stash
             LOGGER.info("Stash for reviewer with id {} does not exists. Creating it.", id);
-            ReviewerDataStash newStash = null;
+            ReviewerDataStash newStash;
             try {
                 newStash = ReviewerDataStash.fromReviewer(reviewer);
                 entityManager.persist(newStash);
@@ -453,7 +431,7 @@ public class Reviewers {
     @Produces({MediaType.APPLICATION_JSON})
     @RolesAllowed({"authenticated-user", IDP_PRODUCT_NAME + "-" + IDP_EDITOR_RIGHT_NAME, IDP_PRODUCT_NAME + "-" + IDP_REVIEWER_RIGHT_NAME})
     public Response resetHiatus(@PathParam("id") final Integer id,
-                                @QueryParam("notify") @DefaultValue("false") final Boolean notify,
+                                @QueryParam("notify") @DefaultValue("false") final boolean notify,
                                 @Context UriInfo uriInfo) {
 
         // Find the existing user

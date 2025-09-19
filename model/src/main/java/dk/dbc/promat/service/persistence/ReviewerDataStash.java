@@ -96,7 +96,7 @@ public class ReviewerDataStash {
                 .withStashTime(LocalDateTime.now())
                 .withReviewer(mapper.writeValueAsString(reviewer))
                 .withReviewerId(reviewer.getId());
-        LOGGER.info("ReviewerDataStash from reviewer " + reviewerDataStash);
+        LOGGER.info("ReviewerDataStash from reviewer {}", reviewerDataStash);
         return reviewerDataStash;
     }
 

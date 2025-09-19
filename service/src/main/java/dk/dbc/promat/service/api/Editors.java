@@ -1,7 +1,6 @@
 package dk.dbc.promat.service.api;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import dk.dbc.connector.culr.CulrConnectorException;
 import dk.dbc.promat.service.dto.EditorList;
 import dk.dbc.promat.service.dto.EditorRequest;
 import dk.dbc.promat.service.dto.ServiceErrorDto;
@@ -46,9 +45,6 @@ public class Editors {
     EntityManager entityManager;
 
     @Inject
-    CulrHandler culrHandler;
-
-    @Inject
     AuditLogHandler auditLogHandler;
 
     private final static String MISSING_REQUIRED_FIELD = "Missing required field in the request data";
@@ -57,7 +53,7 @@ public class Editors {
     @Path("editors")
     @Produces({MediaType.APPLICATION_JSON})
     @RolesAllowed({"authenticated-user", IDP_PRODUCT_NAME + "-" + IDP_EDITOR_RIGHT_NAME})
-    public Response createEditor(EditorRequest editorRequest, @Context UriInfo uriInfo) throws CulrConnectorException {
+    public Response createEditor(EditorRequest editorRequest, @Context UriInfo uriInfo) {
         LOGGER.info("editors (POST)");
 
         final String firstName = editorRequest.getFirstName();
@@ -78,15 +74,9 @@ public class Editors {
                     "Field 'email' must be supplied and not be blank when creating a new editor");
         }
 
-        final String cprNumber = editorRequest.getCprNumber();
-        if (cprNumber == null || cprNumber.isBlank()) {
-            return ServiceErrorDto.InvalidRequest(MISSING_REQUIRED_FIELD,
-                    "Field 'cprNumber' must be supplied when creating a new editor");
-        }
-
         final Integer paycode = editorRequest.getPaycode();
         if (paycode == null) {
-            return ServiceErrorDto.InvalidRequest("Missing required field in the request data",
+            return ServiceErrorDto.InvalidRequest(MISSING_REQUIRED_FIELD,
                     "Field 'paycode' must be supplied when creating a new reviewer");
         }
 
@@ -102,13 +92,6 @@ public class Editors {
                     "Field 'userId' must be supplied and not be blank when creating a new editor");
         }
 
-        final String culrId;
-        try {
-            culrId = culrHandler.createCulrAccount(cprNumber, String.valueOf(paycode));
-            LOGGER.info("Obtained CulrId {} for new editor", culrId);
-        } catch (ServiceErrorException e) {
-            return Response.status(500).entity(e.getServiceErrorDto()).build();
-        }
 
         try {
             final Editor entity = new Editor()
@@ -118,7 +101,6 @@ public class Editors {
                     .withEmail(email)
                     .withAgency(agency)
                     .withUserId(userId);
-            entity.setCulrId(culrId);
 
             entityManager.persist(entity);
             entityManager.flush();
