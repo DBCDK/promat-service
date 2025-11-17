@@ -9,6 +9,7 @@ package dk.dbc.promat.service.api;
  import dk.dbc.promat.service.dto.ServiceErrorDto;
  import dk.dbc.promat.service.persistence.CaseStatus;
  import dk.dbc.promat.service.persistence.PromatCase;
+ import jakarta.ws.rs.core.GenericType;
  import org.junit.jupiter.api.MethodOrderer;
  import org.junit.jupiter.api.Order;
  import org.junit.jupiter.api.Test;
@@ -21,7 +22,6 @@ package dk.dbc.promat.service.api;
  import java.time.format.DateTimeFormatter;
  import java.util.List;
  import java.util.Map;
- import java.util.stream.Collectors;
 
  import static org.hamcrest.MatcherAssert.assertThat;
  import static org.hamcrest.Matchers.greaterThanOrEqualTo;
@@ -134,7 +134,7 @@ public class PaymentsIT  extends ContainerTest {
         String csv = response.readEntity(String.class);
         assertThat("number of lines", csv.lines().count(), is(36L));  // 1 header + 34 paymentlines
 
-        // Now check that all pending payments has been payed
+        // Now check that all pending payments has been paid
         response = getResponse("v1/api/payments/preview", Map.of("format","CSV"));
         assertThat("status code", response.getStatus(), is(200));
 
@@ -148,13 +148,13 @@ public class PaymentsIT  extends ContainerTest {
 
     @Order(8)
     @Test
-    public void TestGetPreviousPayment() throws JsonProcessingException {
+    public void TestGetPreviousPayment()  {
 
         Response response = getResponse("v1/api/payments/history");
         assertThat("status code", response.getStatus(), is(200));
 
         // Note: Case #20 is defined in promatcases.sql to test html caseview
-        List<String> history = response.readEntity(List.class);
+        List<String> history = response.readEntity(new GenericType<>() {});
         assertThat("number of history lines is", history.size(), is(4));
 
         // Make sure we have two old payments, in the expected order (oldest->newest)
@@ -181,57 +181,59 @@ public class PaymentsIT  extends ContainerTest {
 
         // Make sure that the expected lines is sorted by the pay category (number)
         // ascending - this is how lines is output
-        String expected = ("Dato;Lønnr.;Lønart;Antal;Tekst;Anmelder\n" +
-                "mm-dd-åååå;123;1956;1;019997 Title for 019997;Hans Hansen\n" +
-                "mm-dd-åååå;123;1956;1;100007 Title for 100007;Hans Hansen\n" +
-                "mm-dd-åååå;123;1956;1;100008 Title for 100008;Hans Hansen\n" +
-                "mm-dd-åååå;123;1956;1;100009 Title for 100009;Hans Hansen\n" +
-                "mm-dd-åååå;123;1956;1;319997 Title for 319997;Hans Hansen\n" +
-                "mm-dd-åååå;123;1956;1;1001000 Case 1;Hans Hansen\n" +
-                "mm-dd-åååå;123;1956;1;1001010 Case 2;Hans Hansen\n" +
-                "mm-dd-åååå;123;1956;1;1001020 Case 3;Hans Hansen\n" +
-                "mm-dd-åååå;123;1956;1;1001030 Case 4;Hans Hansen\n" +
-                "mm-dd-åååå;123;1956;1;1001040 Case 5;Hans Hansen\n" +
-                "mm-dd-åååå;123;1956;1;1001050 Case 6;Hans Hansen\n" +
-                "mm-dd-åååå;123;1956;1;1001060 Case 7;Hans Hansen\n" +
-                "mm-dd-åååå;123;1962;1;1001060 Bkm Case 7;Hans Hansen\n" +
-                "mm-dd-åååå;123;1956;1;1001070 Case 8;Hans Hansen\n" +
-                "mm-dd-åååå;123;1962;1;1001070 Bkm Case 8;Hans Hansen\n" +
-                "mm-dd-åååå;123;1956;1;1001080,1001081,1001082,1001083 Case 9;Hans Hansen\n" +
-                "mm-dd-åååå;123;1960;2;1001080,1001081,1001082,1001083 Kort om, +2 Case 9;Hans Hansen\n" +
-                "mm-dd-åååå;123;1956;1;1001090,1001091,1001092,1001093,1001094 Case 10;Hans Hansen\n" +
-                "mm-dd-åååå;123;1960;2;1001090,1001091,1001092,1001093,1001094 Kort om, +2 Case 10;Hans Hansen\n" +
-                "mm-dd-åååå;123;1956;1;1001100,1001101,1001102,1001103,1001104 Case 11;Hans Hansen\n" +
-                "mm-dd-åååå;123;1960;3;1001100,1001101,1001102,1001103,1001104 Kort om, +3 Case 11;Hans Hansen\n" +
-                "mm-dd-åååå;123;1956;1;1001110,1001111 Case 12;Hans Hansen\n" +
-                "mm-dd-åååå;123;1960;1;1001110,1001111 Kort om, +1 Case 12;Hans Hansen\n" +
-                "mm-dd-åååå;123;1987;2;1001110,1001111 Metadata Case 12;Hans Hansen\n" +
-                "mm-dd-åååå;456;1981;1;1001130,1001131 Case 14;Ole Olsen\n" +
-                "mm-dd-åååå;456;1960;1;1001140,1001141,1001142 Kort om, +1 Case 15;Ole Olsen\n" +
-                "mm-dd-åååå;456;1954;1;1001170,1001171,1001172 Case 18;Ole Olsen\n" +
-                "mm-dd-åååå;456;1960;1;1001170,1001171,1001172 Kort om, +1 Case 18;Ole Olsen\n" +
-                "mm-dd-åååå;456;1954;1;1001180,1001181,1001182 Case 19;Ole Olsen\n" +
-                "mm-dd-åååå;456;1960;1;1001180,1001181,1001182 Kort om, +1 Case 19;Ole Olsen\n" +
-                "mm-dd-åååå;123;1956;1;1001190,1001191 Case 20;Hans Hansen\n" +
-                "mm-dd-åååå;123;1960;1;1001190,1001191 Kort om, +1 Case 20;Hans Hansen\n" +
-                "mm-dd-åååå;123;1956;1;38529633,38529668 Case 20;Hans Hansen\n" +
-                "mm-dd-åååå;123;1960;1;38529633,38529668 Kort om, +1 Case 20;Hans Hansen\n" +
-                "mm-dd-åååå;123;1988;1;38529633,38529668 Case 20;Hans Hansen\n")
-                        .replace("mm-dd-åååå", LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd-MM-yyyy")));
+        String expected = """
+            Dato;Lønnr.;Lønart;Antal;Tekst;Anmelder
+            mm-dd-åååå;123;3212;1;019997 Title for 019997;Hans Hansen
+            mm-dd-åååå;123;3212;1;100007 Title for 100007;Hans Hansen
+            mm-dd-åååå;123;3212;1;100008 Title for 100008;Hans Hansen
+            mm-dd-åååå;123;3212;1;100009 Title for 100009;Hans Hansen
+            mm-dd-åååå;123;3212;1;319997 Title for 319997;Hans Hansen
+            mm-dd-åååå;123;3212;1;1001000 Case 1;Hans Hansen
+            mm-dd-åååå;123;3212;1;1001010 Case 2;Hans Hansen
+            mm-dd-åååå;123;3212;1;1001020 Case 3;Hans Hansen
+            mm-dd-åååå;123;3212;1;1001030 Case 4;Hans Hansen
+            mm-dd-åååå;123;3212;1;1001040 Case 5;Hans Hansen
+            mm-dd-åååå;123;3212;1;1001050 Case 6;Hans Hansen
+            mm-dd-åååå;123;3212;1;1001060 Case 7;Hans Hansen
+            mm-dd-åååå;123;3218;1;1001060 Bkm Case 7;Hans Hansen
+            mm-dd-åååå;123;3212;1;1001070 Case 8;Hans Hansen
+            mm-dd-åååå;123;3218;1;1001070 Bkm Case 8;Hans Hansen
+            mm-dd-åååå;123;3212;1;1001080,1001081,1001082,1001083 Case 9;Hans Hansen
+            mm-dd-åååå;123;3216;2;1001080,1001081,1001082,1001083 Kort om, +2 Case 9;Hans Hansen
+            mm-dd-åååå;123;3212;1;1001090,1001091,1001092,1001093,1001094 Case 10;Hans Hansen
+            mm-dd-åååå;123;3216;2;1001090,1001091,1001092,1001093,1001094 Kort om, +2 Case 10;Hans Hansen
+            mm-dd-åååå;123;3212;1;1001100,1001101,1001102,1001103,1001104 Case 11;Hans Hansen
+            mm-dd-åååå;123;3216;3;1001100,1001101,1001102,1001103,1001104 Kort om, +3 Case 11;Hans Hansen
+            mm-dd-åååå;123;3212;1;1001110,1001111 Case 12;Hans Hansen
+            mm-dd-åååå;123;3216;1;1001110,1001111 Kort om, +1 Case 12;Hans Hansen
+            mm-dd-åååå;123;3229;2;1001110,1001111 Metadata Case 12;Hans Hansen
+            mm-dd-åååå;456;3223;1;1001130,1001131 Case 14;Ole Olsen
+            mm-dd-åååå;456;3216;1;1001140,1001141,1001142 Kort om, +1 Case 15;Ole Olsen
+            mm-dd-åååå;456;3210;1;1001170,1001171,1001172 Case 18;Ole Olsen
+            mm-dd-åååå;456;3216;1;1001170,1001171,1001172 Kort om, +1 Case 18;Ole Olsen
+            mm-dd-åååå;456;3210;1;1001180,1001181,1001182 Case 19;Ole Olsen
+            mm-dd-åååå;456;3216;1;1001180,1001181,1001182 Kort om, +1 Case 19;Ole Olsen
+            mm-dd-åååå;123;3212;1;1001190,1001191 Case 20;Hans Hansen
+            mm-dd-åååå;123;3216;1;1001190,1001191 Kort om, +1 Case 20;Hans Hansen
+            mm-dd-åååå;123;3212;1;38529633,38529668 Case 20;Hans Hansen
+            mm-dd-åååå;123;3216;1;38529633,38529668 Kort om, +1 Case 20;Hans Hansen
+            mm-dd-åååå;123;3230;1;38529633,38529668 Case 20;Hans Hansen
+            """.replace("mm-dd-åååå", LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd-MM-yyyy")));
         LOGGER.info("Expected CSV output is:\n{}", expected);
 
         List<String> expectedLines = expected
                 .lines()
-                .collect(Collectors.toList());
+                .toList();
 
         // Verify each line - one at the time, since it may become very confusing if we just
         // reported an error in the file without indicating which line was faulty
         int lineCnt = 1;
-        for (String line : csv.lines().collect(Collectors.toList())) {
+        for (String line : csv.lines().toList()) {
             LOGGER.info("Line {} actual   = {}", lineCnt, line);
             LOGGER.info("Line {} expected = {}", lineCnt, expectedLines.get(lineCnt - 1));
             assertThat("line is correct", line.equals(expectedLines.get(lineCnt - 1)));
             lineCnt++;
         }
     }
+
 }
