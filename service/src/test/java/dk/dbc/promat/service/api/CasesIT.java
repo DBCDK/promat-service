@@ -57,6 +57,7 @@ import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 
+
 import static jakarta.ws.rs.core.Response.Status.NO_CONTENT;
 import static java.nio.file.StandardOpenOption.CREATE_NEW;
 import static java.nio.file.StandardOpenOption.WRITE;
@@ -74,11 +75,11 @@ import static org.junit.Assert.assertThrows;
 
 @SuppressWarnings("resource")
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-public class CasesIT extends ContainerTest {
+class CasesIT extends ContainerTest {
     private static final Logger LOGGER = LoggerFactory.getLogger(CasesIT.class);
 
     @Test
-    public void testCreateCase() throws JsonProcessingException, PromatServiceConnectorException {
+    void testCreateCase() {
 
         CaseRequest dto = new CaseRequest();
 
@@ -104,7 +105,7 @@ public class CasesIT extends ContainerTest {
     }
 
     @Test
-    public void testCreateCaseForExistingPrimaryFaust() {
+    void testCreateCaseForExistingPrimaryFaust() {
 
         // New case with primary faust 001111 which already exists
         CaseRequest dto = new CaseRequest()
@@ -125,7 +126,7 @@ public class CasesIT extends ContainerTest {
     }
 
     @Test
-    public void testCreateCaseWithSubjectAndReviewerAndEditor() throws JsonProcessingException {
+    void testCreateCaseWithSubjectAndReviewerAndEditor() {
 
         // Note: This test depends on subjects with id 3 and 4, and reviewer with id 1
         // being injected by the dumpfiles also used by the reviewer and subject tests
@@ -155,16 +156,16 @@ public class CasesIT extends ContainerTest {
         List<Integer> actual = created.getSubjects()
                 .stream()
                 .sorted(Comparator.comparingInt(Subject::getId))
-                .map(Subject::getId).collect(Collectors.toList());
+                .map(Subject::getId).toList();
         List<Integer> expected = new ArrayList<>();
         expected.add(3);
         expected.add(4);
-        assertThat("subject ids", actual.equals(expected), is(true) );
+        assertThat("subject ids", actual.equals(expected), is(true));
 
     }
 
     @Test
-    public void testCreateCaseWithTrivialFields() throws JsonProcessingException {
+    void testCreateCaseWithTrivialFields() {
 
         CaseRequest dto = new CaseRequest()
                 .withPrimaryFaust("4001111")
@@ -186,7 +187,7 @@ public class CasesIT extends ContainerTest {
     }
 
     @Test
-    public void testGetCase() throws JsonProcessingException {
+    void testGetCase() throws JsonProcessingException {
 
         // Get case with nonexisting id, expect 404 (NOT FOUND)
         Response response = getResponse("v1/api/cases/1234");
@@ -198,7 +199,7 @@ public class CasesIT extends ContainerTest {
     }
 
     @Test
-    public void testCreateCaseWithTasks() throws JsonProcessingException {
+    void testCreateCaseWithTasks() throws JsonProcessingException {
 
         // Create case
         CaseRequest dto = new CaseRequest()
@@ -263,7 +264,7 @@ public class CasesIT extends ContainerTest {
     }
 
     @Test
-    public void testCreateCaseWithInvalidStatus() {
+    void testCreateCaseWithInvalidStatus() {
 
         // Create case with status ASSIGNED but no reviewer given
         CaseRequest dto = new CaseRequest()
@@ -289,26 +290,26 @@ public class CasesIT extends ContainerTest {
     }
 
     @Test
-    public void testCheckCaseWithFaustExists() {
+    void testCheckCaseWithFaustExists() {
 
         // Check if various fausts exists.
         // (DBC's HttpClient currently do not support HEAD operations, so we use GET and throw away the response body)
 
         // Case with id 1, primary faust
-        assertThat("status code", getResponse("v1/api/cases", Map.of("faust","001111")).getStatus(), is(200));
+        assertThat("status code", getResponse("v1/api/cases", Map.of("faust", "001111")).getStatus(), is(200));
 
         // Case with id 1, related faust
-        assertThat("status code", getResponse("v1/api/cases", Map.of("faust","002222")).getStatus(), is(200));
+        assertThat("status code", getResponse("v1/api/cases", Map.of("faust", "002222")).getStatus(), is(200));
 
         // Case with id 2, related faust
-        assertThat("status code", getResponse("v1/api/cases", Map.of("faust","006666")).getStatus(), is(200));
+        assertThat("status code", getResponse("v1/api/cases", Map.of("faust", "006666")).getStatus(), is(200));
 
         // Check a faustnumber that does not exist
-        assertThat("status code", getResponse("v1/api/cases", Map.of("faust","007777")).getStatus(), is(404));
+        assertThat("status code", getResponse("v1/api/cases", Map.of("faust", "007777")).getStatus(), is(404));
     }
 
     @Test
-    public void testGetCasesWithStatus() throws PromatServiceConnectorException {
+    void testGetCasesWithStatus() throws PromatServiceConnectorException {
 
         // There are 8 cases preloaded into the database, others may have been created
         // by previously run tests
@@ -335,7 +336,7 @@ public class CasesIT extends ContainerTest {
     }
 
     @Test
-    public void testGetCasesWithLimit() throws PromatServiceConnectorException {
+    void testGetCasesWithLimit() throws PromatServiceConnectorException {
 
         // Get 4 cases with status CREATED - there is 8 or more in the database
         final CaseSummaryList fetched = promatServiceConnector.listCases(new ListCasesParams()
@@ -347,7 +348,7 @@ public class CasesIT extends ContainerTest {
     }
 
     @Test
-    public void testGetCasesWithNoOrInvalidFilters() throws JsonProcessingException {
+    void testGetCasesWithNoOrInvalidFilters() throws JsonProcessingException {
 
         Response response = getResponse("v1/api/cases");
         assertThat("status code", response.getStatus(), is(200));
@@ -372,7 +373,7 @@ public class CasesIT extends ContainerTest {
     }
 
     @Test
-    public void testGetCasesWithLimitAndFrom() throws PromatServiceConnectorException {
+    void testGetCasesWithLimitAndFrom() throws PromatServiceConnectorException {
 
         // Get 4 cases with status CREATED from id 1 (first id after 'from' should be 1)
         CaseSummaryList fetched = promatServiceConnector.listCases(new ListCasesParams()
@@ -417,7 +418,7 @@ public class CasesIT extends ContainerTest {
     }
 
     @Test
-    public void testGetCasesWithReviewer() throws PromatServiceConnectorException {
+    void testGetCasesWithReviewer() throws PromatServiceConnectorException {
 
         // Cases with reviewer '9999' (no such user)
         Response response = getResponse("v1/api/cases", Map.of("reviewer", 9999));
@@ -447,7 +448,7 @@ public class CasesIT extends ContainerTest {
     }
 
     @Test
-    public void testGetCasesWithEditor() throws PromatServiceConnectorException {
+    void testGetCasesWithEditor() throws PromatServiceConnectorException {
 
         // Cases with editor '9999' (no such user)
         Response response = getResponse("v1/api/cases", Map.of("editor", 9999));
@@ -477,7 +478,7 @@ public class CasesIT extends ContainerTest {
     }
 
     @Test
-    public void testGetCasesWithTitle() throws PromatServiceConnectorException {
+    void testGetCasesWithTitle() throws PromatServiceConnectorException {
 
         // Cases with part of title 'no_such_title'
         Response response = getResponse("v1/api/cases", Map.of("title", "no_such_title"));
@@ -500,7 +501,7 @@ public class CasesIT extends ContainerTest {
     }
 
     @Test
-    public void getCasesWithTrimmedWeekcode() throws PromatServiceConnectorException {
+    void getCasesWithTrimmedWeekcode() throws PromatServiceConnectorException {
         CaseSummaryList fetched = promatServiceConnector.listCases(new ListCasesParams()
                 .withTrimmedWeekcode("202102"));
         assertThat("Number of cases with trimmed weekcode '202102'", fetched.getNumFound(), is(0));
@@ -519,7 +520,7 @@ public class CasesIT extends ContainerTest {
     }
 
     @Test
-    public void testEditCase() throws JsonProcessingException, PromatServiceConnectorException {
+    void testEditCase() throws JsonProcessingException, PromatServiceConnectorException {
 
         // Update of unknown case - should return 404 NOT FOUND
         CaseRequest dto = new CaseRequest();
@@ -565,7 +566,7 @@ public class CasesIT extends ContainerTest {
                         new TaskDto()
                                 .withTaskType(TaskType.GROUP_1_LESS_THAN_100_PAGES)
                                 .withTaskFieldType(TaskFieldType.BRIEF)
-                                .withTargetFausts(Arrays.asList(new String[] {"8002222", "8004444"})),
+                                .withTargetFausts(Arrays.asList(new String[]{"8002222", "8004444"})),
                         new TaskDto()
                                 .withTaskType(TaskType.GROUP_1_LESS_THAN_100_PAGES)
                                 .withTaskFieldType(TaskFieldType.BKM)
@@ -589,7 +590,7 @@ public class CasesIT extends ContainerTest {
                         new TaskDto()
                                 .withTaskType(TaskType.GROUP_1_LESS_THAN_100_PAGES)
                                 .withTaskFieldType(TaskFieldType.BRIEF)
-                                .withTargetFausts(Arrays.asList(new String[] {"8001111", "8004444"})),
+                                .withTargetFausts(Arrays.asList(new String[]{"8001111", "8004444"})),
                         new TaskDto()
                                 .withTaskType(TaskType.GROUP_1_LESS_THAN_100_PAGES)
                                 .withTaskFieldType(TaskFieldType.BKM)
@@ -615,8 +616,8 @@ public class CasesIT extends ContainerTest {
                 .map(s -> s.getId()).collect(Collectors.toList());
         List<Integer> expected = new ArrayList<Integer>();
         expected.add(5);
-        assertThat("updated subject ids", actual.equals(expected), is(true) );
-        assertThat("updated deadline", updated.getDeadline(),  is(LocalDate.parse("2021-01-18")));
+        assertThat("updated subject ids", actual.equals(expected), is(true));
+        assertThat("updated deadline", updated.getDeadline(), is(LocalDate.parse("2021-01-18")));
         assertThat("updated materialtype", updated.getMaterialType(), is(MaterialType.MULTIMEDIA));
         assertThat("updated tasks (should remain unchanged)", updated.getTasks().equals(created.getTasks()));
 
@@ -689,7 +690,7 @@ public class CasesIT extends ContainerTest {
     }
 
     @Test
-    public void testCreateWithFieldsCreatorAuthorPublisherAndWeekcode() throws JsonProcessingException {
+    void testCreateWithFieldsCreatorAuthorPublisherAndWeekcode() throws JsonProcessingException {
         CaseRequest dto = new CaseRequest()
                 .withPrimaryFaust("9001211")
                 .withTitle("Title for 9001211")
@@ -729,7 +730,7 @@ public class CasesIT extends ContainerTest {
     }
 
     @Test
-    public void testCreateCaseWithTasksWithMissingFields() throws JsonProcessingException {
+    void testCreateCaseWithTasksWithMissingFields() throws JsonProcessingException {
 
         // Create case without tasktype and taskfieldtype
         CaseRequest dto = new CaseRequest()
@@ -773,7 +774,7 @@ public class CasesIT extends ContainerTest {
     }
 
     @Test
-    public void testAddFirstTask() throws JsonProcessingException {
+    void testAddFirstTask() throws JsonProcessingException {
 
         // Create new case
         CaseRequest dto = new CaseRequest()
@@ -817,7 +818,7 @@ public class CasesIT extends ContainerTest {
     }
 
     @Test
-    public void testAddNextTask() throws JsonProcessingException {
+    void testAddNextTask() throws JsonProcessingException {
 
         // Create new case
         CaseRequest dto = new CaseRequest()
@@ -851,7 +852,7 @@ public class CasesIT extends ContainerTest {
     }
 
     @Test
-    public void testAddTaskWithFaustInUse() throws JsonProcessingException {
+    void testAddTaskWithFaustInUse() throws JsonProcessingException {
 
         // Create case 1
         CaseRequest dto = new CaseRequest()
@@ -905,7 +906,7 @@ public class CasesIT extends ContainerTest {
     }
 
     @Test
-    public void testAddTaskWithMissingFields() throws JsonProcessingException {
+    void testAddTaskWithMissingFields() throws JsonProcessingException {
 
         // Create new case
         CaseRequest dto = new CaseRequest()
@@ -937,7 +938,7 @@ public class CasesIT extends ContainerTest {
     }
 
     @Test
-    public void testAddTaskWithDuplicateType() throws JsonProcessingException {
+    void testAddTaskWithDuplicateType() throws JsonProcessingException {
         CaseRequest dto = new CaseRequest()
                 .withPrimaryFaust("26901111")
                 .withTitle("Title for 26901111")
@@ -959,7 +960,7 @@ public class CasesIT extends ContainerTest {
     }
 
     @Test
-    public void testCreateCaseWithTaskWithUsedFaust() {
+    void testCreateCaseWithTaskWithUsedFaust() {
 
         // Create case 1
         CaseRequest dto = new CaseRequest()
@@ -994,7 +995,7 @@ public class CasesIT extends ContainerTest {
     }
 
     @Test
-    public void testDeleteCase() throws JsonProcessingException {
+    void testDeleteCase() throws JsonProcessingException {
         List<Integer> deleteCases = List.of(12, 13);
 
         // Check that the case at first IS in the response
@@ -1023,7 +1024,7 @@ public class CasesIT extends ContainerTest {
         }
 
         // Give me the list of cases where status is deleted
-        response = getResponse("v1/api/cases", Map.of("status","DELETED"));
+        response = getResponse("v1/api/cases", Map.of("status", "DELETED"));
         obj = response.readEntity(String.class);
         fetched = mapper.readValue(obj, CaseSummaryList.class);
         assertThat("The deleted case is amongst the cases with flagged 'deleted'",
@@ -1032,7 +1033,7 @@ public class CasesIT extends ContainerTest {
     }
 
     @Test
-    public void testApproveCaseWithUnfinishedMetakompasTask() throws JsonProcessingException {
+    void testApproveCaseWithUnfinishedMetakompasTask() throws JsonProcessingException {
 
         // Reviewer has done his job and sets the case in state PENDING_APPROVAL
         CaseRequest requestDto = new CaseRequest().withStatus(CaseStatus.PENDING_APPROVAL);
@@ -1073,7 +1074,7 @@ public class CasesIT extends ContainerTest {
     }
 
     @Test
-    public void testApproveCaseWithApprovedMetakompasTask() throws JsonProcessingException {
+    void testApproveCaseWithApprovedMetakompasTask() throws JsonProcessingException {
 
         // Reviewer has done his job and sets the case in state PENDING_APPROVAL
         CaseRequest requestDto = new CaseRequest().withStatus(CaseStatus.PENDING_APPROVAL);
@@ -1096,7 +1097,7 @@ public class CasesIT extends ContainerTest {
     }
 
     @Test
-    public void testApproveCase() throws JsonProcessingException {
+    void testApproveCase() throws JsonProcessingException {
 
         // Reviewer has done his job and sets the case in state PENDING_APPROVAL
         CaseRequest requestDto = new CaseRequest().withStatus(CaseStatus.PENDING_APPROVAL);
@@ -1119,7 +1120,7 @@ public class CasesIT extends ContainerTest {
     }
 
     @Test
-    public void testLookUpOnAuthorField() throws PromatServiceConnectorException {
+    void testLookUpOnAuthorField() throws PromatServiceConnectorException {
         Set<Integer> expected = createCasesWithAuthorsAndWeekcodes(
                 Map.of(1, List.of("Klavs Hansen"), 2, List.of("Niels (hansen)-Nielsen"), 3, List.of("HANSE HANSEN"))
         );
@@ -1132,25 +1133,25 @@ public class CasesIT extends ContainerTest {
                 .withAuthor("Hans"));
         assertThat("Number of cases with author 'Hans'", fetched.getNumFound(), is(3));
 
-        Set<Integer> actual = fetched.getCases().stream().map( c -> c.getId()).collect(Collectors.toSet());
+        Set<Integer> actual = fetched.getCases().stream().map(c -> c.getId()).collect(Collectors.toSet());
         assertThat("caseIds match", actual, is(expected));
 
         Response response;
         // Delete cases so that we dont mess up payments tests
-        for(Integer cid : expected) {
-            response = deleteResponse("v1/api/cases/"+cid);
+        for (Integer cid : expected) {
+            response = deleteResponse("v1/api/cases/" + cid);
             assertThat("status code", response.getStatus(), is(200));
         }
 
-        for(Integer cid : others) {
-            response = deleteResponse("v1/api/cases/"+cid);
+        for (Integer cid : others) {
+            response = deleteResponse("v1/api/cases/" + cid);
             assertThat("status code", response.getStatus(), is(200));
         }
 
     }
 
     @Test
-    public void testLookupOfWeekcodes() throws PromatServiceConnectorException {
+    void testLookupOfWeekcodes() throws PromatServiceConnectorException {
         Set<Integer> expected = createCasesWithAuthorsAndWeekcodes(
                 Map.of(6, List.of("NONE", "BKM202102"), 7, List.of("NONE", "BKM202102"), 8, List.of("NONE", "BKM202102"))
         );
@@ -1160,7 +1161,7 @@ public class CasesIT extends ContainerTest {
         CaseSummaryList fetched = promatServiceConnector.listCases(new ListCasesParams()
                 .withWeekCode("BKM202102"));
         assertThat("Cases found", fetched.getNumFound(), greaterThanOrEqualTo(3));
-        Set<Integer> actual = fetched.getCases().stream().map( c -> c.getId()).collect(Collectors.toSet());
+        Set<Integer> actual = fetched.getCases().stream().map(c -> c.getId()).collect(Collectors.toSet());
         assertThat("cases are all there", actual.containsAll(expected));
         assertThat("Case prior to weekcode is not there", !actual.contains(someOther));
 
@@ -1169,14 +1170,14 @@ public class CasesIT extends ContainerTest {
 
         // Delete cases so that we dont mess up payments tests
         Response response;
-        for(Integer cid : expected) {
-            response = deleteResponse("v1/api/cases/"+cid);
+        for (Integer cid : expected) {
+            response = deleteResponse("v1/api/cases/" + cid);
             assertThat("status code", response.getStatus(), is(200));
         }
     }
 
     @Test
-    public void testLookupOfWeekcodesInCodes() throws PromatServiceConnectorException {
+    void testLookupOfWeekcodesInCodes() throws PromatServiceConnectorException {
         CaseSummaryList fetched = promatServiceConnector.listCases(new ListCasesParams()
                 .withWeekCode("BKM197901"));
         assertThat("Cases found", fetched.getNumFound(), is(0));
@@ -1280,8 +1281,7 @@ public class CasesIT extends ContainerTest {
         Response response = postResponse("v1/api/cases", dto);
         assertThat("status code", response.getStatus(), is(201));
         try {
-            PromatCase created = mapper.readValue(response.readEntity(String.class), PromatCase.class);
-            return created;
+            return mapper.readValue(response.readEntity(String.class), PromatCase.class);
         } catch (JsonProcessingException e) {
             return null;
         }
@@ -1310,7 +1310,7 @@ public class CasesIT extends ContainerTest {
     }
 
     @Test
-    public void testChangeStatusPendingExportToExported() throws JsonProcessingException {
+    void testChangeStatusPendingExportToExported() throws JsonProcessingException {
 
         // Case is ready for export, the dataio-harvester will change status to EXPORTED
         CaseRequest requestDto = new CaseRequest().withStatus(CaseStatus.EXPORTED);
@@ -1322,7 +1322,7 @@ public class CasesIT extends ContainerTest {
     }
 
     @Test
-    public void testChangeStatusExportedToPendingExport() throws JsonProcessingException {
+    void testChangeStatusExportedToPendingExport() throws JsonProcessingException {
 
         // Case has been exported but we need to export it again since some error occurred
         // downstream - we dont want to edit the database directly, nor do we want to
@@ -1337,7 +1337,7 @@ public class CasesIT extends ContainerTest {
     }
 
     @Test
-    public void testChangeStatusPendingExportToProcessingToExported() throws JsonProcessingException {
+    void testChangeStatusPendingExportToProcessingToExported() throws JsonProcessingException {
 
         // Case is ready for export, the dataio-harvester will change status to PROCESSING
         CaseRequest requestDto = new CaseRequest().withStatus(CaseStatus.PROCESSING);
@@ -1357,16 +1357,16 @@ public class CasesIT extends ContainerTest {
     }
 
     @Test
-    public void testDbcKatHtmlViewFaustNotFoundReturnsNotFound() throws PromatServiceConnectorException {
+    void testDbcKatHtmlViewFaustNotFoundReturnsNotFound() throws PromatServiceConnectorException {
         try {
             promatServiceConnector.getCaseview("98765432123456789", "HTML");
-        } catch(PromatServiceConnectorUnexpectedStatusCodeException e) {
+        } catch (PromatServiceConnectorUnexpectedStatusCodeException e) {
             assertThat("must return 404 NOT FOUND", e.getStatusCode(), is(404));
         }
     }
 
     @Test
-    public void testDbckatHtmlViewOfPrimaryFaust() throws IOException, PromatServiceConnectorException {
+    void testDbckatHtmlViewOfPrimaryFaust() throws IOException, PromatServiceConnectorException {
 
         // Fetch the html view for the primary faustnumber
         String expected = new String(Files.readAllBytes(Path.of("src/test/resources/__files/case-view-for-id-20-100000.html")));
@@ -1380,7 +1380,7 @@ public class CasesIT extends ContainerTest {
     }
 
     @Test
-    public void testDbckatHtmlViewOfRelatedFausts() throws IOException, PromatServiceConnectorException {
+    void testDbckatHtmlViewOfRelatedFausts() throws IOException, PromatServiceConnectorException {
 
         // Fetch the html view for the first related faustnumber
         String expected = new String(Files.readAllBytes(Path.of("src/test/resources/__files/case-view-for-id-20-100001.html")));
@@ -1404,7 +1404,7 @@ public class CasesIT extends ContainerTest {
     }
 
     @Test
-    public void testDbckatHtmlViewOfPrimaryFaustWithNullData() throws IOException, PromatServiceConnectorException {
+    void testDbckatHtmlViewOfPrimaryFaustWithNullData() throws IOException, PromatServiceConnectorException {
 
         // Fetch the html view for the primary faustnumber
         // Note: it is not normal that field data, or case metadata, is NULL when the case is approved (or beyond)
@@ -1432,16 +1432,16 @@ public class CasesIT extends ContainerTest {
     }
 
     @Test
-    public void testDbcKatXmlViewFaustNotFoundReturnsNotFound() throws PromatServiceConnectorException {
+    void testDbcKatXmlViewFaustNotFoundReturnsNotFound() throws PromatServiceConnectorException {
         try {
             promatServiceConnector.getCaseview("98765432123456789", "XML");
-        } catch(PromatServiceConnectorUnexpectedStatusCodeException e) {
+        } catch (PromatServiceConnectorUnexpectedStatusCodeException e) {
             assertThat("must return 404 NOT FOUND", e.getStatusCode(), is(404));
         }
     }
 
     @Test
-    public void testDbckatXmlViewMultipleBKMReasons() throws IOException, PromatServiceConnectorException {
+    void testDbckatXmlViewMultipleBKMReasons() throws IOException, PromatServiceConnectorException {
 
         // Fetch the xml view for the primary faustnumber
         String expected = new String(Files.readAllBytes(Path.of("src/test/resources/__files/case-view-for-id-500706-22436406.xml")), StandardCharsets.ISO_8859_1);
@@ -1456,7 +1456,7 @@ public class CasesIT extends ContainerTest {
     }
 
     @Test
-    public void testDbckatXmlViewOfPrimaryFaust() throws IOException, PromatServiceConnectorException {
+    void testDbckatXmlViewOfPrimaryFaust() throws IOException, PromatServiceConnectorException {
 
         // Fetch the xml view for the primary faustnumber
         String expected = new String(Files.readAllBytes(Path.of("src/test/resources/__files/case-view-for-id-20-100000.xml")), StandardCharsets.ISO_8859_1);
@@ -1471,7 +1471,7 @@ public class CasesIT extends ContainerTest {
     }
 
     @Test
-    public void testDbckatXmlViewOfRelatedFaust() throws IOException, PromatServiceConnectorException {
+    void testDbckatXmlViewOfRelatedFaust() throws IOException, PromatServiceConnectorException {
 
         // Fetch the xml view for the first related faustnumber
         String expected = new String(Files.readAllBytes(Path.of("src/test/resources/__files/case-view-for-id-20-100001.xml")), StandardCharsets.ISO_8859_1);
@@ -1497,7 +1497,7 @@ public class CasesIT extends ContainerTest {
     }
 
     @Test
-    public void testDbckatXmlViewOfPrimaryFaustWithNullData() throws IOException, PromatServiceConnectorException, ParserConfigurationException, SAXException {
+    void testDbckatXmlViewOfPrimaryFaustWithNullData() throws IOException, PromatServiceConnectorException, ParserConfigurationException, SAXException {
 
         // Fetch the xml view for the primary faustnumber
         // Note: it is not normal that field data, or case metadata, is NULL when the case is approved (or beyond)
@@ -1526,7 +1526,7 @@ public class CasesIT extends ContainerTest {
     }
 
     @Test
-    public void testDbckatHtmlViewOfPrimaryFaustNotApproved() throws IOException, PromatServiceConnectorException {
+    void testDbckatHtmlViewOfPrimaryFaustNotApproved() throws IOException, PromatServiceConnectorException {
 
         // Casewiew not available for dbckat users and reviewers
         assertThrows(PromatServiceConnectorUnexpectedStatusCodeException.class, () -> {
@@ -1546,7 +1546,7 @@ public class CasesIT extends ContainerTest {
     }
 
     @Test
-    public void testDbckatHtmlViewOfPrimaryFaustClosedBKM() throws IOException, PromatServiceConnectorException {
+    void testDbckatHtmlViewOfPrimaryFaustClosedBKM() throws IOException, PromatServiceConnectorException {
 
         CaseRequest dto = new CaseRequest()
                 .withTitle("Title for 90001234")
@@ -1582,7 +1582,7 @@ public class CasesIT extends ContainerTest {
     }
 
     @Test
-    public void testBuggiApproval() throws IOException, PromatServiceConnectorException {
+    void testBuggiApproval() throws IOException, PromatServiceConnectorException {
         String pidPreamble = "870170-BASIS:";
         TagList tags = new TagList(new Tag("hest", 1));
         assertPromatThrows(NO_CONTENT, () -> promatServiceConnector.approveBuggiTask(pidPreamble + "12345678", tags));
@@ -1613,13 +1613,13 @@ public class CasesIT extends ContainerTest {
     }
 
     @Test
-    public void testCaseApprovalWithMoreThanOneBuggiTask() throws PromatServiceConnectorException {
+    void testCaseApprovalWithMoreThanOneBuggiTask() throws PromatServiceConnectorException {
         String descriptor = "870170-BASIS:";
         String firstFaust = "90001235";
         String secondFaust = "90001236";
         CaseRequest dto = new CaseRequest()
-                .withTitle("Title for " +firstFaust)
-                .withDetails("Details for "+firstFaust)
+                .withTitle("Title for " + firstFaust)
+                .withDetails("Details for " + firstFaust)
                 .withPrimaryFaust(firstFaust)
                 .withEditor(10)
                 .withSubjects(Arrays.asList(3, 4))
@@ -1648,7 +1648,7 @@ public class CasesIT extends ContainerTest {
                                 .withTaskType(TaskType.GROUP_1_LESS_THAN_100_PAGES)
                                 .withTaskFieldType(TaskFieldType.BUGGI)
                                 .withTargetFausts(List.of(secondFaust))
-                                ));
+                ));
         PromatCase aCase = postAndAssert("v1/api/cases", dto, PromatCase.class, CREATED);
 
         // Register first faust, and ensure that case ends in 'PENDING_EXTERNAL' state, with only first buggi registered.
@@ -1659,8 +1659,8 @@ public class CasesIT extends ContainerTest {
         assertThat("Status", aCase.getStatus(), is(CaseStatus.PENDING_EXTERNAL));
         assertThat("Only first buggi registered",
                 aCase.getTasks().stream()
-                .filter(promatTask -> promatTask.getTaskFieldType() == TaskFieldType.BUGGI)
-                .filter(promatTask -> promatTask.getApproved() == null).count(),
+                        .filter(promatTask -> promatTask.getTaskFieldType() == TaskFieldType.BUGGI)
+                        .filter(promatTask -> promatTask.getApproved() == null).count(),
                 is(1L));
 
         // Approve from PENDING_EXTERNAL status with all buggi's now in place. Now result should be approved.
@@ -1680,8 +1680,8 @@ public class CasesIT extends ContainerTest {
         try {
             callable.call();
         } catch (PromatServiceConnectorUnexpectedStatusCodeException pe) {
-          Assertions.assertEquals(status.getStatusCode(), pe.getStatusCode(),
-                  "Client was expected to throw an exception containing status code " + status);
+            Assertions.assertEquals(status.getStatusCode(), pe.getStatusCode(),
+                    "Client was expected to throw an exception containing status code " + status);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -1697,16 +1697,12 @@ public class CasesIT extends ContainerTest {
                 .withDeadline(LocalDate.now().plus(10, ChronoUnit.DAYS).toString())
                 .withMaterialType(MaterialType.BOOK)
                 .withTasks(Arrays.stream(tasks)
-                    .map(tf -> new TaskDto().withTaskFieldType(tf).withTaskType(TaskType.GROUP_1_LESS_THAN_100_PAGES).withTargetFausts(List.of(faust)))
-                    .collect(Collectors.toList()));
-    }
-
-    private void assertStatus(Response response, Response.Status status) {
-        Assertions.assertEquals(status, response.getStatusInfo().toEnum());
+                        .map(tf -> new TaskDto().withTaskFieldType(tf).withTaskType(TaskType.GROUP_1_LESS_THAN_100_PAGES).withTargetFausts(List.of(faust)))
+                        .collect(Collectors.toList()));
     }
 
     @Test
-    public void testMaterialsFilterQuery() throws PromatServiceConnectorException, JsonProcessingException {
+    void testMaterialsFilterQuery() throws PromatServiceConnectorException, JsonProcessingException {
         // Create a BOOK case
         CaseRequest dto = new CaseRequest()
                 .withTitle("Title for 80011112")
@@ -1798,18 +1794,18 @@ public class CasesIT extends ContainerTest {
 
         // Delete case, in order not to mess up other tests.
         // Delete the case so that we dont mess up payments tests
-        response = deleteResponse("v1/api/cases/"+book.getId());
+        response = deleteResponse("v1/api/cases/" + book.getId());
         assertThat("status code", response.getStatus(), is(200));
 
-        response = deleteResponse("v1/api/cases/"+movie.getId());
+        response = deleteResponse("v1/api/cases/" + movie.getId());
         assertThat("status code", response.getStatus(), is(200));
 
-        response = deleteResponse("v1/api/cases/"+multimedia.getId());
+        response = deleteResponse("v1/api/cases/" + multimedia.getId());
         assertThat("status code", response.getStatus(), is(200));
     }
 
     @Test
-    public void testRejectAssignmentAndReassignedToOtherReviewer() throws JsonProcessingException, PromatServiceConnectorException {
+    void testRejectAssignmentAndReassignedToOtherReviewer() throws JsonProcessingException, PromatServiceConnectorException {
 
         // Create a new case
         CaseRequest dto = new CaseRequest()
@@ -1842,13 +1838,13 @@ public class CasesIT extends ContainerTest {
         assertThat("is reassigned", updated.getStatus(), is(CaseStatus.ASSIGNED));
 
         // Delete the case so that we dont mess up payments tests
-        response = deleteResponse("v1/api/cases/"+created.getId());
+        response = deleteResponse("v1/api/cases/" + created.getId());
         assertThat("deleted", response.getStatus(), is(200));
 
     }
 
     @Test
-    public void testStatusFlowToExported() throws JsonProcessingException {
+    void testStatusFlowToExported() throws JsonProcessingException {
 
         // Create a new case
         CaseRequest dto = new CaseRequest()
@@ -1896,7 +1892,7 @@ public class CasesIT extends ContainerTest {
     }
 
     @Test
-    public void testStatusFlowToExportedFromApproved() throws JsonProcessingException {
+    void testStatusFlowToExportedFromApproved() throws JsonProcessingException {
 
         // Create a new case
         CaseRequest dto = new CaseRequest()
@@ -1939,7 +1935,7 @@ public class CasesIT extends ContainerTest {
     }
 
     @Test
-    public void testStatusFlowToPendingRevertAndRevertedFromExported() throws JsonProcessingException {
+    void testStatusFlowToPendingRevertAndRevertedFromExported() throws JsonProcessingException {
 
         // Create a new case
         CaseRequest dto = new CaseRequest()
@@ -1993,7 +1989,7 @@ public class CasesIT extends ContainerTest {
     }
 
     @Test
-    public void testStatusFlowToExportedFromApprovedWithProcessing() throws JsonProcessingException {
+    void testStatusFlowToExportedFromApprovedWithProcessing() throws JsonProcessingException {
 
         // Create a new case
         CaseRequest dto = new CaseRequest()
@@ -2041,7 +2037,7 @@ public class CasesIT extends ContainerTest {
     }
 
     @Test
-    public void testStatusFlowToPendingRevertAndRevertedFromExportedWithProcessing() throws JsonProcessingException {
+    void testStatusFlowToPendingRevertAndRevertedFromExportedWithProcessing() throws JsonProcessingException {
 
         // Create a new case
         CaseRequest dto = new CaseRequest()
@@ -2105,7 +2101,7 @@ public class CasesIT extends ContainerTest {
     }
 
     @Test
-    public void testStatusFlowToExportedFromApprovedWithProcessingAndError() throws JsonProcessingException {
+    void testStatusFlowToExportedFromApprovedWithProcessingAndError() throws JsonProcessingException {
 
         // Create a new case
         CaseRequest dto = new CaseRequest()
@@ -2153,7 +2149,7 @@ public class CasesIT extends ContainerTest {
     }
 
     @Test
-    public void testStatusFlowToPendingRevertAndRevertedFromExportedWithProcessingAndError() throws JsonProcessingException {
+    void testStatusFlowToPendingRevertAndRevertedFromExportedWithProcessingAndError() throws JsonProcessingException {
 
         // Create a new case
         CaseRequest dto = new CaseRequest()
@@ -2217,7 +2213,7 @@ public class CasesIT extends ContainerTest {
     }
 
     @Test
-    public void testAssignFaustnumberWhenChangeToPendingExport() throws JsonProcessingException {
+    void testAssignFaustnumberWhenChangeToPendingExport() throws JsonProcessingException {
 
         // Create a new case
         CaseRequest dto = new CaseRequest()
@@ -2231,9 +2227,9 @@ public class CasesIT extends ContainerTest {
                 .withNote("hej")
                 .withMaterialType(MaterialType.BOOK)
                 .withTasks(Arrays.asList(new TaskDto()
-                    .withTaskType(TaskType.GROUP_1_LESS_THAN_100_PAGES)
-                    .withTaskFieldType(TaskFieldType.BRIEF)
-                    .withTargetFausts(Arrays.asList("24001111"))
+                        .withTaskType(TaskType.GROUP_1_LESS_THAN_100_PAGES)
+                        .withTaskFieldType(TaskFieldType.BRIEF)
+                        .withTargetFausts(Arrays.asList("24001111"))
                 ));
 
         Response response = postResponse("v1/api/cases", dto);
@@ -2272,7 +2268,7 @@ public class CasesIT extends ContainerTest {
     }
 
     @Test
-    public void testStatusFlowToPendingIssuesFromApproved() throws JsonProcessingException {
+    void testStatusFlowToPendingIssuesFromApproved() throws JsonProcessingException {
 
         // Create a new case
         CaseRequest dto = new CaseRequest()
@@ -2310,7 +2306,7 @@ public class CasesIT extends ContainerTest {
     }
 
     @Test
-    public void testStatusFlowToPendingIssuesFromPendingMeeting() throws JsonProcessingException {
+    void testStatusFlowToPendingIssuesFromPendingMeeting() throws JsonProcessingException {
 
         // Create a new case
         CaseRequest dto = new CaseRequest()
@@ -2353,7 +2349,7 @@ public class CasesIT extends ContainerTest {
     }
 
     @Test
-    public void testReassignCase() throws JsonProcessingException {
+    void testReassignCase() throws JsonProcessingException {
 
         // Create a new case
         CaseRequest dto = new CaseRequest()
@@ -2390,7 +2386,7 @@ public class CasesIT extends ContainerTest {
     }
 
     @Test
-    public void testReassignCaseWithPendingIssues() throws JsonProcessingException {
+    void testReassignCaseWithPendingIssues() throws JsonProcessingException {
 
         // Create a new case
         CaseRequest dto = new CaseRequest()
@@ -2449,7 +2445,7 @@ public class CasesIT extends ContainerTest {
     }
 
     @Test
-    public void testStatusFlowToPendingCloseFromPendingApproval() throws JsonProcessingException {
+    void testStatusFlowToPendingCloseFromPendingApproval() throws JsonProcessingException {
 
         // Create a new case
         CaseRequest dto = new CaseRequest()
@@ -2482,7 +2478,7 @@ public class CasesIT extends ContainerTest {
     }
 
     @Test
-    public void testStatusFlowToApprovedFromPendingExternal() throws JsonProcessingException {
+    void testStatusFlowToApprovedFromPendingExternal() throws JsonProcessingException {
 
         // Create a new case
         CaseRequest dto = new CaseRequest()
@@ -2502,7 +2498,7 @@ public class CasesIT extends ContainerTest {
                         new TaskDto()
                                 .withTaskType(TaskType.GROUP_1_LESS_THAN_100_PAGES)
                                 .withTaskFieldType(TaskFieldType.METAKOMPAS)
-                                .withTargetFausts(Arrays.asList(new String[] {"28001111"}))
+                                .withTargetFausts(Arrays.asList(new String[]{"28001111"}))
                 ));
 
         Response response = postResponse("v1/api/cases", dto);
@@ -2548,7 +2544,7 @@ public class CasesIT extends ContainerTest {
 
     @Test
     @Order(1)
-    public void testGetOnlyCasesWithFaustForExport() throws PromatServiceConnectorException {
+    void testGetOnlyCasesWithFaustForExport() throws PromatServiceConnectorException {
         CaseSummaryList fetched = promatServiceConnector.listCases(new ListCasesParams()
                 .withStatus(CaseStatus.PENDING_EXPORT)
                 .withFormat(ListCasesParams.Format.EXPORT));
@@ -2557,7 +2553,7 @@ public class CasesIT extends ContainerTest {
     }
 
     @Test
-    public void testQueryByCreator() throws JsonProcessingException {
+    void testQueryByCreator() throws JsonProcessingException {
 
         // Create a new case
         CaseRequest dto = new CaseRequest()
@@ -2598,7 +2594,7 @@ public class CasesIT extends ContainerTest {
     }
 
     @Test
-    public void testQueryByIdAndPublisher() throws JsonProcessingException {
+    void testQueryByIdAndPublisher() throws JsonProcessingException {
 
         // Create a new case
         CaseRequest dto = new CaseRequest()
@@ -2650,7 +2646,7 @@ public class CasesIT extends ContainerTest {
                                 .withTargetFausts(List.of("38352253", "38352296"))));
 
         response = postResponse("v1/api/cases", dto);
-        PromatCase created_2 = mapper.readValue(response.readEntity(String.class), PromatCase.class);
+        PromatCase created2 = mapper.readValue(response.readEntity(String.class), PromatCase.class);
         assertThat("status code", response.getStatus(), is(201));
 
         // Query by id with faust 24699773: Expected is at least the case just created.
@@ -2663,7 +2659,7 @@ public class CasesIT extends ContainerTest {
         // Query by isbn 9788764432589: Expected is at least the case just created.
         response = getResponse("v1/api/cases", Map.of("id", "9788776073770"));
         cases = mapper.readValue(response.readEntity(String.class), CaseSummaryList.class);
-       
+
         assertThat(cases.getNumFound(), is(greaterThanOrEqualTo(1)));
         assertThat("The newly created first case with this isbn is one of them",
                 cases.getCases().stream().map(PromatCase::getId).collect(Collectors.toList()).contains(created.getId()));
@@ -2673,7 +2669,7 @@ public class CasesIT extends ContainerTest {
         cases = mapper.readValue(response.readEntity(String.class), CaseSummaryList.class);
         assertThat(cases.getNumFound(), is(greaterThanOrEqualTo(1)));
         assertThat("The newly created second case with this ean is one of them",
-                cases.getCases().stream().map(PromatCase::getId).collect(Collectors.toList()).contains(created_2.getId()));
+                cases.getCases().stream().map(PromatCase::getId).collect(Collectors.toList()).contains(created2.getId()));
 
         // Query by publisher: Expected are both cases.
         response = getResponse("v1/api/cases", Map.of("publisher", "for"));
@@ -2681,7 +2677,7 @@ public class CasesIT extends ContainerTest {
         assertThat(cases.getNumFound(), is(greaterThanOrEqualTo(2)));
         assertThat("Both newly created cases, should be present",
                 cases.getCases().stream().map(PromatCase::getId).collect(Collectors.toList())
-                        .containsAll(List.of(created_2.getId(), created.getId())));
+                        .containsAll(List.of(created2.getId(), created.getId())));
 
         // Query by publisher: Expected is only the first.
         response = getResponse("v1/api/cases", Map.of("publisher", "27100104"));
@@ -2692,19 +2688,19 @@ public class CasesIT extends ContainerTest {
                 caseIds.contains(created.getId()));
 
         assertThat("The second one of the two cases, should NOT be present",
-                not(caseIds.contains(created_2.getId())));
+                not(caseIds.contains(created2.getId())));
 
         // Delete case 1
         response = deleteResponse("v1/api/cases/" + created.getId());
         assertThat("status code", response.getStatus(), is(200));
 
         // Delete case 2
-        response = deleteResponse("v1/api/cases/" + created_2.getId());
+        response = deleteResponse("v1/api/cases/" + created2.getId());
         assertThat("status code", response.getStatus(), is(200));
     }
 
     @Test
-    public void testThatEmaterialForDownloadIsRegisteredProperly() throws JsonProcessingException {
+    void testThatEmaterialForDownloadIsRegisteredProperly() throws JsonProcessingException {
 
         // Create a new case
         CaseRequest dto = new CaseRequest()
@@ -2754,7 +2750,7 @@ public class CasesIT extends ContainerTest {
         response = postResponse("v1/api/cases", dto2);
         PromatCase created2 = mapper.readValue(response.readEntity(String.class), PromatCase.class);
         assertThat("status code", response.getStatus(), is(201));
-        assertThat("No e-content for this faust could be found at creation time.",created2.getFulltextLink(), nullValue());
+        assertThat("No e-content for this faust could be found at creation time.", created2.getFulltextLink(), nullValue());
 
         // Delete the cases so that we dont mess up payments and dataio-export tests
         response = deleteResponse("v1/api/cases/" + created.getId());
@@ -2765,7 +2761,7 @@ public class CasesIT extends ContainerTest {
     }
 
     @Test
-    public void testThatGdprFieldsIsNeverExposedOnCases() throws JsonProcessingException {
+    void testThatGdprFieldsIsNeverExposedOnCases() throws JsonProcessingException {
 
         // Create case
         CaseRequest dto = new CaseRequest()
@@ -2826,7 +2822,7 @@ public class CasesIT extends ContainerTest {
     }
 
     @Test
-    public void testRepeatedCaseCreation() throws IOException, InterruptedException {
+    void testRepeatedCaseCreation() throws IOException, InterruptedException {
         final int REVIEWER_ID = 3;
         final int EDITOR_ID = 11;
 
@@ -2858,7 +2854,7 @@ public class CasesIT extends ContainerTest {
     }
 
     @Test
-    public void testSearchCaseWithPendingClose() throws IOException, InterruptedException {
+    void testSearchCaseWithPendingClose() throws IOException, InterruptedException {
 
         CaseRequest dto = new CaseRequest()
                 .withPrimaryFaust("5004422")
@@ -2901,7 +2897,7 @@ public class CasesIT extends ContainerTest {
     }
 
     @Test
-    public void testSearchAndViewClosedCases() throws IOException, InterruptedException, PromatServiceConnectorException {
+    void testSearchAndViewClosedCases() throws IOException, InterruptedException, PromatServiceConnectorException {
 
         // Create case.
         CaseRequest dto = new CaseRequest()
@@ -2921,7 +2917,7 @@ public class CasesIT extends ContainerTest {
                         new TaskDto()
                                 .withTaskType(TaskType.GROUP_1_LESS_THAN_100_PAGES)
                                 .withTaskFieldType(TaskFieldType.DESCRIPTION)
-                                .withTargetFausts(Arrays.asList(new String[] {"5004522"}))
+                                .withTargetFausts(Arrays.asList(new String[]{"5004522"}))
                 ));
 
         Response response = postResponse("v1/api/cases", dto);
@@ -2951,7 +2947,7 @@ public class CasesIT extends ContainerTest {
                         new TaskDto()
                                 .withTaskType(TaskType.GROUP_1_LESS_THAN_100_PAGES)
                                 .withTaskFieldType(TaskFieldType.DESCRIPTION)
-                                .withTargetFausts(Arrays.asList(new String[] {"5004522"}))
+                                .withTargetFausts(Arrays.asList(new String[]{"5004522"}))
                 ));
 
         response = postResponse("v1/api/cases", dto);
@@ -2985,7 +2981,7 @@ public class CasesIT extends ContainerTest {
     }
 
     @Test
-    public void testSetKeepEditor() throws IOException {
+    void testSetKeepEditor() throws IOException {
         String caseUrl;
 
         // Create case.
@@ -3006,7 +3002,7 @@ public class CasesIT extends ContainerTest {
                         new TaskDto()
                                 .withTaskType(TaskType.GROUP_1_LESS_THAN_100_PAGES)
                                 .withTaskFieldType(TaskFieldType.DESCRIPTION)
-                                .withTargetFausts(Arrays.asList(new String[] {"5004522"}))
+                                .withTargetFausts(Arrays.asList(new String[]{"5004522"}))
                 ));
 
         // Create the case
@@ -3051,12 +3047,12 @@ public class CasesIT extends ContainerTest {
         assertThat("status code", response.getStatus(), is(200));
     }
 
-    public void nightlyReset() {
+    void nightlyReset() {
         assertThat("Nightly reset", putResponse("v1/api/cases/forceeditorreset", null).getStatus(), is(200));
     }
 
     @Test
-    public void testSetAssignedDateOnAssigned() throws IOException {
+    void testSetAssignedDateOnAssigned() throws IOException {
 
         // Initial check to make sure we dont get false results (test is added late)
         Response response = getResponse("v1/api/cases/6");
@@ -3084,7 +3080,7 @@ public class CasesIT extends ContainerTest {
     }
 
     @Test
-    public void testRevertedCaseIsInactive() throws JsonProcessingException {
+    void testRevertedCaseIsInactive() throws JsonProcessingException {
 
         // Create first case
         CaseRequest requestDto = new CaseRequest()
@@ -3163,7 +3159,7 @@ public class CasesIT extends ContainerTest {
     }
 
     @Test
-    public void testInactiveCaseCanBeReactivated() throws JsonProcessingException {
+    void testInactiveCaseCanBeReactivated() throws JsonProcessingException {
 
         // Create case
         CaseRequest requestDto = new CaseRequest()
@@ -3227,7 +3223,7 @@ public class CasesIT extends ContainerTest {
     }
 
     @Test
-    public void testFaustActiveEndpoint() throws JsonProcessingException {
+    void testFaustActiveEndpoint() throws JsonProcessingException {
         // Setup
         // Create case
         CreateStatusDto createStatusDto;
@@ -3312,7 +3308,7 @@ public class CasesIT extends ContainerTest {
     }
 
     @Test
-    public void testSetCodes() throws IOException {
+    void testSetCodes() throws IOException {
 
         // Create case
         CaseRequest requestDto = new CaseRequest()
@@ -3352,7 +3348,7 @@ public class CasesIT extends ContainerTest {
     }
 
     @Test
-    public void testInternalNote() throws IOException {
+    void testInternalNote() throws IOException {
 
         // Create case with status ASSIGNED but no reviewer given
         CaseRequest requestDto = new CaseRequest()
@@ -3375,5 +3371,8 @@ public class CasesIT extends ContainerTest {
 
         PromatCase updated = get("v1/api/cases/" + aCase.getId(), PromatCase.class);
         assertThat("Note", updated.getInternalNote(), is("Testing"));
+
+        // Delete the case
+        assertThat("status code", deleteResponse("v1/api/cases/" + aCase.getId()).getStatus(), is(200));
     }
 }
