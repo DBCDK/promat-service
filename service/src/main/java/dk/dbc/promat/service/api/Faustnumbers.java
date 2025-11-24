@@ -2,14 +2,11 @@ package dk.dbc.promat.service.api;
 
 import dk.dbc.promat.service.dto.ServiceErrorCode;
 import java.util.List;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.Query;
 
 public class Faustnumbers {
-    private static final Logger LOGGER = LoggerFactory.getLogger(Faustnumbers.class);
 
     static boolean checkNoOpenCaseWithFaust(EntityManager entityManager, String... fausts) {
         return checkNoOpenCaseWithFaust(entityManager, null, fausts);
@@ -33,15 +30,14 @@ public class Faustnumbers {
     }
 
     public static <T> void checkForNullFausts(List<String> fausts, T task) throws ServiceErrorException {
-        if (fausts != null && !fausts.isEmpty()) {
-            if (fausts.contains(null) || fausts.contains("")) {
-                throw new ServiceErrorException("Invalid target faustnumber")
-                        .withCause("Invalid target faustnumber")
-                        .withDetails("One or more target faustnumbers are null or empty. Task: " + task)
-                        .withCode(ServiceErrorCode.INVALID_REQUEST)
-                        .withHttpStatus(400);
-            }
+        if (fausts != null && !fausts.isEmpty() && (fausts.contains(null) || fausts.contains(""))) {
+            throw new ServiceErrorException("Invalid target faustnumber")
+                    .withCause("Invalid target faustnumber")
+                    .withDetails("One or more target faustnumbers are null or empty. Task: " + task)
+                    .withCode(ServiceErrorCode.INVALID_REQUEST)
+                    .withHttpStatus(400);
         }
+
     }
 
 

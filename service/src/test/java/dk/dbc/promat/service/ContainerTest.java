@@ -12,6 +12,7 @@ import dk.dbc.httpclient.HttpPut;
 import dk.dbc.promat.service.persistence.JsonMapperProvider;
 import dk.dbc.promat.service.connector.PromatServiceConnector;
 import dk.dbc.promat.service.connector.PromatServiceConnectorFactory;
+import java.util.Arrays;
 import org.junit.jupiter.api.Assertions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,12 +29,8 @@ import java.util.Map;
 import java.util.function.Function;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.configureFor;
-import static com.github.tomakehurst.wiremock.client.WireMock.requestMatching;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options;
 import static dk.dbc.promat.service.AuthMocks.mockAuthenticationResponses;
-import static dk.dbc.promat.service.api.Users.IDP_EDITOR_RIGHT_NAME;
-import static dk.dbc.promat.service.api.Users.IDP_PRODUCT_NAME;
-import static dk.dbc.promat.service.api.Users.IDP_REVIEWER_RIGHT_NAME;
 
 public abstract class ContainerTest extends IntegrationTestIT {
     protected static final Logger LOGGER = LoggerFactory.getLogger(ContainerTest.class);
@@ -121,6 +118,21 @@ public abstract class ContainerTest extends IntegrationTestIT {
         return httpClient.execute(httpPost);
     }
 
+    protected static <T,S> S postResponse(String path, T body, Class<S> responseType, Response.Status expectedStatus, String... queryParms) {
+        HttpPost httpPost = new HttpPost(httpClient)
+                .withBaseUrl(PROMATSERVICE_BASE_URL)
+                .withPathElements(path);
+        if (body != null) {
+            httpPost.withData(body, "application/json");
+        }
+
+        Arrays.stream(queryParms).forEach(s -> {
+            String[] keyValue = s.split("=");
+            httpPost.withQueryParameter(keyValue[0], keyValue[1]);
+        });
+        return httpClient.executeAndExpect(httpPost, expectedStatus, responseType);
+    }
+
     public <T> Response postResponse(String path, T body, Map<String, Object> queryParameter, String authToken) {
         HttpPost httpPost = new HttpPost(httpClient)
                 .withBaseUrl(PROMATSERVICE_BASE_URL)
@@ -147,6 +159,21 @@ public abstract class ContainerTest extends IntegrationTestIT {
             httpPut.getHeaders().put("Authorization", "Bearer " + authToken);
         }
         return httpClient.execute(httpPut);
+    }
+
+    protected static <T,S> S putResponse(String path, T body, Class<S> responseType, Response.Status expectedStatus, String... queryParms) {
+        HttpPut httpPut = new HttpPut(httpClient)
+                .withBaseUrl(PROMATSERVICE_BASE_URL)
+                .withPathElements(path);
+        if (body != null) {
+            httpPut.withData(body, "application/json");
+        }
+
+        Arrays.stream(queryParms).forEach(s -> {
+            String[] keyValue = s.split("=");
+            httpPut.withQueryParameter(keyValue[0], keyValue[1]);
+        });
+        return httpClient.executeAndExpect(httpPut, expectedStatus, responseType);
     }
 
     public <T> Response putResponse(String path, T body, String authToken) {

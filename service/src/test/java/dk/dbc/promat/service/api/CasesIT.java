@@ -30,8 +30,6 @@ import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
 import org.junit.jupiter.api.io.TempDir;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.xml.sax.SAXException;
 
 import jakarta.ws.rs.core.Response;
@@ -76,7 +74,6 @@ import static org.junit.Assert.assertThrows;
 @SuppressWarnings("resource")
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class CasesIT extends ContainerTest {
-    private static final Logger LOGGER = LoggerFactory.getLogger(CasesIT.class);
 
     @Test
     void testCreateCase() {
