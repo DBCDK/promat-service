@@ -24,11 +24,10 @@ import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.stream.Collectors;
+
+
+import static dk.dbc.promat.service.api.Faustnumbers.checkForNullFausts;
 
 @Stateless
 @Path("")
@@ -71,7 +70,10 @@ public class Tasks {
 
                 // Used to remove duplicates and to keep the order of the elements
                 List<String> faustNumbers = dto.getTargetFausts().stream()
-                        .distinct().collect(Collectors.toList());
+                        .distinct().toList();
+
+                // Check for null or empty faustnumbers
+                checkForNullFausts(faustNumbers, dto);
 
                 if(!Faustnumbers.checkNoOpenCaseWithFaust(entityManager, caseOfTask.getId(),
                         faustNumbers.toArray(String[]::new))) {
@@ -94,10 +96,10 @@ public class Tasks {
 
             return Response.ok(existing).build();
         } catch(ServiceErrorException serviceErrorException) {
-            LOGGER.info("Received serviceErrorException while updating task: {}", serviceErrorException.getMessage());
+            LOGGER.error("Received serviceErrorException while updating task: {}", serviceErrorException.getMessage());
             return Response.status(serviceErrorException.getHttpStatus()).entity(serviceErrorException.getServiceErrorDto()).build();
         } catch(Exception exception) {
-            LOGGER.error("Caught exception: {}", exception.getMessage());
+            LOGGER.error("Caught exception in updateTask: {}", exception.getMessage());
             return ServiceErrorDto.Failed(exception.getMessage());
         }
     }
@@ -143,7 +145,7 @@ public class Tasks {
             LOGGER.info("Received serviceErrorException while updating task: {}", serviceErrorException.getMessage());
             return Response.status(serviceErrorException.getHttpStatus()).entity(serviceErrorException.getServiceErrorDto()).build();
         } catch(Exception exception) {
-            LOGGER.error("Caught exception: {}", exception.getMessage());
+            LOGGER.error("Caught exception in deleteTask: {}", exception.getMessage());
             return ServiceErrorDto.Failed(exception.getMessage());
         }
     }
@@ -156,10 +158,9 @@ public class Tasks {
         PromatCase caseOfTask = query.getResultList().stream().findFirst().orElse(null);
 
         if( caseOfTask == null) {
-            LOGGER.info(String.format("Unable to load  case of task with id %d", taskId));
             throw new ServiceErrorException("Case not found")
                     .withCause("Case not found")
-                    .withDetails(String.format("Task with id %d do not belong to any task", taskId))
+                    .withDetails(String.format("Task with id %d do not belong to any case", taskId))
                     .withCode(ServiceErrorCode.NOT_FOUND)
                     .withHttpStatus(404);
         }

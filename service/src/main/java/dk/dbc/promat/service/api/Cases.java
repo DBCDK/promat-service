@@ -73,6 +73,8 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+
+import static dk.dbc.promat.service.api.Faustnumbers.checkForNullFausts;
 import static jakarta.ws.rs.core.Response.Status.BAD_REQUEST;
 import static jakarta.ws.rs.core.Response.Status.NO_CONTENT;
 
@@ -178,6 +180,7 @@ public class Cases {
         Editor creator;
         List<PromatTask> tasks;
         try {
+
             // Check that the new case does not use any faustnumbers used on any other active case
             checkValidFaustNumbers(dto);
 
@@ -970,13 +973,14 @@ public class Cases {
 
     private void validateTaskDto(TaskDto dto) throws ServiceErrorException {
         if(dto.getTaskType() == null || dto.getTaskFieldType() == null || dto.getTargetFausts() == null || dto.getTargetFausts().isEmpty()) {
-            LOGGER.info("Task dto is missing the taskType and/or taskFieldType field");
+            LOGGER.error("Task dto is missing the taskType and/or taskFieldType field");
             throw new ServiceErrorException("Task dto is missing the taskType and/or taskFieldType field")
                     .withCause("Missing required field(s) in the request data")
                     .withDetails("Fields 'taskType' and 'taskFieldType' must be supplied when creating a new task")
                     .withCode(ServiceErrorCode.INVALID_REQUEST)
                     .withHttpStatus(400);
         }
+        checkForNullFausts(dto.getTargetFausts(), dto);
     }
 
     private void checkValidFaustNumbers(CaseRequest dto) throws ServiceErrorException {
