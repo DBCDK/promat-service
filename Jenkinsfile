@@ -1,6 +1,6 @@
 #!groovy
 
-def workerNode = "devel11"
+def workerNode = "devel12"
 def teamSlackNotice = 'team-x-notice'
 def teamSlackWarning = 'team-x-warning'
 
