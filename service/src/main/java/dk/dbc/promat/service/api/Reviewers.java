@@ -46,7 +46,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
+import java.util.Arrays;
 
 import static dk.dbc.promat.service.api.Users.IDP_EDITOR_RIGHT_NAME;
 import static dk.dbc.promat.service.api.Users.IDP_PRODUCT_NAME;
@@ -194,7 +194,7 @@ public class Reviewers {
                         .withWeekWorkload((long) objects[1])
                         .withWeekBeforeWorkload((long) objects[2])
                         .withWeekAfterWorkload((long) objects[3]))
-                .collect(Collectors.toList());
+                .toList();
         ReviewerList<ReviewerWithWorkloads> listOfReviewers = new ReviewerList<ReviewerWithWorkloads>().withReviewers(reviewers);
         return Response.ok(objectMapper.writerWithView(ReviewerView.Summary.class).writeValueAsString(listOfReviewers))
                 .build();
@@ -294,7 +294,7 @@ public class Reviewers {
                     // Validate against existing subjects instead.
                     reviewer.setSubjectNotes(
                             repository.resolveSubjectNotes(
-                                    reviewer.getSubjects().stream().map(Subject::getId).collect(Collectors.toList()),
+                                    reviewer.getSubjects().stream().map(Subject::getId).toList(),
                                     reviewerRequest.getSubjectNotes()));
                 }
             }
@@ -466,5 +466,16 @@ public class Reviewers {
             return Response.serverError().entity(e.getMessage()).build();
         }
 
+    }
+
+    @GET
+    @Path("reviewers/accepttypes")
+    @Produces({MediaType.APPLICATION_JSON})
+    public Response getAcceptTypes() {
+        LOGGER.info("reviewers/accepttypes (GET)");
+        List<Reviewer.AcceptsDto> acceptTypes = Arrays.stream(Reviewer.Accepts.values())
+                .map(Reviewer.AcceptsDto::from)
+                .toList();
+        return Response.ok(acceptTypes).build();
     }
 }

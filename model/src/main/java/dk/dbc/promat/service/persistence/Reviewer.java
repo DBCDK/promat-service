@@ -64,18 +64,46 @@ public class Reviewer extends PromatUser {
             "GROUP BY pu.id";
 
     public enum Accepts {
-        BKM,
-        BOOK,
-        EBOOK,
-        EXPRESS,
-        MOVIE,
-        MULTIMEDIA,
-        PS4,
-        PS5,
-        XBOX_ONE,
-        XBOX_SERIES_X,
-        NINTENDO_SWITCH,
-        BIWEEKLY_ONLY
+        BKM("BKM", "Modtager BKM-vurderinger", false),
+        BOOK("BOOK", "Bog", false),
+        EBOOK("EBOOK", "Modtager ebøger", false),
+        EXPRESS("EXPRESS", "Modtager ekspres", false),
+        MOVIE("MOVIE", "Film", false),
+        MULTIMEDIA("MULTIMEDIA", "Multimedia", false),
+        PS4("PS4", "Har PS4", true),
+        PS5("PS5", "Har PS5", true),
+        XBOX_ONE("XBOX_ONE", "Har Xbox One", true),
+        XBOX_SERIES_X("XBOX_SERIES_X", "Har Xbox serie X", true),
+        NINTENDO_SWITCH("NINTENDO_SWITCH", "Har Nintendo Switch", true),
+        BIWEEKLY_ONLY("BIWEEKLY_ONLY", "BIWEEKLY_ONLY", false),
+        NINTENDO_SWITCH_2("NINTENDO_SWITCH_2", "Har Nintendo Switch 2", true);
+
+        private final String value;
+        private final String label;
+        private final boolean isConsole;
+
+        Accepts(String value, String label, boolean isConsole) {
+            this.value = value;
+            this.label = label;
+            this.isConsole = isConsole;
+        }
+
+        public String getValue() {
+            return value;
+        }
+
+        public String getLabel() {
+            return label;
+        }
+
+        public boolean isConsole() {
+            return isConsole;
+        }
+    }
+    public record AcceptsDto(String value, String label, boolean isConsole) {
+        public static AcceptsDto from(Accepts accepts) {
+            return new AcceptsDto(accepts.getValue(), accepts.getLabel(), accepts.isConsole());
+        }
     }
 
     @PrePersist
