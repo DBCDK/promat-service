@@ -306,7 +306,7 @@ class ReviewersIT extends ContainerTest {
 
         final ReviewerRequest reviewerRequest = new ReviewerRequest()
                 .withActive(false)
-                .withAccepts(Arrays.asList(Reviewer.Accepts.BOOK, Reviewer.Accepts.MULTIMEDIA))
+                .withAccepts(Arrays.asList(Reviewer.Accepts.BOOK, Reviewer.Accepts.MULTIMEDIA, Reviewer.Accepts.NINTENDO_SWITCH_2))
                 .withAddress(new Address().withAddress1("Mellemgade 51").withAddress2("Øvre Mellem").withCity("Mellemtved").withZip("6666").withSelected(true))
                 .withPrivateAddress(new Address().withAddress1("Hjemmegade 51").withAddress2("Hjemme").withCity("Hjemmeby").withZip("1236").withSelected(false))
                 .withEmail("peder@pedersen.dk")
@@ -606,7 +606,7 @@ class ReviewersIT extends ContainerTest {
         reviewer.setHiatusBegin(LocalDate.parse("2020-12-22"));
         reviewer.setHiatusEnd(LocalDate.parse("2021-01-03"));
         reviewer.setAccepts(List.of(
-                Reviewer.Accepts.BOOK, Reviewer.Accepts.MULTIMEDIA));
+                Reviewer.Accepts.BOOK, Reviewer.Accepts.MULTIMEDIA, Reviewer.Accepts.NINTENDO_SWITCH_2));
         reviewer.setNote("note3");
         reviewer.setCapacity(2);
         reviewer.setSubjectNotes(List.of());
