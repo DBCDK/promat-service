@@ -13,6 +13,10 @@ import dk.dbc.promat.service.persistence.JsonMapperProvider;
 import dk.dbc.promat.service.connector.PromatServiceConnector;
 import dk.dbc.promat.service.connector.PromatServiceConnectorFactory;
 import java.util.Arrays;
+
+import dk.dbc.promat.service.persistence.PromatCase;
+import dk.dbc.promat.service.persistence.PromatTask;
+import dk.dbc.promat.service.persistence.TaskFieldType;
 import org.junit.jupiter.api.Assertions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,6 +35,7 @@ import java.util.function.Function;
 import static com.github.tomakehurst.wiremock.client.WireMock.configureFor;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options;
 import static dk.dbc.promat.service.AuthMocks.mockAuthenticationResponses;
+import static dk.dbc.promat.service.OpenformatMocks.mockOpenformatResponses;
 
 public abstract class ContainerTest extends IntegrationTestIT {
     protected static final Logger LOGGER = LoggerFactory.getLogger(ContainerTest.class);
@@ -60,6 +65,13 @@ public abstract class ContainerTest extends IntegrationTestIT {
                 .withPathElements(path)
                 .withHeader("Authorization", "Bearer " + authToken)
                 .execute();
+    }
+
+    public <R> R getResponse(String path, Class<R> responseClass, Response.Status expectedStatus) {
+        HttpGet httpGet = new HttpGet(httpClient)
+                .withBaseUrl(PROMATSERVICE_BASE_URL)
+                .withPathElements(path);
+        return httpClient.executeAndExpect(httpGet, expectedStatus, responseClass);
     }
 
     public Response getResponse(String path, Map<String, Object> queryParameter) {
@@ -184,6 +196,10 @@ public abstract class ContainerTest extends IntegrationTestIT {
         return putResponse(path, body, null, null);
     }
 
+    public Response putResponse(String path) {
+        return putResponse(path, null, null, null);
+    }
+
     @SuppressWarnings("unused")
     public <T> Response deleteResponse(String path) {
         HttpDelete httpDelete = new HttpDelete(httpClient)
@@ -221,6 +237,7 @@ public abstract class ContainerTest extends IntegrationTestIT {
         WireMockServer wireMockServer = new WireMockServer(options().dynamicPort());
 
         mockAuthenticationResponses(wireMockServer);
+        mockOpenformatResponses(wireMockServer);
 
         wireMockServer.start();
         configureFor("localhost", wireMockServer.port());
@@ -295,4 +312,10 @@ public abstract class ContainerTest extends IntegrationTestIT {
         return server;
     }
 
+    public static PromatTask findTaskByFieldType(PromatCase promatCase, TaskFieldType taskFieldType) {
+        return promatCase.getTasks().stream()
+                .filter(task -> task.getTaskFieldType() == taskFieldType)
+                .findFirst()
+                .orElse(null);
+    }
 }

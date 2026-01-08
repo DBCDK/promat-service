@@ -30,6 +30,7 @@ import dk.dbc.promat.service.persistence.PromatUser;
 import dk.dbc.promat.service.persistence.Reviewer;
 import dk.dbc.promat.service.persistence.Subject;
 import dk.dbc.promat.service.persistence.TaskFieldType;
+import dk.dbc.promat.service.persistence.TaskType;
 import dk.dbc.promat.service.service.CaseSearch;
 import dk.dbc.promat.service.templating.CaseviewXmlTransformer;
 import dk.dbc.promat.service.templating.NotificationFactory;
@@ -747,6 +748,38 @@ public class Cases {
             entityManager.detach(existing);
 
             return ServiceErrorDto.Failed(exception.getMessage());
+        }
+    }
+
+    /**
+     * Forcibly set tasktype on all tasks of a case
+     * @param id case id
+     * @param taskType task type to set
+     * @return OK or not found
+     */
+    @PUT
+    @Path("cases/{id}/tasktype/{tasktype}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response setTaskTypeForCase(@PathParam("id") final Integer id, @PathParam("tasktype") final TaskType taskType) {
+        LOGGER.info("cases/{}/tasktype/{} (PUT)", id, taskType);
+
+        // Lock case and task tables
+        repository.getExclusiveAccessToTable(PromatCase.TABLE_NAME);
+        repository.getExclusiveAccessToTable(PromatTask.TABLE_NAME);
+        PromatCase promatCase = entityManager.find(PromatCase.class, id);
+        if(promatCase == null) {
+            LOGGER.info("No case with id {}", id);
+            return ServiceErrorDto.NotFound("No such case", String.format("No case with id %d exists", id));
+        }
+        setTaskTypeForCase(promatCase, taskType);
+        entityManager.merge(promatCase);
+        return Response.ok().entity(promatCase).build();
+    }
+
+    public void setTaskTypeForCase(PromatCase promatCase, TaskType taskType) {
+        for (PromatTask task : promatCase.getTasks()) {
+            task.setTaskType(taskType);
+            task.setPayCategory(Repository.getPayCategoryForTaskFieldTypeOfTaskType(taskType, task.getTaskFieldType()));
         }
     }
 
