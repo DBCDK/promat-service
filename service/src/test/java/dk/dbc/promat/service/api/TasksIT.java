@@ -17,7 +17,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.stream.Collectors;
+import java.util.List;
+
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.core.Is.is;
@@ -58,16 +59,16 @@ public class TasksIT extends ContainerTest {
                         .flatMap(t -> t.getTargetFausts()
                                 .stream())
                         .sorted()
-                        .collect(Collectors.toList()),
+                        .toList(),
                 is(Arrays.asList("31001111", "31002222", "31003333", "31004444")));
 
         // Find task ids
         PromatTask taskWithPrimaryTargetFaust = createdCase.getTasks().stream()
-                .filter(task -> task.getTargetFausts() != null && task.getTargetFausts().size() != 0)
+                .filter(task -> task.getTargetFausts() != null && !task.getTargetFausts().isEmpty())
                 .filter(task -> task.getTargetFausts().contains("31001111"))
                 .findFirst().orElseThrow();
         PromatTask taskWithRelatedTargetFaust = createdCase.getTasks().stream()
-                .filter(task -> task.getTargetFausts() != null && task.getTargetFausts().size() != 0)
+                .filter(task -> task.getTargetFausts() != null && !task.getTargetFausts().isEmpty())
                 .filter(task -> task.getTargetFausts().contains("31003333"))
                 .findFirst().orElseThrow();
         assertThat("has task with primary targetFaust", taskWithPrimaryTargetFaust, is(notNullValue()));
@@ -116,7 +117,7 @@ public class TasksIT extends ContainerTest {
         assertThat("status code", response.getStatus(), is(200));
         updated = mapper.readValue(response.readEntity(String.class), PromatTask.class);
         assertThat("targetfaust is not null", updated.getTargetFausts(), is(notNullValue()));
-        assertThat("targetfaust contains", updated.getTargetFausts().stream().sorted().collect(Collectors.toList()),
+        assertThat("targetfaust contains", updated.getTargetFausts().stream().sorted().toList(),
                 is(Arrays.asList("31001111", "31002222", "31005555")));
 
         // When adding a targetfaust, the number should either not belong to any active case, or belong (as primary
@@ -135,7 +136,7 @@ public class TasksIT extends ContainerTest {
         dto = new TaskDto().withTargetFausts(updated.getTargetFausts());
 
         // The faustnumbers set earlier in the test
-        assertThat("targetfaust contains", updated.getTargetFausts().stream().sorted().collect(Collectors.toList()),
+        assertThat("targetfaust contains", updated.getTargetFausts().stream().sorted().toList(),
                 is(Arrays.asList("31001111", "31002222", "31005555")));
         response = putResponse("v1/api/tasks/" + taskWithPrimaryTargetFaust.getId(), dto);
         assertThat("status code", response.getStatus(), is(200));
@@ -157,6 +158,60 @@ public class TasksIT extends ContainerTest {
         // Duplicate faustnumbers were removed by the system without notifying the user and the order maintained
         assertThat("targetfaust contains no duplicates", new ArrayList<>(updated.getTargetFausts()),
                 is(Arrays.asList("31001111", "31002222", "31005555", "31007777", "31006666")));
+    }
+
+    @Test
+    public void testEnsureSamePaycategory() {
+
+        CaseRequest caseRequest = new CaseRequest()
+                .withTitle("Case for paycategory restrictions")
+                .withDetails("Details for paycategory restrictions")
+                .withPrimaryFaust("31001111001")
+                .withMaterialType(MaterialType.BOOK)
+                .withTasks(List.of(
+                        new TaskDto()
+                                .withTaskType(TaskType.GROUP_1_LESS_THAN_100_PAGES)
+                                .withTaskFieldType(TaskFieldType.BRIEF)
+                                .withTargetFausts(Arrays.asList("310011110", "310022220")),
+                        new TaskDto()
+                                .withTaskType(TaskType.GROUP_1_LESS_THAN_100_PAGES)
+                                .withTaskFieldType(TaskFieldType.DESCRIPTION)
+                                .withTargetFausts(Arrays.asList("310011110", "310022220")),
+                        new TaskDto()
+                                .withTaskType(TaskType.GROUP_1_LESS_THAN_100_PAGES)
+                                .withTaskFieldType(TaskFieldType.EVALUATION)
+                                .withTargetFausts(Arrays.asList("310033330", "310044440"))));
+
+        PromatCase promatCase = postResponse("v1/api/cases", caseRequest,
+                PromatCase.class, Response.Status.CREATED);
+
+        // fake some mishap
+        PromatTask t = findTaskByFieldType(promatCase, TaskFieldType.EVALUATION);
+        t.setPayCategory(PayCategory.GROUP_2_100_UPTO_199_PAGES);
+        t.setTaskType(TaskType.GROUP_2_100_UPTO_199_PAGES);
+
+        putResponse("v1/api/tasks/" + t.getId(), t, PromatTask.class, Response.Status.OK);
+
+        promatCase = getResponse("v1/api/cases/" + promatCase.getId(), PromatCase.class, Response.Status.OK);
+        t = findTaskByFieldType(promatCase, TaskFieldType.EVALUATION);
+        assertThat("paycategory is GROUP_2_100_UPTO_199_PAGES", t.getPayCategory(), is(PayCategory.GROUP_2_100_UPTO_199_PAGES));
+        assertThat("tasktype is GROUP_2_100_UPTO_199_PAGES", t.getTaskType(), is(TaskType.GROUP_2_100_UPTO_199_PAGES));
+
+        // Reset by setting tasktype on case
+        Response response = putResponse("v1/api/cases/" + promatCase.getId() + "/tasktype/" + TaskType.GROUP_4_500_OR_MORE_PAGES);
+        assertThat(response.getStatus(), is(200));
+
+        promatCase = getResponse("v1/api/cases/" + promatCase.getId(), PromatCase.class, Response.Status.OK);
+        t = findTaskByFieldType(promatCase, TaskFieldType.EVALUATION);
+        assertThat("paycategory is GROUP_4_500_OR_MORE_PAGES", t.getPayCategory(), is(PayCategory.GROUP_4_500_OR_MORE_PAGES));
+        assertThat("tasktype is GROUP_4_500_OR_MORE_PAGES", t.getTaskType(), is(TaskType.GROUP_4_500_OR_MORE_PAGES));
+
+        t = findTaskByFieldType(promatCase, TaskFieldType.BRIEF);
+        assertThat("paycategory is still BRIEF", t.getPayCategory(), is(PayCategory.BRIEF));
+
+        // Clean up
+        response = deleteResponse("v1/api/cases/" + promatCase.getId());
+        assertThat("status code", response.getStatus(), is(200));
     }
 
     @Test
@@ -183,7 +238,7 @@ public class TasksIT extends ContainerTest {
         assertThat("status code", response.getStatus(), is(200));
         existing = mapper.readValue(response.readEntity(String.class), PromatCase.class);
         assertThat("number of tasks", existing.getTasks().size(), is(3));
-        assertThat("expected tasks", existing.getTasks().stream().map(task -> task.getId()).sorted().collect(Collectors.toList()),
+        assertThat("expected tasks", existing.getTasks().stream().map(PromatTask::getId).sorted().toList(),
                 is(Arrays.asList(1, 2, 3)));
     }
 

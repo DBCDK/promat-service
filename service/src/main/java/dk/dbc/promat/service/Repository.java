@@ -25,7 +25,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Stateless
 public class Repository {
@@ -94,7 +93,7 @@ public class Repository {
         return subjectNotes
                 .stream()
                 .filter(subjectNote -> subjects.contains(subjectNote.getSubjectId()))
-                .collect(Collectors.toList());
+                .toList();
     }
 
     public List<SubjectNote> checkSubjectNotes(List<SubjectNote> subjectNotes, List<Integer> reviewerSubjectIds) throws ServiceErrorException {
@@ -114,7 +113,7 @@ public class Repository {
         return subjectNotes;
     }
 
-    public static PayCategory getPayCategoryForTaskFieldTypeOfTaskType(TaskType taskType, TaskFieldType taskFieldType) throws ServiceErrorException {
+    public static PayCategory getPayCategoryForTaskFieldTypeOfTaskType(TaskType taskType, TaskFieldType taskFieldType) {
         return taskFieldType.getPaymentCategory(taskType);
     }
 
@@ -126,7 +125,7 @@ public class Repository {
         List<PromatTask> tasks = existing.getTasks().stream()
                 .filter(task -> task.getTaskFieldType() == TaskFieldType.BRIEF)
                 .filter(task -> task.getRecordId() == null || task.getRecordId().isEmpty())
-                .collect(Collectors.toList());
+                .toList();
         for (PromatTask task : tasks) {
             OpennumberRollConnector.Params params = new OpennumberRollConnector.Params().withRollName(openNumberrollRollName);
             task.setRecordId(opennumberRollConnector.getId(params));
