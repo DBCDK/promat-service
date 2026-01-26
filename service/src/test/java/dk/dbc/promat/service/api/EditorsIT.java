@@ -136,7 +136,7 @@ class EditorsIT extends ContainerTest {
     }
 
     @Test
-    void updateEditorByProfessionalLogin() throws JsonProcessingException {
+    void updateEditorByProfessionalLogin() {
 
         // Request is a no-change, we just need to check that we pass authentication
         final EditorRequest editorRequest = new EditorRequest()

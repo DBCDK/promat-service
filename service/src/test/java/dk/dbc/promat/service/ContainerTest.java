@@ -12,6 +12,8 @@ import dk.dbc.httpclient.HttpPut;
 import dk.dbc.promat.service.persistence.JsonMapperProvider;
 import dk.dbc.promat.service.connector.PromatServiceConnector;
 import dk.dbc.promat.service.connector.PromatServiceConnectorFactory;
+
+import java.io.IOException;
 import java.util.Arrays;
 
 import dk.dbc.promat.service.persistence.PromatCase;
@@ -40,7 +42,16 @@ import static dk.dbc.promat.service.OpenformatMocks.mockOpenformatResponses;
 public abstract class ContainerTest extends IntegrationTestIT {
     protected static final Logger LOGGER = LoggerFactory.getLogger(ContainerTest.class);
     protected static final ObjectMapper mapper = new JsonMapperProvider().getObjectMapper();
-    protected static WireMockServer wireMockServer = makeWireMockServer();
+    protected static WireMockServer wireMockServer;
+
+    static {
+        try {
+            wireMockServer = makeWireMockServer();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     protected static final GenericContainer<?> promatServiceContainer = makePromatServiceContainer();
     protected static final String PROMATSERVICE_BASE_URL = "http://" + promatServiceContainer.getHost()  +
             ":" + promatServiceContainer.getMappedPort(8080);
@@ -233,7 +244,7 @@ public abstract class ContainerTest extends IntegrationTestIT {
         return null;
     }
 
-    private static WireMockServer makeWireMockServer() {
+    private static WireMockServer makeWireMockServer() throws IOException {
         WireMockServer wireMockServer = new WireMockServer(options().dynamicPort());
 
         mockAuthenticationResponses(wireMockServer);
