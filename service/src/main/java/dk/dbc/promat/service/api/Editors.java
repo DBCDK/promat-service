@@ -1,6 +1,7 @@
 package dk.dbc.promat.service.api;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import dk.dbc.promat.service.Repository;
 import dk.dbc.promat.service.dto.EditorList;
 import dk.dbc.promat.service.dto.EditorRequest;
 import dk.dbc.promat.service.dto.ServiceErrorDto;
@@ -14,6 +15,7 @@ import java.util.Date;
 import java.util.List;
 
 import jakarta.annotation.security.RolesAllowed;
+import jakarta.ejb.EJB;
 import jakarta.persistence.TypedQuery;
 import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.UriInfo;
@@ -46,6 +48,9 @@ public class Editors {
 
     @Inject
     AuditLogHandler auditLogHandler;
+
+    @EJB
+    Repository repository;
 
     private final static String MISSING_REQUIRED_FIELD = "Missing required field in the request data";
 
@@ -91,6 +96,13 @@ public class Editors {
             return ServiceErrorDto.InvalidRequest(MISSING_REQUIRED_FIELD,
                     "Field 'userId' must be supplied and not be blank when creating a new editor");
         }
+
+        if (repository.userExists(userId, agency)) {
+            LOGGER.warn("UserId '{}' is already in use by another editor", userId);
+            return ServiceErrorDto.InvalidRequest("UserId already in use",
+                    String.format("The userId '%s' is already in use by another editor", userId));
+        }
+
 
 
         try {
