@@ -136,7 +136,7 @@ class EditorsIT extends ContainerTest {
     }
 
     @Test
-    void updateEditorByProfessionalLogin() throws JsonProcessingException {
+    void updateEditorByProfessionalLogin() {
 
         // Request is a no-change, we just need to check that we pass authentication
         final EditorRequest editorRequest = new EditorRequest()
@@ -189,6 +189,12 @@ class EditorsIT extends ContainerTest {
         // Check that the editor has been persisted and has all values
         assertThat(created, is(existing));
         assertThat(existing, is(expected));
+
+        // By the way: Check that we cannot create two editors with the same professional login
+        editorRequest.setUserId("EtrE"); // Same as before, but different case
+        editorRequest.setEmail("edi-tore@dbc.dk");
+        response = postResponse("v1/api/editors", editorRequest, "2-3-4-5-6");
+        assertThat("response status", response.getStatus(), is(400));
     }
 
     @Test

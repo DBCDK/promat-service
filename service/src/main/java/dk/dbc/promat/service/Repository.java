@@ -12,6 +12,7 @@ import dk.dbc.promat.service.persistence.Subject;
 import dk.dbc.promat.service.persistence.SubjectNote;
 import dk.dbc.promat.service.persistence.TaskFieldType;
 import dk.dbc.promat.service.persistence.TaskType;
+import dk.dbc.promat.service.persistence.PromatUser;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -111,6 +112,14 @@ public class Repository {
             }
         }
         return subjectNotes;
+    }
+
+    public boolean userExists(String userId, String agency) {
+        Query query = entityManager.createNamedQuery(PromatUser.GET_USER_ROLE_BY_AGENCY_AND_USERID);
+        query.setParameter(1, userId);
+        query.setParameter(2, agency);
+        List results = query.getResultList();
+        return results != null && !results.isEmpty();
     }
 
     public static PayCategory getPayCategoryForTaskFieldTypeOfTaskType(TaskType taskType, TaskFieldType taskFieldType) {

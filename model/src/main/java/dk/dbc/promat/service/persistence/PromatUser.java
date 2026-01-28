@@ -45,7 +45,7 @@ public abstract class PromatUser {
     public static final String GET_USER_ROLE_BY_AGENCY_AND_USERID =
             "PromatUser.getUserRoleByAuthToken";
     public static final String GET_USER_ROLE_BY_AGENCY_AND_USERID_QUERY =
-            "SELECT id,role,CAST(paycode AS TEXT) AS localid FROM promatuser WHERE userId=?1 AND agency=?2";
+            "SELECT id,role,CAST(paycode AS TEXT) AS localid FROM promatuser WHERE LOWER(userId)=LOWER(?1) AND agency=?2";
 
     public enum Role {
         EDITOR, REVIEWER

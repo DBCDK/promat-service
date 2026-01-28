@@ -1,0 +1,24 @@
+{
+  "attributes": {
+    "serviceStatus": {
+      "borchk": "ok",
+      "culr": "ok"
+    },
+    "userId": "klnp",
+    "municipality": "909",
+    "netpunktAgency": "790900",
+    "municipalityAgencyId": "790900",
+    "dbcidp": [
+      {
+        "agencyId": "790900",
+        "rights": [
+          {
+            "productName":"%s",
+            "name":"%s",
+            "description": "adgang til Promat som ekstern anmelder"
+          }
+        ]
+      }
+    ]
+  }
+}

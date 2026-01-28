@@ -124,6 +124,11 @@ public class Reviewers {
             return ServiceErrorDto.InvalidRequest(MISSING_REQUIRED_FIELD,
                     "Field 'userId' must be supplied and not be blank when creating a new reviewer");
         }
+        if (repository.userExists(userId, agency)) {
+            LOGGER.warn("Reviewer with userId '{}' and agency '{}' already exists", userId, agency);
+            return ServiceErrorDto.InvalidRequest("Reviewer with userId " + userId + " and agency " + agency + " already exists",
+                    "Cannot create duplicate reviewer with userId " + userId + " and agency " + agency);
+        }
 
         try {
             final Reviewer entity = new Reviewer()
