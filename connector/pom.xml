@@ -7,11 +7,10 @@
   <parent>
     <groupId>dk.dbc</groupId>
     <artifactId>promat</artifactId>
-    <version>2.2-SNAPSHOT</version>
+    <version>21.2-SNAPSHOT</version>
   </parent>
 
   <artifactId>promat-connector</artifactId>
-  <version>2.2-SNAPSHOT</version>
   <packaging>jar</packaging>
 
   <dependencies>
@@ -23,7 +22,7 @@
     <dependency>
       <groupId>dk.dbc</groupId>
       <artifactId>promat-model</artifactId>
-      <version>2.2-SNAPSHOT</version>
+      <version>21.2-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>org.eclipse.microprofile.config</groupId>
