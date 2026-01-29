@@ -7,7 +7,7 @@
   <parent>
     <groupId>dk.dbc</groupId>
     <artifactId>promat</artifactId>
-    <version>21.2-SNAPSHOT</version>
+    <version>21.2.2-SNAPSHOT</version>
   </parent>
 
   <artifactId>promatservice</artifactId>
@@ -22,13 +22,13 @@
     <dependency>
       <groupId>dk.dbc</groupId>
       <artifactId>promat-connector</artifactId>
-      <version>21.2-SNAPSHOT</version>
+      <version>21.2.2-SNAPSHOT</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>dk.dbc</groupId>
       <artifactId>promat-model</artifactId>
-      <version>21.2-SNAPSHOT</version>
+      <version>21.2.2-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>org.flywaydb</groupId>
@@ -223,7 +223,7 @@
     <dependency>
       <groupId>dk.dbc</groupId>
       <artifactId>dbc-commons-testcontainers-postgres-15</artifactId>
-      <version>1.1-SNAPSHOT</version>
+      <version>3.0-SNAPSHOT</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
