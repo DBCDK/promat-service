@@ -14,12 +14,12 @@
   <parent>
     <groupId>dk.dbc</groupId>
     <artifactId>microservice-pom</artifactId>
-    <version>java17-SNAPSHOT</version>
+    <version>java21-SNAPSHOT</version>
     <relativePath/>
   </parent>
 
   <artifactId>promat</artifactId>
-  <version>2.2-SNAPSHOT</version>
+  <version>21.2.2-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <modules>
@@ -29,7 +29,7 @@
   </modules>
 
   <properties>
-    <jte.version>1.4.0</jte.version>
+    <jte.version>3.2.2</jte.version>
     <sonar.projectKey>promat-service</sonar.projectKey>
     <sonar.moduleKey>${project.artifactId}</sonar.moduleKey>
   </properties>

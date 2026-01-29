@@ -72,7 +72,7 @@
                 <div class="type">Beskrivelse:</div>
                 <div>
                     !{var description = promatCase.getTasks().stream().filter(t -> t.getTaskFieldType() == TaskFieldType.DESCRIPTION).findFirst(); }
-                    !{var descriptionvalue = description.isPresent() ? (description.get().getData() != null ? description.get().getData() : "") : ""}
+                    !{var descriptionvalue = description.isPresent() ? (description.get().getData() != null ? description.get().getData() : "") : "";}
                     $unsafe{PromatTaskUtils.getFormattedDataForLinksMarkup(descriptionvalue)}
                 </div>
             </div>
@@ -102,7 +102,7 @@
                 <div class="type">Til bibliotekaren:</div>
                 <div>
                     !{var recommendation = promatCase.getTasks().stream().filter(t -> t.getTaskFieldType() == TaskFieldType.RECOMMENDATION).findFirst(); }
-                    !{var recommendationvalue = recommendation.isPresent() ? (recommendation.get().getData() != null ? recommendation.get().getData() : "") :  ""}
+                    !{var recommendationvalue = recommendation.isPresent() ? (recommendation.get().getData() != null ? recommendation.get().getData() : "") :  "";}
                     $unsafe{PromatTaskUtils.getFormattedDataForLinksMarkup(recommendationvalue)}
                 </div>
             </div>
