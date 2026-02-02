@@ -11,14 +11,6 @@ pipeline {
 		maven 'Maven 3'
 	}
 
-    environment {
-		GITLAB_PRIVATE_TOKEN = credentials("metascrum-gitlab-api-token")
-		SONAR_SCANNER_HOME = tool 'SonarQube Scanner from Maven Central'
-		SONAR_SCANNER = "$SONAR_SCANNER_HOME/bin/sonar-scanner"
-		SONAR_PROJECT_KEY = "promat-service"
-		SONAR_SOURCES="src"
-		SONAR_TESTS="test"
-	}
   triggers {
     pollSCM("*/3 8-16  * *  *")
     upstream('/Docker-payara6-bump-trigger')
