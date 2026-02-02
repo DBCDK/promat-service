@@ -35,7 +35,37 @@ pipeline {
 				checkout scm
 			}
 		}
+		stage("sonarqube") {
+            steps {
+                withSonarQubeEnv(installationName: 'sonarqube.dbc.dk') {
+                    script {
+                        def status = 0
 
+                        def sonarOptions = "-Dsonar.branch.name=${BRANCH_NAME}"
+                        if (env.BRANCH_NAME != 'master') {
+                            sonarOptions += " -Dsonar.newCode.referenceBranch=master"
+                        }
+
+                        // Do sonar via maven
+                        status += sh returnStatus: true, script: """
+                            mvn -B $sonarOptions sonar:sonar
+                        """
+
+                        if (status != 0) {
+                            error("build failed")
+                        }
+                    }
+                }
+            }
+        }
+        stage("quality gate") {
+            steps {
+                // wait for analysis results
+                timeout(time: 1, unit: 'HOURS') {
+                    waitForQualityGate abortPipeline: true
+                }
+            }
+        }
 		stage("verify") {
 			steps {
 				sh "mvn -D sourcepath=src/main/java verify pmd:pmd"
@@ -52,29 +82,6 @@ pipeline {
 				}
 			}
 		}
-		stage("sonarqube") {
-			steps {
-				withSonarQubeEnv(installationName: 'sonarqube.dbc.dk') {
-					script {
-						def status = 0
-
-						def sonarOptions = "-Dsonar.branch.name=${BRANCH_NAME}"
-						if (env.BRANCH_NAME != 'master') {
-							sonarOptions += " -Dsonar.newCode.referenceBranch=master"
-						}
-
-						// Do sonar via maven
-						status += sh returnStatus: true, script: """
-                            mvn -B $sonarOptions sonar:sonar
-                        """
-
-						if (status != 0) {
-							error("build failed")
-						}
-					}
-				}
-			}
-		}
 		stage("docker push") {
 			when {
                 branch "master"
@@ -85,29 +92,21 @@ pipeline {
 				}
 			}
 		}
-		stage("quality gate") {
-			steps {
-				// wait for analysis results
-				timeout(time: 1, unit: 'HOURS') {
-					waitForQualityGate abortPipeline: true
-				}
-			}
-		}
         stage("Update staging version number") {
-                    when {
-                        branch "main"
+            when {
+                branch "master"
+            }
+            steps {
+                script {
+                    withCredentials([sshUserPrivateKey(credentialsId: "gitlab-isworker", keyFileVariable: "sshkeyfile")]) {
+                        env.GIT_SSH_COMMAND = "ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i ${sshkeyfile}"
+                        sh """
+                            nix run --refresh git+https://gitlab.dbc.dk/public-de-team/gitops-secrets-set-variables.git \
+                                metascrum-staging:PROMAT_SERVICE_VERSION=${BRANCH_NAME}-${BUILD_NUMBER}
+                        """
                     }
-                    steps {
-                        script {
-                            withCredentials([sshUserPrivateKey(credentialsId: "gitlab-isworker", keyFileVariable: "sshkeyfile")]) {
-                                env.GIT_SSH_COMMAND = "ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i ${sshkeyfile}"
-                                sh """
-                                    nix run --refresh git+https://gitlab.dbc.dk/public-de-team/gitops-secrets-set-variables.git \
-                                        metascrum-staging:PROMAT_SERVICE_VERSION=$BUILD_NUMBER
-                                """
-                            }
-                        }
-                    }
+                }
+            }
         }
         stage("deploy to maven repository") {
             when {
@@ -123,18 +122,17 @@ pipeline {
     post {
         success {
             script {
-                if (BRANCH_NAME == 'main') {
-                    def dockerImageName = readFile(file: 'docker.out')
+                if (BRANCH_NAME == 'master') {
                     slackSend(channel: teamSlackNotice,
                             color: 'good',
-                            message: "${JOB_NAME} #${BUILD_NUMBER} completed, and pushed ${dockerImageName} to artifactory.",
+                            message: "${JOB_NAME} #${BUILD_NUMBER} completed, and pushed to artifactory.",
                             tokenCredentialId: 'slack-global-integration-token')
                 }
             }
         }
         fixed {
             script {
-                if ("${env.BRANCH_NAME}" == 'main') {
+                if ("${env.BRANCH_NAME}" == 'master') {
                     slackSend(channel: teamSlackWarning,
                             color: 'good',
                             message: "${env.JOB_NAME} #${env.BUILD_NUMBER} back to normal: ${env.BUILD_URL}",
@@ -144,7 +142,7 @@ pipeline {
         }
         failure {
             script {
-                if ("${env.BRANCH_NAME}".equals('main')) {
+                if ("${env.BRANCH_NAME}".equals('master')) {
                     slackSend(channel: teamSlackWarning,
                         color: 'warning',
                         message: "${env.JOB_NAME} #${env.BUILD_NUMBER} failed and needs attention: ${env.BUILD_URL}",
