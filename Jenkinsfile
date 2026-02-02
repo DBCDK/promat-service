@@ -1,8 +1,8 @@
 #!groovy
 
 def workerNode = "devel12"
-def teamSlackNotice = 'team-x-notice'
-def teamSlackWarning = 'team-x-warning'
+def teamSlackNotice = 'de-notifications'
+def teamSlackWarning = 'de-notifications'
 
 pipeline {
 	agent {label workerNode}
@@ -93,26 +93,22 @@ pipeline {
 				}
 			}
 		}
-        stage("bump docker tag in promat-service-secrets") {
-            agent {
-                docker {
-                    label workerNode
-                    image "docker-dbc.artifacts.dbccloud.dk/build-env:latest"
-                    alwaysPull true
-                }
-            }
-            when {
-                branch "master"
-            }
-            steps {
-                script {
-                    sh """
-                        set-new-version services/promat-service.yml ${env.GITLAB_PRIVATE_TOKEN} metascrum/promat-service-secrets  ${env.BRANCH_NAME}-${env.BUILD_NUMBER} -b staging
-                    """
-                }
-            }
+        stage("Update staging version number") {
+                    when {
+                        branch "main"
+                    }
+                    steps {
+                        script {
+                            withCredentials([sshUserPrivateKey(credentialsId: "gitlab-isworker", keyFileVariable: "sshkeyfile")]) {
+                                env.GIT_SSH_COMMAND = "ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i ${sshkeyfile}"
+                                sh """
+                                    nix run --refresh git+https://gitlab.dbc.dk/public-de-team/gitops-secrets-set-variables.git \
+                                        metascrum-staging:PROMAT_SERVICE_VERSION=$BUILD_NUMBER
+                                """
+                            }
+                        }
+                    }
         }
-
         stage("deploy to maven repository") {
             when {
                 branch "master"
