@@ -1,0 +1,46 @@
+{
+  "ramme" : {
+    "handlingens tid udtrykt i ord" : [ ],
+    "handlingens tid udtrykt i tal" : [ ],
+    "geografisk sted" : [ ],
+    "fiktivt sted" : [ ],
+    "miljø" : [ ],
+    "genre" : [ {
+      "title" : "Some title 1",
+      "note" : [ "This is a note 1" ],
+      "oftenUsed" : false,
+      "id" : 10
+    } ],
+    "univers" : [ ]
+  },
+  "handling" : {
+    "handler om" : [ ],
+    "navngivet hovedperson" : [ ],
+    "hovedperson(er) - beskrivelse" : {
+      "om hovedpersonen" : [ ],
+      "hovedpersonens karaktertræk" : [ {
+        "title" : "Some title 2",
+        "note" : [ "Note 2" ],
+        "oftenUsed" : false,
+        "id" : 11
+      } ],
+      "hovedpersonens konflikt" : [ ]
+    }
+  },
+  "fortælleteknik" : {
+    "skrivestil og struktur" : [ ],
+    "fortællerstemme" : [ ],
+    "tempo" : [ ]
+  },
+  "stemning" : {
+    "positiv" : [ ],
+    "humoristisk" : [ ],
+    "romantisk" : [ ],
+    "erotisk" : [ ],
+    "dramatisk" : [ ],
+    "trist" : [ ],
+    "uhyggelig" : [ ],
+    "fantasifuld" : [ ],
+    "tankevækkende" : [ ]
+  }
+}
