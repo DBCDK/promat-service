@@ -34,7 +34,7 @@ public class SimpleTests extends TestBase {
         actual.put(s1, "ramme", "genre");
         actual.put(s2, "handling", "hovedperson(er) - beskrivelse", "hovedpersonens karaktertræk");
 
-        Taxonomy expected = Taxonomy.of(getResource("/taxonomy/simpletree.json"));
+        Taxonomy expected = jsonbContext.unmarshall(getResource("/taxonomy/simpletree.json"), Taxonomy.class);
         assertThat(expected.get("ramme", "genre", "Some title 1"), is(s1));
         assertThat(expected.get("handling", "hovedperson(er) - beskrivelse", "hovedpersonens karaktertræk", "Some title 2"), is(s2));
 
