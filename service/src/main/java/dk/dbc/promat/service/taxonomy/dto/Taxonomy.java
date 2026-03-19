@@ -1,14 +1,19 @@
 package dk.dbc.promat.service.taxonomy.dto;
 
+import dk.dbc.commons.jsonb.JSONBContext;
+import dk.dbc.commons.jsonb.JSONBException;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
-public class Taxonomy extends LinkedHashMap<String, Object> implements Serializable {
-
+public class Taxonomy  implements Serializable {
+    private static final JSONBContext JSONB_CONTEXT =  new JSONBContext();
+    private Map<String, Object> root = new LinkedHashMap<>();
     public Taxonomy() {
 
         // Settings (Ramme)
@@ -52,10 +57,10 @@ public class Taxonomy extends LinkedHashMap<String, Object> implements Serializa
         mood.put("tankevækkende", new ArrayList<>());
 
         // Consolidate
-        put("ramme", settings);
-        put("handling", action);
-        put("fortælleteknik", narrative);
-        put("stemning", mood);
+        root.put("ramme", settings);
+        root.put("handling", action);
+        root.put("fortælleteknik", narrative);
+        root.put("stemning", mood);
     }
 
     public void put(Subject subject, String... path) {
@@ -75,7 +80,7 @@ public class Taxonomy extends LinkedHashMap<String, Object> implements Serializa
 
     @SuppressWarnings("unchecked")
     private List<LinkedHashMap<String, Object>> getList(List<String> path) {
-        Map<String, Object> current = this;
+        Map<String, Object> current = root;
         for (int i = 0; i < path.size() - 1; i++) {
             String key = path.get(i);
             Object next = current.get(key);
@@ -94,5 +99,22 @@ public class Taxonomy extends LinkedHashMap<String, Object> implements Serializa
         }
     }
 
+    public static Taxonomy of(String taxonomyString) throws JSONBException {
+        Taxonomy taxonomy = new Taxonomy();
+        taxonomy.root = JSONB_CONTEXT.unmarshall(taxonomyString, LinkedHashMap.class);
+        return taxonomy;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == null || getClass() != o.getClass()) return false;
+        Taxonomy taxonomy = (Taxonomy) o;
+        return Objects.equals(root, taxonomy.root);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(root);
+    }
 }
 
