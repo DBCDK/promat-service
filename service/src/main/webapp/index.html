@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>MicroProfile - Open API</title>
+
+    <link href="https://fonts.googleapis.com/css?family=Open+Sans:400,700|Source+Code+Pro:300,600|Titillium+Web:400,600,700" rel="stylesheet" type="text/css"/>
+
+    <link href="http:/webjars/swagger-ui/5.18.2/swagger-ui.css" rel="stylesheet" type="text/css" />
+    <link href="http:/webjars/swagger-ui-themes/3.0.1/themes/3.x/theme-flattop.css" rel="stylesheet" type="text/css" />
+    <link href="style.css" rel="stylesheet" type="text/css" />
+</head>
+
+<body>
+<div id="swagger-ui"></div>
+<script src='http:/webjars/swagger-ui/5.18.2/swagger-ui-bundle.js' type='text/javascript'></script>
+<script src='http:/webjars/swagger-ui/5.18.2/swagger-ui-standalone-preset.js' type='text/javascript'></script>
+<script>
+    window.onload = function () {
+
+        // Build a system
+        const ui = SwaggerUIBundle({
+            url: "/openapi",
+            dom_id: '#swagger-ui',
+            oauth2RedirectUrl: "/oauth2-redirect.html",
+            deepLinking: true,
+            presets: [
+                SwaggerUIBundle.presets.apis,
+                SwaggerUIStandalonePreset
+            ],
+            plugins: [
+                SwaggerUIBundle.plugins.DownloadUrl
+            ],
+            layout: "StandaloneLayout"
+        })
+
+        window.ui = ui
+    }
+</script>
+
+<div id='footer'>
+    <p class="swagger-ui-wrap">
+        <span class="createdWith">Created with <a target="_blank" href="http://www.microprofile-ext.org" data-sw-translate>MicroProfile Extensions: OpenApi</a></span> . &copy; 2026
+    </p>
+</div>
+</body>
+</html>
+service/src/main/webapp/index.html (END)
+
