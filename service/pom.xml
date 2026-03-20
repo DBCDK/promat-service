@@ -193,6 +193,12 @@
       <version>2.3-SNAPSHOT</version>
     </dependency>
     <dependency>
+       <groupId>org.microprofile-ext.openapi-ext</groupId>
+       <artifactId>openapi-ui</artifactId>
+       <version>2.1.1</version>
+    </dependency>
+
+    <dependency>
       <groupId>dk.dbc</groupId>
       <artifactId>dbc-commons-rs-auth</artifactId>
       <version>4.0-SNAPSHOT</version>
