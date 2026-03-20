@@ -8,6 +8,12 @@ info:
     url: 'https://github.com/DBCDK/promat-service/blob/master/LICENCE.txt'
   version: 1.0-SNAPSHOT
 
+servers:
+  - url: http://localhost:8080/v1/api
+  - url: http://promat-service.metascrum-staging.svc.cloud.dbc.dk/v1/api
+  - url: http://promat-service.metascrum-prod.svc.cloud.dbc.dk/v1/api
+
+
 tags:
   - name: editors
     description: Users approving professional reviews
