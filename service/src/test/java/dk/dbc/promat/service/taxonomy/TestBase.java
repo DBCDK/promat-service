@@ -7,6 +7,10 @@ import java.util.Objects;
 
 public class TestBase {
     public String getResource(String resource) throws IOException {
-        return Files.readString(Path.of(Objects.requireNonNull(TestBase.class.getResource(resource)).getPath()));
+        return Files.readString(Path.of(getPath(resource)));
+    }
+
+    public String getPath(String resource) {
+        return  Objects.requireNonNull(TestBase.class.getResource(resource)).getPath();
     }
 }

@@ -289,6 +289,7 @@ public abstract class ContainerTest extends IntegrationTestIT {
                 .withEnv("OAUTH2_CLIENT_SECRET", "abcdef")
                 .withEnv("OAUTH2_INTROSPECTION_URL", "http://host.testcontainers.internal:" + wireMockServer.port() + "/oauth/introspection")
                 .withEnv("OAUTH2_USERINFO_URL", "http://host.testcontainers.internal:" + wireMockServer.port() + "/userinfo")
+                .withEnv("RECORD_SERVICE", "http://host.testcontainers.internal:" + wireMockServer.port() + "/api/v1/dump")
                 .withExposedPorts(8080)
                 .waitingFor(Wait.forHttp("/health"))
                 .withStartupTimeout(Duration.ofMinutes(2));

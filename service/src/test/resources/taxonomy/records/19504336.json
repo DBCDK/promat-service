@@ -1,0 +1,203 @@
+{
+  "fields": [
+    {
+      "name": "001",
+      "indicators": "00",
+      "subfields": [
+        {
+          "name": "a",
+          "value": "19504336"
+        },
+        {
+          "name": "b",
+          "value": "190004"
+        },
+        {
+          "name": "c",
+          "value": "20250701101642"
+        },
+        {
+          "name": "d",
+          "value": "20181121"
+        },
+        {
+          "name": "f",
+          "value": "a"
+        }
+      ]
+    },
+    {
+      "name": "004",
+      "indicators": "00",
+      "subfields": [
+        {
+          "name": "r",
+          "value": "n"
+        },
+        {
+          "name": "a",
+          "value": "e"
+        },
+        {
+          "name": "x",
+          "value": "m"
+        }
+      ]
+    },
+    {
+      "name": "008",
+      "indicators": "00",
+      "subfields": [
+        {
+          "name": "t",
+          "value": "h"
+        },
+        {
+          "name": "v",
+          "value": "0"
+        }
+      ]
+    },
+    {
+      "name": "040",
+      "indicators": "00",
+      "subfields": [
+        {
+          "name": "b",
+          "value": "dan"
+        },
+        {
+          "name": "f",
+          "value": "DBC"
+        }
+      ]
+    },
+    {
+      "name": "165",
+      "indicators": "00",
+      "subfields": [
+        {
+          "name": "a",
+          "value": "perserkrigene"
+        }
+      ]
+    },
+    {
+      "name": "680",
+      "indicators": "00",
+      "subfields": [
+        {
+          "name": "a",
+          "value": "En række krige som førtes mellem Perserriget og flere af de græske bystater i perioden 499-449 f.Kr."
+        }
+      ]
+    },
+    {
+      "name": "996",
+      "indicators": "00",
+      "subfields": [
+        {
+          "name": "a",
+          "value": "DBC"
+        }
+      ]
+    },
+    {
+      "name": "d08",
+      "indicators": "00",
+      "subfields": [
+        {
+          "name": "o",
+          "value": "crp"
+        },
+        {
+          "name": "r",
+          "value": "idha"
+        },
+        {
+          "name": "a",
+          "value": "680: \"det persiske Rige\" ændret til \"Perserriget\" /202527"
+        }
+      ]
+    },
+    {
+      "name": "d08",
+      "indicators": "00",
+      "subfields": [
+        {
+          "name": "a",
+          "value": "Masserettelse af 001t, november 2021"
+        }
+      ]
+    },
+    {
+      "name": "d09",
+      "indicators": "00",
+      "subfields": [
+        {
+          "name": "z",
+          "value": "EMS201951"
+        }
+      ]
+    },
+    {
+      "name": "x08",
+      "indicators": "00",
+      "subfields": [
+        {
+          "name": "p",
+          "value": "s"
+        }
+      ]
+    },
+    {
+      "name": "x09",
+      "indicators": "00",
+      "subfields": [
+        {
+          "name": "p",
+          "value": "i"
+        },
+        {
+          "name": "q",
+          "value": "5024"
+        }
+      ]
+    },
+    {
+      "name": "x09",
+      "indicators": "00",
+      "subfields": [
+        {
+          "name": "p",
+          "value": "e"
+        },
+        {
+          "name": "q",
+          "value": "6873"
+        }
+      ]
+    },
+    {
+      "name": "z98",
+      "indicators": "00",
+      "subfields": [
+        {
+          "name": "a",
+          "value": "Minus korrekturprint"
+        }
+      ]
+    },
+    {
+      "name": "z99",
+      "indicators": "00",
+      "subfields": [
+        {
+          "name": "a",
+          "value": "idha"
+        }
+      ]
+    }
+  ],
+  "leader": "00000n    2200000   4500"
+}
