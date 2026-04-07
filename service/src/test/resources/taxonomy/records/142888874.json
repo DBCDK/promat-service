@@ -1,0 +1,161 @@
+{
+  "fields": [
+    {
+      "name": "001",
+      "indicators": "00",
+      "subfields": [
+        {
+          "name": "a",
+          "value": "142888874"
+        },
+        {
+          "name": "b",
+          "value": "190004"
+        },
+        {
+          "name": "c",
+          "value": "20260302100329"
+        },
+        {
+          "name": "d",
+          "value": "20260228"
+        },
+        {
+          "name": "f",
+          "value": "a"
+        }
+      ]
+    },
+    {
+      "name": "004",
+      "indicators": "00",
+      "subfields": [
+        {
+          "name": "r",
+          "value": "n"
+        },
+        {
+          "name": "a",
+          "value": "e"
+        },
+        {
+          "name": "x",
+          "value": "m"
+        }
+      ]
+    },
+    {
+      "name": "008",
+      "indicators": "00",
+      "subfields": [
+        {
+          "name": "t",
+          "value": "h"
+        },
+        {
+          "name": "v",
+          "value": "0"
+        }
+      ]
+    },
+    {
+      "name": "040",
+      "indicators": "00",
+      "subfields": [
+        {
+          "name": "b",
+          "value": "dan"
+        },
+        {
+          "name": "f",
+          "value": "DBC"
+        }
+      ]
+    },
+    {
+      "name": "165",
+      "indicators": "00",
+      "subfields": [
+        {
+          "name": "a",
+          "value": "Hobro"
+        }
+      ]
+    },
+    {
+      "name": "670",
+      "indicators": "00",
+      "subfields": [
+        {
+          "name": "a",
+          "value": "142816806"
+        }
+      ]
+    },
+    {
+      "name": "996",
+      "indicators": "00",
+      "subfields": [
+        {
+          "name": "a",
+          "value": "DBC"
+        }
+      ]
+    },
+    {
+      "name": "d08",
+      "indicators": "00",
+      "subfields": [
+        {
+          "name": "o",
+          "value": "pml"
+        }
+      ]
+    },
+    {
+      "name": "d09",
+      "indicators": "00",
+      "subfields": [
+        {
+          "name": "z",
+          "value": "EMS202609"
+        }
+      ]
+    },
+    {
+      "name": "x08",
+      "indicators": "00",
+      "subfields": [
+        {
+          "name": "p",
+          "value": "s"
+        }
+      ]
+    },
+    {
+      "name": "x09",
+      "indicators": "00",
+      "subfields": [
+        {
+          "name": "p",
+          "value": "q"
+        },
+        {
+          "name": "q",
+          "value": "142888882"
+        }
+      ]
+    },
+    {
+      "name": "z99",
+      "indicators": "00",
+      "subfields": [
+        {
+          "name": "a",
+          "value": "pml"
+        }
+      ]
+    }
+  ],
+  "leader": "00000n    2200000   4500"
+}

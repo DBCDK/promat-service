@@ -1,0 +1,271 @@
+{
+  "ramme" : {
+    "handlingens tid udtrykt i ord" : [ {
+      "title" : "Algierkrigen",
+      "note" : [ "Periode: 1. november 1954 - 19. marts 1962" ],
+      "oftenUsed" : false,
+      "id" : 4945
+    }, {
+      "title" : "antikken",
+      "note" : [ "En periode i verdenshistorien der er en underdeling af oldtiden. Kaldes også klassisk oldtid ca. 750 f.Kr. til ca. år 400 e.Kr." ],
+      "oftenUsed" : true,
+      "id" : 4947
+    }, {
+      "title" : "balkankrigene",
+      "note" : [ "To militære konflikter på Balkanhalvøen 8. oktober 1912 - 18. juli 1913" ],
+      "oftenUsed" : false,
+      "id" : 4950
+    } ],
+    "handlingens tid udtrykt i tal" : [ {
+      "title" : "boerkrigen 1899-1902",
+      "note" : [ "Krig i Sydafrika i perioden 11. oktober 1899 - 31. maj 1902 (1. boerkrig 1880-1881)" ],
+      "oftenUsed" : false,
+      "id" : 4955
+    }, {
+      "title" : "1-99",
+      "note" : [ ],
+      "oftenUsed" : false,
+      "id" : 5053
+    }, {
+      "title" : "1000-1009",
+      "note" : [ ],
+      "oftenUsed" : false,
+      "id" : 5054
+    } ],
+    "geografisk sted" : [ {
+      "title" : "Bermudatrekanten",
+      "note" : [ ],
+      "oftenUsed" : false,
+      "id" : 1410
+    }, {
+      "title" : "Åbenrå",
+      "note" : [ ],
+      "oftenUsed" : false,
+      "id" : 3809
+    }, {
+      "title" : "Aalborg",
+      "note" : [ ],
+      "oftenUsed" : false,
+      "id" : 3810
+    }, {
+      "title" : "Århus",
+      "note" : [ "'Å' brugt mellem 1948 og 2010, ellers med 'Aa'" ],
+      "oftenUsed" : false,
+      "id" : 3811
+    } ],
+    "fiktivt sted" : [ {
+      "title" : "Alderaan",
+      "note" : [ ],
+      "oftenUsed" : false,
+      "id" : 5736
+    }, {
+      "title" : "Andeby",
+      "note" : [ ],
+      "oftenUsed" : false,
+      "id" : 5737
+    }, {
+      "title" : "Asgård",
+      "note" : [ ],
+      "oftenUsed" : false,
+      "id" : 5738
+    } ],
+    "miljø" : [ {
+      "title" : "bogbranchen",
+      "note" : [ ],
+      "oftenUsed" : false,
+      "id" : 5256
+    }, {
+      "title" : "byggebranchen",
+      "note" : [ ],
+      "oftenUsed" : false,
+      "id" : 5257
+    } ],
+    "genre" : [ {
+      "title" : "manga",
+      "note" : [ "Betyder tegneserie på japansk og betegner en speciel tegnestil, der anvendes i japanske tegneserier" ],
+      "oftenUsed" : false,
+      "id" : 116
+    }, {
+      "title" : "tragikomik",
+      "note" : [ "En genre, hvor handlingen er tragisk og komisk på samme tid. Undertiden grænsende til det absurde eller groteske" ],
+      "oftenUsed" : false,
+      "id" : 172
+    }, {
+      "title" : "chōka",
+      "note" : [ "Japansk digtform på 43 stavelser fordelt på 7 \"linjer\" med 5,7,5,7, 5, 7 og 7 stavelser", "Vælg også emneordet digte" ],
+      "oftenUsed" : false,
+      "id" : 1219
+    } ],
+    "univers" : [ {
+      "title" : "fantastisk",
+      "note" : [ "Et univers, hvor begivenheder med naturlig forklaring blandes med tilsyneladende overnaturlige hændelser. Der gives ingen forklaring på begivenhederne og som læser er man i tvivl om hvad der er sket og om der en naturlig eller overnaturlig forklaring" ],
+      "oftenUsed" : true,
+      "id" : 5726
+    }, {
+      "title" : "faktion",
+      "note" : [ "Et univers hvor fakta og fiktion blandes sammen, og hvor man forsøger at skabe en virkelighed med historisk korrekte kendsgerninger, men hvor der samtidig digtes på virkeligheden" ],
+      "oftenUsed" : true,
+      "id" : 5727
+    }, {
+      "title" : "kontrafaktisk",
+      "note" : [ "Et historisk univers med en alternativ vinkel, hvor man forestiller sig, hvad der ville være sket, hvis en bestemt handling var faldet anderledes ud" ],
+      "oftenUsed" : true,
+      "id" : 5728
+    } ]
+  },
+  "handling" : {
+    "handler om" : [ {
+      "title" : "Algierkrigen",
+      "note" : [ "Periode: 1. november 1954 - 19. marts 1962" ],
+      "oftenUsed" : false,
+      "id" : 6897
+    }, {
+      "title" : "antikken",
+      "note" : [ "En periode i verdenshistorien der er en underdeling af oldtiden. Kaldes også klassisk oldtid ca. 750 f.Kr. til ca. år 400 e.Kr." ],
+      "oftenUsed" : false,
+      "id" : 6845
+    }, {
+      "title" : "balkankrigene",
+      "note" : [ "To militære konflikter på Balkanhalvøen 8. oktober 1912 - 18. juli 1913" ],
+      "oftenUsed" : false,
+      "id" : 6883
+    }, {
+      "title" : "boerkrigen 1899-1902",
+      "note" : [ "Krig i Sydafrika i perioden 11. oktober 1899 - 31. maj 1902 (1. boerkrig 1880-1881)" ],
+      "oftenUsed" : false,
+      "id" : 6879
+    }, {
+      "title" : "Asgård",
+      "note" : [ ],
+      "oftenUsed" : false,
+      "id" : 6551
+    }, {
+      "title" : "bogbranchen",
+      "note" : [ ],
+      "oftenUsed" : false,
+      "id" : 5796
+    }, {
+      "title" : "byggebranchen",
+      "note" : [ ],
+      "oftenUsed" : false,
+      "id" : 5795
+    }, {
+      "title" : "droner",
+      "note" : [ ],
+      "oftenUsed" : false,
+      "id" : 3
+    }, {
+      "title" : "fingerringe",
+      "note" : [ ],
+      "oftenUsed" : false,
+      "id" : 4
+    }, {
+      "title" : "fjer",
+      "note" : [ ],
+      "oftenUsed" : false,
+      "id" : 5
+    } ],
+    "navngivet hovedperson" : [ {
+      "title" : "Hal Mikkelson",
+      "note" : [ ],
+      "oftenUsed" : false,
+      "id" : 132034001
+    }, {
+      "title" : "Byggemand Bob",
+      "note" : [ ],
+      "oftenUsed" : false,
+      "id" : 132423113
+    }, {
+      "title" : "Penelope",
+      "note" : [ ],
+      "oftenUsed" : false,
+      "id" : 132425043
+    } ],
+    "hovedperson(er) - beskrivelse" : {
+      "om hovedpersonen" : [ {
+        "title" : "dreng",
+        "note" : [ ],
+        "oftenUsed" : false,
+        "id" : 6178
+      }, {
+        "title" : "pige",
+        "note" : [ ],
+        "oftenUsed" : false,
+        "id" : 6179
+      }, {
+        "title" : "mand",
+        "note" : [ ],
+        "oftenUsed" : false,
+        "id" : 6180
+      } ],
+      "hovedpersonens karaktertræk" : [ {
+        "title" : "filosofisk",
+        "note" : [ "Om livets store spørgsmål. Stikord: Tænkende, undrende, grublende" ],
+        "oftenUsed" : false,
+        "id" : 136716484
+      } ],
+      "hovedpersonens konflikt" : [ ]
+    }
+  },
+  "fortælleteknik" : {
+    "skrivestil og struktur" : [ {
+      "title" : "lettilgængeligt sprog",
+      "note" : [ "Ikke-krævende, ligefremt sprog, der ikke stiller store krav til læseren" ],
+      "oftenUsed" : false,
+      "id" : 5611
+    }, {
+      "title" : "krævende sprog",
+      "note" : [ "Sofistikeret, svært tilgængeligt sprog, der stiller store krav til læseren" ],
+      "oftenUsed" : false,
+      "id" : 5612
+    }, {
+      "title" : "detaljeret sprog",
+      "note" : [ "Fuldt af uddybende beskrivelser. Illustrativt, udfoldet sprog" ],
+      "oftenUsed" : false,
+      "id" : 5613
+    } ],
+    "fortællerstemme" : [ ],
+    "tempo" : [ ]
+  },
+  "stemning" : {
+    "positiv" : [ ],
+    "humoristisk" : [ ],
+    "romantisk" : [ ],
+    "erotisk" : [ ],
+    "dramatisk" : [ ],
+    "trist" : [ {
+      "title" : "bittersød",
+      "note" : [ "Der indgår elementer af både lykke og smerte på samme tid. Stikord: Smertefuld, syrligsød" ],
+      "oftenUsed" : true,
+      "id" : 5678
+    }, {
+      "title" : "deprimerende",
+      "note" : [ "Pessimistisk og tungsindig stemning. Stikord: Nedtrykt" ],
+      "oftenUsed" : true,
+      "id" : 5679
+    }, {
+      "title" : "dyster",
+      "note" : [ "En stemning som er mørk og skummel. Stikord: Ildevarslende, trykkende" ],
+      "oftenUsed" : true,
+      "id" : 5680
+    } ],
+    "uhyggelig" : [ ],
+    "fantasifuld" : [ ],
+    "tankevækkende" : [ {
+      "title" : "dybsindig",
+      "note" : [ "En eftertænksom stemning. Stikord: Tænksom, fordybelse, indsigtsfuld" ],
+      "oftenUsed" : true,
+      "id" : 5713
+    }, {
+      "title" : "filosofisk",
+      "note" : [ "Om livets store spørgsmål. Stikord: Tænkende, undrende, grublende" ],
+      "oftenUsed" : true,
+      "id" : 5714
+    }, {
+      "title" : "højtidelig",
+      "note" : [ "En alvorlig lidt højstemt stemning. Stikord: Alvorsfuld, værdighed, formel" ],
+      "oftenUsed" : true,
+      "id" : 5715
+    } ]
+  }
+}

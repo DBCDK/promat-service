@@ -1,0 +1,203 @@
+{
+  "fields": [
+    {
+      "name": "001",
+      "indicators": "00",
+      "subfields": [
+        {
+          "name": "a",
+          "value": "19570452"
+        },
+        {
+          "name": "b",
+          "value": "190004"
+        },
+        {
+          "name": "c",
+          "value": "20230925181356"
+        },
+        {
+          "name": "d",
+          "value": "20181213"
+        },
+        {
+          "name": "f",
+          "value": "a"
+        }
+      ]
+    },
+    {
+      "name": "004",
+      "indicators": "00",
+      "subfields": [
+        {
+          "name": "r",
+          "value": "n"
+        },
+        {
+          "name": "a",
+          "value": "e"
+        },
+        {
+          "name": "x",
+          "value": "m"
+        }
+      ]
+    },
+    {
+      "name": "008",
+      "indicators": "00",
+      "subfields": [
+        {
+          "name": "t",
+          "value": "h"
+        },
+        {
+          "name": "v",
+          "value": "0"
+        }
+      ]
+    },
+    {
+      "name": "040",
+      "indicators": "00",
+      "subfields": [
+        {
+          "name": "b",
+          "value": "dan"
+        },
+        {
+          "name": "f",
+          "value": "DBC"
+        }
+      ]
+    },
+    {
+      "name": "165",
+      "indicators": "00",
+      "subfields": [
+        {
+          "name": "a",
+          "value": "både"
+        }
+      ]
+    },
+    {
+      "name": "670",
+      "indicators": "00",
+      "subfields": [
+        {
+          "name": "a",
+          "value": "39064855"
+        }
+      ]
+    },
+    {
+      "name": "996",
+      "indicators": "00",
+      "subfields": [
+        {
+          "name": "a",
+          "value": "DBC"
+        }
+      ]
+    },
+    {
+      "name": "d08",
+      "indicators": "00",
+      "subfields": [
+        {
+          "name": "a",
+          "value": "Masserettelse af 001t, november 2021"
+        }
+      ]
+    },
+    {
+      "name": "d09",
+      "indicators": "00",
+      "subfields": [
+        {
+          "name": "z",
+          "value": "EMS201901"
+        },
+        {
+          "name": "z",
+          "value": "EMS202339"
+        }
+      ]
+    },
+    {
+      "name": "x08",
+      "indicators": "00",
+      "subfields": [
+        {
+          "name": "p",
+          "value": "s"
+        }
+      ]
+    },
+    {
+      "name": "x09",
+      "indicators": "00",
+      "subfields": [
+        {
+          "name": "p",
+          "value": "m"
+        },
+        {
+          "name": "q",
+          "value": "5296"
+        }
+      ]
+    },
+    {
+      "name": "x09",
+      "indicators": "00",
+      "subfields": [
+        {
+          "name": "p",
+          "value": "e"
+        },
+        {
+          "name": "q",
+          "value": "5834"
+        }
+      ]
+    },
+    {
+      "name": "x09",
+      "indicators": "00",
+      "subfields": [
+        {
+          "name": "p",
+          "value": "j"
+        },
+        {
+          "name": "q",
+          "value": "137124017"
+        }
+      ]
+    },
+    {
+      "name": "z98",
+      "indicators": "00",
+      "subfields": [
+        {
+          "name": "a",
+          "value": "Minus korrekturprint"
+        }
+      ]
+    },
+    {
+      "name": "z99",
+      "indicators": "00",
+      "subfields": [
+        {
+          "name": "a",
+          "value": "amh"
+        }
+      ]
+    }
+  ],
+  "leader": "00000n    2200000   4500"
+}

@@ -2,7 +2,6 @@ package dk.dbc.promat.service.taxonomy.dto;
 
 import dk.dbc.commons.jsonb.JSONBContext;
 import dk.dbc.commons.jsonb.JSONBException;
-
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -63,9 +62,16 @@ public class Taxonomy  implements Serializable {
         root.put("stemning", mood);
     }
 
+    public Map<String, Object> getRoot() {
+        return root;
+    }
+
     public void put(Subject subject, String... path) {
-        List<String> pathList = Arrays.asList(path);
-        getList(pathList).add(subject.toHashMap());
+        put(subject, Arrays.asList(path));
+    }
+
+    public void put(Subject subject, List<String> path) {
+        getList(path).add(subject.toHashMap());
     }
 
     public Subject get(String... path) {
@@ -76,6 +82,11 @@ public class Taxonomy  implements Serializable {
                 .filter(subject -> key.equals(subject.getTitle()))
                 .findFirst()
                 .orElse(null);
+    }
+
+    public List<Subject> getList(String... path) {
+        List<LinkedHashMap<String, Object>> list = getList(new ArrayList<>(Arrays.asList(path)));
+        return list.stream().map(Subject::of).toList();
     }
 
     @SuppressWarnings("unchecked")
@@ -95,7 +106,7 @@ public class Taxonomy  implements Serializable {
         if (target instanceof List) {
             return (List<LinkedHashMap<String, Object>>) target;
         } else {
-            throw new IllegalArgumentException("Invalid path: expected List at " + path.getLast());
+            throw new IllegalArgumentException("Invalid path: expected List at '" + path.getLast() + "' ");
         }
     }
 
