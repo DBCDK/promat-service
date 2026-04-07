@@ -7,6 +7,13 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import dk.dbc.marc.binding.MarcBinding;
 
+
+/**
+ * MarcUtils
+ * For regular dm2/dm3 records the way forward would be to use the JsonReader class.
+ * Unfortunately, the v2 "dump" endpoint returns the properties "indicator" and "leader" as strings,
+ * rather than arrays. This class provides a workaround for that.
+ */
 public class MarcUtils {
     static final ObjectMapper mapper = new ObjectMapper();
     private MarcUtils() {}

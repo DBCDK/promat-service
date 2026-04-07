@@ -10,6 +10,8 @@ import org.junit.Test;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
+
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
@@ -21,6 +23,25 @@ public class SimpleTests extends TestBase {
             jsonbContext.getObjectMapper().setSerializationInclusion(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL);
     }
 
+    @Test
+    public void simpleSubjectTest() {
+        Subject expected = new Subject()
+                .withId(10)
+                .withNote("This is a note 1")
+                .withTitle("Some title 1");
+
+        Subject actual = Subject.of(Map.of(
+                "id", 10,
+                "note", List.of("This is a note 1"),
+                "title", "Some title 1"
+        ));
+
+        assertThat(expected, is(actual));
+
+        expected.withOftenUsed(true);
+        actual.withOftenUsed(true);
+        assertThat(expected, is(actual));
+    }
     @Test
     public void simpleTestOfTaxonomyTree() throws JSONBException, IOException {
         Taxonomy actual = new Taxonomy();

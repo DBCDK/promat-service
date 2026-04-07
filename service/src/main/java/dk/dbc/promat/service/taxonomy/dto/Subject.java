@@ -64,8 +64,8 @@ public class Subject implements Serializable {
     public static Subject of(Map<String, Object> map) {
         Subject subject = new Subject();
         subject.title = (String) map.get("title");
-        subject.note = (List<String>) map.get("note");
-        subject.oftenUsed = (boolean) map.get("oftenUsed");
+        subject.note = (List<String>) Optional.ofNullable(map.get("note")).orElse(new ArrayList<>());
+        subject.oftenUsed = (boolean) Optional.ofNullable(map.get("oftenUsed")).orElse(false);
         subject.id = (int) map.get("id");
         subject.ref = (String) map.get("ref");
         return subject;
