@@ -50,14 +50,28 @@ public class SimpleTests extends TestBase {
         pathSubject.withNote("Some note")
                 .withId(12)
                 .withTitle("Tiny O'Mara");
-        expected.put(pathSubject, pathSubject.getPath());
+        actual.put(pathSubject, pathSubject.getPath());
+
+        Subject expectedSubject = new Subject()
+                .withId(12)
+                .withNote("Some note")
+                .withTitle("Tiny O'Mara");
+
+        assertThat(actual.get("handling", "navngivet hovedperson", "Tiny O'Mara"), is(expectedSubject));
 
         pathSubject = new PathSubject()
                 .withPath(List.of("ramme", "handlingens tid udtrykt i tal"));
         pathSubject.withNote("Some note")
                 .withId(13)
                 .withTitle("1999 - 20000");
-        expected.put(pathSubject, pathSubject.getPath());
+        actual.put(pathSubject, pathSubject.getPath());
+
+        expectedSubject = new Subject()
+                .withId(13)
+                .withNote("Some note")
+                .withTitle("1999 - 20000");
+
+        assertThat(actual.get("ramme", "handlingens tid udtrykt i tal", "1999 - 20000"), is(expectedSubject));
     }
 
 }

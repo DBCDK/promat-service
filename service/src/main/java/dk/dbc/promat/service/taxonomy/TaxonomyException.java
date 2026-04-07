@@ -9,7 +9,12 @@ public class TaxonomyException extends Exception {
         super(err);
         this.statusCode = response.getStatus();
     }
+
     public  TaxonomyException(String err) {
         super(err);
+    }
+
+    public int getStatusCode() {
+        return statusCode;
     }
 }

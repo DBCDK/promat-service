@@ -2,6 +2,7 @@ package dk.dbc.promat.service.taxonomy.dto;
 
 import dk.dbc.marc.binding.DataField;
 import dk.dbc.marc.binding.MarcBinding;
+import dk.dbc.marc.binding.SubField;
 import dk.dbc.promat.service.taxonomy.TaxonomyException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -130,7 +131,8 @@ public class SubjectBuilder {
         // Add the indexed ones. Index is 1 or 2 in x09å. Index points to 680å. In that very same 680, use the 'a' subfield as note.
         marcBinding.getSubFieldValues(TAXONOMY_FIELD, 'å').forEach(index ->
                 marcBinding.getDataFields(NOTES_FIELD).forEach(dataField -> {
-                    if (dataField.hasSubField(DataField.hasSubFieldCode('å'))) {
+                    String noteFieldIndex = dataField.getSubField(DataField.hasSubFieldCode('å')).map(SubField::getData).orElse(null);
+                    if (noteFieldIndex != null && noteFieldIndex.equals(index)) {
                         dataField.getSubField(DataField.hasSubFieldCode('a')).ifPresent(note -> notes.add(note.getData()));
                     }
                 }));
@@ -140,7 +142,7 @@ public class SubjectBuilder {
     private void handleID(PathSubject pathSubject, String idAsString) {
         int id =  Integer.parseInt(idAsString);
         if (id <=0 ) {
-            throw new IllegalArgumentException(String.format("ID must be greater than or equal to zero: %d", id));
+            throw new IllegalArgumentException(String.format("ID must be greater than zero: %d", id));
         }
         if (usedIds.contains(id)) {
             throw new IllegalArgumentException(String.format("Taxonomy ID %d is already in use", id));

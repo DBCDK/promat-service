@@ -16,7 +16,8 @@ public class FromFileBuilder extends DM2Builder {
 
     @Override
     public void buildTaxonomy(Taxonomy taxonomy) throws IOException {
-        FileInputStream inputStream = new FileInputStream(filename);
-        build(inputStream, taxonomy);
+        try (FileInputStream inputStream = new FileInputStream(filename)) {
+            build(inputStream, taxonomy);
+        }
     }
 }

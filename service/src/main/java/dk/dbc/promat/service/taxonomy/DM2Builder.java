@@ -7,6 +7,7 @@ import dk.dbc.promat.service.taxonomy.dto.PathSubject;
 import dk.dbc.promat.service.taxonomy.dto.SubjectBuilder;
 import dk.dbc.promat.service.taxonomy.dto.Taxonomy;
 import dk.dbc.promat.service.taxonomy.dto.MarcUtils;
+import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.client.ClientBuilder;
@@ -39,6 +40,7 @@ public class DM2Builder implements TaxonomyBuilder {
     @ConfigProperty(name = "TOPICS_FETCH_READ_TIMEOUT", defaultValue = "PT20S")
     protected Duration readTimeout;
 
+    @PostConstruct
     public void initialize() {
         ClientConfig clientConfig = new ClientConfig();
         clientConfig.register(JacksonFeature.class);
@@ -87,7 +89,7 @@ public class DM2Builder implements TaxonomyBuilder {
                     } catch (TaxonomyException e) {
                         LOGGER.error("Error building taxonomy", e);
                     }
-
+                    i = i + 1;
                 }
             }
             LOGGER.info("Traversed: {} records", i);

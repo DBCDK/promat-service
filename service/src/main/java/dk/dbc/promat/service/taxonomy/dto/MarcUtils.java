@@ -8,7 +8,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import dk.dbc.marc.binding.MarcBinding;
 
 public class MarcUtils {
-
+    static final ObjectMapper mapper = new ObjectMapper();
     private MarcUtils() {}
 
     public static MarcBinding toMarcBinding(String jsonString) throws JsonProcessingException {
@@ -16,7 +16,6 @@ public class MarcUtils {
         final String FIELDS = "fields";
         final String INDICATORS = "indicators";
 
-        ObjectMapper mapper = new ObjectMapper();
         JsonNode rootNode = mapper.readTree(jsonString);
 
         if (rootNode.has(LEADER)) {
