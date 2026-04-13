@@ -1,10 +1,9 @@
 package dk.dbc.promat.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tomakehurst.wiremock.WireMockServer;
-import com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder;
-import com.github.tomakehurst.wiremock.matching.MatchResult;
 import dk.dbc.httpclient.HttpDelete;
 import dk.dbc.httpclient.HttpGet;
 import dk.dbc.httpclient.HttpPost;
@@ -38,6 +37,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.configureFor;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options;
 import static dk.dbc.promat.service.AuthMocks.mockAuthenticationResponses;
 import static dk.dbc.promat.service.OpenformatMocks.mockOpenformatResponses;
+import static dk.dbc.promat.service.taxonomy.RecordServiceMocks.mockRecordServiceAgencyDump;
 
 public abstract class ContainerTest extends IntegrationTestIT {
     protected static final Logger LOGGER = LoggerFactory.getLogger(ContainerTest.class);
@@ -85,6 +85,19 @@ public abstract class ContainerTest extends IntegrationTestIT {
         return httpClient.executeAndExpect(httpGet, expectedStatus, responseClass);
     }
 
+    public <R> R getResponse(String path, TypeReference<R> responseType, Response.Status expectedStatus) {
+        try (Response response = getResponse(path)) {
+            Response.StatusType status = response.getStatusInfo().toEnum();
+            String responseBody = response.readEntity(String.class);
+            Assertions.assertEquals(expectedStatus, status, "Response to call " + path
+                    + " was expected to be: " + expectedStatus + " but was: " + status
+                    + "\nResponse body was: " + responseBody);
+            return mapper.readValue(responseBody, responseType);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     public Response getResponse(String path, Map<String, Object> queryParameter) {
         HttpGet httpGet = new HttpGet(httpClient)
                 .withBaseUrl(PROMATSERVICE_BASE_URL)
@@ -107,6 +120,19 @@ public abstract class ContainerTest extends IntegrationTestIT {
 
     public <T, R> R postAndAssert(String path, T body, Class<R> responseClass, Response.Status expectedStatus) {
         return postAndAssert(path, body, null, responseClass, expectedStatus);
+    }
+
+    public <T, R> R postAndAssert(String path, T body, TypeReference<R> responseType, Response.Status expectedStatus) {
+        try (Response response = postResponse(path, body, (String) null)) {
+            Response.StatusType status = response.getStatusInfo().toEnum();
+            String responseBody = response.readEntity(String.class);
+            Assertions.assertEquals(expectedStatus, status, "Response to call " + path
+                    + " was expected to be: " + expectedStatus + " but was: " + status
+                    + "\nResponse body was: " + responseBody);
+            return mapper.readValue(responseBody, responseType);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public <T, R> R postAndAssert(String path, T requestBody, String authToken, Class<R> responseClass, Response.Status expectedStatus) {
@@ -249,6 +275,7 @@ public abstract class ContainerTest extends IntegrationTestIT {
 
         mockAuthenticationResponses(wireMockServer);
         mockOpenformatResponses(wireMockServer);
+        mockRecordServiceAgencyDump(wireMockServer);
 
         wireMockServer.start();
         configureFor("localhost", wireMockServer.port());
@@ -289,7 +316,7 @@ public abstract class ContainerTest extends IntegrationTestIT {
                 .withEnv("OAUTH2_CLIENT_SECRET", "abcdef")
                 .withEnv("OAUTH2_INTROSPECTION_URL", "http://host.testcontainers.internal:" + wireMockServer.port() + "/oauth/introspection")
                 .withEnv("OAUTH2_USERINFO_URL", "http://host.testcontainers.internal:" + wireMockServer.port() + "/userinfo")
-                .withEnv("RECORD_SERVICE", "http://host.testcontainers.internal:" + wireMockServer.port() + "/api/v1/dump")
+                .withEnv("RECORD_SERVICE", "http://host.testcontainers.internal:" + wireMockServer.port())
                 .withExposedPorts(8080)
                 .waitingFor(Wait.forHttp("/health"))
                 .withStartupTimeout(Duration.ofMinutes(2));

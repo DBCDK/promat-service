@@ -3,6 +3,7 @@ package dk.dbc.promat.service.taxonomy;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import dk.dbc.commons.jsonb.JSONBContext;
 import dk.dbc.commons.jsonb.JSONBException;
+import dk.dbc.promat.service.TestUtils;
 import dk.dbc.promat.service.taxonomy.dto.PathSubject;
 import dk.dbc.promat.service.taxonomy.dto.Subject;
 import dk.dbc.promat.service.taxonomy.dto.Taxonomy;
@@ -16,7 +17,7 @@ import static org.hamcrest.core.Is.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 
-public class SimpleTests extends TestBase {
+public class SimpleTests extends TestUtils {
     static final JSONBContext jsonbContext = new JSONBContext();
     static {
             jsonbContext.getObjectMapper().enable(SerializationFeature.INDENT_OUTPUT);

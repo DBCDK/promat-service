@@ -3,6 +3,7 @@ package dk.dbc.promat.service.taxonomy;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import dk.dbc.marc.binding.MarcBinding;
+import dk.dbc.promat.service.TestUtils;
 import dk.dbc.promat.service.taxonomy.dto.PathSubject;
 import dk.dbc.promat.service.taxonomy.dto.Taxonomy;
 import dk.dbc.promat.service.taxonomy.dto.MarcUtils;
@@ -16,7 +17,7 @@ import dk.dbc.promat.service.taxonomy.dto.SubjectBuilder;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 
-public class BuildTest extends TestBase {
+public class BuildTest extends TestUtils {
     private static final ObjectMapper MAPPER = new ObjectMapper();
     static  {
         MAPPER.enable(SerializationFeature.INDENT_OUTPUT);

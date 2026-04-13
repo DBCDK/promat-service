@@ -9,9 +9,9 @@ info:
   version: 1.0-SNAPSHOT
 
 servers:
-  - url: http://localhost:8080/v1/api
-  - url: http://promat-service.metascrum-staging.svc.cloud.dbc.dk/v1/api
-  - url: http://promat-service.metascrum-prod.svc.cloud.dbc.dk/v1/api
+  - url: http://localhost:8080
+  - url: http://promat-service.metascrum-staging.svc.cloud.dbc.dk
+  - url: http://promat-service.metascrum-prod.svc.cloud.dbc.dk
 
 
 tags:
@@ -1116,6 +1116,68 @@ paths:
         '200':
           description: Trigger of the notification cronjob was successful
 
+  /v1/api/taxonomy/tree:
+    get:
+      summary: "GET v1/api/taxonomy/tree"
+      operationId: "getTaxonomy"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TaxonomyTree"
+
+  /v1/api/taxonomy/cache:
+    delete:
+      summary: "DELETE v1/api/taxonomy/cache"
+      operationId: "clearCache"
+      responses:
+        "200":
+          description: "OK"
+
+  /v1/api/taxonomy/subtree:
+    post:
+      summary: "POST v1/api/taxonomy/subtree"
+      operationId: "getTaxonomySubtree"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: "array"
+              items:
+                type: "string"
+        required: true
+      responses:
+        "200":
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TaxonomySubjectList"
+        "404":
+          description: "Path not found in taxonomy tree"
+
+  /v1/api/taxonomy/subtree/{alias}:
+    get:
+      summary: "GET v1/api/taxonomy/subtree/{alias}"
+      operationId: "getTaxonomySubtreeByAlias"
+      parameters:
+        - name: "alias"
+          in: "path"
+          required: true
+          schema:
+            $ref: "#/components/schemas/PathTranslator"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TaxonomyTree"
+        "404":
+          description: "Path not found in taxonomy tree"
+
 components:
   schemas:
     Address:
@@ -2032,3 +2094,86 @@ components:
       enum:
         - 'HTML'
         - 'XML'
+
+    TaxonomyTree:
+      type: "object"
+      properties: { }
+
+    PathTranslator:
+      type: string
+      description: |
+        Alias for a taxonomy path. Possible values:
+        - `I0`: ramme > handlingens tid udtrykt i ord
+        - `I1`: ramme > handlingens tid udtrykt i tal
+        - `q`: ramme > geografisk sted
+        - `p`: ramme > fiktivt sted
+        - `m`: ramme > miljø
+        - `g`: ramme > genre
+        - `u`: ramme > univers
+        - `e`: handling > handler om
+        - `v`: handling > navngivet hovedperson
+        - `h`: handling > hovedperson(er) - beskrivelse > om hovedpersonen
+        - `k`: handling > hovedperson(er) - beskrivelse > hovedpersonens karaktertræk
+        - `l`: handling > hovedperson(er) - beskrivelse > hovedpersonens konflikt
+        - `s`: fortælleteknik > skrivestil og struktur
+        - `r`: fortælleteknik > fortællerstemme
+        - `t`: fortælleteknik > tempo
+        - `na`: stemning > positiv
+        - `nb`: stemning > humoristisk
+        - `nc`: stemning > romantisk
+        - `nd`: stemning > erotisk
+        - `ne`: stemning > dramatisk
+        - `nf`: stemning > trist
+        - `ng`: stemning > uhyggelig
+        - `nh`: stemning > fantasifuld
+        - `ni`: stemning > tankevækkende
+      enum:
+        - I0
+        - I1
+        - q
+        - p
+        - m
+        - g
+        - u
+        - e
+        - v
+        - h
+        - k
+        - l
+        - s
+        - r
+        - na
+        - nb
+        - nc
+        - nd
+        - ne
+        - nf
+        - ng
+        - nh
+        - ni
+
+    TaxonomySubject:
+      type: object
+      properties:
+        title:
+          type: string
+        note:
+          type: array
+          items:
+            type: string
+        oftenUsed:
+          type: boolean
+        id:
+          type: integer
+        ref:
+          type: string
+      required:
+        - title
+        - note
+        - oftenUsed
+        - id
+
+    TaxonomySubjectList:
+      type: array
+      items:
+        $ref: '#/components/schemas/TaxonomySubject'

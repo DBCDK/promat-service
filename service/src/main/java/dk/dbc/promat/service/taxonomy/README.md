@@ -12,7 +12,7 @@ For existing old-world-setup (dm2) the approach is to use a complete dump of all
 ```shell 
 curl -H 'Content-type: application/json' -d '{"agencies":[190004],"outputFormat":"JSON"}' http://rawrepo-record-service.cisterne.svc.cloud.dbc.dk/api/v1/dump
 ```
-As this is not that snappy, this takes place once every hour.
+As this is not that snappy, this takes place once every 15 minutes.
 
 ### Future dm3
 For future dm3 setup the kafka subject used for prokat-search will be the basis for kafka-js worker to create a new

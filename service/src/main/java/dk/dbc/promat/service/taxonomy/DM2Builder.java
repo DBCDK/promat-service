@@ -7,12 +7,9 @@ import dk.dbc.promat.service.taxonomy.dto.PathSubject;
 import dk.dbc.promat.service.taxonomy.dto.SubjectBuilder;
 import dk.dbc.promat.service.taxonomy.dto.Taxonomy;
 import dk.dbc.promat.service.taxonomy.dto.MarcUtils;
-import jakarta.annotation.PostConstruct;
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
+import jakarta.enterprise.inject.Vetoed;
 import jakarta.ws.rs.client.ClientBuilder;
 import jakarta.ws.rs.core.Response;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.client.ClientProperties;
 import org.glassfish.jersey.jackson.JacksonFeature;
@@ -26,21 +23,16 @@ import java.io.InputStreamReader;
 import java.time.Duration;
 import java.util.List;
 
-@ApplicationScoped
+@Vetoed
 public class DM2Builder implements TaxonomyBuilder {
     static final Logger LOGGER = LoggerFactory.getLogger(DM2Builder.class);
 
     private HttpClient httpClient;
 
-    @Inject
-    @ConfigProperty(name = "RECORD_SERVICE")
     String recordService;
 
-    @Inject
-    @ConfigProperty(name = "TOPICS_FETCH_READ_TIMEOUT", defaultValue = "PT20S")
     protected Duration readTimeout;
 
-    @PostConstruct
     public void initialize() {
         ClientConfig clientConfig = new ClientConfig();
         clientConfig.register(JacksonFeature.class);
@@ -82,8 +74,8 @@ public class DM2Builder implements TaxonomyBuilder {
             int i = 0;
             while ((line = br.readLine()) != null) {
                 if (!line.trim().isEmpty()) {
-                    MarcBinding marcBinding = MarcUtils.toMarcBinding(line);
                     try {
+                        MarcBinding marcBinding = MarcUtils.toMarcBinding(line);
                         List<PathSubject> pathSubjects = subjectBuilder.build(marcBinding);
                         pathSubjects.forEach(pathSubject -> taxonomy.put(pathSubject, pathSubject.getPath()));
                     } catch (TaxonomyException e) {
