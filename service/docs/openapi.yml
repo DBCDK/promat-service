@@ -1116,6 +1116,18 @@ paths:
         '200':
           description: Trigger of the notification cronjob was successful
 
+  /v1/api/taxonomy/structure:
+    get:
+      summary: "GET v1/api/taxonomy/structure"
+      operationId: "getStructure"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TaxonomyTree"
+
   /v1/api/taxonomy/tree:
     get:
       summary: "GET v1/api/taxonomy/tree"

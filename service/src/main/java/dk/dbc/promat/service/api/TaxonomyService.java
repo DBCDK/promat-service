@@ -3,6 +3,7 @@ package dk.dbc.promat.service.api;
 import dk.dbc.promat.service.taxonomy.TaxonomyCache;
 import dk.dbc.promat.service.taxonomy.TaxonomyException;
 import dk.dbc.promat.service.taxonomy.dto.PathTranslator;
+import dk.dbc.promat.service.taxonomy.dto.Taxonomy;
 import jakarta.ejb.Stateless;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.Consumes;
@@ -36,6 +37,13 @@ public class TaxonomyService  {
     @Produces("application/json")
     public Response getTaxonomy() {
         return Response.ok().entity(taxonomyCache.get().getRoot()).build();
+    }
+
+    @GET
+    @Path("structure")
+    @Produces("application/json")
+    public Response getTaxonomyStructure() {
+        return Response.ok().entity(new Taxonomy().getRoot()).build();
     }
 
     @POST

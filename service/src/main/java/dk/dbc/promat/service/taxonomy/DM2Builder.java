@@ -79,7 +79,7 @@ public class DM2Builder implements TaxonomyBuilder {
                         List<PathSubject> pathSubjects = subjectBuilder.build(marcBinding);
                         pathSubjects.forEach(pathSubject -> taxonomy.put(pathSubject, pathSubject.getPath()));
                     } catch (TaxonomyException e) {
-                        LOGGER.error("Error building taxonomy", e);
+                        LOGGER.warn("Error building taxonomy", e);
                     }
                     i = i + 1;
                 }

@@ -14,9 +14,11 @@ import java.util.Set;
 
 public class Subject implements Serializable {
     String title;
-    List<String> note = new ArrayList<>();
 
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    List<String> note = new ArrayList<>();
+
+    @JsonInclude(JsonInclude.Include.NON_DEFAULT)
     boolean oftenUsed;
     int id = -1;
 
