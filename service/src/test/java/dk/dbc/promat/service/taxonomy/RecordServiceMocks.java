@@ -39,7 +39,9 @@ public class RecordServiceMocks {
 
     public static void addToAgencyDump(String lines) {
         agencyDump.updateAndGet(current -> current + "\n" + lines);
-        if (wireMockServer != null) stubAgencyDump();
+        if (wireMockServer != null) {
+            stubAgencyDump();
+        }
     }
 
 
@@ -50,5 +52,8 @@ public class RecordServiceMocks {
 
     public static void resetAgencyDump() throws IOException {
         agencyDump.set(getResource("/taxonomy/records/agency/dump/190004.txt"));
+        if (wireMockServer != null) {
+            stubAgencyDump();
+        }
     }
 }
