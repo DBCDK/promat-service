@@ -23,6 +23,10 @@ import java.io.InputStreamReader;
 import java.time.Duration;
 import java.util.List;
 
+/**
+ * "Vetoed" is used to prevent the class from being instantiated by CDI.
+ * This is needed in order to be able to extend the class (used in FromFileBuilder in test).
+ */
 @Vetoed
 public class DM2Builder implements TaxonomyBuilder {
     static final Logger LOGGER = LoggerFactory.getLogger(DM2Builder.class);

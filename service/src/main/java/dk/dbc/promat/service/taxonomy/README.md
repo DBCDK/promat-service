@@ -16,7 +16,7 @@ As this is not that snappy, this takes place once every 15 minutes.
 
 ### Future dm3
 For future dm3 setup the kafka subject used for prokat-search will be the basis for kafka-js worker to create a new
-kafka subject, containing ONLY metakompas taxonomy relevant records. The initial first build will be slow, but thereafter
+kafka topic, containing ONLY metakompas taxonomy relevant records. The initial first build will be slow, but thereafter
 only incremental .
 
 ## Taxonomy tree

@@ -284,6 +284,11 @@ public abstract class ContainerTest extends IntegrationTestIT {
         return wireMockServer;
     }
 
+    /**
+     * Create the promat container. Thoughts for future improvement:
+     * Use dbc-commons-testcontainers-service.
+     * @return The container
+     */
     private static GenericContainer<?> makePromatServiceContainer() {
         @SuppressWarnings("resource")
         GenericContainer<?> container = new GenericContainer<>("docker-metascrum.artifacts.dbccloud.dk/promat-service:devel")
