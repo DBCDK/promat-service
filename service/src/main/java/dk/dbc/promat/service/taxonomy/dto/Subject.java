@@ -1,5 +1,7 @@
 package dk.dbc.promat.service.taxonomy.dto;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -12,10 +14,15 @@ import java.util.Set;
 
 public class Subject implements Serializable {
     String title;
+
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
     List<String> note = new ArrayList<>();
+
+    @JsonInclude(JsonInclude.Include.NON_DEFAULT)
     boolean oftenUsed;
     int id = -1;
 
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
     String ref;
 
 

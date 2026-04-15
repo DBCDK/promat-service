@@ -97,7 +97,7 @@ public class SubjectBuilder {
 
                         pathSubjects.add(pathSubject);
                     } catch (IllegalArgumentException e) {
-                        LOGGER.error("Unable to (fully) create:{}. Error:{}", faust, e.getMessage());
+                        LOGGER.warn("Unable to (fully) create:{}. Error:{}", faust, e.getMessage());
                     }
                 }
         );

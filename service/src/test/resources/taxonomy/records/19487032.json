@@ -1,0 +1,213 @@
+{
+  "fields": [
+    {
+      "name": "001",
+      "indicators": "00",
+      "subfields": [
+        {
+          "name": "a",
+          "value": "19487032"
+        },
+        {
+          "name": "b",
+          "value": "190004"
+        },
+        {
+          "name": "c",
+          "value": "20251013100910"
+        },
+        {
+          "name": "d",
+          "value": "20181026"
+        },
+        {
+          "name": "f",
+          "value": "a"
+        }
+      ]
+    },
+    {
+      "name": "004",
+      "indicators": "00",
+      "subfields": [
+        {
+          "name": "r",
+          "value": "n"
+        },
+        {
+          "name": "a",
+          "value": "e"
+        },
+        {
+          "name": "x",
+          "value": "m"
+        }
+      ]
+    },
+    {
+      "name": "008",
+      "indicators": "00",
+      "subfields": [
+        {
+          "name": "t",
+          "value": "h"
+        },
+        {
+          "name": "v",
+          "value": "0"
+        }
+      ]
+    },
+    {
+      "name": "040",
+      "indicators": "00",
+      "subfields": [
+        {
+          "name": "b",
+          "value": "dan"
+        },
+        {
+          "name": "f",
+          "value": "DBC"
+        }
+      ]
+    },
+    {
+      "name": "165",
+      "indicators": "00",
+      "subfields": [
+        {
+          "name": "a",
+          "value": "observerende"
+        }
+      ]
+    },
+    {
+      "name": "670",
+      "indicators": "00",
+      "subfields": [
+        {
+          "name": "a",
+          "value": "47732387"
+        }
+      ]
+    },
+    {
+      "name": "680",
+      "indicators": "00",
+      "subfields": [
+        {
+          "name": "a",
+          "value": "En registrerende og iagttagende stemning. Stikord: Objektivt registrerende, saglig"
+        }
+      ]
+    },
+    {
+      "name": "996",
+      "indicators": "00",
+      "subfields": [
+        {
+          "name": "a",
+          "value": "DBC"
+        }
+      ]
+    },
+    {
+      "name": "d08",
+      "indicators": "00",
+      "subfields": [
+        {
+          "name": "o",
+          "value": "crp"
+        }
+      ]
+    },
+    {
+      "name": "d08",
+      "indicators": "00",
+      "subfields": [
+        {
+          "name": "a",
+          "value": "Masserettelse af 001t, november 2021"
+        }
+      ]
+    },
+    {
+      "name": "d09",
+      "indicators": "00",
+      "subfields": [
+        {
+          "name": "z",
+          "value": "EMS201845"
+        },
+        {
+          "name": "z",
+          "value": "EMS202542"
+        }
+      ]
+    },
+    {
+      "name": "x08",
+      "indicators": "00",
+      "subfields": [
+        {
+          "name": "p",
+          "value": "s"
+        }
+      ]
+    },
+    {
+      "name": "x09",
+      "indicators": "00",
+      "subfields": [
+        {
+          "name": "o",
+          "value": "oftenUsed"
+        },
+        {
+          "name": "p",
+          "value": "ni"
+        },
+        {
+          "name": "q",
+          "value": "5719"
+        }
+      ]
+    },
+    {
+      "name": "x09",
+      "indicators": "00",
+      "subfields": [
+        {
+          "name": "p",
+          "value": "k"
+        },
+        {
+          "name": "q",
+          "value": "141617664"
+        }
+      ]
+    },
+    {
+      "name": "z98",
+      "indicators": "00",
+      "subfields": [
+        {
+          "name": "a",
+          "value": "Minus korrekturprint"
+        }
+      ]
+    },
+    {
+      "name": "z99",
+      "indicators": "00",
+      "subfields": [
+        {
+          "name": "a",
+          "value": "amh"
+        }
+      ]
+    }
+  ],
+  "leader": "00000n    2200000   4500"
+}
