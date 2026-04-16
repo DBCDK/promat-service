@@ -21,11 +21,11 @@ The topic will hold a filtered (valid metakompas records only!) transformation o
 As this is done using  a JavaScript-based kafka worker, we might as well make the outcome of the filter nice and directly
 aimed at fitting into promat's taxonomy builder. The solution must be in place at the end of 2026 at the latest.
 
-Subjects live in RawRepo in base 190004.
+Subjects live in RawRepo with agency 190004.
 But the 190004 records in dm2 lack the DBC-specific fields (such as X09). 
-There is no easy way to design a solution that produces a dm2 topic that holds the merged Subject records only, without 
-having to make a complete v2 dump containing merged records.
-
+To make a 190004 topic we would have to be able to have access to the 190004 record as well as its
+191919 counterpart, in a recordcollection. At present there is no such "base" topic. So we would need a
+new java based rawrepo to kafka, for this purpose only. So for now we will stick to the v2 dump endpoint solution. 
 2. Promat must be able to exist in both dm2 and dm3 environs, and use the dump endpoint in the dm2 
 recordservice (as in the old metakompas nextjs solution), when running in "dm2" mode. The type of harvesting must be 
 configurable by env vars.  To use the dm2 harvester, the env var RECORD_SERVICE must be present. Otherwise, dm3 
