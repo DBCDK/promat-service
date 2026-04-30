@@ -23,7 +23,10 @@ public class ContentLookUp {
     public static HttpClient client = null;
 
     public ContentLookUp() {
-        client = HttpClient.newBuilder().version(HttpClient.Version.HTTP_1_1).build();
+        client = HttpClient
+                .newBuilder()
+                .followRedirects(HttpClient.Redirect.NORMAL)
+                .version(HttpClient.Version.HTTP_1_1).build();
     }
 
     public Optional<String> lookUpContent(String faust) {
