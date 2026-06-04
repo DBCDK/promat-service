@@ -1,5 +1,6 @@
 package dk.dbc.promat.service.templating;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import dk.dbc.promat.service.persistence.PromatCase;
 import dk.dbc.promat.service.persistence.PromatTask;
 import dk.dbc.promat.service.persistence.TaskFieldType;
@@ -8,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public record CaseViewJsonExtract(
         String title,
         String author,
@@ -33,9 +35,9 @@ public record CaseViewJsonExtract(
                 promatCase.getAuthor(),
                 promatCase.getPublisher(),
                 fausts(promatCase.getPrimaryFaust(), relatedFausts),
-                Formatting.format(promatCase.getReviewer()),
-                Formatting.format(promatCase.getEditor()),
-                Formatting.format(promatCase.getDeadline()),
+                promatCase.getReviewer() != null ? Formatting.format(promatCase.getReviewer()) : null,
+                promatCase.getEditor() != null ? Formatting.format(promatCase.getEditor()) : null,
+                promatCase.getDeadline() != null ? Formatting.format(promatCase.getDeadline()) : null,
                 Formatting.format(promatCase.getStatus()),
                 taskData(promatCase, TaskFieldType.BKM),
                 tasksMap(promatCase, TaskFieldType.BRIEF),
@@ -50,15 +52,17 @@ public record CaseViewJsonExtract(
     }
 
     private static String taskData(PromatCase promatCase, TaskFieldType type) {
+        if (promatCase.getTasks() == null) return null;
         return promatCase.getTasks().stream()
-                .filter(t -> t.getTaskFieldType() == type)
-                .map(PromatTask::getData)
+                .filter(t -> t.getTaskFieldType() == type && t.getData() != null && !t.getData().isEmpty())
                 .findFirst()
+                .map(PromatTask::getData)
                 .orElse(null);
     }
 
     private static Map<String, String> tasksMap(PromatCase promatCase, TaskFieldType type) {
-        return promatCase.getTasks().stream()
+        if (promatCase.getTasks() == null) return null;
+        Map<String, String> result = promatCase.getTasks().stream()
                 .filter(t -> t.getTaskFieldType() == type)
                 .filter(t -> t.getTargetFausts() != null && t.getData() != null)
                 .collect(Collectors.toMap(
@@ -66,6 +70,7 @@ public record CaseViewJsonExtract(
                         PromatTask::getData,
                         (a, b) -> a
                 ));
+        return result.isEmpty() ? null : result;
     }
 
     private static String fausts(String primaryFaust, List<String> relatedFausts) {

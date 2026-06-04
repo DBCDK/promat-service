@@ -414,6 +414,7 @@ public class Cases {
 
             // Extract related faustnumbers found in the 'targetFaust' field
             Stream<String> caseFausts = cases.getFirst().getTasks().stream()
+                    .filter(t -> t.getTargetFausts() != null)
                     .map(PromatTask::getTargetFausts)
                     .flatMap(Collection::stream);
             // Remove the faustnumber that was requested since it will appear above the
