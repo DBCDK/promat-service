@@ -21,6 +21,7 @@ import dk.dbc.promat.service.persistence.PromatTask;
 import dk.dbc.promat.service.persistence.Subject;
 import dk.dbc.promat.service.persistence.TaskFieldType;
 import dk.dbc.promat.service.persistence.TaskType;
+import dk.dbc.promat.service.templating.model.CaseViewJsonExtract;
 import org.eclipse.jetty.http.HttpStatus;
 import org.hamcrest.core.IsNull;
 import org.jsoup.Jsoup;
@@ -3371,5 +3372,55 @@ class CasesIT extends ContainerTest {
 
         // Delete the case
         assertThat("status code", deleteResponse("v1/api/cases/" + aCase.getId()).getStatus(), is(200));
+    }
+
+    @Test
+    void testJsonSummaryView() throws IOException {
+        CaseRequest dto = new CaseRequest()
+                .withTitle("Title for json summary test")
+                .withPrimaryFaust("99901234")
+                .withEditor(10)
+                .withSubjects(Arrays.asList(3, 4))
+                .withDeadline("2025-01-01")
+                .withMaterialType(MaterialType.BOOK);
+
+        Response response = postResponse("v1/api/cases", dto);
+        assertThat("status code", response.getStatus(), is(201));
+        PromatCase aCase = mapper.readValue(response.readEntity(String.class), PromatCase.class);
+
+        // Add some tasks..
+        List<TaskDto> tasks = List.of(
+                        new TaskDto()
+                                .withTaskType(TaskType.GROUP_1_LESS_THAN_100_PAGES)
+                                .withTaskFieldType(TaskFieldType.BRIEF)
+                                .withData("Brief text")
+                                .withTargetFausts(Arrays.asList("99901234", "99901235")),
+                        new TaskDto()
+                                .withTaskType(TaskType.GROUP_1_LESS_THAN_100_PAGES)
+                                .withTaskFieldType(TaskFieldType.DESCRIPTION)
+                                .withTargetFausts(List.of("99901234"))
+                                .withData("Description text"),
+                        new TaskDto()
+                                .withTaskType(TaskType.GROUP_1_LESS_THAN_100_PAGES)
+                                .withTaskFieldType(TaskFieldType.TOPICS)
+                                .withTargetFausts(List.of("99901234"))
+                                .withData("word1;word2")
+    );
+
+        for (TaskDto t : tasks) {
+            assertThat("task created", postResponse("v1/api/cases/" + aCase.getId() + "/tasks", t).getStatus(), is(201));
+        }
+
+        response = getResponse("v1/api/cases/JSON_SUMMARY/99901234", Map.of("override", "true"));
+        assertThat("status code", response.getStatus(), is(200));
+
+        CaseViewJsonExtract extract = mapper.readValue(response.readEntity(String.class), CaseViewJsonExtract.class);
+        assertThat("title", extract.title(), is("Title for json summary test"));
+        assertThat("faust with related", extract.faust(), is("99901234 + (99901235)"));
+        assertThat("description", extract.description(), is("Description text"));
+        assertThat("briefs key is joined fausts", extract.briefs().get("99901234, 99901235"), is("Brief text"));
+        assertThat("topics key is joined fausts", extract.topics().get("99901234"), is("word1;word2"));
+
+        assertThat("cleanup", deleteResponse("v1/api/cases/" + aCase.getId()).getStatus(), is(200));
     }
 }

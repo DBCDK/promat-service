@@ -9,7 +9,7 @@ info:
   version: 1.0-SNAPSHOT
 
 servers:
-  - url: "http://"
+  - url: "/v1/api"
 
 tags:
   - name: editors
@@ -1113,7 +1113,7 @@ paths:
         '200':
           description: Trigger of the notification cronjob was successful
 
-  /v1/api/taxonomy/structure:
+  /taxonomy/structure:
     get:
       summary: "GET v1/api/taxonomy/structure"
       operationId: "getStructure"
@@ -1125,7 +1125,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/TaxonomyTree"
 
-  /v1/api/taxonomy/tree:
+  /taxonomy/tree:
     get:
       summary: "GET v1/api/taxonomy/tree"
       operationId: "getTaxonomy"
@@ -1137,7 +1137,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/TaxonomyTree"
 
-  /v1/api/taxonomy/cache:
+  /taxonomy/cache:
     delete:
       summary: "DELETE v1/api/taxonomy/cache"
       operationId: "clearCache"
@@ -1145,7 +1145,7 @@ paths:
         "200":
           description: "OK"
 
-  /v1/api/taxonomy/subtree:
+  /taxonomy/subtree:
     post:
       summary: "POST v1/api/taxonomy/subtree"
       operationId: "getTaxonomySubtree"
@@ -1167,7 +1167,7 @@ paths:
         "404":
           description: "Path not found in taxonomy tree"
 
-  /v1/api/taxonomy/subtree/{alias}:
+  /taxonomy/subtree/{alias}:
     get:
       summary: "GET v1/api/taxonomy/subtree/{alias}"
       operationId: "getTaxonomySubtreeByAlias"
@@ -2103,6 +2103,7 @@ components:
       enum:
         - 'HTML'
         - 'XML'
+        - 'JSON_SUMMARY'
 
     TaxonomyTree:
       type: "object"

@@ -32,6 +32,7 @@ import dk.dbc.promat.service.persistence.Subject;
 import dk.dbc.promat.service.persistence.TaskFieldType;
 import dk.dbc.promat.service.persistence.TaskType;
 import dk.dbc.promat.service.service.CaseSearch;
+import dk.dbc.promat.service.templating.model.CaseViewJsonExtract;
 import dk.dbc.promat.service.templating.CaseviewXmlTransformer;
 import dk.dbc.promat.service.templating.NotificationFactory;
 import dk.dbc.promat.service.templating.Renderer;
@@ -390,12 +391,12 @@ public class Cases {
             TypedQuery<PromatCase> query = entityManager.createNamedQuery(PromatCase.GET_CASE_BY_FAUST_NAME, PromatCase.class);
             query.setParameter("faust", faust);
             List<PromatCase> cases = query.getResultList();
-            if (cases == null || cases.size() == 0) {
+            if (cases == null || cases.isEmpty()) {
                 LOGGER.info("No case with faust {}", faust);
                 return ServiceErrorDto.NotFound("No case with this primary- or relatedfaust or no case in required states",
                         String.format("No case with primary- or relatedfaust %s or in required states exists", faust));
             }
-            if (cases.get(0).getTasks() == null || cases.get(0).getTasks().isEmpty()) {
+            if (cases.getFirst().getTasks() == null || cases.getFirst().getTasks().isEmpty()) {
                 LOGGER.error("Case with faust {} has no tasks", faust);
                 return ServiceErrorDto.NotFound("Case has no tasks",
                         String.format("Case with primary- or relatedfaust %s has no tasks", faust));
@@ -404,7 +405,7 @@ public class Cases {
             // Case must have a status that ensures that there is valid data.
             // This check can be ignored if the query parameter 'override' is set to true
             if (!override) {
-                if(!Arrays.asList(CaseStatus.PENDING_EXTERNAL, CaseStatus.APPROVED, CaseStatus.PENDING_MEETING,
+                if (!Arrays.asList(CaseStatus.PENDING_EXTERNAL, CaseStatus.APPROVED, CaseStatus.PENDING_MEETING,
                         CaseStatus.PENDING_EXPORT, CaseStatus.EXPORTED).contains(cases.get(0).getStatus())) {
                     return ServiceErrorDto.NotFound("Not found or not in valid state",
                             String.format("No case with faust %s or a status that guarantees valid data is found", faust));
@@ -412,20 +413,21 @@ public class Cases {
             }
 
             // Extract related faustnumbers found in the 'targetFaust' field
-            Stream<String> caseFausts = cases.get(0).getTasks().stream()
+            Stream<String> caseFausts = cases.getFirst().getTasks().stream()
+                    .filter(t -> t.getTargetFausts() != null)
                     .map(PromatTask::getTargetFausts)
                     .flatMap(Collection::stream);
             // Remove the faustnumber that was requested since it will appear above the
             // list of brief notes for the related fausts in the view (disregarding which
             // is actually the primary faust for the case)
-            List<String> relatedFausts = Stream.concat(caseFausts, Stream.of(cases.get(0).getPrimaryFaust()))
+            List<String> relatedFausts = Stream.concat(caseFausts, Stream.of(cases.getFirst().getPrimaryFaust()))
                     .filter(f -> !faust.equals(f))
                     .distinct()
-                    .collect(Collectors.toList());
+                    .toList();
 
             Renderer renderer = new Renderer();
             Map<String, Object> models = new HashMap<>();
-            models.put("promatCase", cases.get(0));
+            models.put("promatCase", cases.getFirst());
             models.put("requestedFaustnumber", faust);
             models.put("relatedFaustnumbers", relatedFausts);
 
@@ -437,12 +439,16 @@ public class Cases {
                             .entity(html).build();
                 case XML:
                     CaseviewXmlTransformer transformer = new CaseviewXmlTransformer();
-                    byte[] transformed = transformer.toXml(faust, cases.get(0));
+                    byte[] transformed = transformer.toXml(faust, cases.getFirst());
                     return Response.status(200)
                             .header("Content-Type", "text/xml; charset=ISO-8859-1")
                             .entity(transformed).build();
+                case JSON_SUMMARY:
+                    return Response.status(200)
+                            .header("Content-Type", MediaType.APPLICATION_JSON)
+                            .entity(CaseViewJsonExtract.from(relatedFausts, cases.getFirst())).build();
                 default:
-                    return ServiceErrorDto.Failed("No handling of CaseviewFormat " + format);
+                    return ServiceErrorDto.NotFound("No handling of CaseviewFormat " + format, "Not found");
             }
         } catch(Exception exception) {
             LOGGER.error("Caught exception:", exception);
