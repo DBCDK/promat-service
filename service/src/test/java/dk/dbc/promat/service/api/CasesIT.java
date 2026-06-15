@@ -21,7 +21,7 @@ import dk.dbc.promat.service.persistence.PromatTask;
 import dk.dbc.promat.service.persistence.Subject;
 import dk.dbc.promat.service.persistence.TaskFieldType;
 import dk.dbc.promat.service.persistence.TaskType;
-import dk.dbc.promat.service.templating.CaseViewJsonExtract;
+import dk.dbc.promat.service.templating.model.CaseViewJsonExtract;
 import org.eclipse.jetty.http.HttpStatus;
 import org.hamcrest.core.IsNull;
 import org.jsoup.Jsoup;

@@ -62,6 +62,11 @@
       <version>${jersey.version}</version>
     </dependency>
     <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-databind</artifactId>
+      <version>2.18.2</version>
+    </dependency>
+    <dependency>
       <groupId>com.fasterxml.jackson.module</groupId>
       <artifactId>jackson-module-jakarta-xmlbind-annotations</artifactId>
       <version>2.18.2</version>
@@ -197,7 +202,6 @@
        <artifactId>openapi-ui</artifactId>
        <version>2.1.1</version>
     </dependency>
-
     <dependency>
       <groupId>dk.dbc</groupId>
       <artifactId>dbc-commons-rs-auth</artifactId>

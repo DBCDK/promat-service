@@ -1,9 +1,10 @@
-package dk.dbc.promat.service.templating;
+package dk.dbc.promat.service.templating.model;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import dk.dbc.promat.service.persistence.PromatCase;
 import dk.dbc.promat.service.persistence.PromatTask;
 import dk.dbc.promat.service.persistence.TaskFieldType;
+import dk.dbc.promat.service.templating.Formatting;
 
 import java.util.List;
 import java.util.Map;

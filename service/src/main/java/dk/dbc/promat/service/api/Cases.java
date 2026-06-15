@@ -32,7 +32,7 @@ import dk.dbc.promat.service.persistence.Subject;
 import dk.dbc.promat.service.persistence.TaskFieldType;
 import dk.dbc.promat.service.persistence.TaskType;
 import dk.dbc.promat.service.service.CaseSearch;
-import dk.dbc.promat.service.templating.CaseViewJsonExtract;
+import dk.dbc.promat.service.templating.model.CaseViewJsonExtract;
 import dk.dbc.promat.service.templating.CaseviewXmlTransformer;
 import dk.dbc.promat.service.templating.NotificationFactory;
 import dk.dbc.promat.service.templating.Renderer;
@@ -396,7 +396,7 @@ public class Cases {
                 return ServiceErrorDto.NotFound("No case with this primary- or relatedfaust or no case in required states",
                         String.format("No case with primary- or relatedfaust %s or in required states exists", faust));
             }
-            if (cases.get(0).getTasks() == null || cases.get(0).getTasks().isEmpty()) {
+            if (cases.getFirst().getTasks() == null || cases.getFirst().getTasks().isEmpty()) {
                 LOGGER.error("Case with faust {} has no tasks", faust);
                 return ServiceErrorDto.NotFound("Case has no tasks",
                         String.format("Case with primary- or relatedfaust %s has no tasks", faust));
@@ -405,7 +405,7 @@ public class Cases {
             // Case must have a status that ensures that there is valid data.
             // This check can be ignored if the query parameter 'override' is set to true
             if (!override) {
-                if(!Arrays.asList(CaseStatus.PENDING_EXTERNAL, CaseStatus.APPROVED, CaseStatus.PENDING_MEETING,
+                if (!Arrays.asList(CaseStatus.PENDING_EXTERNAL, CaseStatus.APPROVED, CaseStatus.PENDING_MEETING,
                         CaseStatus.PENDING_EXPORT, CaseStatus.EXPORTED).contains(cases.get(0).getStatus())) {
                     return ServiceErrorDto.NotFound("Not found or not in valid state",
                             String.format("No case with faust %s or a status that guarantees valid data is found", faust));
