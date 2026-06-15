@@ -80,7 +80,7 @@ pipeline {
             steps {
                 script {
                     dependencyTrackGate(
-                        projectBom:  'target/bom.json',
+                        projectBom:  'target/sbom-java.json',
                         projectTeam: 'de-team',
                         projectType: 'java',
                     )
