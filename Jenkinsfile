@@ -1,5 +1,7 @@
 #!groovy
 
+@Library('dependency-track')
+
 def workerNode = "devel12"
 def teamSlackNotice = 'de-notifications'
 def teamSlackWarning = 'de-notifications'
@@ -74,6 +76,17 @@ pipeline {
 				}
 			}
 		}
+		stage("supply-chain gate") {
+            steps {
+                script {
+                    dependencyTrackGate(
+                        projectBom:  'target/sbom-java.json',
+                        projectTeam: 'de-team',
+                        projectType: 'java',
+                    )
+                }
+            }
+        }
 		stage("docker push") {
 			when {
                 branch "master"
