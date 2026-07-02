@@ -1,7 +1,7 @@
 package dk.dbc.promat.service.api;
 
-import dk.dbc.promat.service.dto.Dto;
-import dk.dbc.promat.service.dto.RecordsListDto;
+import dk.dbc.promat.service.connectors.FaustResolverException;
+import dk.dbc.promat.service.connectors.OpenFormatConnectorException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,24 +20,22 @@ public class Records {
     private static final Logger LOGGER = LoggerFactory.getLogger(Records.class);
 
     @Inject
-    public RecordsResolver recordsResolver;
+    public RecordsProvider recordsProvider;
 
     @GET
     @Path("{id}")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response getRecords(@PathParam("id") final String id) throws Exception {
+    public Response getRecords(@PathParam("id") final String id) {
         LOGGER.info("getRecords/{}", id);
 
         // Find every record with that belongs to any work that matches the given id
         try {
-            Dto dto = recordsResolver.resolveId(id);
-            if(dto.getClass().equals(RecordsListDto.class)) {
-                return Response.ok(dto).build();
-            }
-            return Response.status(400).entity(dto).build();
-        } catch(Exception exception) {
-            LOGGER.info("Caught exception: {}", exception.getMessage());
-            throw exception;
+            return Response.ok(recordsProvider.getRecords(id)).build();
+
+
+        } catch (FaustResolverException | OpenFormatConnectorException e) {
+            LOGGER.error("Failed to get records for id {}", id, e);
+            return Response.status(400).entity(e).build();
         }
     }
 }
