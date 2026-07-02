@@ -1,0 +1,19 @@
+{
+  "id" : "124ce415-80dd-3212-a6a4-3ebb4113e7b7",
+  "request" : {
+    "url" : "/api/v1/manifestations/isbn-issn/9788764432589",
+    "method" : "GET"
+  },
+  "response" : {
+    "status" : 200,
+    "bodyFileName" : "body-api-v1-manifestations-isbn-issn-9788764432589-QtvFL.json",
+    "headers" : {
+      "X-Frame-Options" : "SAMEORIGIN",
+      "Keep-Alive" : "timeout=10s",
+      "Server" : "Payara Micro #badassfish",
+      "Cluster-Node" : "faust-resolver-5894974994-f6gvz",
+      "Content-Type" : "application/json"
+    }
+  },
+  "uuid" : "124ce415-80dd-3212-a6a4-3ebb4113e7b7"
+}

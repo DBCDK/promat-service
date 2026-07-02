@@ -1,0 +1,20 @@
+{
+  "id" : "a9f7a72b-78e6-3109-a985-44ef7983f6ce",
+  "request" : {
+    "url" : "/api/v1/manifestations/isbn-issn/135426296",
+    "method" : "GET"
+  },
+  "response" : {
+    "status" : 400,
+    "bodyFileName" : "body-api-v1-manifestations-isbn-issn-135426296-Cul0c.json",
+    "headers" : {
+      "X-Frame-Options" : "SAMEORIGIN",
+      "Keep-Alive" : "timeout=10s",
+      "Server" : "Payara Micro #badassfish",
+      "Cluster-Node" : "faust-resolver-5894974994-f6gvz",
+      "X-DBC-Status" : "200 OK",
+      "Content-Type" : "application/json"
+    }
+  },
+  "uuid" : "a9f7a72b-78e6-3109-a985-44ef7983f6ce"
+}

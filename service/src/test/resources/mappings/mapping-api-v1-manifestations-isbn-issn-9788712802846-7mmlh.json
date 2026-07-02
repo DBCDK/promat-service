@@ -1,0 +1,19 @@
+{
+  "id" : "24fdb7ca-10ea-3b33-8693-d18b9ad7b604",
+  "request" : {
+    "url" : "/api/v1/manifestations/isbn-issn/9788712802846",
+    "method" : "GET"
+  },
+  "response" : {
+    "status" : 200,
+    "bodyFileName" : "body-api-v1-manifestations-isbn-issn-9788712802846-7mmlh.json",
+    "headers" : {
+      "X-Frame-Options" : "SAMEORIGIN",
+      "Keep-Alive" : "timeout=10s",
+      "Server" : "Payara Micro #badassfish",
+      "Cluster-Node" : "faust-resolver-5894974994-f6gvz",
+      "Content-Type" : "application/json"
+    }
+  },
+  "uuid" : "24fdb7ca-10ea-3b33-8693-d18b9ad7b604"
+}

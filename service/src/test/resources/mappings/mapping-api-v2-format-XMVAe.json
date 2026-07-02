@@ -1,0 +1,24 @@
+{
+  "id" : "e92cdb39-cafa-3878-9a62-5b11b6be819f",
+  "request" : {
+    "url" : "/api/v2/format",
+    "method" : "POST",
+    "bodyPatterns" : [ {
+      "equalToJson" : "{\"formats\":[{\"name\":\"promat\",\"mediaType\":\"application/json\"}],\"objects\":[{\"repositoryId\":\"870970-basis:53000308\"}]}",
+      "ignoreArrayOrder" : true,
+      "ignoreExtraElements" : true
+    } ]
+  },
+  "response" : {
+    "status" : 200,
+    "bodyFileName" : "body-api-v2-format-XMVAe.json",
+    "headers" : {
+      "X-Frame-Options" : "SAMEORIGIN",
+      "Keep-Alive" : "timeout=10s",
+      "Server" : "Payara Micro #badassfish",
+      "Cluster-Node" : "open-format-broker-deploy-64c778d496-hjkvg",
+      "Content-Type" : "application/json"
+    }
+  },
+  "uuid" : "e92cdb39-cafa-3878-9a62-5b11b6be819f"
+}
