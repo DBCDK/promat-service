@@ -18,9 +18,14 @@ import jakarta.ws.rs.core.Response;
 @Path("records")
 public class Records {
     private static final Logger LOGGER = LoggerFactory.getLogger(Records.class);
+    private RecordsProvider recordsProvider;
+
+    public Records() {}
 
     @Inject
-    public RecordsProvider recordsProvider;
+    public Records(RecordsProvider recordsProvider) {
+        this.recordsProvider = recordsProvider;
+    }
 
     @GET
     @Path("{id}")

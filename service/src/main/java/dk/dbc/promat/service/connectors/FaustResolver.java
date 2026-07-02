@@ -41,12 +41,29 @@ public class FaustResolver {
     }
 
     /**
-     * Parses a pid on the form "{agencyId}-basis:{faust}" into a RecordID.
+     * Resolves an id (either faust or isbn/issn) to a set of fausts.
+     * @param id faust or isbn/issn
+     * @return set of fausts
+     * @throws FaustResolverException
+     */
+    public Set<String> resolve(String id) throws FaustResolverException {
+        Set<String> manifestations = byIsbnIssn(id);
+        if (!manifestations.isEmpty()) {
+            return manifestations;
+        } else if (faustExists(id)) {
+            return Set.of(id);
+        } else {
+            return Collections.emptySet();
+        }
+    }
+
+    /**
+     * Parses a pid on the form "{agencyId}-basis:{faust}" into a faust number.
      *
      * @param pid e.g. "870970-basis:143453731"
-     * @return the parsed RecordID, or {@code null} if the format does not match
+     * @return the parsed faust number, or {@code null} if the format does not match
      */
-    public static String parsePid(String pid) {
+    private static String parsePid(String pid) {
         if (pid == null) {
             return null;
         }
@@ -61,7 +78,7 @@ public class FaustResolver {
      * Resolves the manifestations matching a given isbn or issn.
      *
      * @param isbnIssn isbn or issn number to resolve
-     * @return the matching manifestation items, or {@code null} if none was found
+     * @return the matching fausts, or {@code null} if none was found
      * @throws FaustResolverException on unexpected failure
      */
     public Set<String> byIsbnIssn(String isbnIssn) throws FaustResolverException {
@@ -85,32 +102,29 @@ public class FaustResolver {
      * Resolves the manifestations belonging to a given faust number.
      *
      * @param faust faust number to resolve
-     * @return the matching manifestations as RecordIDs, or {@code null} if none was found
-     * @throws FaustResolverException on unexpected failure
+     * @return true if the matching faust was found, false otherwise
+     * @throws FaustResolverException on multiple fausts found or unexpected failure
      */
-    public Set<String> byFaust(String faust) throws FaustResolverException {
+    public boolean faustExists(String faust) throws FaustResolverException {
         final HttpGet httpGet = new HttpGet(failSafeHttpClient)
                 .withBaseUrl(baseUrl)
                 .withPathElements("api","v1", "fausts", faust, "manifestations");
         try (Response response = httpGet.execute()) {
             if (response.getStatus() == Response.Status.NOT_FOUND.getStatusCode()) {
-                return Collections.emptySet();
+                return false;
             }
             assertResponseStatus(response);
-            return readResponseEntity(response, ManifestationsResponse.class)
+            Set<String> fausts = readResponseEntity(response, ManifestationsResponse.class)
                     .manifestations()
                     .stream()
                     .map(FaustResolver::parsePid)
                     .filter(Objects::nonNull)
                     .collect(Collectors.toSet());
+            if (!fausts.isEmpty() && fausts.size() > 1) {
+                throw new FaustResolverException("Multiple fausts found for " + faust);
+            }
+            return fausts.contains(faust);
         }
-    }
-
-    public Set<String> resolve(String faust) throws FaustResolverException {
-        Set<String> manifestations = byIsbnIssn(faust);
-        if (!manifestations.isEmpty()) {
-            return manifestations;
-        } else return byFaust(faust);
     }
 
     private void assertResponseStatus(Response response)
