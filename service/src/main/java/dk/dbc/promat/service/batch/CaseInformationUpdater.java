@@ -1,6 +1,6 @@
 package dk.dbc.promat.service.batch;
 
-import dk.dbc.connector.openformat.OpenFormatConnectorException;
+import dk.dbc.promat.service.connectors.OpenFormatConnectorException;
 import dk.dbc.promat.service.Dates;
 import dk.dbc.promat.service.api.BibliographicInformation;
 import dk.dbc.promat.service.api.OpenFormatHandler;

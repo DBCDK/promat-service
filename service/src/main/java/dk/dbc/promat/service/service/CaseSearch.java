@@ -1,7 +1,7 @@
 package dk.dbc.promat.service.service;
 
 import dk.dbc.promat.service.api.PredicateFactory;
-import dk.dbc.promat.service.api.RecordsResolver;
+import dk.dbc.promat.service.api.RecordsProvider;
 import dk.dbc.promat.service.api.ServiceErrorException;
 import dk.dbc.promat.service.dto.CaseSummaryList;
 import dk.dbc.promat.service.dto.ListCasesParams;
@@ -51,7 +51,7 @@ public class CaseSearch {
     EntityManager entityManager;
 
     @Inject
-    RecordsResolver recordsResolver;
+    RecordsProvider recordsProvider;
 
     public CaseSummaryList listCases(ListCasesParams params) throws ServiceErrorException {
         // Initialize query and criteriabuilder
@@ -147,8 +147,8 @@ public class CaseSearch {
                 fausts = Set.of(id);
             } else {
 
-                // This is EAN (barcode) or ISBN.
-                RecordsListDto faustList = (RecordsListDto) recordsResolver.resolveId(id);
+                // This is EAN ISBN or ISSN.
+                RecordsListDto faustList = recordsProvider.getRecords(id);
                 fausts = faustList.getRecords().stream().map(RecordDto::getFaust).collect(Collectors.toSet());
             }
             // Fetch all caseIds

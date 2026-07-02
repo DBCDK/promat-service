@@ -3,7 +3,7 @@ package dk.dbc.promat.service.api;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import dk.dbc.connector.openformat.OpenFormatConnectorException;
+import dk.dbc.promat.service.connectors.OpenFormatConnectorException;
 import dk.dbc.promat.service.Repository;
 import dk.dbc.promat.service.batch.ContentLookUp;
 import dk.dbc.promat.service.batch.Reminders;
@@ -89,9 +89,6 @@ public class Cases {
     @Inject
     @PromatEntityManager
     EntityManager entityManager;
-
-    @Inject
-    RecordsResolver recordsResolver;
 
     @Inject
     ContentLookUp contentLookUp;

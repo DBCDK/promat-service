@@ -1,9 +1,8 @@
 package dk.dbc.promat.service.templating;
 
-import dk.dbc.connector.openformat.OpenFormatConnectorException;
 import dk.dbc.promat.service.api.BibliographicInformation;
 import dk.dbc.promat.service.api.OpenFormatHandler;
-import dk.dbc.promat.service.dto.ReviewerRequest;
+import dk.dbc.promat.service.connectors.OpenFormatConnectorException;
 import dk.dbc.promat.service.persistence.Notification;
 import dk.dbc.promat.service.persistence.NotificationStatus;
 import dk.dbc.promat.service.persistence.PromatCase;
