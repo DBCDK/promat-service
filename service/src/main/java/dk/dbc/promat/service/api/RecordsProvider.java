@@ -8,14 +8,17 @@ import dk.dbc.promat.service.dto.RecordMaterialTypeDto;
 import dk.dbc.promat.service.dto.RecordsListDto;
 import dk.dbc.promat.service.persistence.MaterialType;
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @ApplicationScoped
 public class RecordsProvider {
+    private static final Logger LOGGER = LoggerFactory.getLogger(RecordsProvider.class);
+
     FaustResolver faustResolver;
     OpenFormatHandler openFormatHandler;
 
@@ -33,16 +36,21 @@ public class RecordsProvider {
         Set<String> manifestations = faustResolver.resolve(id);
         List<RecordDto> recordList = openFormatHandler.format(manifestations)
                     .stream()
-                    .filter(Objects::nonNull)
                     .map(promatElements -> {
                         String faust = promatElements.faust().getFirst();
-                        String[] sf = promatElements.materialtypesDetail().type().getFirst().split(" ");
+                        var detail = promatElements.materialtypesDetail();
+                        String[] sf = detail != null && detail.type() != null && !detail.type().isEmpty()
+                                ? detail.type().getFirst().split(" ")
+                                : null;
                         return new RecordDto()
                                 .withFaust(faust)
                                 .withPrimary(id.equals(faust))
                                 .withTypes(List.of(mapRrType(sf)));
 
                     }).toList();
+        if (recordList.size() < manifestations.size()) {
+            LOGGER.warn("Partial result for id {}: expected {} manifestations, got {}", id, manifestations.size(), recordList.size());
+        }
         return new RecordsListDto().withRecords(recordList).withNumFound(recordList.size());
     }
 

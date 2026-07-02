@@ -37,7 +37,10 @@ public class OpenFormatHandler {
     public List<OpenFormatConnector.PromatElements> format(Set<String> fausts) throws OpenFormatConnectorException {
         List<OpenFormatConnector.PromatElements> result = new ArrayList<>();
         for (String faust : fausts) {
-            result.add(format(faust, OPENFORMAT_AGENCY, OpenFormatConnector.PromatElements.class));
+            OpenFormatConnector.PromatElements elements = format(faust, OPENFORMAT_AGENCY, OpenFormatConnector.PromatElements.class);
+            if (elements != null) {
+                result.add(elements);
+            }
         }
         return result;
     }
