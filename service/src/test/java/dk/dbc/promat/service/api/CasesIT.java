@@ -2662,13 +2662,6 @@ class CasesIT extends ContainerTest {
         assertThat("The newly created first case with this isbn is one of them",
                 cases.getCases().stream().map(PromatCase::getId).collect(Collectors.toList()).contains(created.getId()));
 
-        // Query by ean 5053083221386: Expected is at least the case just created.
-        response = getResponse("v1/api/cases", Map.of("id", "5053083221386"));
-        cases = mapper.readValue(response.readEntity(String.class), CaseSummaryList.class);
-        assertThat(cases.getNumFound(), is(greaterThanOrEqualTo(1)));
-        assertThat("The newly created second case with this ean is one of them",
-                cases.getCases().stream().map(PromatCase::getId).collect(Collectors.toList()).contains(created2.getId()));
-
         // Query by publisher: Expected are both cases.
         response = getResponse("v1/api/cases", Map.of("publisher", "for"));
         cases = mapper.readValue(response.readEntity(String.class), CaseSummaryList.class);

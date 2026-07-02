@@ -3,8 +3,6 @@ package dk.dbc.promat.service.batch;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import dk.dbc.commons.persistence.TransactionScopedPersistenceContext;
-import dk.dbc.connector.openformat.OpenFormatConnectorException;
-import dk.dbc.connector.openformat.OpenFormatConnectorFactory;
 import dk.dbc.opennumberroll.OpennumberRollConnectorException;
 import dk.dbc.promat.service.ContainerTest;
 import dk.dbc.promat.service.Dates;
@@ -12,6 +10,8 @@ import dk.dbc.promat.service.Repository;
 import dk.dbc.promat.service.api.BibliographicInformation;
 import dk.dbc.promat.service.api.OpenFormatHandler;
 import dk.dbc.promat.service.cluster.ServerRole;
+import dk.dbc.promat.service.connectors.OpenFormatConnectorException;
+import dk.dbc.promat.service.connectors.OpenFormatConnectorProducer;
 import dk.dbc.promat.service.dto.CaseRequest;
 import dk.dbc.promat.service.dto.TaskDto;
 import dk.dbc.promat.service.persistence.CaseStatus;
@@ -81,7 +81,7 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
         wireMockServer = new WireMockServer(options().dynamicPort());
         wireMockServer.start();
         configureFor("localhost", wireMockServer.port());
-        wiremockHost = ContainerTest.getOpenFormatBaseUrl(wireMockServer.baseUrl()) + "/api/v2";
+        wiremockHost = ContainerTest.getOpenFormatBaseUrl(wireMockServer.baseUrl());
     }
 
     @AfterAll
@@ -98,7 +98,7 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
     }
 
     @Test
-    public void testUpdateCaseWithWeekcode() throws OpenFormatConnectorException, JsonProcessingException {
+    public void testUpdateCaseWithWeekcode() throws JsonProcessingException {
 
         // Create a case with incorrect title and weekcode
         CaseRequest dto = new CaseRequest()
@@ -120,7 +120,7 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
             upd.caseInformationUpdater = new CaseInformationUpdater();
             upd.caseInformationUpdater.metricRegistry = metricRegistry;
             upd.caseInformationUpdater.openFormatHandler = new OpenFormatHandler()
-                    .withConnector(OpenFormatConnectorFactory.create(wiremockHost));
+                    .withConnector(OpenFormatConnectorProducer.produce(wiremockHost));
 
             ContentLookUp contentLookUpMock = mock(ContentLookUp.class);
             upd.caseInformationUpdater.contentLookUp = contentLookUpMock;
@@ -163,7 +163,7 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
             upd.caseInformationUpdater = new CaseInformationUpdater();
             upd.caseInformationUpdater.metricRegistry = metricRegistry;
             upd.caseInformationUpdater.openFormatHandler = new OpenFormatHandler()
-                    .withConnector(OpenFormatConnectorFactory.create(wiremockHost));
+                    .withConnector(OpenFormatConnectorProducer.produce(wiremockHost));
 
             ContentLookUp contentLookUpMock = mock(ContentLookUp.class);
             upd.caseInformationUpdater.contentLookUp = contentLookUpMock;
@@ -205,7 +205,7 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
             upd.caseInformationUpdater = new CaseInformationUpdater();
             upd.caseInformationUpdater.metricRegistry = metricRegistry;
             upd.caseInformationUpdater.openFormatHandler = new OpenFormatHandler()
-                    .withConnector(OpenFormatConnectorFactory.create(wiremockHost));
+                    .withConnector(OpenFormatConnectorProducer.produce(wiremockHost));
 
             ContentLookUp contentLookUpMock = mock(ContentLookUp.class);
             upd.caseInformationUpdater.contentLookUp = contentLookUpMock;
@@ -247,7 +247,7 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
             upd.caseInformationUpdater = new CaseInformationUpdater();
             upd.caseInformationUpdater.metricRegistry = metricRegistry;
             upd.caseInformationUpdater.openFormatHandler = new OpenFormatHandler()
-                    .withConnector(OpenFormatConnectorFactory.create(wiremockHost));
+                    .withConnector(OpenFormatConnectorProducer.produce(wiremockHost));
 
             ContentLookUp contentLookUpMock = mock(ContentLookUp.class);
             upd.caseInformationUpdater.contentLookUp = contentLookUpMock;
@@ -352,7 +352,7 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
             upd.caseInformationUpdater = new CaseInformationUpdater();
             upd.caseInformationUpdater.metricRegistry = metricRegistry;
             upd.caseInformationUpdater.openFormatHandler = new OpenFormatHandler()
-                    .withConnector(OpenFormatConnectorFactory.create(wiremockHost));
+                    .withConnector(OpenFormatConnectorProducer.produce(wiremockHost));
 
             ContentLookUp contentLookUpMock = mock(ContentLookUp.class);
             upd.caseInformationUpdater.contentLookUp = contentLookUpMock;
@@ -395,7 +395,7 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
             upd.caseInformationUpdater = new CaseInformationUpdater();
             upd.caseInformationUpdater.metricRegistry = metricRegistry;
             upd.caseInformationUpdater.openFormatHandler = new OpenFormatHandler()
-                    .withConnector(OpenFormatConnectorFactory.create(wiremockHost));
+                    .withConnector(OpenFormatConnectorProducer.produce(wiremockHost));
 
             ContentLookUp contentLookUpMock = mock(ContentLookUp.class);
             upd.caseInformationUpdater.contentLookUp = contentLookUpMock;
@@ -547,7 +547,7 @@ public class ScheduledCaseInformationUpdaterIT extends ContainerTest {
     }
 
     @Test
-    public void testUpdateCaseWithPendingExportForPrehistoricWeekcode() throws OpenFormatConnectorException, JsonProcessingException, OpennumberRollConnectorException {
+    public void testUpdateCaseWithPendingExportForPrehistoricWeekcode() throws JsonProcessingException, OpennumberRollConnectorException, OpenFormatConnectorException {
 
         // Create a case
         CaseRequest dto = new CaseRequest()

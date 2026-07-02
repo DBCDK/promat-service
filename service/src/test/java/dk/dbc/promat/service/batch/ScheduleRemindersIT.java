@@ -2,7 +2,6 @@ package dk.dbc.promat.service.batch;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import dk.dbc.commons.persistence.TransactionScopedPersistenceContext;
-import dk.dbc.connector.openformat.OpenFormatConnectorException;
 import dk.dbc.promat.service.ContainerTest;
 import dk.dbc.promat.service.cluster.ServerRole;
 import dk.dbc.promat.service.dto.CaseRequest;
@@ -39,7 +38,7 @@ public class ScheduleRemindersIT extends ContainerTest {
 
     @BeforeAll
     public static void startWiremock() {
-        wiremockHost = wireMockServer.baseUrl() + "/api/v2";
+        wiremockHost = wireMockServer.baseUrl();
     }
 
     @BeforeEach
@@ -48,7 +47,7 @@ public class ScheduleRemindersIT extends ContainerTest {
     }
 
     @Test
-    public void testThatMailsAreSentEverydayAfterDeadline() throws JsonProcessingException, OpenFormatConnectorException {
+    public void testThatMailsAreSentEverydayAfterDeadline() throws JsonProcessingException {
 
         // Create a case with deadline yesterday
         CaseRequest dto = new CaseRequest()

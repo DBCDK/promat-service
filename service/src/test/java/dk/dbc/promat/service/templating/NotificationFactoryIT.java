@@ -1,15 +1,14 @@
 package dk.dbc.promat.service.templating;
 
-import dk.dbc.connector.openformat.OpenFormatConnectorException;
-import dk.dbc.connector.openformat.OpenFormatConnectorFactory;
 import dk.dbc.promat.service.api.OpenFormatHandler;
+import dk.dbc.promat.service.connectors.OpenFormatConnectorProducer;
 
 public class NotificationFactoryIT {
-    public static NotificationFactory getNotificationFactory(String wiremockHost) throws OpenFormatConnectorException {
+    public static NotificationFactory getNotificationFactory(String wiremockHost) {
         NotificationFactory ntf = new NotificationFactory();
         ntf.reviewerDiffer = new ReviewerDiffer();
         ntf.openFormatHandler = new OpenFormatHandler()
-                .withConnector(OpenFormatConnectorFactory.create(wiremockHost));
+                .withConnector(OpenFormatConnectorProducer.produce(wiremockHost));
         return ntf;
     }
 }
