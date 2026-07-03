@@ -1,0 +1,19 @@
+{
+  "id" : "48328097-ca6c-371f-ad3e-0c6ee5d1f6ca",
+  "request" : {
+    "url" : "/api/v1/manifestations/isbn-issn/9788776073770",
+    "method" : "GET"
+  },
+  "response" : {
+    "status" : 200,
+    "bodyFileName" : "body-api-v1-manifestations-isbn-issn-9788776073770-WHciy.json",
+    "headers" : {
+      "X-Frame-Options" : "SAMEORIGIN",
+      "Keep-Alive" : "timeout=10s",
+      "Server" : "Payara Micro #badassfish",
+      "Cluster-Node" : "faust-resolver-5894974994-f6gvz",
+      "Content-Type" : "application/json"
+    }
+  },
+  "uuid" : "48328097-ca6c-371f-ad3e-0c6ee5d1f6ca"
+}

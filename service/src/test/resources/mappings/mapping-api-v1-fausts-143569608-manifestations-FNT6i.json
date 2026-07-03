@@ -1,0 +1,19 @@
+{
+  "id" : "58ef4eba-ce24-3cfb-9442-e4ecfbefb197",
+  "request" : {
+    "url" : "/api/v1/fausts/143569608/manifestations",
+    "method" : "GET"
+  },
+  "response" : {
+    "status" : 200,
+    "bodyFileName" : "body-api-v1-fausts-143569608-manifestations-FNT6i.json",
+    "headers" : {
+      "X-Frame-Options" : "SAMEORIGIN",
+      "Keep-Alive" : "timeout=10s",
+      "Server" : "Payara Micro #badassfish",
+      "Cluster-Node" : "faust-resolver-5894974994-74rrm",
+      "Content-Type" : "application/json"
+    }
+  },
+  "uuid" : "58ef4eba-ce24-3cfb-9442-e4ecfbefb197"
+}

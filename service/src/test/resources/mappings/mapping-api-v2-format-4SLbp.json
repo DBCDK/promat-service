@@ -1,0 +1,24 @@
+{
+  "id" : "f0d72a41-6c29-36c1-8de5-c98a8d6f720f",
+  "request" : {
+    "url" : "/api/v2/format",
+    "method" : "POST",
+    "bodyPatterns" : [ {
+      "equalToJson" : "{\"formats\":[{\"name\":\"promat\",\"mediaType\":\"application/json\"}],\"objects\":[{\"repositoryId\":\"870970-basis:23319322\"}]}",
+      "ignoreArrayOrder" : true,
+      "ignoreExtraElements" : true
+    } ]
+  },
+  "response" : {
+    "status" : 200,
+    "bodyFileName" : "body-api-v2-format-4SLbp.json",
+    "headers" : {
+      "X-Frame-Options" : "SAMEORIGIN",
+      "Keep-Alive" : "timeout=10s",
+      "Server" : "Payara Micro #badassfish",
+      "Cluster-Node" : "open-format-broker-deploy-64c778d496-hjkvg",
+      "Content-Type" : "application/json"
+    }
+  },
+  "uuid" : "f0d72a41-6c29-36c1-8de5-c98a8d6f720f"
+}

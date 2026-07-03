@@ -1,11 +1,10 @@
 package dk.dbc.promat.service.templating;
 
 import com.github.tomakehurst.wiremock.WireMockServer;
-import dk.dbc.connector.openformat.OpenFormatConnectorException;
-import dk.dbc.connector.openformat.OpenFormatConnectorFactory;
 import dk.dbc.promat.service.ContainerTest;
 import dk.dbc.promat.service.api.OpenFormatHandler;
-import dk.dbc.promat.service.dto.ReviewerRequest;
+import dk.dbc.promat.service.connectors.OpenFormatConnectorException;
+import dk.dbc.promat.service.connectors.OpenFormatConnectorProducer;
 import dk.dbc.promat.service.persistence.Address;
 import dk.dbc.promat.service.persistence.Editor;
 import dk.dbc.promat.service.persistence.Notification;
@@ -27,15 +26,12 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 
-public class RendererTestIT extends ContainerTest {
-    private static final Logger LOGGER = LoggerFactory.getLogger(RendererTestIT.class);
+public class RendererTestIT {
     private static final NotificationFactory notificationFactory = new NotificationFactory();
     private static WireMockServer wireMockServer;
     private final PromatCase aCase = new PromatCase()
@@ -54,12 +50,12 @@ public class RendererTestIT extends ContainerTest {
                             .withEmail("kreste@krestense.dk"));
 
     @BeforeAll
-    public static void startWiremock() throws OpenFormatConnectorException {
+    public static void startWiremock() {
         wireMockServer = new WireMockServer(options().dynamicPort());
         wireMockServer.start();
 
         notificationFactory.openFormatHandler = new OpenFormatHandler().withConnector(
-                OpenFormatConnectorFactory.create(ContainerTest.getOpenFormatBaseUrl(wireMockServer.baseUrl() + "/api/v2")));
+                OpenFormatConnectorProducer.produce(wireMockServer.baseUrl()));
         notificationFactory.reviewerDiffer = new ReviewerDiffer();
         notificationFactory.LU_MAILADDRESS = "TEST@dbc.dk";
         notificationFactory.CC_MAILADDRESS = "cc_test@dbc.dk";
@@ -71,7 +67,7 @@ public class RendererTestIT extends ContainerTest {
     }
 
     @Test
-    public void testReviewCollection() throws NotificationFactory.ValidateException, OpenFormatConnectorException, IOException {
+    public void testReviewCollection() throws NotificationFactory.ValidateException, IOException, OpenFormatConnectorException {
         String NOTE = "Du bedes udarbejde en samlet anmeldelse af materialerne.<br/> " +
                 "Bøgerne er kandidater til inddatering i Metabuggi. " +
                 "Du bedes afgøre om de er relevante for Buggi og i positiv fald tildele dem metadata.";
@@ -96,7 +92,7 @@ public class RendererTestIT extends ContainerTest {
     }
 
     @Test
-    public void testMailWithMaterialThatShouldBeDownloaded() throws OpenFormatConnectorException, NotificationFactory.ValidateException, IOException {
+    public void testMailWithMaterialThatShouldBeDownloaded() throws NotificationFactory.ValidateException, IOException, OpenFormatConnectorException {
         Notification notification = notificationFactory.notificationOf(new AssignReviewer()
                 .withPromatCase(aCase
                         .withFulltextLink("Alink")
@@ -111,7 +107,7 @@ public class RendererTestIT extends ContainerTest {
     }
 
     @Test
-    public void testMailWithMaterialThatShouldBeDownloadedOrReadFromPrintedBook() throws OpenFormatConnectorException, NotificationFactory.ValidateException, IOException {
+    public void testMailWithMaterialThatShouldBeDownloadedOrReadFromPrintedBook() throws NotificationFactory.ValidateException, IOException, OpenFormatConnectorException {
         Notification notification = notificationFactory.notificationOf(new AssignReviewer()
                 .withPromatCase(aCase
                         .withFulltextLink("Alink")
@@ -127,7 +123,7 @@ public class RendererTestIT extends ContainerTest {
     }
 
     @Test
-    public void testMailWithMaterialEbookAndExpress() throws OpenFormatConnectorException, NotificationFactory.ValidateException, IOException {
+    public void testMailWithMaterialEbookAndExpress() throws NotificationFactory.ValidateException, IOException, OpenFormatConnectorException {
         Notification notification = notificationFactory.notificationOf(new AssignReviewer()
                 .withPromatCase(aCase
                         .withPrimaryFaust("48951147")

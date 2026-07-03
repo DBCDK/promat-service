@@ -1,0 +1,20 @@
+{
+  "id" : "e553bc12-9a0e-3cab-810b-984fcc5eea7c",
+  "request" : {
+    "url" : "/api/v1/manifestations/isbn-issn/143569608",
+    "method" : "GET"
+  },
+  "response" : {
+    "status" : 400,
+    "bodyFileName" : "body-api-v1-manifestations-isbn-issn-143569608-XD05q.json",
+    "headers" : {
+      "X-Frame-Options" : "SAMEORIGIN",
+      "Keep-Alive" : "timeout=10s",
+      "Server" : "Payara Micro #badassfish",
+      "Cluster-Node" : "faust-resolver-5894974994-2z5fl",
+      "X-DBC-Status" : "200 OK",
+      "Content-Type" : "application/json"
+    }
+  },
+  "uuid" : "e553bc12-9a0e-3cab-810b-984fcc5eea7c"
+}
