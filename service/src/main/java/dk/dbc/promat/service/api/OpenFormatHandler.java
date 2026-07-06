@@ -91,8 +91,8 @@ public class OpenFormatHandler {
                         : new ArrayList<>())
                 .withTitle(e.title() != null ? e.title().stream().findFirst().orElse("") : "")
                 .withTargetgroup(e.targetgroup() != null ? e.targetgroup() : new ArrayList<>())
-                .withMetakompassubject(e.metakompasSubject() != null
-                        ? e.metakompasSubject().stream().findFirst().orElse("")
+                .withMetakompassubject(e.metakompassubject() != null
+                        ? e.metakompassubject().stream().findFirst().orElse("")
                         : "");
     }
 }

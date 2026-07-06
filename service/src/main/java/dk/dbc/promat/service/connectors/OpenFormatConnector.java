@@ -122,7 +122,7 @@ public class OpenFormatConnector {
             CodeList catalogcodes,
             List<String> title,
             List<String> targetgroup,
-            List<String> metakompasSubject) {}
+            List<String> metakompassubject) {}
 
     @JsonIgnoreProperties(ignoreUnknown = true)
     public record TypeList(List<String> type) {}
