@@ -1,5 +1,6 @@
 package dk.dbc.promat.service.connector;
 
+import dk.dbc.commons.useragent.UserAgent;
 import dk.dbc.httpclient.FailSafeHttpClient;
 import dk.dbc.httpclient.HttpGet;
 import dk.dbc.httpclient.HttpPost;
@@ -35,6 +36,7 @@ public class PromatServiceConnector {
      * with older versions of the FailSafeHttpClient in use in systems using
      * this connector.
      */
+    private static final UserAgent USER_AGENT = new UserAgent("PromatServiceConnector");
     private static final RetryPolicy<Response> RETRY_POLICY = new RetryPolicy<Response>()
             .handle(ProcessingException.class)
             .handleResultIf(response -> response.getStatus() == 500)
@@ -45,7 +47,7 @@ public class PromatServiceConnector {
     private final String baseUrl;
 
     public PromatServiceConnector(Client client, String promatServiceBaseUrl) {
-        this(FailSafeHttpClient.create(client, RETRY_POLICY), promatServiceBaseUrl);
+        this(FailSafeHttpClient.create(client, USER_AGENT, RETRY_POLICY), promatServiceBaseUrl);
     }
 
     public PromatServiceConnector(FailSafeHttpClient failSafeHttpClient, String promatServiceBaseUrl) {

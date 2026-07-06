@@ -1,5 +1,6 @@
 package dk.dbc.promat.service.connectors;
 
+import dk.dbc.commons.useragent.UserAgent;
 import dk.dbc.httpclient.FailSafeHttpClient;
 import dk.dbc.httpclient.HttpClient;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -29,11 +30,16 @@ public class FaustResolverProducer {
 
     @Produces
     public static FaustResolver produce(@ConfigProperty(name = "FAUST_RESOLVER_URL") String baseUrl) {
+        return produce(baseUrl, UserAgent.forInternalRequests());
+    }
+
+    public static FaustResolver produce(String baseUrl, UserAgent userAgent) {
         Client client = HttpClient.newClient(new ClientConfig()
                 .register(new JacksonFeature()));
-        FailSafeHttpClient failSafeHttpClient = FailSafeHttpClient.create(client, RETRY_POLICY);
+        FailSafeHttpClient failSafeHttpClient = FailSafeHttpClient.create(client, userAgent, RETRY_POLICY);
         return new FaustResolver(failSafeHttpClient, baseUrl);
     }
+
 
     static void dispose(@Disposes FaustResolver faustResolver) {
         faustResolver.close();

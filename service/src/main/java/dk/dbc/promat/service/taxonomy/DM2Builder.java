@@ -1,5 +1,6 @@
 package dk.dbc.promat.service.taxonomy;
 
+import dk.dbc.commons.useragent.UserAgent;
 import dk.dbc.httpclient.HttpClient;
 import dk.dbc.httpclient.HttpPost;
 import dk.dbc.marc.binding.MarcBinding;
@@ -32,23 +33,32 @@ public class DM2Builder implements TaxonomyBuilder {
     static final Logger LOGGER = LoggerFactory.getLogger(DM2Builder.class);
 
     private HttpClient httpClient;
+    private UserAgent userAgent;
 
     String recordService;
 
     protected Duration readTimeout;
 
     public void initialize() {
+        if (userAgent == null) {
+            userAgent = UserAgent.forInternalRequests();
+        }
         ClientConfig clientConfig = new ClientConfig();
         clientConfig.register(JacksonFeature.class);
         clientConfig.property(ClientProperties.READ_TIMEOUT, readTimeout.toMillis());
-        this.httpClient = HttpClient.create(ClientBuilder.newClient(clientConfig));
+        this.httpClient = HttpClient.create(ClientBuilder.newClient(clientConfig), userAgent);
     }
 
     public DM2Builder() {}
 
     public DM2Builder(String url, Duration timeOut) {
+        this(url, timeOut, UserAgent.forInternalRequests());
+    }
+
+    public DM2Builder(String url, Duration timeOut, UserAgent userAgent) {
         this.readTimeout = timeOut;
         this.recordService = url;
+        this.userAgent = userAgent;
         initialize();
     }
 

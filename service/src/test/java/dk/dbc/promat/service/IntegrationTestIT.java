@@ -2,6 +2,7 @@ package dk.dbc.promat.service;
 
 import dk.dbc.commons.jdbc.util.JDBCUtil;
 import dk.dbc.commons.testcontainers.postgres.DBCPostgreSQLContainer;
+import dk.dbc.commons.useragent.UserAgent;
 import dk.dbc.httpclient.HttpClient;
 import dk.dbc.httpclient.HttpGet;
 import dk.dbc.promat.service.db.DatabaseMigrator;
@@ -44,7 +45,7 @@ public class IntegrationTestIT {
     private static boolean setupDone;
 
     static {
-        httpClient = HttpClient.create(HttpClient.newClient());
+        httpClient = HttpClient.create(HttpClient.newClient(), new UserAgent("PromatIT"));
         httpClient.getClient().property(ClientProperties.SUPPRESS_HTTP_COMPLIANCE_VALIDATION, true);
         LOGGER.info("Postres url is:{}", String.format("postgres:@host.testcontainers.internal:%s/postgres",
                 promatDBContainer.getHostPort()));

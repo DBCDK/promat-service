@@ -1,5 +1,6 @@
 package dk.dbc.promat.service.templating;
 
+import dk.dbc.commons.useragent.UserAgent;
 import dk.dbc.promat.service.api.OpenFormatHandler;
 import dk.dbc.promat.service.connectors.OpenFormatConnectorProducer;
 
@@ -8,7 +9,7 @@ public class NotificationFactoryIT {
         NotificationFactory ntf = new NotificationFactory();
         ntf.reviewerDiffer = new ReviewerDiffer();
         ntf.openFormatHandler = new OpenFormatHandler()
-                .withConnector(OpenFormatConnectorProducer.produce(wiremockHost));
+                .withConnector(OpenFormatConnectorProducer.produce(wiremockHost, new UserAgent("PromatIT")));
         return ntf;
     }
 }

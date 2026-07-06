@@ -295,6 +295,7 @@ public abstract class ContainerTest extends IntegrationTestIT {
         @SuppressWarnings("resource")
         GenericContainer<?> container = new GenericContainer<>("docker-metascrum.artifacts.dbccloud.dk/promat-service:devel")
                 .withLogConsumer(new Slf4jLogConsumer(LOGGER))
+                .withEnv("APP_NAME", "promatIT")
                 .withEnv("TZ", "Europe/Copenhagen")
                 .withEnv("JAVA_MAX_HEAP_SIZE", "2G")
                 .withEnv("LOG_FORMAT", "text")
@@ -308,7 +309,6 @@ public abstract class ContainerTest extends IntegrationTestIT {
                 .withEnv("MAIL_USER", "mail.user")
                 .withEnv("MAIL_FROM", "some@address.dk")
                 .withEnv("OPENFORMAT_SERVICE_URL", getOpenFormatBaseUrl("http://host.testcontainers.internal:" + wireMockServer.port()))
-                //.withEnv("OPENFORMAT_SERVICE_URL", "http://172.17.38.221:8081")// + wireMockServer.port()))
                 .withEnv("LU_MAILADDRESS", "lumailaddress-test@dbc.dk")
                 .withEnv("OPENNUMBERROLL_SERVICE_URL", "http://host.testcontainers.internal:" + wireMockServer.port() + "/1.1")
                 .withEnv("EMATERIAL_CONTENT_REPO", "http://host.testcontainers.internal:" + wireMockServer.port() +
@@ -322,7 +322,6 @@ public abstract class ContainerTest extends IntegrationTestIT {
                 .withEnv("OAUTH2_USERINFO_URL", "http://host.testcontainers.internal:" + wireMockServer.port() + "/userinfo")
                 .withEnv("RECORD_SERVICE", "http://host.testcontainers.internal:" + wireMockServer.port())
                 .withEnv("FAUST_RESOLVER_URL", "http://host.testcontainers.internal:" + wireMockServer.port())
-                //.withEnv("FAUST_RESOLVER_URL", "http://172.17.38.221:8082") // + wireMockServer.port())
                 .withExposedPorts(8080)
                 .waitingFor(Wait.forHttp("/health"))
                 .withStartupTimeout(Duration.ofMinutes(2));
