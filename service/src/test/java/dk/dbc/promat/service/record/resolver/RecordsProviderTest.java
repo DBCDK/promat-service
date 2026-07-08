@@ -1,6 +1,7 @@
 package dk.dbc.promat.service.record.resolver;
 
 import com.github.tomakehurst.wiremock.WireMockServer;
+import dk.dbc.commons.useragent.UserAgent;
 import dk.dbc.promat.service.OpenformatMocks;
 import dk.dbc.promat.service.api.OpenFormatHandler;
 import dk.dbc.promat.service.api.RecordsProvider;
@@ -20,6 +21,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 
 class RecordsProviderTest {
+    private static final UserAgent USER_AGENT = new UserAgent("PromatIT");
     private static WireMockServer wireMockServer;
     private static FaustResolver faustResolver;
     private static OpenFormatConnector connector;
@@ -30,8 +32,8 @@ class RecordsProviderTest {
     static void startWiremock() {
         wireMockServer = new WireMockServer(options().dynamicPort());
         wireMockServer.start();
-        faustResolver  = FaustResolverProducer.produce("http://localhost:" + wireMockServer.port());
-        connector = OpenFormatConnectorProducer.produce("http://localhost:" + wireMockServer.port());
+        faustResolver  = FaustResolverProducer.produce("http://localhost:" + wireMockServer.port(), USER_AGENT);
+        connector = OpenFormatConnectorProducer.produce("http://localhost:" + wireMockServer.port(), USER_AGENT);
         openFormatHandler = new OpenFormatHandler(connector);
         provider = new RecordsProvider(faustResolver, openFormatHandler);
         OpenformatMocks.mockOpenformatResponses(wireMockServer);

@@ -37,7 +37,14 @@ Integration tests (`*IT.java`) use TestContainers (spins up PostgreSQL + Payara 
 ./scripts/stop              # Stop both
 ```
 
-Environment is configured via `scripts/common` (defaults) or `.env.local` (local overrides). Required env vars: `PROMAT_DB_URL`, `OPENSEARCH_SERVICE_URL`, `RECORD_SERVICE`, `OPENFORMAT_SERVICE_URL`, `OPENNUMBERROLL_SERVICE_URL`, `CULR_SERVICE_URL`.
+Environment is configured via `scripts/common` (defaults) or `.env.local` (local overrides). Required env vars: 
+* `PROMAT_DB_URL`, 
+* `OPENSEARCH_SERVICE_URL`, 
+* `RECORD_SERVICE`, 
+* `OPENFORMAT_SERVICE_URL`, 
+* `FAUST_RESOLVER_URL`,  
+* `OPENNUMBERROLL_SERVICE_URL`, 
+* `APP_NAME`.
 
 ## Architecture
 

@@ -1,6 +1,7 @@
 package dk.dbc.promat.service.templating;
 
 import com.github.tomakehurst.wiremock.WireMockServer;
+import dk.dbc.commons.useragent.UserAgent;
 import dk.dbc.promat.service.ContainerTest;
 import dk.dbc.promat.service.api.OpenFormatHandler;
 import dk.dbc.promat.service.connectors.OpenFormatConnectorException;
@@ -55,7 +56,7 @@ public class RendererTestIT {
         wireMockServer.start();
 
         notificationFactory.openFormatHandler = new OpenFormatHandler().withConnector(
-                OpenFormatConnectorProducer.produce(wireMockServer.baseUrl()));
+                OpenFormatConnectorProducer.produce(wireMockServer.baseUrl(), new UserAgent("PromatIT")));
         notificationFactory.reviewerDiffer = new ReviewerDiffer();
         notificationFactory.LU_MAILADDRESS = "TEST@dbc.dk";
         notificationFactory.CC_MAILADDRESS = "cc_test@dbc.dk";
