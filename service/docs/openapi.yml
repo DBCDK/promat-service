@@ -308,10 +308,9 @@ paths:
           name: id
           required: true
           schema:
-            type: string
+            type: integer
             minimum: 1
-            maximum: 1
-            description: Identifier to lookup. Can be faust, isbn-10 or isbn-13
+            description: Identifier to lookup. Can be faust, isbn-10, isbn-13 or barcode
       responses:
         '200':
           description: successful operation

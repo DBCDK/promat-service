@@ -36,6 +36,7 @@ import java.util.function.Function;
 import static com.github.tomakehurst.wiremock.client.WireMock.configureFor;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options;
 import static dk.dbc.promat.service.AuthMocks.mockAuthenticationResponses;
+import static dk.dbc.promat.service.FaustResolverMocks.mockFaustResolverResponses;
 import static dk.dbc.promat.service.OpenformatMocks.mockOpenformatResponses;
 import static dk.dbc.promat.service.taxonomy.RecordServiceMocks.mockRecordServiceAgencyDump;
 
@@ -278,6 +279,7 @@ public abstract class ContainerTest extends IntegrationTestIT {
         mockAuthenticationResponses(wireMockServer);
         mockOpenformatResponses(wireMockServer);
         mockRecordServiceAgencyDump(wireMockServer);
+        mockFaustResolverResponses(wireMockServer);
 
         wireMockServer.start();
         configureFor("localhost", wireMockServer.port());
