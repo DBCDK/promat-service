@@ -301,15 +301,16 @@ paths:
       tags:
         - records
       summary: Return zero or more faust numbers that match the given id.
-        The id can be a faust number or an isbn-10 or isbn-13 number.
+        The id can be a faust number, an isbn-10 or isbn-13 number, or a barcode.
       operationId: getRecords
       parameters:
         - in: path
           name: id
           required: true
           schema:
-            type: integer
-            minimum: 1
+            type: string
+            minLength: 8
+            maxLength: 13
             description: Identifier to lookup. Can be faust, isbn-10, isbn-13 or barcode
       responses:
         '200':

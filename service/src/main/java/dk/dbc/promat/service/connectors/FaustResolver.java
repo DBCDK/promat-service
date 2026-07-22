@@ -48,14 +48,17 @@ public class FaustResolver {
      */
     public Set<String> resolve(String id) throws FaustResolverException {
         Set<String> manifestations = byOther(IdType.ISBN_ISSN, id);
-        manifestations.addAll(byOther(IdType.BARCODE, id));
         if (!manifestations.isEmpty()) {
             return manifestations;
-        } else if (faustExists(id)) {
-            return Set.of(id);
-        } else {
-            return Collections.emptySet();
         }
+        manifestations = byOther(IdType.BARCODE, id);
+        if (!manifestations.isEmpty()) {
+            return manifestations;
+        }
+        if (faustExists(id)) {
+            return Set.of(id);
+        }
+        return Collections.emptySet();
     }
 
     /**

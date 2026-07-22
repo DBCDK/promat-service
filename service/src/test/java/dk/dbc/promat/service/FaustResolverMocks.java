@@ -9,15 +9,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching;
 public class FaustResolverMocks {
 
     public static void mockFaustResolverResponses(WireMockServer wireMockServer) {
-        wireMockServer.stubFor(get(urlPathMatching(".*api/v1/manifestations/barcode/.*"))
-                .atPriority(10)
-                .willReturn(okJson("""
-                        {
-                          "items": [],
-                          "trackingId": "000-000-000-000-000"
-                        }
-                        """)));
-        wireMockServer.stubFor(get(urlPathMatching(".*api/v1/manifestations/isbn-issn/.*"))
+        wireMockServer.stubFor(get(urlPathMatching(".*api/v1/manifestations/(barcode|isbn-issn)/.*"))
                 .atPriority(10)
                 .willReturn(okJson("""
                         {
