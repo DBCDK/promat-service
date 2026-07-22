@@ -1,0 +1,19 @@
+{
+  "id" : "8cd18a34-5b58-3093-b592-fd87fe1d7c61",
+  "request" : {
+    "url" : "/api/v1/manifestations/barcode/5026555432207",
+    "method" : "GET"
+  },
+  "response" : {
+    "status" : 200,
+    "bodyFileName" : "body-api-v1-manifestations-barcode-5026555432207-ZIIcy.json",
+    "headers" : {
+      "X-Frame-Options" : "SAMEORIGIN",
+      "Keep-Alive" : "timeout=10s",
+      "Server" : "Payara Micro",
+      "Cluster-Node" : "faust-resolver-5d44f787f5-xp45m",
+      "Content-Type" : "application/json"
+    }
+  },
+  "uuid" : "8cd18a34-5b58-3093-b592-fd87fe1d7c61"
+}

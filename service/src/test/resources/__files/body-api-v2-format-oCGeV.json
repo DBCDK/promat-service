@@ -1,0 +1,56 @@
+{
+  "objects": [
+    {
+      "promat": [
+        {
+          "formatted": {
+            "format": "promat",
+            "records": [
+              {
+                "elements": {
+                  "faust": [
+                    "62765739"
+                  ],
+                  "dk5": [
+                    "79.41"
+                  ],
+                  "materialtypes": {
+                    "type": [
+                      "Playstation 5"
+                    ]
+                  },
+                  "materialtypesDetail": {
+                    "type": [
+                      "t to"
+                    ]
+                  },
+                  "publisher": [
+                    "Windsor, Berks., 2K, 2022"
+                  ],
+                  "barcode": [
+                    "5026555432207"
+                  ],
+                  "catalogcodes": {
+                    "code": [
+                      "ACC202223",
+                      "BKM202226",
+                      "BKX202225"
+                    ]
+                  },
+                  "title": [
+                    "The Quarry (Playstation 5)"
+                  ],
+                  "targetgroup": [
+                    "v"
+                  ]
+                }
+              }
+            ]
+          },
+          "mediaType": "application/json"
+        }
+      ]
+    }
+  ],
+  "trackingId": "aba2cfca-f5fb-4f58-b3c0-c2941f152603"
+}
