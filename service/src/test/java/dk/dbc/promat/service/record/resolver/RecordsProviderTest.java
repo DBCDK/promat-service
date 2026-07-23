@@ -2,6 +2,7 @@ package dk.dbc.promat.service.record.resolver;
 
 import com.github.tomakehurst.wiremock.WireMockServer;
 import dk.dbc.commons.useragent.UserAgent;
+import dk.dbc.promat.service.FaustResolverMocks;
 import dk.dbc.promat.service.OpenformatMocks;
 import dk.dbc.promat.service.api.OpenFormatHandler;
 import dk.dbc.promat.service.api.RecordsProvider;
@@ -37,6 +38,7 @@ class RecordsProviderTest {
         openFormatHandler = new OpenFormatHandler(connector);
         provider = new RecordsProvider(faustResolver, openFormatHandler);
         OpenformatMocks.mockOpenformatResponses(wireMockServer);
+        FaustResolverMocks.mockFaustResolverResponses(wireMockServer);
     }
 
     @AfterAll
@@ -49,6 +51,19 @@ class RecordsProviderTest {
         RecordsListDto recordsListDto = provider.getRecords("9788712802846");
         assertThat("One record is present", recordsListDto.getNumFound(), is(1));
         assertThat("Material type is book", recordsListDto.getRecords().getFirst().getTypes().getFirst().getMaterialType().toString(), is("BOOK"));
+    }
+
+    @Test
+    void barcode_materialtype_movie() throws FaustResolverException, OpenFormatConnectorException {
+        RecordsListDto recordsListDto = provider.getRecords("5710768010115");
+        assertThat("One record is present", recordsListDto.getNumFound(), is(1));
+        assertThat("Material type is movie", recordsListDto.getRecords().getFirst().getTypes().getFirst().getMaterialType().toString(), is("MOVIE"));
+    }
+    @Test
+    void barcode_materialtype_multimedia() throws FaustResolverException, OpenFormatConnectorException {
+        RecordsListDto recordsListDto = provider.getRecords("5026555432207");
+        assertThat("One record is present", recordsListDto.getNumFound(), is(1));
+        assertThat("Material type is multimmedia", recordsListDto.getRecords().getFirst().getTypes().getFirst().getMaterialType().toString(), is("MULTIMEDIA"));
     }
 
     @Test

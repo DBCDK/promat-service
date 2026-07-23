@@ -23,7 +23,7 @@ public class FaustResolver {
 
     public record ManifestationsResponse(List<String> manifestations, String trackingId) {}
     public record ManifestationItemsResponse(List<ManifestationItem> items, String trackingId) {}
-    public record ManifestationItem(String manifestationId, int agencyId, String localId, String isbnIssn) {}
+    public record ManifestationItem(String manifestationId, int agencyId, String localId, String isbnIssn, String barcode) {}
 
     public FaustResolver(FailSafeHttpClient failSafeHttpClient, String baseUrl) {
         if (failSafeHttpClient == null || baseUrl == null) {
@@ -42,19 +42,23 @@ public class FaustResolver {
 
     /**
      * Resolves an id (either faust or isbn/issn) to a set of fausts.
-     * @param id faust or isbn/issn
+     * @param id faust or isbn/issn or barcode
      * @return set of fausts
      * @throws FaustResolverException
      */
     public Set<String> resolve(String id) throws FaustResolverException {
-        Set<String> manifestations = byIsbnIssn(id);
+        Set<String> manifestations = byOther(IdType.ISBN_ISSN, id);
         if (!manifestations.isEmpty()) {
             return manifestations;
-        } else if (faustExists(id)) {
-            return Set.of(id);
-        } else {
-            return Collections.emptySet();
         }
+        manifestations = byOther(IdType.BARCODE, id);
+        if (!manifestations.isEmpty()) {
+            return manifestations;
+        }
+        if (faustExists(id)) {
+            return Set.of(id);
+        }
+        return Collections.emptySet();
     }
 
     /**
@@ -74,17 +78,25 @@ public class FaustResolver {
         return Objects.equals(m.group("agencyId"), "870970") ? m.group("faust") : null;
     }
 
+    private enum IdType {
+        ISBN_ISSN("isbn-issn"), BARCODE("barcode");
+        public final String value;
+        IdType(String value) {
+            this.value = value;
+        }
+    }
     /**
      * Resolves the manifestations matching a given isbn or issn.
      *
-     * @param isbnIssn isbn or issn number to resolve
+     * @param otherIdType "isbn-issn" or "barcode"
+     * @param id isbn or issn number to resolve
      * @return the matching fausts, or {@code null} if none was found
      * @throws FaustResolverException on unexpected failure
      */
-    public Set<String> byIsbnIssn(String isbnIssn) throws FaustResolverException {
+    private Set<String> byOther(IdType otherIdType, String id) throws FaustResolverException {
         final HttpGet httpGet = new HttpGet(failSafeHttpClient)
                 .withBaseUrl(baseUrl)
-                .withPathElements("api", "v1", "manifestations", "isbn-issn", isbnIssn);
+                .withPathElements("api", "v1", "manifestations", otherIdType.value, id);
         try (Response response = httpGet.execute()) {
             if (response.getStatus() == Response.Status.BAD_REQUEST.getStatusCode()) {
                 return Collections.emptySet();
