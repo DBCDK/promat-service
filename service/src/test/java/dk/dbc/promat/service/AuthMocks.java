@@ -26,12 +26,25 @@ public class AuthMocks {
      * ----------------------------------------------------------------------------------------
      * 1-2-3-4-5         active=true     EDITOR        12           53               bibliotek
      * 2-3-4-5-6         active=true     EDITOR        13           klnp             netpunkt
+     * 6-5-4-3-2         active=true     EDITOR        13           klnp             entraDbc (userId=klnp@dbc.dk)
+     * 7-6-5-4-3         active=true     EDITOR        n/a          n/a              entraDbc (userId=nomatch@dbc.dk, no matching promatuser)
+     * 8-7-6-5-4         active=true     EDITOR        n/a          n/a              entraDbc (userId=klnp@otherdomain.com, non-dbc.dk domain)
      * 6-7-8-9-0         active=false
      */
     public static void mockAuthenticationResponses(WireMockServer wireMockServer) throws IOException {
 
         // Mock logged-in editor with id=13, using 'netpunkt login' (userid+agency)
         mockAuth(wireMockServer, "2-3-4-5-6", 200, 200, IDP_PRODUCT_NAME, IDP_EDITOR_RIGHT_NAME);
+
+        // Mock logged-in editor with id=13, using 'entraDbc login' (userId returned as email, e.g. klnp@dbc.dk)
+        mockAuth(wireMockServer, "6-5-4-3-2", 200, 200, IDP_PRODUCT_NAME, IDP_EDITOR_RIGHT_NAME);
+
+        // Mock entraDbc login where the userId local-part (nomatch) has no matching promatuser row
+        mockAuth(wireMockServer, "7-6-5-4-3", 200, 200, IDP_PRODUCT_NAME, IDP_EDITOR_RIGHT_NAME);
+
+        // Mock entraDbc login where the userId local-part (klnp) matches a promatuser row, but the
+        // domain is not @dbc.dk - the fallback must not kick in for non-dbc.dk domains
+        mockAuth(wireMockServer, "8-7-6-5-4", 200, 200, IDP_PRODUCT_NAME, IDP_EDITOR_RIGHT_NAME);
 
         // Mock logged-in reviewer with id=2, using 'netpunkt login' (userid+agency)
         mockAuth(wireMockServer, "3-4-5-6-7", 200, 200, IDP_PRODUCT_NAME, IDP_REVIEWER_RIGHT_NAME);
