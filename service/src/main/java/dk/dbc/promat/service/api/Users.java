@@ -57,28 +57,23 @@ public class Users {
                             .withCode(ServiceErrorCode.FORBIDDEN)).build();
         }
 
-        /* "initials" is asserted by the IdP regardless of login path (dbcidp or entraDbc), unlike
-           "userId" which differs in format between the two (e.g. "klnp" vs "klnp@dbc.dk") - so we
-           match promatuser rows on initials instead, without needing to care which idpUsed applies. */
-        Optional<String> initials = callerPrincipal.claim("initials");
         Optional<String> userId = callerPrincipal.claim("userId");
         Optional<String> agency = callerPrincipal.claim("netpunktAgency");
-        if (initials.isEmpty() || userId.isEmpty() || agency.isEmpty()) {
+        if (userId.isEmpty() || agency.isEmpty()) {
             return Response.status(401).entity(
                     new ServiceErrorDto()
-                            .withCause("No initials, userId or agency")
-                            .withDetails("Received request for user role without initials, userId and/or agency")
+                            .withCause("No userId or agency")
+                            .withDetails("Received request for user role without a userId and/or agency")
                             .withCode(ServiceErrorCode.FORBIDDEN)).build();
         }
 
-        /* Sanity checks on the IdP's own claims, before trusting "initials" for the DB lookup:
-           - if "userId" is email-shaped (entraDbc login), its domain must be dbc.dk - we don't
-             want to accept an identity federated from an arbitrary/unrecognized domain
-           - "initials" must equal the local-part of "userId" regardless of domain (e.g.
-             "userId=klnp@dbc.dk" or "userId=klnp" must both have "initials=klnp") - this guards
-             against relying on "initials" alone if it's ever populated inconsistently with the
-             rest of the token */
-        final String userIdLocalPart;
+        /* userId is only email-shaped for entraDbc logins - the classic (dbcidp/netpunkt/bibliotek)
+           login paths return a plain, already-DB-matching userId here, so for those we keep the
+           exact original behavior (no "initials" claim involved at all) for backward compatibility.
+           Only for the email-shaped case do we need "initials" - which the IdP asserts consistently
+           regardless of login path, unlike userId - to recover a DB-matching identifier, and even
+           then only after checking it's from the trusted dbc.dk domain and agrees with userId. */
+        final String userIdLookupKey;
         if (userId.get().contains("@")) {
             final String userIdDomain = userId.get().substring(userId.get().indexOf('@') + 1);
             if (!userIdDomain.equalsIgnoreCase("dbc.dk")) {
@@ -89,44 +84,55 @@ public class Users {
                                 .withDetails(String.format("userId %s is not from the dbc.dk domain", userId.get()))
                                 .withCode(ServiceErrorCode.FORBIDDEN)).build();
             }
-            userIdLocalPart = userId.get().substring(0, userId.get().indexOf('@'));
+
+            final Optional<String> initials = callerPrincipal.claim("initials");
+            if (initials.isEmpty()) {
+                return Response.status(401).entity(
+                        new ServiceErrorDto()
+                                .withCause("No initials")
+                                .withDetails("Received request for user role with an email-shaped userId but no initials")
+                                .withCode(ServiceErrorCode.FORBIDDEN)).build();
+            }
+
+            final String userIdLocalPart = userId.get().substring(0, userId.get().indexOf('@'));
+            if (!userIdLocalPart.equalsIgnoreCase(initials.get())) {
+                LOGGER.error("getUserRoleFromAuthToken initials {} does not match userId {}", initials.get(), userId.get());
+                return Response.status(401).entity(
+                        new ServiceErrorDto()
+                                .withCause("Inconsistent identity claims")
+                                .withDetails(String.format("initials %s does not match userId %s", initials.get(), userId.get()))
+                                .withCode(ServiceErrorCode.FORBIDDEN)).build();
+            }
+            userIdLookupKey = initials.get();
         } else {
-            userIdLocalPart = userId.get();
-        }
-        if (!userIdLocalPart.equalsIgnoreCase(initials.get())) {
-            LOGGER.error("getUserRoleFromAuthToken initials {} does not match userId {}", initials.get(), userId.get());
-            return Response.status(401).entity(
-                    new ServiceErrorDto()
-                            .withCause("Inconsistent identity claims")
-                            .withDetails(String.format("initials %s does not match userId %s", initials.get(), userId.get()))
-                            .withCode(ServiceErrorCode.FORBIDDEN)).build();
+            userIdLookupKey = userId.get();
         }
 
         final TypedQuery<UserRole> query = entityManager.createNamedQuery(PromatUser.GET_USER_ROLE_BY_AGENCY_AND_USERID, UserRole.class);
-        query.setParameter(1, initials.get());
+        query.setParameter(1, userIdLookupKey);
         query.setParameter(2, agency.get());
 
         final List<UserRole> userRole = query.getResultList();
         if (userRole.isEmpty()) {
-            LOGGER.error("getUserRoleFromAuthToken returned empty list when searching with initials {} and agency {}", initials.get(), agency.get());
+            LOGGER.error("getUserRoleFromAuthToken returned empty list when searching with userId {} and agency {}", userIdLookupKey, agency.get());
             return Response.status(401).entity(
                     new ServiceErrorDto()
                             .withCause("User not authorized")
-                            .withDetails(String.format("initials/agency %s/%s was not found in the set of known Promat users", initials.get(), agency.get()))
+                            .withDetails(String.format("userId/agency %s/%s was not found in the set of known Promat users", userIdLookupKey, agency.get()))
                             .withCode(ServiceErrorCode.NOT_FOUND)).build();
         }
         if (userRole.size() > 1) {
-            LOGGER.error("getUserRoleFromAuthToken returned list with more than 1 user when searching with initials {} and agency {}", initials.get(), agency.get());
+            LOGGER.error("getUserRoleFromAuthToken returned list with more than 1 user when searching with userId {} and agency {}", userIdLookupKey, agency.get());
             return Response.status(401).entity(
                     new ServiceErrorDto()
                             .withCause("User not authorized")
-                            .withDetails(String.format("initials/agency %s/%s returned multiple known Promat users", initials.get(), agency.get()))
+                            .withDetails(String.format("userId/agency %s/%s returned multiple known Promat users", userIdLookupKey, agency.get()))
                             .withCode(ServiceErrorCode.NOT_FOUND)).build();
         }
 
         Set<String> groups = callerPrincipal.getGroups();
-        if (groups.isEmpty() || !groups.contains(IDP_PRODUCT_NAME + "-" + getRightNameForRole(userRole.get(0).getRole()))) {
-            LOGGER.error("getUserRoleFromAuthToken with no or incorrect roles. Role is {}, but having groups {}", userRole.get(0).getRole().name(), groups);
+        if (groups.isEmpty() || !groups.contains(IDP_PRODUCT_NAME + "-" + getRightNameForRole(userRole.getFirst().getRole()))) {
+            LOGGER.error("getUserRoleFromAuthToken with no or incorrect roles. Role is {}, but having groups {}", userRole.getFirst().getRole().name(), groups);
             return Response.status(401).entity(
                     new ServiceErrorDto()
                             .withCause("No or incorrect roles")
@@ -134,7 +140,7 @@ public class Users {
                             .withCode(ServiceErrorCode.FORBIDDEN)).build();
         }
 
-        return Response.ok(userRole.get(0)).build();
+        return Response.ok(userRole.getFirst()).build();
     }
 
     private String getRightNameForRole(PromatUser.Role role) {
