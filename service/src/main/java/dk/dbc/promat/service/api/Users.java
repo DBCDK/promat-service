@@ -72,15 +72,16 @@ public class Users {
            (i.e. initials), so we use the "initials" claim instead, which the IdP asserts
            consistently regardless of login path, after the sanity checks below. A plain
            (non-email) userId is used as-is, unchanged, for backward compatibility. */
+        final String rawUserId = userId.get();
         final String userIdLookupKey;
-        if (userId.get().contains("@")) {
-            final String userIdDomain = userId.get().substring(userId.get().indexOf('@') + 1);
+        if (rawUserId.contains("@")) {
+            final String userIdDomain = rawUserId.substring(rawUserId.indexOf('@') + 1);
             if (!userIdDomain.equalsIgnoreCase("dbc.dk")) {
-                LOGGER.error("getUserRoleFromAuthToken userId {} is not from the dbc.dk domain", userId.get());
+                LOGGER.error("getUserRoleFromAuthToken userId {} is not from the dbc.dk domain", rawUserId);
                 return Response.status(401).entity(
                         new ServiceErrorDto()
                                 .withCause("Untrusted userId domain")
-                                .withDetails(String.format("userId %s is not from the dbc.dk domain", userId.get()))
+                                .withDetails(String.format("userId %s is not from the dbc.dk domain", rawUserId))
                                 .withCode(ServiceErrorCode.FORBIDDEN)).build();
             }
 
@@ -93,18 +94,18 @@ public class Users {
                                 .withCode(ServiceErrorCode.FORBIDDEN)).build();
             }
 
-            final String userIdLocalPart = userId.get().substring(0, userId.get().indexOf('@'));
+            final String userIdLocalPart = rawUserId.substring(0, rawUserId.indexOf('@'));
             if (!userIdLocalPart.equalsIgnoreCase(initials.get())) {
-                LOGGER.error("getUserRoleFromAuthToken initials {} does not match userId {}", initials.get(), userId.get());
+                LOGGER.error("getUserRoleFromAuthToken initials {} does not match userId {}", initials.get(), rawUserId);
                 return Response.status(401).entity(
                         new ServiceErrorDto()
                                 .withCause("Inconsistent identity claims")
-                                .withDetails(String.format("initials %s does not match userId %s", initials.get(), userId.get()))
+                                .withDetails(String.format("initials %s does not match userId %s", initials.get(), rawUserId))
                                 .withCode(ServiceErrorCode.FORBIDDEN)).build();
             }
             userIdLookupKey = initials.get();
         } else {
-            userIdLookupKey = userId.get();
+            userIdLookupKey = rawUserId;
         }
 
         final TypedQuery<UserRole> query = entityManager.createNamedQuery(PromatUser.GET_USER_ROLE_BY_AGENCY_AND_USERID, UserRole.class);
