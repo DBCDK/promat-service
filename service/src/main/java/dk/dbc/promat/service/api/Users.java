@@ -67,12 +67,11 @@ public class Users {
                             .withCode(ServiceErrorCode.FORBIDDEN)).build();
         }
 
-        /* userId is only email-shaped for entraDbc logins - the classic (dbcidp/netpunkt/bibliotek)
-           login paths return a plain, already-DB-matching userId here, so for those we keep the
-           exact original behavior (no "initials" claim involved at all) for backward compatibility.
-           Only for the email-shaped case do we need "initials" - which the IdP asserts consistently
-           regardless of login path, unlike userId - to recover a DB-matching identifier, and even
-           then only after checking it's from the trusted dbc.dk domain and agrees with userId. */
+        /* An email-shaped userId means entraDbc login was used. By convention - not a DB constraint -
+           promatuser.userId is stored in the format the netpunkt login flow uses
+           (i.e. initials), so we use the "initials" claim instead, which the IdP asserts
+           consistently regardless of login path, after the sanity checks below. A plain
+           (non-email) userId is used as-is, unchanged, for backward compatibility. */
         final String userIdLookupKey;
         if (userId.get().contains("@")) {
             final String userIdDomain = userId.get().substring(userId.get().indexOf('@') + 1);
