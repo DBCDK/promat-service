@@ -183,11 +183,6 @@
     </dependency>
     <dependency>
       <groupId>dk.dbc</groupId>
-      <artifactId>dbc-commons-metrics-handler</artifactId>
-      <version>1.2-SNAPSHOT</version>
-    </dependency>
-    <dependency>
-      <groupId>dk.dbc</groupId>
       <artifactId>opennumberroll-connector</artifactId>
       <version>21.2.3-SNAPSHOT</version>
     </dependency>
