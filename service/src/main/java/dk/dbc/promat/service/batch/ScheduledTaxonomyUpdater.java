@@ -13,7 +13,7 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@Startup
+// @Startup disabled temporarily
 @Singleton
 public class ScheduledTaxonomyUpdater {
     private static final Logger LOGGER = LoggerFactory.getLogger(ScheduledTaxonomyUpdater.class);
