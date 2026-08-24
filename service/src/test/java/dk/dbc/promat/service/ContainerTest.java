@@ -37,7 +37,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.configureFor;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options;
 import static dk.dbc.promat.service.AuthMocks.mockAuthenticationResponses;
 import static dk.dbc.promat.service.FaustResolverMocks.mockFaustResolverResponses;
-import static dk.dbc.promat.service.OpenformatMocks.mockOpenformatResponses;
+import static dk.dbc.promat.service.FbiApiMocks.mockFbiApiResponses;
 import static dk.dbc.promat.service.taxonomy.RecordServiceMocks.mockRecordServiceAgencyDump;
 
 public abstract class ContainerTest extends IntegrationTestIT {
@@ -274,10 +274,10 @@ public abstract class ContainerTest extends IntegrationTestIT {
     private static WireMockServer makeWireMockServer() throws IOException {
         WireMockServer wireMockServer = new WireMockServer(options()
                 .dynamicPort()
-                .extensions(OpenformatMocks.bodyTransformer()));
+                .extensions(FbiApiMocks.bodyTransformer()));
 
         mockAuthenticationResponses(wireMockServer);
-        mockOpenformatResponses(wireMockServer);
+        mockFbiApiResponses(wireMockServer);
         mockRecordServiceAgencyDump(wireMockServer);
         mockFaustResolverResponses(wireMockServer);
 
