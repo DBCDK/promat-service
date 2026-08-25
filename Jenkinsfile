@@ -89,7 +89,7 @@ pipeline {
         }
 		stage("docker push") {
 			when {
-                branch "master"
+                branch "support-entra-login"
             }
 			steps {
 				script {
@@ -99,7 +99,7 @@ pipeline {
 		}
         stage("Update staging version number") {
             when {
-                branch "master"
+                branch "support-entra-login"
             }
             steps {
                 script {
