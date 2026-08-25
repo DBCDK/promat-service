@@ -1,0 +1,3 @@
+# Enable zsh-tab-completion management for SDKMAN
+# Consult https://sdkman.io/usage#config for usage instructions
+java=21.0.12-tem
