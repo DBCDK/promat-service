@@ -62,7 +62,7 @@ pipeline {
         }
 		stage("verify") {
 			steps {
-				sh "mvn -D sourcepath=src/main/java verify pmd:pmd"
+				sh "mvn -D sourcepath=src/main/java -Dmaven.repo.local=${WORKSPACE}/.m2-clean verify pmd:pmd"
 
 				junit testResults: '**/target/*-reports/TEST-*.xml'
 
