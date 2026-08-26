@@ -26,12 +26,30 @@ public class AuthMocks {
      * ----------------------------------------------------------------------------------------
      * 1-2-3-4-5         active=true     EDITOR        12           53               bibliotek
      * 2-3-4-5-6         active=true     EDITOR        13           klnp             netpunkt
+     * 6-5-4-3-2         active=true     EDITOR        13           klnp             entraDbc (userId=klnp@dbc.dk, initials=klnp)
+     * 7-6-5-4-3         active=true     EDITOR        n/a          n/a              entraDbc (initials=nomatch, no matching promatuser)
+     * 8-7-6-5-4         active=true     EDITOR        n/a          n/a              entraDbc (userId=klnp@otherdomain.com, initials=klnp - non-dbc.dk domain rejected)
+     * 9-8-7-6-5         active=true     EDITOR        n/a          n/a              entraDbc (userId=klnp@dbc.dk, initials=different - inconsistent claims)
      * 6-7-8-9-0         active=false
      */
     public static void mockAuthenticationResponses(WireMockServer wireMockServer) throws IOException {
 
         // Mock logged-in editor with id=13, using 'netpunkt login' (userid+agency)
         mockAuth(wireMockServer, "2-3-4-5-6", 200, 200, IDP_PRODUCT_NAME, IDP_EDITOR_RIGHT_NAME);
+
+        /* Mock logged-in editor with id=13, using 'entraDbc login' (userId returned as email, initials=klnp) */
+        mockAuth(wireMockServer, "6-5-4-3-2", 200, 200, IDP_PRODUCT_NAME, IDP_EDITOR_RIGHT_NAME);
+
+        /* Mock entraDbc login where initials (nomatch) has no matching promatuser row */
+        mockAuth(wireMockServer, "7-6-5-4-3", 200, 200, IDP_PRODUCT_NAME, IDP_EDITOR_RIGHT_NAME);
+
+        /* Mock entraDbc login where userId is an unrelated, non-dbc.dk domain - even though initials
+           (klnp) matches a promatuser row, the domain check must reject this before any DB lookup */
+        mockAuth(wireMockServer, "8-7-6-5-4", 200, 200, IDP_PRODUCT_NAME, IDP_EDITOR_RIGHT_NAME);
+
+        /* Mock entraDbc login where initials (different) disagrees with the local-part of userId
+           (klnp) - the cross-claim consistency check must reject this before any DB lookup */
+        mockAuth(wireMockServer, "9-8-7-6-5", 200, 200, IDP_PRODUCT_NAME, IDP_EDITOR_RIGHT_NAME);
 
         // Mock logged-in reviewer with id=2, using 'netpunkt login' (userid+agency)
         mockAuth(wireMockServer, "3-4-5-6-7", 200, 200, IDP_PRODUCT_NAME, IDP_REVIEWER_RIGHT_NAME);
