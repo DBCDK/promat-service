@@ -198,6 +198,29 @@ class EditorsIT extends ContainerTest {
     }
 
     @Test
+    void createEditorRejectsEmailShapedUserId() {
+        final EditorRequest editorRequest = new EditorRequest()
+                .withFirstName("Edi")
+                .withLastName("Tore")
+                .withEmail("edi.tore@dbc.dk")
+                .withAgency("790900")
+                .withUserId("etre@dbc.dk")
+                .withPaycode(9999);
+
+        final Response response = postResponse("v1/api/editors", editorRequest, "2-3-4-5-6");
+        assertThat("response status", response.getStatus(), is(400));
+    }
+
+    @Test
+    void updateEditorRejectsEmailShapedUserId() {
+        final EditorRequest editorRequest = new EditorRequest()
+                .withUserId("etre@dbc.dk");
+
+        final Response response = putResponse("v1/api/editors/13", editorRequest, "2-3-4-5-6");
+        assertThat("response status", response.getStatus(), is(400));
+    }
+
+    @Test
     public void testEditorFormat() {
         Editor editor = new Editor();
         String actual = Formatting.format(editor);
