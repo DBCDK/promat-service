@@ -89,10 +89,7 @@ pipeline {
         }
 		stage("docker push") {
 			when {
-                anyOf {
-                    branch "support-entra-login"
-                    expression { env.CHANGE_BRANCH == "support-entra-login" }
-                }
+                branch "master"
             }
 			steps {
 				script {
@@ -102,10 +99,7 @@ pipeline {
 		}
         stage("Update staging version number") {
             when {
-                anyOf {
-                    branch "support-entra-login"
-                    expression { env.CHANGE_BRANCH == "support-entra-login" }
-                }
+                branch "master"
             }
             steps {
                 script {
