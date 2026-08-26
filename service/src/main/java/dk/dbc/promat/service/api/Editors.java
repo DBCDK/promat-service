@@ -96,6 +96,10 @@ public class Editors {
             return ServiceErrorDto.InvalidRequest(MISSING_REQUIRED_FIELD,
                     "Field 'userId' must be supplied and not be blank when creating a new editor");
         }
+        if (Repository.isEmailShaped(userId)) {
+            return ServiceErrorDto.InvalidRequest("Invalid userId",
+                    "Field 'userId' must not be an email address when creating a new editor");
+        }
 
         if (repository.userExists(userId, agency)) {
             LOGGER.warn("UserId '{}' is already in use by another editor", userId);
@@ -193,6 +197,10 @@ public class Editors {
                 editor.setAgency(editorRequest.getAgency());
             }
             if(editorRequest.getUserId() != null) {
+                if (Repository.isEmailShaped(editorRequest.getUserId())) {
+                    return ServiceErrorDto.InvalidRequest("Invalid userId",
+                            "Field 'userId' must not be an email address");
+                }
                 editor.setUserId(editorRequest.getUserId());
             }
 

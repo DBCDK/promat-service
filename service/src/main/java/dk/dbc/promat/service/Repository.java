@@ -122,6 +122,12 @@ public class Repository {
         return results != null && !results.isEmpty();
     }
 
+    // A promatuser's userId must be the plain netpunkt-style username (e.g. "klnp"), never an
+    // email address - the auth token resolution logic relies on this to match users by userId.
+    public static boolean isEmailShaped(String userId) {
+        return userId != null && userId.contains("@");
+    }
+
     public static PayCategory getPayCategoryForTaskFieldTypeOfTaskType(TaskType taskType, TaskFieldType taskFieldType) {
         return taskFieldType.getPaymentCategory(taskType);
     }

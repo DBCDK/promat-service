@@ -124,6 +124,10 @@ public class Reviewers {
             return ServiceErrorDto.InvalidRequest(MISSING_REQUIRED_FIELD,
                     "Field 'userId' must be supplied and not be blank when creating a new reviewer");
         }
+        if (Repository.isEmailShaped(userId)) {
+            return ServiceErrorDto.InvalidRequest("Invalid userId",
+                    "Field 'userId' must not be an email address when creating a new reviewer");
+        }
         if (repository.userExists(userId, agency)) {
             LOGGER.warn("Reviewer with userId '{}' and agency '{}' already exists", userId, agency);
             return ServiceErrorDto.InvalidRequest("Reviewer with userId " + userId + " and agency " + agency + " already exists",
@@ -313,6 +317,10 @@ public class Reviewers {
                 reviewer.setAgency(reviewerRequest.getAgency());
             }
             if (reviewerRequest.getUserId() != null) {
+                if (Repository.isEmailShaped(reviewerRequest.getUserId())) {
+                    return ServiceErrorDto.InvalidRequest("Invalid userId",
+                            "Field 'userId' must not be an email address");
+                }
                 reviewer.setUserId(reviewerRequest.getUserId());
             }
 
