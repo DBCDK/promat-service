@@ -12,6 +12,7 @@ import jakarta.ws.rs.core.Response;
 import net.jodah.failsafe.RetryPolicy;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.glassfish.jersey.client.ClientConfig;
+import org.glassfish.jersey.client.ClientProperties;
 import org.glassfish.jersey.jackson.JacksonFeature;
 
 import java.time.Duration;
@@ -35,7 +36,9 @@ public class FaustResolverProducer {
 
     public static FaustResolver produce(String baseUrl, UserAgent userAgent) {
         Client client = HttpClient.newClient(new ClientConfig()
-                .register(new JacksonFeature()));
+                .register(new JacksonFeature())
+                .property(ClientProperties.CONNECT_TIMEOUT, 5000)   // 5 sec timeout.
+                .property(ClientProperties.READ_TIMEOUT, 30000));   // 30 sec read timeout.
         FailSafeHttpClient failSafeHttpClient = FailSafeHttpClient.create(client, userAgent, RETRY_POLICY);
         return new FaustResolver(failSafeHttpClient, baseUrl);
     }

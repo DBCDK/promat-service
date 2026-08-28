@@ -1,9 +1,9 @@
 package dk.dbc.promat.service.batch;
 
-import dk.dbc.promat.service.connectors.OpenFormatConnectorException;
+import dk.dbc.promat.service.api.FbiApiHandler;
+import dk.dbc.promat.service.connectors.FbiApiConnectorException;
 import dk.dbc.promat.service.Dates;
 import dk.dbc.promat.service.api.BibliographicInformation;
-import dk.dbc.promat.service.api.OpenFormatHandler;
 import dk.dbc.promat.service.persistence.CaseStatus;
 import dk.dbc.promat.service.persistence.MaterialType;
 import dk.dbc.promat.service.persistence.PromatCase;
@@ -44,7 +44,7 @@ public class CaseInformationUpdater {
     MetricRegistry metricRegistry;
 
     @Inject
-    OpenFormatHandler openFormatHandler;
+    FbiApiHandler fbiApiHandler;
 
     @EJB
     Repository repository;
@@ -73,7 +73,7 @@ public class CaseInformationUpdater {
         try {
             // Get bibliographic information for the primary faustnumber
             long taskStartTime = System.currentTimeMillis();
-            BibliographicInformation bibliographicInformation = openFormatHandler.format(promatCase.getPrimaryFaust());
+            BibliographicInformation bibliographicInformation = fbiApiHandler.format(promatCase.getPrimaryFaust());
 
             if (!bibliographicInformation.isOk()) {
                 LOGGER.error("Failed to obtain bibliographic information for case with id {} and primary faust {}: {}",
@@ -161,7 +161,7 @@ public class CaseInformationUpdater {
                 }
             }
 
-        } catch(OpenFormatConnectorException e) {
+        } catch(FbiApiConnectorException e) {
             LOGGER.error("Caught exception when trying to obtain bibliographic information for faust {} in case with id {}: {}",
                     promatCase.getPrimaryFaust(), promatCase.getId(), e.getMessage());
             metricRegistry.counter(caseUpdateFailureCounterMetadata).inc();
@@ -182,10 +182,10 @@ public class CaseInformationUpdater {
             boolean allIsPresent = fausts
                     .stream().allMatch(faust -> {
                         try {
-                            String metakompassubject = openFormatHandler.format(faust).getMetakompassubject();
+                            String metakompassubject = fbiApiHandler.format(faust).getMetakompassubject();
                             String present = metakompassubject != null ? metakompassubject.strip() : null;
                             return METAKOMPASDATA_PRESENT.equals(present);
-                        } catch (OpenFormatConnectorException e) {
+                        } catch (FbiApiConnectorException e) {
                             LOGGER.error("Unable to look up faust {}", faust, e);
                         }
                         return false;

@@ -14,7 +14,7 @@ public class TaxonomyBuilderProducer {
     Duration readTimeout;
 
     @Inject
-    public TaxonomyBuilderProducer(@ConfigProperty(name = "RECORD_SERVICE") Optional<String> recordService,
+    public TaxonomyBuilderProducer(@ConfigProperty(name = "RAWREPO_RECORD_SERVICE_URL") Optional<String> recordService,
                                    @ConfigProperty(name = "TOPICS_FETCH_READ_TIMEOUT", defaultValue = "PT20S") Duration readTimeout) {
         this.recordService = recordService;
         this.readTimeout = readTimeout;
@@ -26,7 +26,7 @@ public class TaxonomyBuilderProducer {
         return recordService
                 .map(url -> (TaxonomyBuilder) new DM2Builder(url, readTimeout))
 
-                // DM3 builder will eventually be initiated here. (RECORD_SERVICE url is null).
+                // DM3 builder will eventually be initiated here. (RAWREPO_RECORD_SERVICE_URL url is null).
                 .orElse(null);
     }
 }

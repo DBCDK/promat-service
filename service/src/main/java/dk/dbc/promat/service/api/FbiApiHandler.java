@@ -87,8 +87,8 @@ public class FbiApiHandler {
             if (manifestation == null) {
                 continue;
             }
-            final MaterialTypeCode general = firstMaterialTypeGeneral(manifestation);
-            final MaterialTypeCode specific = firstMaterialTypeSpecific(manifestation);
+            final MaterialTypeCode general = firstMaterialType(manifestation, false);
+            final MaterialTypeCode specific = firstMaterialType(manifestation, true);
             result.add(new MaterialTypeInfo(
                     faust,
                     general != null ? general.code() : null,
@@ -97,19 +97,16 @@ public class FbiApiHandler {
         return result;
     }
 
-    private MaterialTypeCode firstMaterialTypeGeneral(Manifestation m) {
+    private MaterialTypeCode firstMaterialType(Manifestation m, boolean specific) {
         if (m.materialTypes() == null || m.materialTypes().isEmpty()) {
             return null;
+        }
+        if (specific) {
+            return m.materialTypes().getFirst().materialTypeSpecific();
         }
         return m.materialTypes().getFirst().materialTypeGeneral();
     }
 
-    private MaterialTypeCode firstMaterialTypeSpecific(Manifestation m) {
-        if (m.materialTypes() == null || m.materialTypes().isEmpty()) {
-            return null;
-        }
-        return m.materialTypes().getFirst().materialTypeSpecific();
-    }
 
     private FbiApiConnector.PromatElements fetchElements(String faust) throws FbiApiConnectorException {
         final Manifestation manifestation = fetchManifestation(faust);
@@ -133,8 +130,8 @@ public class FbiApiHandler {
                         : "")
                 .withDk5(e.dk5() != null ? e.dk5() : new ArrayList<>())
                 .withIsbn(e.isbn() != null ? e.isbn() : new ArrayList<>())
-                .withMaterialtypes(e.materialtypes() != null && e.materialtypes().type() != null
-                        ? e.materialtypes().type()
+                .withMaterialtypes(e.materialtypesDetail() != null && e.materialtypesDetail().type() != null
+                        ? e.materialtypesDetail().type()
                         : new ArrayList<>())
                 .withExtent(e.extent() != null ? e.extent().stream().findFirst().orElse("") : "")
                 .withPublisher(e.publisher() != null ? String.join(", ", e.publisher()) : "")
@@ -213,7 +210,7 @@ public class FbiApiHandler {
             return List.of();
         }
         return m.materialTypes().stream()
-                .map(mt -> mt.materialTypeSpecific() != null ? mt.materialTypeSpecific().code() : null)
+                .map(mt -> mt.materialTypeSpecific() != null ? mt.materialTypeSpecific().display() : null)
                 .filter(Objects::nonNull)
                 .toList();
     }

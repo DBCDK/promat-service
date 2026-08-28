@@ -3,6 +3,7 @@ package dk.dbc.promat.service.api;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import dk.dbc.promat.service.connectors.FbiApiConnectorException;
 import dk.dbc.promat.service.connectors.OpenFormatConnectorException;
 import dk.dbc.promat.service.Repository;
 import dk.dbc.promat.service.batch.ContentLookUp;
@@ -1092,7 +1093,7 @@ public class Cases {
     }
 
     private void notifyOnReviewerChanged(PromatCase promatCase)
-            throws NotificationFactory.ValidateException, OpenFormatConnectorException {
+            throws NotificationFactory.ValidateException, FbiApiConnectorException {
 
         if (promatCase.getId() == null) {
             entityManager.flush();

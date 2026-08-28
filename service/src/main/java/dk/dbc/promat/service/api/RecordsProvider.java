@@ -24,7 +24,7 @@ public class RecordsProvider {
 
     FaustResolver faustResolver;
     FbiApiHandler fbiApiHandler;
-    public RecordServiceConnector recordServiceConnector;
+    RecordServiceConnector recordServiceConnector;
 
     // For CDI
     RecordsProvider() {}

@@ -12,6 +12,7 @@ import jakarta.ws.rs.core.Response;
 import net.jodah.failsafe.RetryPolicy;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.glassfish.jersey.client.ClientConfig;
+import org.glassfish.jersey.client.ClientProperties;
 import org.glassfish.jersey.jackson.JacksonFeature;
 
 import java.time.Duration;
@@ -32,16 +33,18 @@ public class FbiApiConnectorProducer {
     @Produces
     public static FbiApiConnector produce(
             @ConfigProperty(name = "FBI_API_URL") String baseUrl,
-            @ConfigProperty(name = "FBI_API_LOGIN_URL") String loginUrl,
-            @ConfigProperty(name = "FBI_API_CLIENT_ID") String clientId,
-            @ConfigProperty(name = "FBI_API_CLIENT_SECRET") String clientSecret) {
+            @ConfigProperty(name = "FBI_API_LOGIN_URL", defaultValue = "https://login.bib.dk") String loginUrl,
+            @ConfigProperty(name = "OAUTH2_CLIENT_ID") String clientId,
+            @ConfigProperty(name = "OAUTH2_CLIENT_SECRET") String clientSecret) {
         return produce(baseUrl, loginUrl, clientId, clientSecret, UserAgent.forInternalRequests());
     }
 
     public static FbiApiConnector produce(String baseUrl, String loginUrl, String clientId, String clientSecret,
                                            UserAgent userAgent) {
         Client client = HttpClient.newClient(new ClientConfig()
-                .register(new JacksonFeature()));
+                .register(new JacksonFeature())
+                .property(ClientProperties.CONNECT_TIMEOUT, 5000)   // 5 sec timeout.
+                .property(ClientProperties.READ_TIMEOUT, 30000));   // 30 sec read timeout.);
         FailSafeHttpClient failSafeHttpClient = FailSafeHttpClient.create(client, userAgent, RETRY_POLICY);
         return new FbiApiConnector(failSafeHttpClient, baseUrl, loginUrl, clientId, clientSecret, ANONYMOUS_USERNAME, ANONYMOUS_PASSWORD);
     }
