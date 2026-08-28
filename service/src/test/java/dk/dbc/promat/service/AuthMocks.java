@@ -3,11 +3,14 @@ package dk.dbc.promat.service;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder;
 import com.github.tomakehurst.wiremock.matching.MatchResult;
+import jakarta.ws.rs.core.HttpHeaders;
 
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Base64;
 import java.util.Objects;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.requestMatching;
@@ -53,6 +56,9 @@ public class AuthMocks {
 
         // Mock logged-out user
         mockAuthenticationResponseForLoggedOutUser(wireMockServer);
+
+        // Mock for FBI login
+        mockFBILoginAuth(wireMockServer, "123456789", "abcdef");
     }
 
 
@@ -122,5 +128,20 @@ public class AuthMocks {
                         .withStatus(userInfoStatus)
                         .withBody(userInfo)));
 
+    }
+
+    public static void mockFBILoginAuth(WireMockServer server, String clientId, String clientSecret) {
+        String credentials = Base64.getEncoder().encodeToString(
+                (clientId + ":" + clientSecret).getBytes(StandardCharsets.UTF_8));
+        server.stubFor(requestMatching(request ->
+                MatchResult.of(
+                        request.getUrl().contains("/oauth/token") &&
+                                request.getHeader(HttpHeaders.AUTHORIZATION).contains(credentials)
+                ))
+                .willReturn(ResponseDefinitionBuilder
+                        .responseDefinition()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json")
+                        .withBody("{ \"access_token\": \"1234567\", \"expiresIn\": 3000000000 }")));
     }
 }

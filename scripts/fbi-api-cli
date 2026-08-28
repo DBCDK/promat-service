@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+
+set -e
+
+ROOT="$(realpath $(dirname "${0}")/..)"
+cd "$ROOT"
+
+#mvn -q -o -pl service -am compile dependency:build-classpath -Dmdep.outputFile="$ROOT/service/target/classpath.txt"
+
+exec java -cp "$ROOT/service/target/classes:$(cat "$ROOT/service/target/classpath.txt")" dk.dbc.promat.service.connectors.FbiApiHandlerCli "$@"

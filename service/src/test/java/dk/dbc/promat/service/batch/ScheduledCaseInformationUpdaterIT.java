@@ -2,8 +2,8 @@ package dk.dbc.promat.service.batch;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import dk.dbc.promat.service.api.BibliographicInformation;
-import dk.dbc.promat.service.api.OpenFormatHandler;
-import dk.dbc.promat.service.connectors.OpenFormatConnectorException;
+import dk.dbc.promat.service.api.FbiApiHandler;
+import dk.dbc.promat.service.connectors.FbiApiConnectorException;
 import dk.dbc.promat.service.dto.CaseRequest;
 import dk.dbc.promat.service.persistence.CaseStatus;
 import dk.dbc.promat.service.persistence.MaterialType;
@@ -31,7 +31,7 @@ import static org.mockito.Mockito.when;
 public class ScheduledCaseInformationUpdaterIT extends CaseInformationUpdaterTestBase {
 
     @Test
-    public void testCaseUpdates() throws JsonProcessingException, OpenFormatConnectorException {
+    public void testCaseUpdates() throws JsonProcessingException, FbiApiConnectorException {
 
         // Create a case with no weekcode
         CaseRequest dto = new CaseRequest()
@@ -48,8 +48,8 @@ public class ScheduledCaseInformationUpdaterIT extends CaseInformationUpdaterTes
         PromatCase created = postAndAssert("v1/api/cases", dto, PromatCase.class, Response.Status.CREATED);
 
         ScheduledCaseInformationUpdater upd = configure();
-        OpenFormatHandler mockedHandler = mock(OpenFormatHandler.class);
-        upd.caseInformationUpdater.openFormatHandler = mockedHandler;
+        FbiApiHandler mockedHandler = mock(FbiApiHandler.class);
+        upd.caseInformationUpdater.fbiApiHandler = mockedHandler;
         when(mockedHandler.format(created.getPrimaryFaust()))
                 .thenReturn(new BibliographicInformation()
                         .withTitle("UPDATED_TITLE")
@@ -79,7 +79,7 @@ public class ScheduledCaseInformationUpdaterIT extends CaseInformationUpdaterTes
     }
 
     @Test
-    public void testClearInactiveEditors() throws JsonProcessingException, OpenFormatConnectorException {
+    public void testClearInactiveEditors() throws JsonProcessingException, FbiApiConnectorException {
 
         // Create first case and move it to PENDING_APPROVAL
         CaseRequest dto = new CaseRequest()
