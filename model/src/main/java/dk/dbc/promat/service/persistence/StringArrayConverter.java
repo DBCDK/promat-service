@@ -31,9 +31,7 @@ import jakarta.persistence.Converter;
  * catches this kind of "the type you declared isn't the type you actually get" mismatch at
  * compile time; it only surfaces as a runtime cast failure the first time real data is read.
  * Declaring AttributeConverter<String[], String[]> instead - matching what EclipseLink
- * genuinely delivers - fixed it, and turned this into a near-identity conversion (with a
- * null-safety default on the read side, since a NULL column value would otherwise become a
- * null array rather than an empty one).
+ * genuinely delivers - fixed it, and turned this into a near-identity conversion.
  */
 @Converter
 public class StringArrayConverter implements AttributeConverter<String[], String[]> {
@@ -45,6 +43,7 @@ public class StringArrayConverter implements AttributeConverter<String[], String
 
     @Override
     public String[] convertToEntityAttribute(String[] dbData) {
+        // Empty array instead of null so callers never need a null-check before iterating.
         return dbData == null ? new String[0] : dbData;
     }
 }
