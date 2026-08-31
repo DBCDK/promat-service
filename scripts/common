@@ -3,12 +3,7 @@
 set -e
 
 getMyIP() {
-    local _ip _line
-    while IFS=$': \t' read -a _line ;do
-        [ -z "${_line%inet}" ] &&
-           _ip=${_line[${#_line[1]}>4?1:2]} &&
-           [ "${_ip#127.0.0.1}" ] && echo $_ip && return 0
-      done< <(LANG=C /sbin/ifconfig)
+    LANG=C /sbin/ifconfig 2>/dev/null | awk '/inet / && $2 != "127.0.0.1" { print $2; exit }'
 }
 
 # build and test run values
@@ -20,12 +15,14 @@ DOCKER_REPOSITORY=${DOCKER_NAMESPACE}/${DOCKER_NAME}
 
 # sample app values
 EMATERIAL_CONTENT_REPO=${EMATERIAL_CONTENT_REPO:-"http://dmat.dbc.dk/eVALU/get.php?faust=%s"}
-PROMAT_DB_URL=${PROMAT_DB_URL:-"${USER}:${USER}@$(getMyIP):${DB_PORT}/${USER}"}
+PROMAT_DB_URL=${PROMAT_DB_URL:-"${USER}:${USER}@host.docker.internal:${DB_PORT}/${USER}"}
 CULR_SERVICE_URL=${CULR_SERVICE_URL:-"none"}
 CULR_SERVICE_USER_ID=${CULR_SERVICE_USER_ID:-"none"}
 CULR_SERVICE_PASSWORD=${CULR_SERVICE_PASSWORD:-"none"}
 OPENSEARCH_SERVICE_URL=${OPENSEARCH_SERVICE_URL:-"http://opensearch-5-2-dbckat-service.cisterne.svc.cloud.dbc.dk/b3.5_5.2/"}
 RECORD_SERVICE=${RECORD_SERVICE:-"http://rawrepo-record-service.fbstest.svc.cloud.dbc.dk"}
+TAXONOMY_KAFKA_BOOTSTRAP_SERVERS=${TAXONOMY_KAFKA_BOOTSTRAP_SERVERS:-"kafkadata-prod-dc1.dbccloud.dk:9092,kafkadata-prod-dc2.dbccloud.dk:9092,kafkadata-prod-dc3.dbccloud.dk:9092"}
+TAXONOMY_KAFKA_TOPIC=${TAXONOMY_KAFKA_TOPIC:-"promat-staging-subjects"}
 OPENSEARCH_PROFILE=${OPENSEARCH_PROFILE:-dbckat}
 OPENSEARCH_AGENCY=${OPENSEARCH_AGENCY:-010100}
 OPENSEARCH_REPOSITORY=${OPENSEARCH_REPOSITORY:-rawrepo_basis}
