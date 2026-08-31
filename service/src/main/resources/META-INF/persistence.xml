@@ -1,8 +1,32 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<!--
+  This file is JPA's ("Jakarta Persistence API") central configuration - it defines one or
+  more named "persistence units", each a self-contained bundle of "which data source to use"
+  plus "which entity/converter classes this unit manages". A <persistence-unit> is what an
+  @PersistenceContext / a @PromatEntityManager-qualified @Inject actually resolves to by name
+  (see PromatEntityManager's usages throughout this project's batch/api classes).
+
+  IMPORTANT, learned the hard way while building the taxonomy/Kafka feature: this project does
+  NOT rely on JPA's automatic classpath scanning to discover @Entity classes - every single
+  entity (and @Converter) must be listed explicitly below, in BOTH persistence units, or the
+  JPA provider (EclipseLink) has literally no metadata for it. Forgetting to add
+  TaxonomyCategory/TaxonomySubject here initially produced a runtime error like "The abstract
+  schema type 'TaxonomyCategory' is unknown" the moment a JPQL query tried to reference it -
+  not a compile-time error, since Java itself has no idea persistence.xml even exists.
+-->
 <persistence version="3.0"
              xmlns="https://jakarta.ee/xml/ns/persistence" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
              xsi:schemaLocation="https://jakarta.ee/xml/ns/persistence https://jakarta.ee/xml/ns/persistence/persistence_3_0.xsd">
+  <!--
+    promatPU: the real, production persistence unit. transaction-type="JTA" means it
+    participates in container-managed transactions (Payara's transaction manager decides when
+    to commit/rollback, driven by @TransactionAttribute on EJB methods - see
+    TaxonomyKafkaPersistence.java) rather than this code calling
+    entityManager.getTransaction().begin()/commit() itself. <jta-data-source> is a JNDI name
+    (jdbc/promat) that Payara resolves to an actual connection pool at deploy time - the real
+    JDBC URL/credentials live in Payara's own configuration, not in this file.
+  -->
   <persistence-unit name="promatPU" transaction-type="JTA">
     <jta-data-source>jdbc/promat</jta-data-source>
     <class>dk.dbc.commons.jpa.converter.EnumConverter</class>
@@ -21,6 +45,13 @@
     <class>dk.dbc.promat.service.persistence.PromatMessage</class>
     <class>dk.dbc.promat.service.persistence.SubjectNote</class>
     <class>dk.dbc.promat.service.persistence.ReviewerDataStash</class>
+    <!-- Added for the taxonomy/Kafka + Buggi options work - see the file-level comment above
+         for why these must be listed explicitly, and what happens if you forget. -->
+    <class>dk.dbc.promat.service.persistence.TaxonomyCategory</class>
+    <class>dk.dbc.promat.service.persistence.TaxonomySubject</class>
+    <class>dk.dbc.promat.service.persistence.StringArrayConverter</class>
+    <class>dk.dbc.promat.service.persistence.BuggiOptionGroup</class>
+    <class>dk.dbc.promat.service.persistence.BuggiOption</class>
     <shared-cache-mode>DISABLE_SELECTIVE</shared-cache-mode>
     <properties>
       <property name="jakarta.persistence.schema-generation.database.action" value="none"/>
@@ -28,6 +59,13 @@
       <property name="eclipselink.cache.coordination.channel" value="promatPUChannel"/>
     </properties>
   </persistence-unit>
+  <!--
+    promatITPU: used by integration tests ("IT" = Integration Test, see *IT.java classes).
+    transaction-type="RESOURCE_LOCAL" is JTA's opposite - test code manages its own
+    EntityManager/transactions directly, since tests typically run outside a full Payara
+    deployment (against a TestContainers-managed Postgres instead) and have no container
+    transaction manager available to hand that responsibility to.
+  -->
   <persistence-unit name="promatITPU" transaction-type="RESOURCE_LOCAL">
     <class>dk.dbc.commons.jpa.converter.EnumConverter</class>
     <class>dk.dbc.promat.service.persistence.Notification</class>
@@ -43,6 +81,11 @@
     <class>dk.dbc.promat.service.persistence.RoleConverter</class>
     <class>dk.dbc.promat.service.persistence.SubjectNote</class>
     <class>dk.dbc.promat.service.persistence.ReviewerDataStash</class>
+    <class>dk.dbc.promat.service.persistence.TaxonomyCategory</class>
+    <class>dk.dbc.promat.service.persistence.TaxonomySubject</class>
+    <class>dk.dbc.promat.service.persistence.StringArrayConverter</class>
+    <class>dk.dbc.promat.service.persistence.BuggiOptionGroup</class>
+    <class>dk.dbc.promat.service.persistence.BuggiOption</class>
     <properties>
       <property name="jakarta.persistence.schema-generation.database.action" value="none"/>
     </properties>
