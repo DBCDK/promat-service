@@ -35,7 +35,30 @@ The service exposes a RESTful [API](https://raw.githubusercontent.com/DBCDK/prom
 
 To build this project JDK 21 and Apache Maven is required.
 
-To start a local instance, docker is required.
+To start a local instance, Docker is required and must be running.
+
+**IDE setup (IntelliJ + SDKMAN)**
+
+```bash
+sdk install java 21-tem
+sdk use java 21-tem
+java -version   # confirm it reports 21
+```
+
+Open the repository root in IntelliJ (`File → Open`) — it will detect the
+multi-module Maven project (`connector/`, `model/`, `service/`). Then:
+
+1. `File → Project Structure → Project` and set Project SDK to the JDK 21
+   installed above (point it at `~/.sdkman/candidates/java/21-tem` if
+   IntelliJ doesn't detect it automatically).
+2. Trigger a Maven re-import (the notification popup, or the refresh icon
+   in the Maven tool window).
+
+Unit tests and integration tests (`*IT.java`, which use TestContainers) can
+be run directly from IntelliJ once the SDK is set — integration tests only
+need Docker running, not `dev-start`. The Promat server itself always runs
+in a Docker container via the scripts below, not as an IntelliJ run
+configuration.
 
 **Canonical local start**
 
@@ -56,6 +79,31 @@ With `.env.local` created and filled in (see Configuration above):
 ```
 
 Use this when you want to manage the database and app server separately.
+
+**Using the staging database instead of a local, empty one**
+
+Starting fresh with an empty local database means no reviewers, cases, or
+taxonomy data to work against. To point the app at the real staging
+database instead, set in `.env.local`:
+
+```bash
+PROMAT_DB_URL='<staging-user>:<staging-password>@<staging-host>:<staging-port>/<staging-dbname>'
+PROMAT_SKIP_MIGRATIONS=true
+```
+
+`PROMAT_SKIP_MIGRATIONS=true` is important here — it stops Flyway from
+running on startup, so your local server never applies schema migrations
+against the shared staging database. Only run a new migration against
+staging deliberately and after review, not as a side effect of starting
+the app locally.
+
+With this set, start only the app server — `./scripts/dev-start` and
+`./scripts/start-database` both start (and expect) a *local* PostgreSQL
+container, which you don't need here:
+
+```bash
+./scripts/start-server
+```
 
 **Scripts**
 * clean - clears build artifacts
