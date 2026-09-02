@@ -24,6 +24,13 @@ import java.util.Objects;
 
 /**
  * Client for the fbi-api GraphQL service.
+ * fbi-api is DBC's public bibliographic data API - it's what replaced the
+ * old OpenFormat broker as promat-service's source of book/movie/etc.
+ * metadata (title, author, ISBN, etc.) for a given faust number.
+ * This class is deliberately "dumb": it only knows how to log in and send
+ * a GraphQL query/variables pair. It has no idea what a "manifestation" or
+ * "case" is - that domain knowledge lives in FbiApiHandler, which uses
+ * this connector.
  */
 public class FbiApiConnector {
     private static final Logger LOGGER = LoggerFactory.getLogger(FbiApiConnector.class);
@@ -38,6 +45,11 @@ public class FbiApiConnector {
     private final String username;
     private final String password;
 
+    // `volatile` here means: whenever one thread writes a new value to these
+    // fields (in fetchAccessToken()), every other thread immediately sees
+    // it, instead of possibly reading a stale cached copy. That matters
+    // because this connector is a shared, application-scoped bean - many
+    // concurrent HTTP requests can call getAccessToken() at the same time.
     private volatile String accessToken;
     private volatile Instant accessTokenExpiresAt = Instant.MIN;
 
@@ -82,12 +94,19 @@ public class FbiApiConnector {
         try (Response response = httpPost.execute()) {
             assertResponseStatus(response, "fbi-api");
             final GraphQLResponse graphQLResponse = readResponseEntity(response, GraphQLResponse.class, "fbi-api");
+            // A GraphQL API can respond with HTTP 200 and *still* fail - the
+            // "errors" field carries query-level problems (e.g. a bad field
+            // name), separate from HTTP-level failures like a 500.
             if (graphQLResponse.errors() != null && !graphQLResponse.errors().isEmpty()) {
                 throw new FbiApiConnectorException("fbi-api returned GraphQL errors: " + graphQLResponse.errors());
             }
             if (graphQLResponse.data() == null) {
                 throw new FbiApiConnectorException("fbi-api returned no data");
             }
+            // JsonNode is Jackson's generic "any JSON value" type - returned
+            // here because this low-level overload doesn't know what shape
+            // the caller expects. The typed overload below builds on this
+            // by converting the JsonNode into a specific Java type.
             return graphQLResponse.data();
         }
     }
@@ -103,6 +122,13 @@ public class FbiApiConnector {
         }
     }
 
+    // "Double-checked locking": we check the condition once without locking
+    // (fast path - most calls just reuse the cached token, no need to wait
+    // for a lock), and only if it looks like we need a new token do we
+    // acquire the lock and check *again* (in case another thread already
+    // refreshed it while we were waiting). This avoids every single request
+    // serializing on `synchronized`, while still only fetching one new
+    // token at a time even under concurrent load.
     private String getAccessToken() throws FbiApiConnectorException {
         if (accessToken == null || Instant.now().isAfter(accessTokenExpiresAt)) {
             synchronized (this) {
@@ -114,6 +140,12 @@ public class FbiApiConnector {
         return accessToken;
     }
 
+    // fbi-api uses OAuth2 "password grant": exchange a client id/secret
+    // (identifying *this application*) plus a username/password (identifying
+    // the *end user* - here, always the fixed anonymous account, see
+    // FbiApiConnectorProducer) for a short-lived bearer token. That token is
+    // then cached and reused (see getAccessToken above) until shortly before
+    // it expires, rather than logging in again on every single call.
     private void fetchAccessToken() throws FbiApiConnectorException {
         LOGGER.info("Fetching new fbi-api access token from {}", loginUrl);
 
@@ -159,23 +191,40 @@ public class FbiApiConnector {
         return entity;
     }
 
+    // These are Java "records" - a compact way to declare an immutable data
+    // class. `record GraphQLRequest(String query, Map<String, Object> variables) {}`
+    // gives you a constructor, getters (query(), variables()), equals(),
+    // hashCode() and toString() for free, without writing any of that
+    // boilerplate by hand. They're used throughout this file purely as
+    // typed "shapes" for JSON going in and out - Jackson (de)serializes
+    // them just like a regular class.
     private record GraphQLRequest(String query, Map<String, Object> variables) {}
 
+    // @JsonIgnoreProperties(ignoreUnknown = true) tells Jackson "if the JSON
+    // has fields I didn't declare here, ignore them instead of throwing".
+    // fbi-api's real responses have many more fields than we ever need, so
+    // every response record in this file declares only the handful of
+    // fields it actually cares about.
     @JsonIgnoreProperties(ignoreUnknown = true)
     private record GraphQLResponse(JsonNode data, List<GraphQLError> errors) {}
 
     @JsonIgnoreProperties(ignoreUnknown = true)
     private record GraphQLError(String message) {}
 
+    // @JsonProperty maps a JSON field with a different name (fbi-api's OAuth
+    // response uses snake_case, "access_token") onto a normal camelCase
+    // Java field name (accessToken).
     @JsonIgnoreProperties(ignoreUnknown = true)
     private record TokenResponse(
             @JsonProperty("access_token") String accessToken,
             @JsonProperty("expires_in") long expiresIn) {}
 
     /**
-     * Bibliographic data for a single manifestation, fetched from fbi-api. Field-for-field
-     * equivalent of {@link dk.dbc.promat.service.connectors.OpenFormatConnector.PromatElements},
-     * to ease migrating existing consumers once OpenFormat is retired.
+     * Bibliographic data for a single manifestation, fetched from fbi-api.
+     * The field names here (faust, dk5, isbn, catalogcodes, ...) deliberately
+     * mirror what the old OpenFormat integration used to return, so that
+     * FbiApiHandler.toBibliographicInformation() could be written as a
+     * like-for-like port instead of a redesign.
      */
     public record PromatElements(
             List<String> faust,

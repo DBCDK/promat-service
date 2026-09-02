@@ -59,7 +59,7 @@ public abstract class CaseInformationUpdaterTestBase extends ContainerTest {
                 .extensions(FbiApiMocks.bodyTransformer()));
         wireMockServer.start();
         configureFor("localhost", wireMockServer.port());
-        wiremockHost = ContainerTest.getOpenFormatBaseUrl(wireMockServer.baseUrl());
+        wiremockHost = wireMockServer.baseUrl();
 
         AuthMocks.mockFBILoginAuth(wireMockServer, "123456789", "abcdef");
         FbiApiMocks.mockFbiApiResponses(wireMockServer);

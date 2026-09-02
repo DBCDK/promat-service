@@ -3,7 +3,6 @@ package dk.dbc.promat.service.templating;
 import dk.dbc.promat.service.api.BibliographicInformation;
 import dk.dbc.promat.service.api.FbiApiHandler;
 import dk.dbc.promat.service.connectors.FbiApiConnectorException;
-import dk.dbc.promat.service.connectors.OpenFormatConnectorException;
 import dk.dbc.promat.service.persistence.Notification;
 import dk.dbc.promat.service.persistence.NotificationStatus;
 import dk.dbc.promat.service.persistence.PromatCase;
@@ -50,6 +49,11 @@ public class NotificationFactory {
         }
     }
 
+    // Used only to look up titles for the fausts mentioned in a notification
+    // email (see getTitleSections below) - this used to go through
+    // OpenFormatHandler before the fbi-api migration; the rest of this
+    // class didn't need to change at all, since it only ever depended on
+    // getting back a BibliographicInformation.
     @Inject
     FbiApiHandler fbiApiHandler;
 

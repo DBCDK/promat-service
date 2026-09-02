@@ -3,6 +3,12 @@ package dk.dbc.promat.service.api;
 import java.util.ArrayList;
 import java.util.List;
 
+// Holds one manifestation's bibliographic data on its way from fbi-api into
+// a PromatCase (see FbiApiHandler.toBibliographicInformation() for how it's
+// built, and CaseInformationUpdater for how each field ends up on a case).
+// Fields default to "" / empty list rather than null, so callers can safely
+// do e.g. `bibliographicInformation.getTitle().isEmpty()` without a
+// null-check first.
 public class BibliographicInformation {
 
     private String faust = "";
@@ -14,6 +20,7 @@ public class BibliographicInformation {
     private String publisher = "";
     private List<String> catalogcodes = new ArrayList<>();
     private String title = "";
+    private List<String> series = new ArrayList<>();
     private List<String> targetgroup = new ArrayList<>();
     private String metakompassubject = "";
     private String error = "";
@@ -54,6 +61,10 @@ public class BibliographicInformation {
         return title;
     }
 
+    public List<String> getSeries() {
+        return series;
+    }
+
     public List<String> getTargetgroup() {
         return targetgroup;
     }
@@ -66,6 +77,11 @@ public class BibliographicInformation {
         return error;
     }
 
+    // "No data yet" is expected and common (fbi-api hasn't indexed a
+    // just-catalogued record), not an exceptional failure - so this uses a
+    // plain error-message field callers check with isOk(), rather than
+    // throwing an exception for what's really a normal, temporary outcome.
+    // See CaseInformationUpdater.updateCaseInformation() for how it's used.
     public boolean isOk() {
         return error.isEmpty();
     }
@@ -104,6 +120,10 @@ public class BibliographicInformation {
 
     public void setTitle(String title) {
         this.title = title;
+    }
+
+    public void setSeries(List<String> series) {
+        this.series = series;
     }
 
     public void setTargetgroup(List<String> targetgroup) {
@@ -163,6 +183,11 @@ public class BibliographicInformation {
         return this;
     }
 
+    public BibliographicInformation withSeries(List<String> series) {
+        this.series = series;
+        return this;
+    }
+
     public BibliographicInformation withTargetgroup(List<String> targetgroup) {
         this.targetgroup = targetgroup;
         return this;
@@ -190,6 +215,7 @@ public class BibliographicInformation {
                 ", publisher='" + publisher + '\'' +
                 ", catalogcodes=" + catalogcodes +
                 ", title='" + title + '\'' +
+                ", series=" + series +
                 ", targetgroup='" + targetgroup + '\'' +
                 ", error='" + error + '\'' +
                 '}';

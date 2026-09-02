@@ -12,6 +12,13 @@ import dk.dbc.promat.service.api.FbiApiHandler;
  * fbi-api URL and login URL can be overridden via the FBI_API_URL and FBI_API_LOGIN_URL
  * environment variables.
  */
+// This class has a `main` method and is meant to be run directly from a
+// terminal/IDE (`mvn exec:java` or "Run" on main()), not deployed inside
+// the WAR. It's handy for quickly checking "does fbi-api actually have
+// data for this faust?" without starting the whole application server -
+// it wires FbiApiHandler/FbiApiConnector together by hand (no CDI
+// container involved), which only works because withConnector() and the
+// non-CDI produce() overload exist specifically to support this.
 public class FbiApiHandlerCli {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 

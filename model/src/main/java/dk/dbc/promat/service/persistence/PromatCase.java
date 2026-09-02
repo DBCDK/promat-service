@@ -236,6 +236,47 @@ public class PromatCase {
     @JsonView({CaseView.Export.class, CaseView.Summary.class, CaseView.Case.class})
     private String publisher;
 
+    // The next few fields (isbn, dk5, extent, materialTypes, series) are
+    // bibliographic data copied onto the case from fbi-api by
+    // CaseInformationUpdater - see that class for when/how they get filled
+    // in. A plain Java `List<String>` can't be stored directly as a
+    // Postgres column, so each one needs two extra annotations:
+    //  - @Column(columnDefinition = "jsonb") : store it as a jsonb column
+    //    (Postgres's native JSON type) rather than trying to use a SQL
+    //    array or a comma-joined string.
+    //  - @Convert(converter = StringListToJsonArrayConverter.class) : tells
+    //    JPA/Hibernate *how* to turn the List<String> into that JSON text
+    //    and back again on every read/write - JPA has no built-in mapping
+    //    for "Java list <-> jsonb column", so this converter class (from a
+    //    shared library, not written in this project) fills that gap.
+    // @JsonView controls which REST responses include this field at all -
+    // see CaseView for what Export/Summary/Case mean.
+    @Column(columnDefinition = "jsonb")
+    @Convert(converter = StringListToJsonArrayConverter.class)
+    @JsonView({CaseView.Export.class, CaseView.Summary.class, CaseView.Case.class})
+    private List<String> isbn;
+
+    @Column(columnDefinition = "jsonb")
+    @Convert(converter = StringListToJsonArrayConverter.class)
+    @JsonView({CaseView.Export.class, CaseView.Summary.class, CaseView.Case.class})
+    private List<String> dk5;
+
+    // A plain string, not jsonb - unlike the others there's only ever one
+    // value (e.g. "295 sider"), so no need for the List<String>+converter
+    // machinery here.
+    @JsonView({CaseView.Export.class, CaseView.Summary.class, CaseView.Case.class})
+    private String extent;
+
+    @Column(columnDefinition = "jsonb")
+    @Convert(converter = StringListToJsonArrayConverter.class)
+    @JsonView({CaseView.Export.class, CaseView.Summary.class, CaseView.Case.class})
+    private List<String> materialTypes;
+
+    @Column(columnDefinition = "jsonb")
+    @Convert(converter = StringListToJsonArrayConverter.class)
+    @JsonView({CaseView.Export.class, CaseView.Summary.class, CaseView.Case.class})
+    private List<String> series;
+
     @JsonView({CaseView.Export.class, CaseView.Summary.class, CaseView.Case.class})
     private String fulltextLink;
 
@@ -435,6 +476,46 @@ public class PromatCase {
         this.publisher = publisher;
     }
 
+    public List<String> getIsbn() {
+        return isbn;
+    }
+
+    public void setIsbn(List<String> isbn) {
+        this.isbn = isbn;
+    }
+
+    public List<String> getDk5() {
+        return dk5;
+    }
+
+    public void setDk5(List<String> dk5) {
+        this.dk5 = dk5;
+    }
+
+    public String getExtent() {
+        return extent;
+    }
+
+    public void setExtent(String extent) {
+        this.extent = extent;
+    }
+
+    public List<String> getMaterialTypes() {
+        return materialTypes;
+    }
+
+    public void setMaterialTypes(List<String> materialTypes) {
+        this.materialTypes = materialTypes;
+    }
+
+    public List<String> getSeries() {
+        return series;
+    }
+
+    public void setSeries(List<String> series) {
+        this.series = series;
+    }
+
     public PromatCase withId(Integer id) {
         this.id = id;
         return this;
@@ -522,6 +603,31 @@ public class PromatCase {
 
     public PromatCase withPublisher(String publisher) {
         this.publisher = publisher;
+        return this;
+    }
+
+    public PromatCase withIsbn(List<String> isbn) {
+        this.isbn = isbn;
+        return this;
+    }
+
+    public PromatCase withDk5(List<String> dk5) {
+        this.dk5 = dk5;
+        return this;
+    }
+
+    public PromatCase withExtent(String extent) {
+        this.extent = extent;
+        return this;
+    }
+
+    public PromatCase withMaterialTypes(List<String> materialTypes) {
+        this.materialTypes = materialTypes;
+        return this;
+    }
+
+    public PromatCase withSeries(List<String> series) {
+        this.series = series;
         return this;
     }
 
@@ -663,6 +769,11 @@ public class PromatCase {
                 Objects.equals(author, aCase.author) &&
                 Objects.equals(creator, aCase.creator) &&
                 Objects.equals(publisher, aCase.publisher) &&
+                Objects.equals(isbn, aCase.isbn) &&
+                Objects.equals(dk5, aCase.dk5) &&
+                Objects.equals(extent, aCase.extent) &&
+                Objects.equals(materialTypes, aCase.materialTypes) &&
+                Objects.equals(series, aCase.series) &&
                 Objects.equals(fulltextLink, aCase.fulltextLink) &&
                 Objects.equals(internalNote, aCase.internalNote) &&
                 newMessagesToEditor == aCase.newMessagesToEditor &&
@@ -676,6 +787,7 @@ public class PromatCase {
     public int hashCode() {
         return Objects.hash(id, title, details, primaryFaust, relatedFausts, reviewer, editor, subjects, created,
                 deadline, assigned, status, materialType, tasks, weekCode, trimmedWeekCode, author, creator, publisher,
+                isbn, dk5, extent, materialTypes, series,
                 fulltextLink, newMessagesToEditor, newMessagesToReviewer, reminderSent, codes, keepEditor, internalNote);
     }
 
@@ -701,6 +813,11 @@ public class PromatCase {
                 ", author='" + author + '\'' +
                 ", creator=" + creator +
                 ", publisher='" + publisher + '\'' +
+                ", isbn=" + isbn +
+                ", dk5=" + dk5 +
+                ", extent='" + extent + '\'' +
+                ", materialTypes=" + materialTypes +
+                ", series=" + series +
                 ", fulltextLink='" + fulltextLink + '\'' +
                 ", newMessagesToEditor='" + newMessagesToEditor + '\'' +
                 ", newMessagesToReviewer='" + newMessagesToReviewer + '\'' +

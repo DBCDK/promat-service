@@ -1,0 +1,48 @@
+# Free-text search (see FbiApiHandler.search()/buildCql()), used for
+# "search by title/author" when creating a new case. $cql is the actual
+# search expression (e.g. term.title='some title'); $offset/$limit page
+# through results; $filters/$sort are always sent empty by our code but are
+# required by fbi-api's schema, so they still need declaring here.
+query ComplexSearch(
+    $cql: String!
+    $offset: Int!
+    $limit: PaginationLimitScalar!
+    $filters: ComplexSearchFiltersInput!
+    $sort: [SortInput!]
+) {
+    complexSearch(cql: $cql, filters: $filters) {
+        hitcount
+        errorMessage
+        # complexSearch groups hits by "work" (e.g. a novel); each work can
+        # have multiple manifestations (paperback, ebook, audiobook, ...).
+        # "bestRepresentations" is fbi-api picking one manifestation per
+        # work for us, so we don't have to decide which edition to show.
+        # The field list below must match FbiApiHandler's `Manifestation`
+        # record, same as in manifestationByPid.graphql.
+        works(offset: $offset, limit: $limit, sort: $sort) {
+            manifestations {
+                bestRepresentations {
+                    pid
+                    creators { display }
+                    classifications { dk5Heading entryType }
+                    edition { edition }
+                    identifiers { type value }
+                    materialTypes {
+                        materialTypeGeneral { code display }
+                        materialTypeSpecific { code display } }
+                    physicalDescription { summaryFull }
+                    publisher
+                    catalogueCodes { nationalBibliography otherCatalogues }
+                    titles { main }
+                    materialSelection {
+                        selectionGroup { display }
+                    }
+                    subjects {
+                        dbcVerified { type display local }
+                    }
+                    series { title numberInSeries }
+                }
+            }
+        }
+    }
+}
