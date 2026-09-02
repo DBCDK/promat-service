@@ -2,6 +2,7 @@ package dk.dbc.promat.service.db;
 
 import org.flywaydb.core.Flyway;
 import org.flywaydb.core.api.MigrationInfo;
+import dk.dbc.promat.service.batch.RuntimeGuards;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,8 +28,19 @@ public class DatabaseMigrator {
         this.dataSource = dataSource;
     }
 
+    // @PostConstruct means: run this once, automatically, right after the
+    // container finishes constructing/injecting this singleton bean - i.e.
+    // once per application startup. That's what makes this "run migrations
+    // on boot" rather than something anyone has to remember to call.
     @PostConstruct
     public void migrate() {
+        // Local/dev escape hatch: if PROMAT_SKIP_MIGRATIONS=true, don't touch
+        // the schema at all. Useful when pointing this service at a shared
+        // staging DB you don't want Flyway silently changing.
+        if (RuntimeGuards.skipMigrations()) {
+            LOGGER.info("database migrations disabled via {}", RuntimeGuards.SKIP_MIGRATIONS_ENV);
+            return;
+        }
         if (isDatabaseAccessReadOnly()) {
             LOGGER.info("database access is read-only, no migration attempted");
             return;
@@ -45,7 +57,7 @@ public class DatabaseMigrator {
         }
         flyway.migrate();
     }
-    
+
     private boolean isDatabaseAccessReadOnly() {
         try (var connection = dataSource.getConnection()) {
             return connection.isReadOnly();

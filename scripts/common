@@ -2,6 +2,16 @@
 
 set -e
 
+REPO_ROOT="$(realpath "$(dirname "${BASH_SOURCE[0]}")/..")"
+ENV_LOCAL_FILE="${REPO_ROOT}/.env.local"
+ENV_TEMPLATE_FILE="${REPO_ROOT}/.env.local.TEMPLATE"
+
+if [ -f "${ENV_LOCAL_FILE}" ]; then
+    set -a
+    source "${ENV_LOCAL_FILE}"
+    set +a
+fi
+
 getMyIP() {
     local _ip _line
     while IFS=$': \t' read -a _line ;do
@@ -31,7 +41,8 @@ OPENSEARCH_AGENCY=${OPENSEARCH_AGENCY:-010100}
 OPENSEARCH_REPOSITORY=${OPENSEARCH_REPOSITORY:-rawrepo_basis}
 OPENFORMAT_SERVICE_URL=${OPENFORMAT_SERVICE_URL:-"http://open-format-broker.fbstest.svc.cloud.dbc.dk/api/v2"}
 PROMAT_AGENCY_ID=${PROMAT_AGENCY_ID:-191977}
-PROMAT_CLUSTER_NAME=${PROMAT_CLUSTER_NAME:-"promatcluster"}
+# empty by default: a non-empty value makes Payara try Hazelcast Kubernetes-DNS cluster discovery, which hangs forever outside a real k8s cluster
+PROMAT_CLUSTER_NAME=${PROMAT_CLUSTER_NAME:-""}
 MAIL_HOST=${MAIL_HOST:-"none"}
 MAIL_USER=${MAIL_USER:-"none"}
 MAIL_FROM=${MAIL_FROM:-"none"}
@@ -50,6 +61,9 @@ FBI_API_URL=${FBI_API_URL:-"https://fbi-api.dbc.dk/promat/graphql"}
 FBI_API_LOGIN_URL=${FBI_API_LOGIN_URL:-"https://login.bib.dk/oauth/token"}
 FBI_API_CLIENT_ID=${FBI_API_CLIENT_ID:-"dummy-client-id"}
 FBI_API_CLIENT_SECRET=${FBI_API_CLIENT_SECRET:-"dummy-client-secret"}
+PROMAT_SKIP_MIGRATIONS=${PROMAT_SKIP_MIGRATIONS:-false}
+PROMAT_DISABLE_SCHEDULED_JOBS=${PROMAT_DISABLE_SCHEDULED_JOBS:-false}
+PROMAT_DISABLE_OUTBOUND_MAIL=${PROMAT_DISABLE_OUTBOUND_MAIL:-false}
 
 # base image mandatory values
 JAVA_MAX_HEAP_SIZE=${JAVA_MAX_HEAP_SIZE:-2G}
@@ -82,3 +96,9 @@ if [ -t 1 ] ; then
   _ERROR_COLOR=$(tput setaf 1)
   _NOCOLOR=$(tput sgr0)
 fi
+
+warnIfTemplateOnly() {
+  if [ ! -f "${ENV_LOCAL_FILE}" ] && [ -f "${ENV_TEMPLATE_FILE}" ] ; then
+    info "No .env.local found. Copy .env.local.TEMPLATE to .env.local to set local secrets and overrides."
+  fi
+}

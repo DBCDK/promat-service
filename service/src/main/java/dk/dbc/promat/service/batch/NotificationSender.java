@@ -47,6 +47,16 @@ public class NotificationSender {
 
     @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
     public void notifyMailRecipient(Notification notification) {
+        // Local-dev guard (see RuntimeGuards): with PROMAT_DISABLE_OUTBOUND_MAIL=true,
+        // pretend the mail was sent (mark it DONE so it isn't retried
+        // forever) without actually sending anything - useful when running
+        // locally against real data, where you don't want to spam real
+        // reviewers'/editors' inboxes.
+        if (RuntimeGuards.disableOutboundMail()) {
+            LOGGER.info("Skipping outbound mail to '{}' because {}=true", notification.getToAddress(), RuntimeGuards.DISABLE_OUTBOUND_MAIL_ENV);
+            notification.setStatus(NotificationStatus.DONE);
+            return;
+        }
         try {
             mailManager.newMail()
                     .withRecipients(notification.getToAddress())

@@ -1,5 +1,8 @@
-echo "### Stopping dmat service docker ###"
+#!/usr/bin/env bash
 
 source "$(realpath $(dirname "${0}")/..)/scripts/common"
 
-docker rm -f ${DOCKER_REPOSITORY}:devel || exit 1
+echo "### Stopping Promat local docker containers ###"
+
+docker stop "${DOCKER_NAME}-${PORT}" 2>/dev/null || true
+docker stop "${DOCKER_NAME}-database" 2>/dev/null || true

@@ -33,6 +33,12 @@ public class ScheduledReminders {
 
     @Schedule(second = "30", minute = "50", hour = "6-16", dayOfWeek = "Mon-Fri", persistent = false)
     public void processReminders() {
+        // See ScheduledNotificationSender.processNotifications() for what
+        // this guard is for.
+        if (RuntimeGuards.disableScheduledJobs()) {
+            LOGGER.info("Skipping scheduled reminders because {}=true", RuntimeGuards.DISABLE_SCHEDULED_JOBS_ENV);
+            return;
+        }
         if (serverRole == ServerRole.PRIMARY) {
             if (!lock.tryLock()) {
                 LOGGER.error("Aborting, since processReminders is already running! " +

@@ -34,9 +34,22 @@ public class ScheduledNotificationSender {
     ServerRole serverRole;
 
 
+    // @Schedule is how EJB timers work: no cron job or external scheduler
+    // needed, the container itself calls this method on the given
+    // schedule (here: every 10 minutes) for as long as the app is running.
     @Schedule(second = "0", minute = "*/10", hour = "*", persistent = false)
     public void processNotifications() {
         try {
+            // Local-dev guard (see RuntimeGuards): with
+            // PROMAT_DISABLE_SCHEDULED_JOBS=true, this (and every other
+            // @Schedule-based job in this package) becomes a no-op. Handy
+            // when running against a shared/staging database locally, where
+            // you don't want your local instance racing the real deployment
+            // to process the same notifications/reminders/etc.
+            if (RuntimeGuards.disableScheduledJobs()) {
+                LOGGER.info("Skipping scheduled notifications because {}=true", RuntimeGuards.DISABLE_SCHEDULED_JOBS_ENV);
+                return;
+            }
             if (serverRole == ServerRole.PRIMARY) {
 
                 userUpdater.processUserDataChanges();

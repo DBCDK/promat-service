@@ -43,6 +43,12 @@ public class ScheduledUserUpdater {
     public void updateUsers() {
 
         try {
+            // See ScheduledNotificationSender.processNotifications() for
+            // what this guard is for.
+            if (RuntimeGuards.disableScheduledJobs()) {
+                LOGGER.info("Skipping scheduled user updates because {}=true", RuntimeGuards.DISABLE_SCHEDULED_JOBS_ENV);
+                return;
+            }
             if(serverRole == ServerRole.PRIMARY) {
 
                 // Prevent running multiple updates at once - since the update runs only once a day,

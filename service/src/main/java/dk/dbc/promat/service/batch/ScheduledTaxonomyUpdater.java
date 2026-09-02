@@ -43,6 +43,12 @@ public class ScheduledTaxonomyUpdater {
      */
     @PostConstruct
     void init() {
+        // See ScheduledNotificationSender.processNotifications() for what
+        // this guard is for.
+        if (RuntimeGuards.disableScheduledJobs()) {
+            LOGGER.info("Skipping taxonomy updater scheduling because {}=true", RuntimeGuards.DISABLE_SCHEDULED_JOBS_ENV);
+            return;
+        }
         int offsetMinutes = resolveOffsetMinutes();
         long initialDelay = computeInitialDelay(offsetMinutes);
         LOGGER.info("Taxonomy updater scheduled with offset {} min, first run in {} ms", offsetMinutes, initialDelay);
@@ -70,6 +76,12 @@ public class ScheduledTaxonomyUpdater {
 
     @Timeout
     public void updateTaxonomy() {
+        // See ScheduledNotificationSender.processNotifications() for what
+        // this guard is for.
+        if (RuntimeGuards.disableScheduledJobs()) {
+            LOGGER.info("Skipping taxonomy refresh because {}=true", RuntimeGuards.DISABLE_SCHEDULED_JOBS_ENV);
+            return;
+        }
         try {
             taxonomyCache.refresh();
         } catch (TaxonomyException | IOException e) {
