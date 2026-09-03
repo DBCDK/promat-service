@@ -1,13 +1,11 @@
 package dk.dbc.promat.service.batch;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import dk.dbc.opennumberroll.OpennumberRollConnectorException;
 import dk.dbc.promat.service.Repository;
 import dk.dbc.promat.service.api.BibliographicInformation;
-import dk.dbc.promat.service.connectors.OpenFormatConnectorException;
+import dk.dbc.promat.service.connectors.FbiApiConnectorException;
 import dk.dbc.promat.service.dto.CaseRequest;
 import dk.dbc.promat.service.dto.TaskDto;
-import dk.dbc.promat.service.persistence.CaseStatus;
 import dk.dbc.promat.service.persistence.MaterialType;
 import dk.dbc.promat.service.persistence.PromatCase;
 import dk.dbc.promat.service.persistence.TaskFieldType;
@@ -38,7 +36,7 @@ public class CaseInformationUpdaterBibliographicSyncIT extends CaseInformationUp
     private static final Logger LOGGER = LoggerFactory.getLogger(CaseInformationUpdaterBibliographicSyncIT.class);
 
     @Test
-    public void testUpdateCaseWithWeekcode() throws JsonProcessingException {
+    public void testUpdateCaseWithWeekcode() {
 
         // Create a case with incorrect title and weekcode
         CaseRequest dto = new CaseRequest()
@@ -65,7 +63,7 @@ public class CaseInformationUpdaterBibliographicSyncIT extends CaseInformationUp
     }
 
     @Test
-    public void testUpdateCaseWithNullWeekcode() throws JsonProcessingException, OpenFormatConnectorException {
+    public void testUpdateCaseWithNullWeekcode() {
 
         // Create a case with no weekcode
         CaseRequest dto = new CaseRequest()
@@ -90,7 +88,7 @@ public class CaseInformationUpdaterBibliographicSyncIT extends CaseInformationUp
     }
 
     @Test
-    public void testUpdateCaseWithEmptyWeekcode() throws JsonProcessingException, OpenFormatConnectorException {
+    public void testUpdateCaseWithEmptyWeekcode() {
 
         // Create a case with no weekcode
         CaseRequest dto = new CaseRequest()
@@ -116,7 +114,7 @@ public class CaseInformationUpdaterBibliographicSyncIT extends CaseInformationUp
     }
 
     @Test
-    public void testUpdateCaseRemoveWeekcode() throws JsonProcessingException, OpenFormatConnectorException {
+    public void testUpdateCaseRemoveWeekcode() {
 
         // Create a case with no weekcode
         CaseRequest dto = new CaseRequest()
@@ -142,7 +140,7 @@ public class CaseInformationUpdaterBibliographicSyncIT extends CaseInformationUp
     }
 
     @Test
-    public void testUpdateWithNoWeekcode() throws JsonProcessingException, OpenFormatConnectorException {
+    public void testUpdateWithNoWeekcode() {
 
         // Create a case with no weekcode
         CaseRequest dto = new CaseRequest()
@@ -168,7 +166,7 @@ public class CaseInformationUpdaterBibliographicSyncIT extends CaseInformationUp
     }
 
     @Test
-    public void testUpdateWithPublisherAsArray() throws JsonProcessingException, OpenFormatConnectorException {
+    public void testUpdateWithPublisherAsArray() {
 
         // Create a case with no weekcode
         CaseRequest dto = new CaseRequest()
@@ -190,14 +188,14 @@ public class CaseInformationUpdaterBibliographicSyncIT extends CaseInformationUp
 
         assertThat("title is updated", created.getTitle().equals("Præsidentjagt"));
         assertThat("weekcode is updated", created.getWeekCode().equals("BKM202111"));
-        assertThat("author is updated", created.getAuthor().equals("Duggan, Gerry"));
+        assertThat("author is updated", created.getAuthor().equals("Gerry Duggan, Brian Posehn, Tony Moore"));
 
         // Delete the case so that we don't mess up payments and dataio-export tests
         deleteTestCase(created.getId());
     }
 
     @Test
-    public void testUpdateCaseWithNoCatalogCodes() throws OpenFormatConnectorException, JsonProcessingException, OpennumberRollConnectorException {
+    public void testUpdateCaseWithNoCatalogCodes() throws OpennumberRollConnectorException, FbiApiConnectorException {
 
         // Create a case
         CaseRequest dto = new CaseRequest()
@@ -219,7 +217,7 @@ public class CaseInformationUpdaterBibliographicSyncIT extends CaseInformationUp
         PromatCase created = postAndAssert("v1/api/cases", dto, PromatCase.class, Response.Status.CREATED);
 
         ScheduledCaseInformationUpdater upd = configure();
-        upd.caseInformationUpdater.openFormatHandler = mockOpenFormat(new BibliographicInformation()
+        upd.caseInformationUpdater.fbiApiHandler = mockFbiApiHandler(new BibliographicInformation()
                 .withCatalogcodes(null));
         Repository mockedRepository = mock(Repository.class);
         upd.caseInformationUpdater.repository = mockedRepository;
@@ -234,7 +232,7 @@ public class CaseInformationUpdaterBibliographicSyncIT extends CaseInformationUp
     }
 
     @Test
-    public void testUpdateCaseWithManyCatalogCodes() throws OpenFormatConnectorException, JsonProcessingException, OpennumberRollConnectorException {
+    public void testUpdateCaseWithManyCatalogCodes() throws OpennumberRollConnectorException, FbiApiConnectorException {
 
         // Create a case
         CaseRequest dto = new CaseRequest()
@@ -256,7 +254,7 @@ public class CaseInformationUpdaterBibliographicSyncIT extends CaseInformationUp
         PromatCase created = postAndAssert("v1/api/cases", dto, PromatCase.class, Response.Status.CREATED);
 
         ScheduledCaseInformationUpdater upd = configure();
-        upd.caseInformationUpdater.openFormatHandler = mockOpenFormat(new BibliographicInformation()
+        upd.caseInformationUpdater.fbiApiHandler = mockFbiApiHandler(new BibliographicInformation()
                 .withCatalogcodes(Arrays.asList("FFK20210603", "BKM20210603", "bkx20210602", "ACC20210601")));
         Repository mockedRepository = mock(Repository.class);
         upd.caseInformationUpdater.repository = mockedRepository;

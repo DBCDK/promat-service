@@ -187,6 +187,11 @@
       <version>21.2.3-SNAPSHOT</version>
     </dependency>
     <dependency>
+      <groupId>dk.dbc</groupId>
+      <artifactId>rawrepo-record-service-connector</artifactId>
+      <version>21.3.4-SNAPSHOT</version>
+    </dependency>
+    <dependency>
        <groupId>org.microprofile-ext.openapi-ext</groupId>
        <artifactId>openapi-ui</artifactId>
        <version>2.1.1</version>

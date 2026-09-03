@@ -18,33 +18,38 @@ import org.glassfish.jersey.jackson.JacksonFeature;
 import java.time.Duration;
 
 @ApplicationScoped
-public class FaustResolverProducer {
+public class FbiApiConnectorProducer {
     private static final RetryPolicy<Response> RETRY_POLICY = new RetryPolicy<Response>()
             .handle(ProcessingException.class)
             .handleResultIf(response -> response.getStatus() == 500)
             .withDelay(Duration.ofSeconds(5))
             .withMaxRetries(3);
 
+    private static final String ANONYMOUS_USERNAME = "@";
+    private static final String ANONYMOUS_PASSWORD = "@";
 
-
-    protected FaustResolverProducer() {}
+    protected FbiApiConnectorProducer() {}
 
     @Produces
-    public static FaustResolver produce(@ConfigProperty(name = "FAUST_RESOLVER_URL") String baseUrl) {
-        return produce(baseUrl, UserAgent.forInternalRequests());
+    public static FbiApiConnector produce(
+            @ConfigProperty(name = "FBI_API_URL") String baseUrl,
+            @ConfigProperty(name = "FBI_API_LOGIN_URL", defaultValue = "https://login.bib.dk") String loginUrl,
+            @ConfigProperty(name = "OAUTH2_CLIENT_ID") String clientId,
+            @ConfigProperty(name = "OAUTH2_CLIENT_SECRET") String clientSecret) {
+        return produce(baseUrl, loginUrl, clientId, clientSecret, UserAgent.forInternalRequests());
     }
 
-    public static FaustResolver produce(String baseUrl, UserAgent userAgent) {
+    public static FbiApiConnector produce(String baseUrl, String loginUrl, String clientId, String clientSecret,
+                                           UserAgent userAgent) {
         Client client = HttpClient.newClient(new ClientConfig()
                 .register(new JacksonFeature())
                 .property(ClientProperties.CONNECT_TIMEOUT, 5000)   // 5 sec timeout.
-                .property(ClientProperties.READ_TIMEOUT, 30000));   // 30 sec read timeout.
+                .property(ClientProperties.READ_TIMEOUT, 30000));   // 30 sec read timeout.);
         FailSafeHttpClient failSafeHttpClient = FailSafeHttpClient.create(client, userAgent, RETRY_POLICY);
-        return new FaustResolver(failSafeHttpClient, baseUrl);
+        return new FbiApiConnector(failSafeHttpClient, baseUrl, loginUrl, clientId, clientSecret, ANONYMOUS_USERNAME, ANONYMOUS_PASSWORD);
     }
 
-
-    static void dispose(@Disposes FaustResolver faustResolver) {
-        faustResolver.close();
+    static void dispose(@Disposes FbiApiConnector connector) {
+        connector.close();
     }
 }

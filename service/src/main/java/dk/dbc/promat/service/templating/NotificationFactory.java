@@ -1,7 +1,8 @@
 package dk.dbc.promat.service.templating;
 
 import dk.dbc.promat.service.api.BibliographicInformation;
-import dk.dbc.promat.service.api.OpenFormatHandler;
+import dk.dbc.promat.service.api.FbiApiHandler;
+import dk.dbc.promat.service.connectors.FbiApiConnectorException;
 import dk.dbc.promat.service.connectors.OpenFormatConnectorException;
 import dk.dbc.promat.service.persistence.Notification;
 import dk.dbc.promat.service.persistence.NotificationStatus;
@@ -50,7 +51,7 @@ public class NotificationFactory {
     }
 
     @Inject
-    OpenFormatHandler openFormatHandler;
+    FbiApiHandler fbiApiHandler;
 
     @Inject
     ReviewerDiffer reviewerDiffer;
@@ -88,7 +89,7 @@ public class NotificationFactory {
         }
     }
 
-    public Notification notificationOf(AssignReviewer model) throws ValidateException, OpenFormatConnectorException {
+    public Notification notificationOf(AssignReviewer model) throws ValidateException, FbiApiConnectorException {
         Notification notification = new Notification();
         PromatCase promatCase = model.getPromatCase();
 
@@ -157,7 +158,7 @@ public class NotificationFactory {
                 .withStatus(NotificationStatus.PENDING);
     }
 
-    public Notification notificationOf(EarlyReminderMail model) throws OpenFormatConnectorException, ValidateException {
+    public Notification notificationOf(EarlyReminderMail model) throws ValidateException, FbiApiConnectorException {
         Notification notification = new Notification();
         List<String> fausts = collectFausts(model.getPromatCase());
 
@@ -169,7 +170,7 @@ public class NotificationFactory {
                 .withStatus(NotificationStatus.PENDING);
     }
 
-    public Notification notificationOf(DeadlinePassedMail model) throws OpenFormatConnectorException, ValidateException {
+    public Notification notificationOf(DeadlinePassedMail model) throws ValidateException, FbiApiConnectorException {
         Notification notification = new Notification();
         List<String> fausts = collectFausts(model.getPromatCase());
 
@@ -181,10 +182,10 @@ public class NotificationFactory {
                 .withStatus(NotificationStatus.PENDING);
     }
 
-    private List<BibliographicInformation> getTitleSections(List<String> fausts) throws OpenFormatConnectorException {
+    private List<BibliographicInformation> getTitleSections(List<String> fausts) throws FbiApiConnectorException {
         List<BibliographicInformation> titleSections = new ArrayList<>();
         for (String faust : fausts) {
-            titleSections.add(openFormatHandler.format(faust));
+            titleSections.add(fbiApiHandler.format(faust));
         }
         return titleSections;
     }

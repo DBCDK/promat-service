@@ -4,14 +4,16 @@ import com.github.tomakehurst.wiremock.WireMockServer;
 import dk.dbc.commons.persistence.TransactionScopedPersistenceContext;
 import dk.dbc.commons.useragent.UserAgent;
 import dk.dbc.opennumberroll.OpennumberRollConnectorException;
+import dk.dbc.promat.service.AuthMocks;
 import dk.dbc.promat.service.ContainerTest;
 import dk.dbc.promat.service.Dates;
+import dk.dbc.promat.service.FbiApiMocks;
 import dk.dbc.promat.service.Repository;
 import dk.dbc.promat.service.api.BibliographicInformation;
-import dk.dbc.promat.service.api.OpenFormatHandler;
+import dk.dbc.promat.service.api.FbiApiHandler;
 import dk.dbc.promat.service.cluster.ServerRole;
-import dk.dbc.promat.service.connectors.OpenFormatConnectorException;
-import dk.dbc.promat.service.connectors.OpenFormatConnectorProducer;
+import dk.dbc.promat.service.connectors.FbiApiConnectorException;
+import dk.dbc.promat.service.connectors.FbiApiConnectorProducer;
 import dk.dbc.promat.service.persistence.PromatCase;
 import org.eclipse.microprofile.metrics.Counter;
 import org.eclipse.microprofile.metrics.Metadata;
@@ -53,10 +55,14 @@ public abstract class CaseInformationUpdaterTestBase extends ContainerTest {
 
     @BeforeAll
     static void startWiremock() {
-        wireMockServer = new WireMockServer(options().dynamicPort());
+        wireMockServer = new WireMockServer(options().dynamicPort()
+                .extensions(FbiApiMocks.bodyTransformer()));
         wireMockServer.start();
         configureFor("localhost", wireMockServer.port());
         wiremockHost = ContainerTest.getOpenFormatBaseUrl(wireMockServer.baseUrl());
+
+        AuthMocks.mockFBILoginAuth(wireMockServer, "123456789", "abcdef");
+        FbiApiMocks.mockFbiApiResponses(wireMockServer);
     }
 
     @AfterAll
@@ -108,9 +114,9 @@ public abstract class CaseInformationUpdaterTestBase extends ContainerTest {
         upd.caseInformationUpdater.metricRegistry = metricRegistry;
         upd.entityManager = entityManager;
         upd.serverRole = ServerRole.PRIMARY;
-        upd.caseInformationUpdater.openFormatHandler = new OpenFormatHandler()
-                .withConnector(OpenFormatConnectorProducer.produce(wiremockHost, new UserAgent("PromatIT")));
-
+        upd.caseInformationUpdater.fbiApiHandler = new FbiApiHandler()
+                .withConnector(FbiApiConnectorProducer.produce(wiremockHost, wiremockHost, "123456789",
+                        "abcdef", new UserAgent("PROMAT_IT")));
         ContentLookUp contentLookUpMock = mock(ContentLookUp.class);
         upd.caseInformationUpdater.contentLookUp = contentLookUpMock;
         when(contentLookUpMock.lookUpContent(anyString())).thenReturn(Optional.empty());
@@ -121,8 +127,8 @@ public abstract class CaseInformationUpdaterTestBase extends ContainerTest {
         return upd;
     }
 
-    protected OpenFormatHandler mockOpenFormat(BibliographicInformation info) throws OpenFormatConnectorException {
-        OpenFormatHandler handler = mock(OpenFormatHandler.class);
+    protected FbiApiHandler mockFbiApiHandler(BibliographicInformation info) throws FbiApiConnectorException {
+        FbiApiHandler handler = mock(FbiApiHandler.class);
         when(handler.format(anyString())).thenReturn(info);
         return handler;
     }

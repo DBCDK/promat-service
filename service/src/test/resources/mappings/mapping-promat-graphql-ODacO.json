@@ -1,0 +1,30 @@
+{
+  "id" : "7c6837a3-428f-3fe7-a2e9-b4c624bcd33f",
+  "request" : {
+    "url" : "/promat/graphql",
+    "method" : "POST",
+    "bodyPatterns" : [ {
+      "equalToJson" : "{\"query\":\"query ManifestationByPid($pid: String!) {\\n    manifestation(pid: $pid) {\\n        pid\\n        creators { display }\\n        classifications { dk5Heading entryType }\\n        edition { edition }\\n        identifiers { type value }\\n        materialTypes {\\n            materialTypeGeneral { code display }\\n            materialTypeSpecific { code display } }\\n        physicalDescription { summaryFull }\\n        publisher\\n        catalogueCodes { nationalBibliography otherCatalogues }\\n        titles { main }\\n        materialSelection {\\n            selectionGroup { display }\\n        }\\n        subjects {\\n            dbcVerified { type display local }\\n        }\\n    }\\n}\\n\",\"variables\":{\"pid\":\"870970-basis:51785347\"}}",
+      "ignoreArrayOrder" : true,
+      "ignoreExtraElements" : true
+    } ]
+  },
+  "response" : {
+    "status" : 200,
+    "bodyFileName" : "body-promat-graphql-ODacO.json",
+    "headers" : {
+      "date" : "Fri, 28 Aug 2026 08:56:02 GMT",
+      "access-control-allow-origin" : "*",
+      "dbcdk-clientid" : "6f020b22-b91f-4c20-82d7-254c09497b51",
+      "dbcdk-withexternalrequest" : "false",
+      "x-powered-by" : "Express",
+      "content-type" : "application/json; charset=utf-8",
+      "dbcdk-agency" : "190106",
+      "dbcdk-complexityclass" : "simple",
+      "strict-transport-security" : "max-age=31536000",
+      "dbcdk-traceid" : "3e71790b-732d-4297-a5c8-6508f30b55ee",
+      "dbcdk-action" : "simple"
+    }
+  },
+  "uuid" : "7c6837a3-428f-3fe7-a2e9-b4c624bcd33f"
+}

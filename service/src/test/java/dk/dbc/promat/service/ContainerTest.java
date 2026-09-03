@@ -37,7 +37,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.configureFor;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options;
 import static dk.dbc.promat.service.AuthMocks.mockAuthenticationResponses;
 import static dk.dbc.promat.service.FaustResolverMocks.mockFaustResolverResponses;
-import static dk.dbc.promat.service.OpenformatMocks.mockOpenformatResponses;
+import static dk.dbc.promat.service.FbiApiMocks.mockFbiApiResponses;
 import static dk.dbc.promat.service.taxonomy.RecordServiceMocks.mockRecordServiceAgencyDump;
 
 public abstract class ContainerTest extends IntegrationTestIT {
@@ -274,10 +274,10 @@ public abstract class ContainerTest extends IntegrationTestIT {
     private static WireMockServer makeWireMockServer() throws IOException {
         WireMockServer wireMockServer = new WireMockServer(options()
                 .dynamicPort()
-                .extensions(OpenformatMocks.bodyTransformer()));
+                .extensions(FbiApiMocks.bodyTransformer()));
 
         mockAuthenticationResponses(wireMockServer);
-        mockOpenformatResponses(wireMockServer);
+        mockFbiApiResponses(wireMockServer);
         mockRecordServiceAgencyDump(wireMockServer);
         mockFaustResolverResponses(wireMockServer);
 
@@ -318,12 +318,17 @@ public abstract class ContainerTest extends IntegrationTestIT {
                 .withEnv("OPENNUMBERROLL_NUMBERROLLNAME", "faust")
                 .withEnv("ENABLE_REMINDERS", String.valueOf(true))
                 .withEnv("CC_MAILADDRESS", "ccmailaddress-test@dbc.dk")
+                //.withEnv("OAUTH2_CLIENT_ID", "**")
                 .withEnv("OAUTH2_CLIENT_ID", "123456789")
+                //.withEnv("OAUTH2_CLIENT_SECRET", "**")
                 .withEnv("OAUTH2_CLIENT_SECRET", "abcdef")
                 .withEnv("OAUTH2_INTROSPECTION_URL", "http://host.testcontainers.internal:" + wireMockServer.port() + "/oauth/introspection")
                 .withEnv("OAUTH2_USERINFO_URL", "http://host.testcontainers.internal:" + wireMockServer.port() + "/userinfo")
-                .withEnv("RECORD_SERVICE", "http://host.testcontainers.internal:" + wireMockServer.port())
+                .withEnv("RAWREPO_RECORD_SERVICE_URL", "http://host.testcontainers.internal:" + wireMockServer.port())
                 .withEnv("FAUST_RESOLVER_URL", "http://host.testcontainers.internal:" + wireMockServer.port())
+                //.withEnv("FBI_API_URL", "http://172.17.33.94:8082")
+                .withEnv("FBI_API_URL", "http://host.testcontainers.internal:" + wireMockServer.port())
+                .withEnv("FBI_API_LOGIN_URL", "http://host.testcontainers.internal:" + wireMockServer.port())
                 .withExposedPorts(8080)
                 .waitingFor(Wait.forHttp("/health"))
                 .withStartupTimeout(Duration.ofMinutes(2));

@@ -11,8 +11,8 @@
     !{material = "Printfile"; }
 @else
     @for ( var title : model.getTitleSections())
-        @if (title.getMaterialtypes().contains("Ebog"))
-            !{ material = "Ebog"; }
+        @if (title.getMaterialtypes().contains("e-bog"))
+            !{ material = "e-bog"; }
         @endif
     @endfor
 @endif
@@ -23,7 +23,7 @@
     @else
         Link til åbning af e-bog findes i Promat.
     @endif
-@elseif (material.equals("Ebog"))
+@elseif (material.equals("e-bog"))
     Link til åbning af e-bog findes i Promat.
 @else
     Materialet er på vej med posten.
