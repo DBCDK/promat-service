@@ -37,7 +37,13 @@ To build this project JDK 21 and Apache Maven is required.
 
 To start a local instance, Docker is required and must be running.
 
-**IDE setup (IntelliJ + SDKMAN)**
+**IDE setup**
+
+Get a JDK 21 onto your machine — [SDKMAN](https://sdkman.io) is the easiest
+way: it installs per-shell, without touching your system Java or needing
+sudo, which is nice if you're setting up a new machine or juggling several
+projects' JDK versions at once. Not required though — any JDK 21 works, as
+long as `JAVA_HOME` points at it.
 
 ```bash
 sdk install java 21-tem
@@ -48,9 +54,9 @@ java -version   # confirm it reports 21
 Open the repository root in IntelliJ (`File → Open`) — it will detect the
 multi-module Maven project (`connector/`, `model/`, `service/`). Then:
 
-1. `File → Project Structure → Project` and set Project SDK to the JDK 21
-   installed above (point it at `~/.sdkman/candidates/java/21-tem` if
-   IntelliJ doesn't detect it automatically).
+1. `File → Project Structure → Project` and set Project SDK to your JDK 21
+   (point it at `~/.sdkman/candidates/java/21-tem` if using SDKMAN, or
+   wherever else it lives, if IntelliJ doesn't detect it automatically).
 2. Trigger a Maven re-import (the notification popup, or the refresh icon
    in the Maven tool window).
 

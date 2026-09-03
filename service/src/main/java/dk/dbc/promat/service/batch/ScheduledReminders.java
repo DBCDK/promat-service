@@ -36,7 +36,7 @@ public class ScheduledReminders {
         // See ScheduledNotificationSender.processNotifications() for what
         // this guard is for.
         if (RuntimeGuards.disableScheduledJobs()) {
-            LOGGER.info("Skipping scheduled reminders because {}=true", RuntimeGuards.DISABLE_SCHEDULED_JOBS_ENV);
+            LOGGER.warn("Skipping scheduled reminders because {}=true", RuntimeGuards.DISABLE_SCHEDULED_JOBS_ENV);
             return;
         }
         if (serverRole == ServerRole.PRIMARY) {

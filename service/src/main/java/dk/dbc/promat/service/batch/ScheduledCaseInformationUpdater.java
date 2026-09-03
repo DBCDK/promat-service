@@ -45,7 +45,7 @@ public class ScheduledCaseInformationUpdater {
             // See ScheduledNotificationSender.processNotifications() for
             // what this guard is for.
             if (RuntimeGuards.disableScheduledJobs()) {
-                LOGGER.info("Skipping scheduled case updates because {}=true", RuntimeGuards.DISABLE_SCHEDULED_JOBS_ENV);
+                LOGGER.warn("Skipping scheduled case updates because {}=true", RuntimeGuards.DISABLE_SCHEDULED_JOBS_ENV);
                 return;
             }
             // promat-service can run as several instances behind a load
@@ -98,7 +98,7 @@ public class ScheduledCaseInformationUpdater {
             // See ScheduledNotificationSender.processNotifications() for
             // what this guard is for.
             if (RuntimeGuards.disableScheduledJobs()) {
-                LOGGER.info("Skipping scheduled editor cleanup because {}=true", RuntimeGuards.DISABLE_SCHEDULED_JOBS_ENV);
+                LOGGER.warn("Skipping scheduled editor cleanup because {}=true", RuntimeGuards.DISABLE_SCHEDULED_JOBS_ENV);
                 return;
             }
             if(serverRole == ServerRole.PRIMARY) {

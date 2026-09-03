@@ -53,7 +53,7 @@ public class NotificationSender {
         // locally against real data, where you don't want to spam real
         // reviewers'/editors' inboxes.
         if (RuntimeGuards.disableOutboundMail()) {
-            LOGGER.info("Skipping outbound mail to '{}' because {}=true", notification.getToAddress(), RuntimeGuards.DISABLE_OUTBOUND_MAIL_ENV);
+            LOGGER.warn("Skipping outbound mail to '{}' because {}=true", notification.getToAddress(), RuntimeGuards.DISABLE_OUTBOUND_MAIL_ENV);
             notification.setStatus(NotificationStatus.DONE);
             return;
         }

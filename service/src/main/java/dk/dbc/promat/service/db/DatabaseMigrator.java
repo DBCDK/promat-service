@@ -38,7 +38,7 @@ public class DatabaseMigrator {
         // the schema at all. Useful when pointing this service at a shared
         // staging DB you don't want Flyway silently changing.
         if (RuntimeGuards.skipMigrations()) {
-            LOGGER.info("database migrations disabled via {}", RuntimeGuards.SKIP_MIGRATIONS_ENV);
+            LOGGER.warn("database migrations disabled via {}", RuntimeGuards.SKIP_MIGRATIONS_ENV);
             return;
         }
         if (isDatabaseAccessReadOnly()) {

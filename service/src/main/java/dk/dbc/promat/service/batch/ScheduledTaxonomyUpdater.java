@@ -46,7 +46,7 @@ public class ScheduledTaxonomyUpdater {
         // See ScheduledNotificationSender.processNotifications() for what
         // this guard is for.
         if (RuntimeGuards.disableScheduledJobs()) {
-            LOGGER.info("Skipping taxonomy updater scheduling because {}=true", RuntimeGuards.DISABLE_SCHEDULED_JOBS_ENV);
+            LOGGER.warn("Skipping taxonomy updater scheduling because {}=true", RuntimeGuards.DISABLE_SCHEDULED_JOBS_ENV);
             return;
         }
         int offsetMinutes = resolveOffsetMinutes();
@@ -79,7 +79,7 @@ public class ScheduledTaxonomyUpdater {
         // See ScheduledNotificationSender.processNotifications() for what
         // this guard is for.
         if (RuntimeGuards.disableScheduledJobs()) {
-            LOGGER.info("Skipping taxonomy refresh because {}=true", RuntimeGuards.DISABLE_SCHEDULED_JOBS_ENV);
+            LOGGER.warn("Skipping taxonomy refresh because {}=true", RuntimeGuards.DISABLE_SCHEDULED_JOBS_ENV);
             return;
         }
         try {

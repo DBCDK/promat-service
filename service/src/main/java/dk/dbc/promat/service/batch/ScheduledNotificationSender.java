@@ -47,7 +47,7 @@ public class ScheduledNotificationSender {
             // you don't want your local instance racing the real deployment
             // to process the same notifications/reminders/etc.
             if (RuntimeGuards.disableScheduledJobs()) {
-                LOGGER.info("Skipping scheduled notifications because {}=true", RuntimeGuards.DISABLE_SCHEDULED_JOBS_ENV);
+                LOGGER.warn("Skipping scheduled notifications because {}=true", RuntimeGuards.DISABLE_SCHEDULED_JOBS_ENV);
                 return;
             }
             if (serverRole == ServerRole.PRIMARY) {

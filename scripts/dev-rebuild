@@ -4,28 +4,28 @@ set -e
 
 cd "$(dirname "$0")/.."
 
-echo "🔨 Rebuilding Promat Service..."
+echo "Rebuilding Promat Service..."
 echo ""
 
 # Check Java version
 JAVA_VERSION=$(java -version 2>&1 | head -n 1 | cut -d'"' -f2 | cut -d'.' -f1)
 if [ "$JAVA_VERSION" -lt 21 ]; then
-    echo "❌ Java 21+ required, but found Java $JAVA_VERSION"
+    echo "Java 21+ required, but found Java $JAVA_VERSION"
     exit 1
 fi
 
 # Stop running containers
-echo "🛑 Stopping containers..."
+echo "Stopping containers..."
 docker stop promat-service-8080 2>/dev/null || true
 docker stop promat-service-database 2>/dev/null || true
 sleep 2
 
 # Rebuild
-echo "📦 Building application..."
+echo "Building application..."
 mvn clean package -DskipTests
 
 echo ""
-echo "✅ Build complete! Starting services..."
+echo "Build complete! Starting services..."
 echo ""
 
 # Start again
