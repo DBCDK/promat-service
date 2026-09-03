@@ -67,31 +67,72 @@ public class Users {
                             .withCode(ServiceErrorCode.FORBIDDEN)).build();
         }
 
+        /* An email-shaped userId means entraDbc login was used. By convention - not a DB constraint -
+           promatuser.userId is stored in the format the netpunkt login flow uses
+           (i.e. initials), so we use the "initials" claim instead, which the IdP asserts
+           consistently regardless of login path, after the sanity checks below. A plain
+           (non-email) userId is used as-is, unchanged, for backward compatibility. */
+        final String rawUserId = userId.get();
+        final String userIdLookupKey;
+        if (rawUserId.contains("@")) {
+            final String userIdDomain = rawUserId.substring(rawUserId.indexOf('@') + 1);
+            if (!userIdDomain.equalsIgnoreCase("dbc.dk")) {
+                LOGGER.error("getUserRoleFromAuthToken userId {} is not from the dbc.dk domain", rawUserId);
+                return Response.status(401).entity(
+                        new ServiceErrorDto()
+                                .withCause("Untrusted userId domain")
+                                .withDetails(String.format("userId %s is not from the dbc.dk domain", rawUserId))
+                                .withCode(ServiceErrorCode.FORBIDDEN)).build();
+            }
+
+            final Optional<String> initials = callerPrincipal.claim("initials");
+            if (initials.isEmpty()) {
+                return Response.status(401).entity(
+                        new ServiceErrorDto()
+                                .withCause("No initials")
+                                .withDetails("Received request for user role with an email-shaped userId but no initials")
+                                .withCode(ServiceErrorCode.FORBIDDEN)).build();
+            }
+
+            final String userIdLocalPart = rawUserId.substring(0, rawUserId.indexOf('@'));
+            if (!userIdLocalPart.equalsIgnoreCase(initials.get())) {
+                LOGGER.error("getUserRoleFromAuthToken initials {} does not match userId {}", initials.get(), rawUserId);
+                return Response.status(401).entity(
+                        new ServiceErrorDto()
+                                .withCause("Inconsistent identity claims")
+                                .withDetails(String.format("initials %s does not match userId %s", initials.get(), rawUserId))
+                                .withCode(ServiceErrorCode.FORBIDDEN)).build();
+            }
+            userIdLookupKey = initials.get();
+        } else {
+            userIdLookupKey = rawUserId;
+        }
+
         final TypedQuery<UserRole> query = entityManager.createNamedQuery(PromatUser.GET_USER_ROLE_BY_AGENCY_AND_USERID, UserRole.class);
-        query.setParameter(1, userId.get());
+        query.setParameter(1, userIdLookupKey);
         query.setParameter(2, agency.get());
 
         final List<UserRole> userRole = query.getResultList();
         if (userRole.isEmpty()) {
-            LOGGER.error("getUserRoleFromAuthToken returned empty list when searching with user id {} and agency {}", userId.get(), agency.get());
+            LOGGER.error("getUserRoleFromAuthToken returned empty list when searching with userId {} and agency {}", userIdLookupKey, agency.get());
             return Response.status(401).entity(
                     new ServiceErrorDto()
                             .withCause("User not authorized")
-                            .withDetails(String.format("userId/agency %s/%s was not found in the set of known Promat users", userId.get(), agency.get()))
+                            .withDetails(String.format("userId/agency %s/%s was not found in the set of known Promat users", userIdLookupKey, agency.get()))
                             .withCode(ServiceErrorCode.NOT_FOUND)).build();
         }
         if (userRole.size() > 1) {
-            LOGGER.error("getUserRoleFromAuthToken returned list with more than 1 user when searching with user id {} and agency {}", userId.get(), agency.get());
+            LOGGER.error("getUserRoleFromAuthToken returned list with more than 1 user when searching with userId {} and agency {}", userIdLookupKey, agency.get());
             return Response.status(401).entity(
                     new ServiceErrorDto()
                             .withCause("User not authorized")
-                            .withDetails(String.format("userId/agency %s/%s returned multiple known Promat users", userId.get(), agency.get()))
+                            .withDetails(String.format("userId/agency %s/%s returned multiple known Promat users", userIdLookupKey, agency.get()))
                             .withCode(ServiceErrorCode.NOT_FOUND)).build();
         }
 
         Set<String> groups = callerPrincipal.getGroups();
-        if (groups.isEmpty() || !groups.contains(IDP_PRODUCT_NAME + "-" + getRightNameForRole(userRole.get(0).getRole()))) {
-            LOGGER.error("getUserRoleFromAuthToken with no or incorrect roles. Role is {}, but having groups {}", userRole.get(0).getRole().name(), groups);
+        if (groups.isEmpty() || !groups.contains(IDP_PRODUCT_NAME + "-" + getRightNameForRole(userRole.getFirst().getRole()))) {
+            LOGGER.error("getUserRoleFromAuthToken with no or incorrect roles. Role is {}, but having groups {}", userRole.getFirst().getRole().name(), groups);
             return Response.status(401).entity(
                     new ServiceErrorDto()
                             .withCause("No or incorrect roles")
@@ -99,7 +140,7 @@ public class Users {
                             .withCode(ServiceErrorCode.FORBIDDEN)).build();
         }
 
-        return Response.ok(userRole.get(0)).build();
+        return Response.ok(userRole.getFirst()).build();
     }
 
     private String getRightNameForRole(PromatUser.Role role) {
