@@ -4,9 +4,9 @@
       "borchk": "ok",
       "culr": "ok"
     },
-    "userId": "kLNp",
-    "idpUsed": "dbcidp",
-    "initials": "kLNp",
+    "userId": "nomatch@dbc.dk",
+    "idpUsed": "entraDbc",
+    "initials": "nomatch",
     "municipality": "909",
     "netpunktAgency": "790900",
     "municipalityAgencyId": "790900",

@@ -1,7 +1,6 @@
 package dk.dbc.promat.service.batch;
 
 import dk.dbc.promat.service.taxonomy.TaxonomyCache;
-import dk.dbc.promat.service.taxonomy.TaxonomyException;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.Resource;
 import jakarta.ejb.Singleton;
@@ -14,9 +13,7 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-
-@Startup
+// @Startup disabled temporarily
 @Singleton
 public class ScheduledTaxonomyUpdater {
     private static final Logger LOGGER = LoggerFactory.getLogger(ScheduledTaxonomyUpdater.class);
@@ -72,7 +69,7 @@ public class ScheduledTaxonomyUpdater {
     public void updateTaxonomy() {
         try {
             taxonomyCache.refresh();
-        } catch (TaxonomyException | IOException e) {
+        } catch (Exception e) {
             LOGGER.error("Failed to build taxonomy", e);
         }
     }
