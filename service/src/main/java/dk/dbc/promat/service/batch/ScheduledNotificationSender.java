@@ -34,9 +34,6 @@ public class ScheduledNotificationSender {
     ServerRole serverRole;
 
 
-    // @Schedule is how EJB timers work: no cron job or external scheduler
-    // needed, the container itself calls this method on the given
-    // schedule (here: every 10 minutes) for as long as the app is running.
     @Schedule(second = "0", minute = "*/10", hour = "*", persistent = false)
     public void processNotifications() {
         try {

@@ -48,13 +48,6 @@ public class ScheduledCaseInformationUpdater {
                 LOGGER.warn("Skipping scheduled case updates because {}=true", RuntimeGuards.DISABLE_SCHEDULED_JOBS_ENV);
                 return;
             }
-            // promat-service can run as several instances behind a load
-            // balancer (for uptime/scaling), but a batch job like this one
-            // must only run once per tick, not once per instance - otherwise
-            // every instance would try to update every case at the same
-            // time. ServerRole (backed by Hazelcast cluster membership)
-            // elects exactly one instance as PRIMARY; only that instance
-            // actually does the work here.
             if(serverRole == ServerRole.PRIMARY) {
 
                 // Prevent running multiple updates at once - since the update runs only every hour,

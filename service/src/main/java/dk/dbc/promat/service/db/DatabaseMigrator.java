@@ -28,10 +28,6 @@ public class DatabaseMigrator {
         this.dataSource = dataSource;
     }
 
-    // @PostConstruct means: run this once, automatically, right after the
-    // container finishes constructing/injecting this singleton bean - i.e.
-    // once per application startup. That's what makes this "run migrations
-    // on boot" rather than something anyone has to remember to call.
     @PostConstruct
     public void migrate() {
         // Local/dev escape hatch: if PROMAT_SKIP_MIGRATIONS=true, don't touch
