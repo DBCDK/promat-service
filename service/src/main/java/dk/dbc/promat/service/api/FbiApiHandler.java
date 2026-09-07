@@ -389,6 +389,7 @@ public class FbiApiHandler {
         return m.materialSelection().selectionGroup().stream()
                 .map(SelectionGroup::display)
                 .filter(Objects::nonNull)
+                .distinct()
                 .toList();
     }
 
