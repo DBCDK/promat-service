@@ -30,7 +30,7 @@ import static org.mockito.Mockito.mock;
 
 /**
  * Tests that CaseInformationUpdater correctly syncs title/author/weekcode/catalog codes
- * from OpenFormat bibliographic data onto a case.
+ * from fbi-api bibliographic data onto a case.
  */
 public class CaseInformationUpdaterBibliographicSyncIT extends CaseInformationUpdaterTestBase {
     private static final Logger LOGGER = LoggerFactory.getLogger(CaseInformationUpdaterBibliographicSyncIT.class);

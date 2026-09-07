@@ -29,7 +29,6 @@ RECORD_SERVICE=${RECORD_SERVICE:-"http://rawrepo-record-service.fbstest.svc.clou
 OPENSEARCH_PROFILE=${OPENSEARCH_PROFILE:-dbckat}
 OPENSEARCH_AGENCY=${OPENSEARCH_AGENCY:-010100}
 OPENSEARCH_REPOSITORY=${OPENSEARCH_REPOSITORY:-rawrepo_basis}
-OPENFORMAT_SERVICE_URL=${OPENFORMAT_SERVICE_URL:-"http://open-format-broker.fbstest.svc.cloud.dbc.dk/api/v2"}
 FAUST_RESOLVER_URL=${FAUST_RESOLVER_URL:-"http://faust-resolver-service.fbstest.svc.cloud.dbc.dk"}
 PROMAT_AGENCY_ID=${PROMAT_AGENCY_ID:-191977}
 # empty by default: a non-empty value makes Payara try Hazelcast Kubernetes-DNS cluster discovery, which hangs forever outside a real k8s cluster
@@ -38,7 +37,6 @@ MAIL_HOST=${MAIL_HOST:-"none"}
 MAIL_USER=${MAIL_USER:-"none"}
 MAIL_FROM=${MAIL_FROM:-"none"}
 PROMAT_AGENCY_ID=${PROMAT_AGENCY_ID}
-OPENFORMAT_SERVICE_URL=${OPENFORMAT_SERVICE_URL}
 LU_MAILADDRESS=${LU_MAILADDRESS:-"none"}
 MP_OPENAPI_SERVERS="http://$(getMyIP):${PORT}/v1/api"
 OPENAPI_UI_CONTEXTROOT="http://$(getMyIP):${PORT}"

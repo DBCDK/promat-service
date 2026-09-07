@@ -5,7 +5,6 @@ import com.github.tomakehurst.wiremock.WireMockServer;
 import dk.dbc.commons.persistence.TransactionScopedPersistenceContext;
 import dk.dbc.promat.service.ContainerTest;
 import dk.dbc.promat.service.cluster.ServerRole;
-import dk.dbc.promat.service.connectors.OpenFormatConnectorException;
 import dk.dbc.promat.service.persistence.Editor;
 import dk.dbc.promat.service.persistence.Reviewer;
 import org.eclipse.microprofile.metrics.Counter;
@@ -58,7 +57,7 @@ public class ScheduledUserUpdaterIT extends ContainerTest {
     }
 
     @Test
-    public void testUserUpdatesDeactivatedUser() throws JsonProcessingException, OpenFormatConnectorException {
+    public void testUserUpdatesDeactivatedUser() throws JsonProcessingException {
 
         ScheduledUserUpdater upd = new ScheduledUserUpdater();
         upd.userUpdater = new UserUpdater();

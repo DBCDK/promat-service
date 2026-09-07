@@ -173,9 +173,7 @@ public class FbiApiConnector {
             @JsonProperty("expires_in") long expiresIn) {}
 
     /**
-     * Bibliographic data for a single manifestation, fetched from fbi-api. Field-for-field
-     * equivalent of {@link dk.dbc.promat.service.connectors.OpenFormatConnector.PromatElements},
-     * to ease migrating existing consumers once OpenFormat is retired.
+     * Bibliographic data for a single manifestation, fetched from fbi-api.
      */
     public record PromatElements(
             List<String> faust,
