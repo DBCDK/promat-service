@@ -23,11 +23,9 @@ public class FbiApiHandler {
     private static final Logger LOGGER = LoggerFactory.getLogger(FbiApiHandler.class);
     private static final String AGENCY_ID = "870970";
     private static final String METAKOMPASDATA_PRESENT = "true";
-    // NOTE: this query's field list must line up exactly with the
-    // `Manifestation` record (further down this file), and several test
-    // fixtures under service/src/test/resources/mappings/ match this exact
-    // query text byte-for-byte - so editing the .graphql file requires
-    // updating those fixtures too.
+    // Field-list alignment with `Manifestation` is enforced by FbiApiHandlerQueryFieldsTest.
+    // Editing this file also requires updating the WireMock fixtures under
+    // service/src/test/resources/mappings/, which match on this exact query text.
     private static final String QUERY = loadQuery();
 
     private FbiApiConnector connector;
