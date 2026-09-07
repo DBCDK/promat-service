@@ -34,10 +34,6 @@ import java.util.Locale;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-// Also how a case created via RecordsProvider's rawrepo fallback (faust+title
-// only, because fbi-api didn't have the record yet) "catches up" to a
-// fully-enriched case automatically - the next scheduled run just succeeds
-// once fbi-api has the data.
 @Stateless
 public class CaseInformationUpdater {
     private static final Logger LOGGER = LoggerFactory.getLogger(CaseInformationUpdater.class);
@@ -59,11 +55,6 @@ public class CaseInformationUpdater {
     @Inject
     Dates dates;
 
-    // Note: this metric's name/description still say "openformat" even
-    // though it now times the fbi-api call below - it's measuring the same
-    // thing (how long it takes to fetch bibliographic data for a case), just
-    // from a different upstream system, and the name was left as-is to
-    // avoid breaking any existing Grafana dashboards/alerts built on it.
     static final Metadata openformatTimerMetadata = Metadata.builder()
             .withName("promat_service_caseinformationupdater_openformat_timer")
             .withDescription("Openformat response time")
@@ -84,8 +75,6 @@ public class CaseInformationUpdater {
             long taskStartTime = System.currentTimeMillis();
             BibliographicInformation bibliographicInformation = fbiApiHandler.format(promatCase.getPrimaryFaust());
 
-            // Expected for a record fbi-api hasn't indexed yet - give up on this run,
-            // the next scheduled run will try again.
             if (!bibliographicInformation.isOk()) {
                 LOGGER.error("Failed to obtain bibliographic information for case with id {} and primary faust {}: {}",
                         promatCase.getId(), promatCase.getPrimaryFaust(), bibliographicInformation.getError());

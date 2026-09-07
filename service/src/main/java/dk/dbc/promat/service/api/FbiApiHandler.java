@@ -134,6 +134,8 @@ public class FbiApiHandler {
             return List.of();
         }
         final int effectiveLimit = limit == null ? MAX_SEARCH_LIMIT : Math.min(limit, MAX_SEARCH_LIMIT);
+        // TODO: offset is always 0 - add real pagination (offset param + surfacing
+        // ComplexSearch.hitcount()) instead of silently truncating at MAX_SEARCH_LIMIT.
         final Map<String, Object> variables = Map.of(
                 "cql", cql,
                 "offset", 0,

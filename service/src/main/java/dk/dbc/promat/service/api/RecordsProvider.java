@@ -47,9 +47,7 @@ public class RecordsProvider {
         if (recordList.size() < manifestations.size()) {
             LOGGER.warn("Partial result for id {}: expected {} manifestations, got {}", id, manifestations.size(), recordList.size());
         }
-        // Fallthrough: fbi-api doesn't know this faust yet, but rawrepo (the
-        // underlying source of truth) already does - return a minimal
-        // faust+title result so the caller can still proceed.
+        // Fallthrough: Only rawrepo-record-service lookup of faust; now also resolves a title.
         if (recordList.isEmpty() && recordServiceConnector.recordExists(DBC_AGENCY, id)) {
            return new RecordsListDto().withRecords(List.of(new RecordDto()
                            .withFaust(id)

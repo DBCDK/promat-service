@@ -49,7 +49,6 @@ public class NotificationFactory {
         }
     }
 
-    // Used to go through OpenFormatHandler before the fbi-api migration.
     @Inject
     FbiApiHandler fbiApiHandler;
 

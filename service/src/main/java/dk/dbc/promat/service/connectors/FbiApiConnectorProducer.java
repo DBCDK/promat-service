@@ -25,8 +25,6 @@ public class FbiApiConnectorProducer {
             .withDelay(Duration.ofSeconds(5))
             .withMaxRetries(3);
 
-    // Promat has no per-request end users to authenticate as, so it always
-    // logs in as this fixed anonymous placeholder account.
     private static final String ANONYMOUS_USERNAME = "@";
     private static final String ANONYMOUS_PASSWORD = "@";
 
@@ -41,7 +39,6 @@ public class FbiApiConnectorProducer {
         return produce(baseUrl, loginUrl, clientId, clientSecret, UserAgent.forInternalRequests());
     }
 
-    // Non-CDI overload so tests (and FbiApiHandlerCli) can build a connector directly.
     public static FbiApiConnector produce(String baseUrl, String loginUrl, String clientId, String clientSecret,
                                            UserAgent userAgent) {
         Client client = HttpClient.newClient(new ClientConfig()

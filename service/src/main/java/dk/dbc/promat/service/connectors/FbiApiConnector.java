@@ -24,8 +24,6 @@ import java.util.Objects;
 
 /**
  * Client for the fbi-api GraphQL service.
- * fbi-api replaced the old OpenFormat broker as promat-service's source of
- * bibliographic metadata for a given faust number.
  */
 public class FbiApiConnector {
     private static final Logger LOGGER = LoggerFactory.getLogger(FbiApiConnector.class);
@@ -84,9 +82,6 @@ public class FbiApiConnector {
         try (Response response = httpPost.execute()) {
             assertResponseStatus(response, "fbi-api");
             final GraphQLResponse graphQLResponse = readResponseEntity(response, GraphQLResponse.class, "fbi-api");
-            // A GraphQL API can respond with HTTP 200 and *still* fail - the
-            // "errors" field carries query-level problems (e.g. a bad field
-            // name), separate from HTTP-level failures like a 500.
             if (graphQLResponse.errors() != null && !graphQLResponse.errors().isEmpty()) {
                 throw new FbiApiConnectorException("fbi-api returned GraphQL errors: " + graphQLResponse.errors());
             }
@@ -119,7 +114,6 @@ public class FbiApiConnector {
         return accessToken;
     }
 
-    // Uses OAuth2 "password grant", logged in as the fixed anonymous account (see FbiApiConnectorProducer).
     private void fetchAccessToken() throws FbiApiConnectorException {
         LOGGER.info("Fetching new fbi-api access token from {}", loginUrl);
 
@@ -180,10 +174,6 @@ public class FbiApiConnector {
 
     /**
      * Bibliographic data for a single manifestation, fetched from fbi-api.
-     * The field names here (faust, dk5, isbn, catalogcodes, ...) deliberately
-     * mirror what the old OpenFormat integration used to return, so that
-     * FbiApiHandler.toBibliographicInformation() could be written as a
-     * like-for-like port instead of a redesign.
      */
     public record PromatElements(
             List<String> faust,
