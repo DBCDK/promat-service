@@ -2,9 +2,7 @@ package dk.dbc.promat.service.templating;
 
 import dk.dbc.commons.useragent.UserAgent;
 import dk.dbc.promat.service.api.FbiApiHandler;
-import dk.dbc.promat.service.api.OpenFormatHandler;
 import dk.dbc.promat.service.connectors.FbiApiConnectorProducer;
-import dk.dbc.promat.service.connectors.OpenFormatConnectorProducer;
 
 public class NotificationFactoryIT {
     public static NotificationFactory getNotificationFactory(String wiremockHost) {

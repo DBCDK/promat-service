@@ -3,7 +3,6 @@ package dk.dbc.promat.service.templating;
 import dk.dbc.promat.service.api.BibliographicInformation;
 import dk.dbc.promat.service.api.FbiApiHandler;
 import dk.dbc.promat.service.connectors.FbiApiConnectorException;
-import dk.dbc.promat.service.connectors.OpenFormatConnectorException;
 import dk.dbc.promat.service.persistence.Notification;
 import dk.dbc.promat.service.persistence.NotificationStatus;
 import dk.dbc.promat.service.persistence.PromatCase;

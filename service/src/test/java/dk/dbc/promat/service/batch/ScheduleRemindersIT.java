@@ -76,7 +76,7 @@ public class ScheduleRemindersIT extends ContainerTest {
         ScheduledReminders scheduledReminders = new ScheduledReminders();
         scheduledReminders.reminders = new Reminders();
         scheduledReminders.reminders.entityManager = entityManager;
-        scheduledReminders.reminders.notificationFactory = NotificationFactoryIT.getNotificationFactory(ContainerTest.getOpenFormatBaseUrl(wiremockHost));
+        scheduledReminders.reminders.notificationFactory = NotificationFactoryIT.getNotificationFactory(wiremockHost);
         scheduledReminders.ENABLE_REMINDERS = "true";
         scheduledReminders.serverRole = ServerRole.PRIMARY;
         persistenceContext.run(scheduledReminders::processReminders);
