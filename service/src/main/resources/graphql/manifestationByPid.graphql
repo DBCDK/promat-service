@@ -1,0 +1,22 @@
+query ManifestationByPid($pid: String!) {
+    manifestation(pid: $pid) {
+        pid
+        creators { display }
+        classifications { dk5Heading entryType }
+        edition { edition }
+        identifiers { type value }
+        materialTypes {
+            materialTypeGeneral { code display }
+            materialTypeSpecific { code display } }
+        physicalDescription { summaryFull }
+        publisher
+        catalogueCodes { nationalBibliography otherCatalogues }
+        titles { main }
+        materialSelection {
+            selectionGroup { display }
+        }
+        subjects {
+            dbcVerified { type display local }
+        }
+    }
+}

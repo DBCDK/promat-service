@@ -1,7 +1,8 @@
 package dk.dbc.promat.service.api;
 
 import dk.dbc.promat.service.connectors.FaustResolverException;
-import dk.dbc.promat.service.connectors.OpenFormatConnectorException;
+import dk.dbc.promat.service.connectors.FbiApiConnectorException;
+import dk.dbc.rawrepo.record.RecordServiceConnectorException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,7 +39,7 @@ public class Records {
             return Response.ok(recordsProvider.getRecords(id)).build();
 
 
-        } catch (FaustResolverException | OpenFormatConnectorException e) {
+        } catch (FaustResolverException | FbiApiConnectorException | RecordServiceConnectorException e) {
             LOGGER.error("Failed to get records for id {}", id, e);
             return Response.status(400).entity(e).build();
         }

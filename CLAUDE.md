@@ -41,7 +41,6 @@ Environment is configured via `scripts/common` (defaults) or `.env.local` (local
 * `PROMAT_DB_URL`, 
 * `OPENSEARCH_SERVICE_URL`, 
 * `RECORD_SERVICE`, 
-* `OPENFORMAT_SERVICE_URL`, 
 * `FAUST_RESOLVER_URL`,  
 * `OPENNUMBERROLL_SERVICE_URL`, 
 * `APP_NAME`.
@@ -97,7 +96,7 @@ Singleton EJBs in `service/src/main/java/dk/dbc/promat/service/batch/`:
 | Service | Purpose |
 |---------|---------|
 | OpenSearch | Bibliographic data lookup |
-| OpenFormat | Record formatting |
+| fbi-api | Record formatting / bibliographic metadata |
 | OpenNumberRoll | FAUST number generation |
 | CULR | User/reviewer data sync |
 | Rawrepo Record Service | Material records + taxonomy dump |

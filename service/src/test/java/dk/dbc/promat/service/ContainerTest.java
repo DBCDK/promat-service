@@ -37,7 +37,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.configureFor;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options;
 import static dk.dbc.promat.service.AuthMocks.mockAuthenticationResponses;
 import static dk.dbc.promat.service.FaustResolverMocks.mockFaustResolverResponses;
-import static dk.dbc.promat.service.OpenformatMocks.mockOpenformatResponses;
+import static dk.dbc.promat.service.FbiApiMocks.mockFbiApiResponses;
 import static dk.dbc.promat.service.taxonomy.RecordServiceMocks.mockRecordServiceAgencyDump;
 
 public abstract class ContainerTest extends IntegrationTestIT {
@@ -274,10 +274,10 @@ public abstract class ContainerTest extends IntegrationTestIT {
     private static WireMockServer makeWireMockServer() throws IOException {
         WireMockServer wireMockServer = new WireMockServer(options()
                 .dynamicPort()
-                .extensions(OpenformatMocks.bodyTransformer()));
+                .extensions(FbiApiMocks.bodyTransformer()));
 
         mockAuthenticationResponses(wireMockServer);
-        mockOpenformatResponses(wireMockServer);
+        mockFbiApiResponses(wireMockServer);
         mockRecordServiceAgencyDump(wireMockServer);
         mockFaustResolverResponses(wireMockServer);
 
@@ -310,7 +310,6 @@ public abstract class ContainerTest extends IntegrationTestIT {
                 .withEnv("MAIL_HOST", "mailhost")
                 .withEnv("MAIL_USER", "mail.user")
                 .withEnv("MAIL_FROM", "some@address.dk")
-                .withEnv("OPENFORMAT_SERVICE_URL", getOpenFormatBaseUrl("http://host.testcontainers.internal:" + wireMockServer.port()))
                 .withEnv("LU_MAILADDRESS", "lumailaddress-test@dbc.dk")
                 .withEnv("OPENNUMBERROLL_SERVICE_URL", "http://host.testcontainers.internal:" + wireMockServer.port() + "/1.1")
                 .withEnv("EMATERIAL_CONTENT_REPO", "http://host.testcontainers.internal:" + wireMockServer.port() +
@@ -318,12 +317,17 @@ public abstract class ContainerTest extends IntegrationTestIT {
                 .withEnv("OPENNUMBERROLL_NUMBERROLLNAME", "faust")
                 .withEnv("ENABLE_REMINDERS", String.valueOf(true))
                 .withEnv("CC_MAILADDRESS", "ccmailaddress-test@dbc.dk")
+                //.withEnv("OAUTH2_CLIENT_ID", "**")
                 .withEnv("OAUTH2_CLIENT_ID", "123456789")
+                //.withEnv("OAUTH2_CLIENT_SECRET", "**")
                 .withEnv("OAUTH2_CLIENT_SECRET", "abcdef")
                 .withEnv("OAUTH2_INTROSPECTION_URL", "http://host.testcontainers.internal:" + wireMockServer.port() + "/oauth/introspection")
                 .withEnv("OAUTH2_USERINFO_URL", "http://host.testcontainers.internal:" + wireMockServer.port() + "/userinfo")
-                .withEnv("RECORD_SERVICE", "http://host.testcontainers.internal:" + wireMockServer.port())
+                .withEnv("RAWREPO_RECORD_SERVICE_URL", "http://host.testcontainers.internal:" + wireMockServer.port())
                 .withEnv("FAUST_RESOLVER_URL", "http://host.testcontainers.internal:" + wireMockServer.port())
+                //.withEnv("FBI_API_URL", "http://172.17.33.94:8082")
+                .withEnv("FBI_API_URL", "http://host.testcontainers.internal:" + wireMockServer.port())
+                .withEnv("FBI_API_LOGIN_URL", "http://host.testcontainers.internal:" + wireMockServer.port())
                 .withExposedPorts(8080)
                 .waitingFor(Wait.forHttp("/health"))
                 .withStartupTimeout(Duration.ofMinutes(2));
@@ -333,29 +337,6 @@ public abstract class ContainerTest extends IntegrationTestIT {
         }
         container.start();
         return container;
-    }
-
-    /**
-     * Helper method to set wiremock host for open-format, since we use open-format
-     * quite a few places, and it is a pain in the ****e to go between a real server,
-     * a local wiremock(recorder) and the in-test wiremock host when making changes that
-     * involves the openformat connector (or mocks thereof)
-     *
-     * @param server The servername under normal circumstances
-     * @return Either the given open-format baseurl, or if modified, a static address
-     */
-    public static String getOpenFormatBaseUrl(String server) {
-
-        // Use fixed address for a real open-format broker
-        // NEVER COMMIT THIS AS ACTIVE !
-        //return "http://open-format-broker.cisterne.svc.cloud.dbc.dk/api/v2";
-
-        // Use local wiremock recorder. Use '--proxy-all http://open-format-broker.cisterne.svc.cloud.dbc.dk'
-        // NEVER COMMIT THIS AS ACTIVE !
-        //return "http://172.17.38.221:8081";
-
-        // Use default server value as given by the various tests.
-        return server;
     }
 
     public static PromatTask findTaskByFieldType(PromatCase promatCase, TaskFieldType taskFieldType) {

@@ -1,6 +1,6 @@
 package dk.dbc.promat.service.batch;
 
-import dk.dbc.promat.service.connectors.OpenFormatConnectorException;
+import dk.dbc.promat.service.connectors.FbiApiConnectorException;
 import dk.dbc.promat.service.persistence.Notification;
 import dk.dbc.promat.service.persistence.PromatCase;
 import dk.dbc.promat.service.persistence.PromatEntityManager;
@@ -112,7 +112,7 @@ public class Reminders {
                     }
                 }
 
-            } catch (OpenFormatConnectorException | NotificationFactory.ValidateException e) {
+            } catch (FbiApiConnectorException | NotificationFactory.ValidateException e) {
                 LOGGER.error("Caught exception during 'processReminder': {}", e.getMessage());
             }
         }
