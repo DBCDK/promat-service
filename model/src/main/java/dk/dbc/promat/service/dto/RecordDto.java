@@ -4,30 +4,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-// A DTO ("Data Transfer Object") is a plain class whose only job is to
-// carry data across a boundary - here, from the backend to whatever calls
-// GET /v1/api/records/{id} or /records/search - as JSON. It's deliberately
-// dumb: no business logic, just fields plus the boilerplate below them.
-// Everything in this file is repetitive by design:
-//  - getX()/setX() : the classic Java "bean" pattern many libraries
-//    (including the JSON library used here) expect.
-//  - withX(...) returning `this` : a "fluent builder" style, used instead
-//    of a giant constructor - see RecordsProvider for how it's used, e.g.
-//    `new RecordDto().withFaust(...).withTitle(...)`.
-//  - equals()/hashCode()/toString() : written by hand here field-by-field;
-//    a Java `record` (like FbiApiHandler.RecordInfo) gets these for free,
-//    but this project's DTOs predate that being the norm for this class.
 public class RecordDto implements Dto {
 
     private String faust;
-    // Named "isPrimary" rather than "primary" so the generated getter below
-    // reads naturally as a yes/no question: isPrimary(). This is the
-    // manifestation that matches the id the caller originally asked for -
-    // see RecordsProvider.getRecords().
     private boolean isPrimary;
-    // General + specific material type (e.g. general "BOOK", specific
-    // "audiobook"). A list because a manifestation can technically have more
-    // than one, though in practice this project only ever fills in one.
     private List<RecordMaterialTypeDto> types = new ArrayList<>();
     private String title;
     private String creator;

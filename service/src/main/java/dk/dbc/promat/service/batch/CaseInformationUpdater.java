@@ -34,14 +34,10 @@ import java.util.Locale;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-// Called (via ScheduledCaseInformationUpdater, on a timer) for every active
-// case, to refresh it with the latest fbi-api data: title/author/publisher
-// might get corrected, a weekcode might appear once a record is fully
-// catalogued, etc. This is also how a case created via the rawrepo fallback
-// in RecordsProvider (faust+title only, because fbi-api didn't have the
-// record yet) "catches up" to a fully-enriched case automatically, without
-// any special-case code - the very next run of this job just succeeds once
-// fbi-api has the data.
+// Also how a case created via RecordsProvider's rawrepo fallback (faust+title
+// only, because fbi-api didn't have the record yet) "catches up" to a
+// fully-enriched case automatically - the next scheduled run just succeeds
+// once fbi-api has the data.
 @Stateless
 public class CaseInformationUpdater {
     private static final Logger LOGGER = LoggerFactory.getLogger(CaseInformationUpdater.class);
@@ -88,10 +84,8 @@ public class CaseInformationUpdater {
             long taskStartTime = System.currentTimeMillis();
             BibliographicInformation bibliographicInformation = fbiApiHandler.format(promatCase.getPrimaryFaust());
 
-            // Not an unusual/rare case: this is exactly what happens for a
-            // record fbi-api hasn't indexed yet. We just log it, count it,
-            // and give up on *this* run - the next scheduled run will try
-            // again, and will succeed once fbi-api catches up.
+            // Expected for a record fbi-api hasn't indexed yet - give up on this run,
+            // the next scheduled run will try again.
             if (!bibliographicInformation.isOk()) {
                 LOGGER.error("Failed to obtain bibliographic information for case with id {} and primary faust {}: {}",
                         promatCase.getId(), promatCase.getPrimaryFaust(), bibliographicInformation.getError());
@@ -120,10 +114,7 @@ public class CaseInformationUpdater {
                 promatCase.setPublisher(bibliographicInformation.getPublisher());
             }
 
-            // Update extent, if changed - same pattern as title/author/
-            // publisher above: useSameOrUpdateValue() decides whether the
-            // new value is actually different (and non-null) before we
-            // bother overwriting and logging it.
+            // Update extent, if changed
             if(useSameOrUpdateValue(promatCase.getExtent(), bibliographicInformation.getExtent(), false)) {
                 LOGGER.info("Updating extent: '{}' ==> '{}' of case with id {}", promatCase.getExtent(),
                         bibliographicInformation.getExtent(), promatCase.getId());
@@ -161,13 +152,8 @@ public class CaseInformationUpdater {
                         .collect(Collectors.toList()));
             }
 
-            // Add supplementary bibliographic data fetched from fbi-api.
-            // Unlike title/author/publisher/extent above, these are simply
-            // set whenever fbi-api has a non-empty value - there's no
-            // "did it actually change" check or log line, since these
-            // fields are purely informational (not used in any status/
-            // business-logic decision the way weekcode is below) and don't
-            // need that level of change tracking.
+            // Supplementary, purely informational fields - just set whenever fbi-api
+            // has a non-empty value, no change-tracking needed.
             if( bibliographicInformation.getIsbn() != null && !bibliographicInformation.getIsbn().isEmpty() ) {
                 promatCase.setIsbn(bibliographicInformation.getIsbn());
             }

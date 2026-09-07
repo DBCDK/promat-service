@@ -49,11 +49,7 @@ public class NotificationFactory {
         }
     }
 
-    // Used only to look up titles for the fausts mentioned in a notification
-    // email (see getTitleSections below) - this used to go through
-    // OpenFormatHandler before the fbi-api migration; the rest of this
-    // class didn't need to change at all, since it only ever depended on
-    // getting back a BibliographicInformation.
+    // Used to go through OpenFormatHandler before the fbi-api migration.
     @Inject
     FbiApiHandler fbiApiHandler;
 

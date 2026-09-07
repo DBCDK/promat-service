@@ -3,12 +3,6 @@ package dk.dbc.promat.service.api;
 import java.util.ArrayList;
 import java.util.List;
 
-// Holds one manifestation's bibliographic data on its way from fbi-api into
-// a PromatCase (see FbiApiHandler.toBibliographicInformation() for how it's
-// built, and CaseInformationUpdater for how each field ends up on a case).
-// Fields default to "" / empty list rather than null, so callers can safely
-// do e.g. `bibliographicInformation.getTitle().isEmpty()` without a
-// null-check first.
 public class BibliographicInformation {
 
     private String faust = "";
@@ -77,11 +71,6 @@ public class BibliographicInformation {
         return error;
     }
 
-    // "No data yet" is expected and common (fbi-api hasn't indexed a
-    // just-catalogued record), not an exceptional failure - so this uses a
-    // plain error-message field callers check with isOk(), rather than
-    // throwing an exception for what's really a normal, temporary outcome.
-    // See CaseInformationUpdater.updateCaseInformation() for how it's used.
     public boolean isOk() {
         return error.isEmpty();
     }

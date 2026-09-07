@@ -147,7 +147,7 @@ public class PromatCase {
 
     public static final String GET_COUNT_OF_CASES_IN_PROCESSING_STATE_NAME =
             "PromatCase.get.count.of.cases.in.processing.state";
-    public static final String GET_COUNT_OF_CASES_IN_PROCESSING_STATE_QUERY = "select count(1)" +
+    public static final String GET_COUNT_OF_CASES_IN_PROCESSING_STATE_QUERY = "select count(c)" +
             "                                                  from PromatCase c" +
             "                                                 where c.status = dk.dbc.promat.service.persistence.CaseStatus.PROCESSING";
 
@@ -236,21 +236,8 @@ public class PromatCase {
     @JsonView({CaseView.Export.class, CaseView.Summary.class, CaseView.Case.class})
     private String publisher;
 
-    // The next few fields (isbn, dk5, extent, materialTypes, series) are
-    // bibliographic data copied onto the case from fbi-api by
-    // CaseInformationUpdater - see that class for when/how they get filled
-    // in. A plain Java `List<String>` can't be stored directly as a
-    // Postgres column, so each one needs two extra annotations:
-    //  - @Column(columnDefinition = "jsonb") : store it as a jsonb column
-    //    (Postgres's native JSON type) rather than trying to use a SQL
-    //    array or a comma-joined string.
-    //  - @Convert(converter = StringListToJsonArrayConverter.class) : tells
-    //    JPA/Hibernate *how* to turn the List<String> into that JSON text
-    //    and back again on every read/write - JPA has no built-in mapping
-    //    for "Java list <-> jsonb column", so this converter class (from a
-    //    shared library, not written in this project) fills that gap.
-    // @JsonView controls which REST responses include this field at all -
-    // see CaseView for what Export/Summary/Case mean.
+    // isbn, dk5, extent, materialTypes and series are bibliographic data
+    // copied onto the case from fbi-api by CaseInformationUpdater.
     @Column(columnDefinition = "jsonb")
     @Convert(converter = StringListToJsonArrayConverter.class)
     @JsonView({CaseView.Export.class, CaseView.Summary.class, CaseView.Case.class})
@@ -261,9 +248,6 @@ public class PromatCase {
     @JsonView({CaseView.Export.class, CaseView.Summary.class, CaseView.Case.class})
     private List<String> dk5;
 
-    // A plain string, not jsonb - unlike the others there's only ever one
-    // value (e.g. "295 sider"), so no need for the List<String>+converter
-    // machinery here.
     @JsonView({CaseView.Export.class, CaseView.Summary.class, CaseView.Case.class})
     private String extent;
 
