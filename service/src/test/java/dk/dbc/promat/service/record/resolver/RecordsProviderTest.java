@@ -12,6 +12,7 @@ import dk.dbc.promat.service.connectors.FaustResolver;
 import dk.dbc.promat.service.connectors.FaustResolverException;
 import dk.dbc.promat.service.connectors.FbiApiConnector;
 import dk.dbc.promat.service.connectors.FbiApiConnectorException;
+import dk.dbc.promat.service.dto.RecordDto;
 import dk.dbc.promat.service.dto.RecordsListDto;
 import dk.dbc.rawrepo.record.RecordServiceConnector;
 import dk.dbc.rawrepo.record.RecordServiceConnectorException;
@@ -23,6 +24,7 @@ import java.util.Set;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
+import static org.hamcrest.core.IsNull.notNullValue;
 import static org.hamcrest.core.IsNull.nullValue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyMap;
@@ -216,6 +218,45 @@ class RecordsProviderTest {
 
         RecordsListDto recordsListDto = provider.getRecords(id);
         assertThat("No records are present", recordsListDto.getNumFound(), is(0));
+    }
+
+    @Test
+    void getRecordByFaust_found_returnsSingleRecordDirectly() throws RecordServiceConnectorException, FbiApiConnectorException {
+        String faust = "48951147";
+
+        ObjectNode manifestation = MAPPER.createObjectNode();
+        manifestation.putArray("creators").addObject().put("display", "Roger Crowley");
+        manifestation.putObject("titles").putArray("main").add("Konstantinopels fald");
+        ObjectNode materialType = manifestation.putArray("materialTypes").addObject();
+        materialType.putObject("materialTypeGeneral").put("code", "BOOKS");
+        materialType.putObject("materialTypeSpecific").put("display", "bog");
+
+        ObjectNode root = MAPPER.createObjectNode();
+        root.set("manifestation", manifestation);
+        when(fbiApiConnector.execute(anyString(), anyMap(), any()))
+                .thenAnswer(invocation -> MAPPER.treeToValue(root, invocation.getArgument(2, Class.class)));
+
+        RecordDto record = provider.getRecordByFaust(faust);
+        assertThat("Record is found", record, is(notNullValue()));
+        assertThat("Faust matches", record.getFaust(), is(faust));
+        assertThat("Title", record.getTitle(), is("Konstantinopels fald"));
+        assertThat("Marked as primary", record.isPrimary(), is(true));
+
+        // Bypasses FaustResolver entirely - the caller already has a known faust,
+        // not an id that might need resolving to one or more manifestations.
+        verifyNoInteractions(faustResolver);
+    }
+
+    @Test
+    void getRecordByFaust_notFoundAnywhere_returnsNull() throws RecordServiceConnectorException, FbiApiConnectorException {
+        String faust = "00000000";
+        when(fbiApiConnector.execute(anyString(), anyMap(), any()))
+                .thenAnswer(invocation -> MAPPER.treeToValue(
+                        MAPPER.createObjectNode().putNull("manifestation"), invocation.getArgument(2, Class.class)));
+        when(recordServiceConnector.recordExists(RecordsProvider.DBC_AGENCY, faust)).thenReturn(false);
+
+        RecordDto record = provider.getRecordByFaust(faust);
+        assertThat("No record found", record, is(nullValue()));
     }
 
     @Test

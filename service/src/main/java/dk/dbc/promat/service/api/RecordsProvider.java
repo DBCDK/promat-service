@@ -59,6 +59,28 @@ public class RecordsProvider {
     }
 
     /**
+     * Looks up a single, known faust directly - bypassing {@link FaustResolver}'s
+     * ISBN/barcode resolution entirely, since the caller already has a faust, not an
+     * id that might resolve to several manifestations. Always returns at most one
+     * record (or {@code null} if none was found), never a list, unlike
+     * {@link #getRecords(String)}, which has to stay list-shaped to also serve
+     * ISBN/barcode lookups that can genuinely match more than one manifestation.
+     */
+    public RecordDto getRecordByFaust(String faust) throws FbiApiConnectorException, RecordServiceConnectorException {
+        List<FbiApiHandler.RecordInfo> records = fbiApiHandler.recordInfo(Set.of(faust));
+        if (!records.isEmpty()) {
+            return toRecordDto(records.getFirst(), true);
+        }
+        // Fallthrough: fbi-api doesn't know this faust yet, but rawrepo (the
+        // underlying source of truth) already does - return a minimal
+        // faust+title result so the caller can still proceed.
+        if (recordServiceConnector.recordExists(DBC_AGENCY, faust)) {
+            return new RecordDto().withFaust(faust).withPrimary(true).withTitle(resolveTitle(faust));
+        }
+        return null;
+    }
+
+    /**
      * Free-text search by title and/or creator, backed by fbi-api's complexSearch.
      * Unlike {@link #getRecords(String)}, hits are not tied to a requested id, so none
      * of them are ever marked primary.
