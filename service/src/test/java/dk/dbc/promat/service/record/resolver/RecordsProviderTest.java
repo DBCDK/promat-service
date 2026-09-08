@@ -140,6 +140,34 @@ class RecordsProviderTest {
     }
 
     @Test
+    void manifestationWithMultipleMaterialTypes_allAreReturned() throws FaustResolverException, RecordServiceConnectorException, FbiApiConnectorException {
+        // A combined print+audio release: two materialTypes entries on the same manifestation.
+        String id = "143569608";
+        String faust = "143569608";
+        when(faustResolver.resolve(id)).thenReturn(Set.of(faust));
+
+        ObjectNode manifestation = MAPPER.createObjectNode();
+        ArrayNode materialTypes = manifestation.putArray("materialTypes");
+        ObjectNode book = materialTypes.addObject();
+        book.putObject("materialTypeGeneral").put("code", "BOOKS");
+        book.putObject("materialTypeSpecific").put("display", "bog");
+        ObjectNode audiobook = materialTypes.addObject();
+        audiobook.putObject("materialTypeGeneral").put("code", "AUDIO_BOOKS");
+        audiobook.putObject("materialTypeSpecific").put("display", "lydbog");
+
+        ObjectNode root = MAPPER.createObjectNode();
+        root.set("manifestation", manifestation);
+        when(fbiApiConnector.execute(anyString(), anyMap(), any()))
+                .thenAnswer(invocation -> MAPPER.treeToValue(root, invocation.getArgument(2, Class.class)));
+
+        RecordsListDto recordsListDto = provider.getRecords(id);
+        var types = recordsListDto.getRecords().getFirst().getTypes();
+        assertThat("Both material type entries are present, not just the first", types.size(), is(2));
+        assertThat("First entry is the book", types.get(0).getSpecificType(), is("bog"));
+        assertThat("Second entry is the audiobook", types.get(1).getSpecificType(), is("lydbog"));
+    }
+
+    @Test
     void fbiApiHasFullData_recordIncludesAllBibliographicFields() throws FaustResolverException, RecordServiceConnectorException, FbiApiConnectorException {
         String faust = "48951147";
         when(faustResolver.resolve(faust)).thenReturn(Set.of(faust));

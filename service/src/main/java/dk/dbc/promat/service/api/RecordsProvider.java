@@ -86,7 +86,9 @@ public class RecordsProvider {
                 .withSeries(info.series())
                 .withTargetGroup(info.targetgroup())
                 .withCatalogCodes(info.catalogcodes())
-                .withTypes(List.of(mapMaterialType(info.materialTypeGeneralCode(), info.materialTypeSpecificDisplay())));
+                .withTypes(info.materialTypes().stream()
+                        .map(pair -> mapMaterialType(pair.generalCode(), pair.specificDisplay()))
+                        .toList());
     }
 
     // "245" is the MARC field for a record's title; subfield 'a' is the main title text.

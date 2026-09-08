@@ -82,9 +82,15 @@ public class FbiApiHandler {
     }
 
     /**
-     * Full bibliographic data for a single manifestation, plus the general/specific material
-     * type pair resolved from that same manifestation fetch (so the two stay correctly paired,
-     * unlike independently derived lists elsewhere in this class).
+     * One manifestation's general/specific material type pair - a manifestation can list
+     * several of these (e.g. a combined print+ebook record), each kept together so the two
+     * stay correctly matched instead of being derived independently.
+     */
+    public record MaterialTypePair(String generalCode, String specificDisplay) {}
+
+    /**
+     * Full bibliographic data for a single manifestation, plus every general/specific material
+     * type pair it lists (usually just one).
      */
     public record RecordInfo(
             String faust,
@@ -98,8 +104,7 @@ public class FbiApiHandler {
             List<String> series,
             List<String> targetgroup,
             List<String> catalogcodes,
-            String materialTypeGeneralCode,
-            String materialTypeSpecificDisplay) {}
+            List<MaterialTypePair> materialTypes) {}
 
     // One fbi-api round trip per faust - see toRecordInfo below for the field mapping.
     public List<RecordInfo> recordInfo(Set<String> fausts) throws FbiApiConnectorException {
@@ -191,8 +196,6 @@ public class FbiApiHandler {
     // Shared by recordInfo() and search() so the general/specific material
     // type always comes from the same manifestation fetch.
     private RecordInfo toRecordInfo(String faust, Manifestation manifestation) {
-        final MaterialTypeCode general = firstMaterialType(manifestation, false);
-        final MaterialTypeCode specific = firstMaterialType(manifestation, true);
         final List<String> creators = creators(manifestation);
         final List<String> publishers = publisher(manifestation);
         return new RecordInfo(
@@ -207,18 +210,18 @@ public class FbiApiHandler {
                 series(manifestation),
                 targetgroup(manifestation),
                 catalogcodes(manifestation),
-                general != null ? general.code() : null,
-                specific != null ? specific.display() : null);
+                materialTypePairs(manifestation));
     }
 
-    private MaterialTypeCode firstMaterialType(Manifestation m, boolean specific) {
-        if (m.materialTypes() == null || m.materialTypes().isEmpty()) {
-            return null;
+    private List<MaterialTypePair> materialTypePairs(Manifestation m) {
+        if (m.materialTypes() == null) {
+            return List.of();
         }
-        if (specific) {
-            return m.materialTypes().getFirst().materialTypeSpecific();
-        }
-        return m.materialTypes().getFirst().materialTypeGeneral();
+        return m.materialTypes().stream()
+                .map(mt -> new MaterialTypePair(
+                        mt.materialTypeGeneral() != null ? mt.materialTypeGeneral().code() : null,
+                        mt.materialTypeSpecific() != null ? mt.materialTypeSpecific().display() : null))
+                .toList();
     }
 
 
