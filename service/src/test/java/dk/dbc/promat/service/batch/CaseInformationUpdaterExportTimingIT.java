@@ -1,10 +1,9 @@
 package dk.dbc.promat.service.batch;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import dk.dbc.opennumberroll.OpennumberRollConnectorException;
 import dk.dbc.promat.service.Repository;
 import dk.dbc.promat.service.api.BibliographicInformation;
-import dk.dbc.promat.service.connectors.OpenFormatConnectorException;
+import dk.dbc.promat.service.connectors.FbiApiConnectorException;
 import dk.dbc.promat.service.dto.CaseRequest;
 import dk.dbc.promat.service.dto.TaskDto;
 import dk.dbc.promat.service.persistence.CaseStatus;
@@ -39,7 +38,7 @@ import static org.mockito.Mockito.when;
 public class CaseInformationUpdaterExportTimingIT extends CaseInformationUpdaterTestBase {
 
     @Test
-    public void testUpdateCaseWithPendingExportForPrehistoricWeekcode() throws JsonProcessingException, OpennumberRollConnectorException, OpenFormatConnectorException {
+    public void testUpdateCaseWithPendingExportForPrehistoricWeekcode() throws OpennumberRollConnectorException, FbiApiConnectorException {
 
         // Create a case
         CaseRequest dto = new CaseRequest()
@@ -60,7 +59,7 @@ public class CaseInformationUpdaterExportTimingIT extends CaseInformationUpdater
         PromatCase created = postAndAssert("v1/api/cases", dto, PromatCase.class, Response.Status.CREATED);
 
         ScheduledCaseInformationUpdater upd = configure();
-        upd.caseInformationUpdater.openFormatHandler = mockOpenFormat(new BibliographicInformation()
+        upd.caseInformationUpdater.fbiApiHandler = mockFbiApiHandler(new BibliographicInformation()
                 .withCatalogcodes(Arrays.asList("BKM202001", "ACC202001")));
         upd.caseInformationUpdater.repository = mockRepositoryAssigningRecordId("123456789");
 
@@ -75,7 +74,7 @@ public class CaseInformationUpdaterExportTimingIT extends CaseInformationUpdater
     }
 
     @Test
-    public void testUpdateCaseWithPendingExportForCurrentWeekcode() throws OpenFormatConnectorException, JsonProcessingException, OpennumberRollConnectorException {
+    public void testUpdateCaseWithPendingExportForCurrentWeekcode() throws  OpennumberRollConnectorException, FbiApiConnectorException {
 
         // Create a case
         CaseRequest dto = new CaseRequest()
@@ -98,7 +97,7 @@ public class CaseInformationUpdaterExportTimingIT extends CaseInformationUpdater
 
         ScheduledCaseInformationUpdater upd = configure();
         LocalDate date = LocalDate.now().plusWeeks(1);
-        upd.caseInformationUpdater.openFormatHandler = mockOpenFormat(new BibliographicInformation()
+        upd.caseInformationUpdater.fbiApiHandler = mockFbiApiHandler(new BibliographicInformation()
                 .withCatalogcodes(Arrays.asList(weekcode("BKM", date), "ACC202001")));
         upd.caseInformationUpdater.repository = mockRepositoryAssigningRecordId("123456789");
 
@@ -113,7 +112,7 @@ public class CaseInformationUpdaterExportTimingIT extends CaseInformationUpdater
     }
 
     @Test
-    public void testUpdateCaseWithPendingExportForNextWeeksWeekcode() throws OpenFormatConnectorException, OpennumberRollConnectorException {
+    public void testUpdateCaseWithPendingExportForNextWeeksWeekcode() throws OpennumberRollConnectorException, FbiApiConnectorException {
 
         // Create a case
         CaseRequest dto = new CaseRequest()
@@ -138,7 +137,7 @@ public class CaseInformationUpdaterExportTimingIT extends CaseInformationUpdater
         // Get weekcode 2 weeks into the future - and check for end-of-year rollaround which can cause
         // trouble for the 'ww' weekcode formatter when used with a fixed 'yyyy' year
         LocalDate date = LocalDate.now().plusWeeks(2);
-        upd.caseInformationUpdater.openFormatHandler = mockOpenFormat(new BibliographicInformation()
+        upd.caseInformationUpdater.fbiApiHandler = mockFbiApiHandler(new BibliographicInformation()
                 .withCatalogcodes(Arrays.asList(weekcode("BKM", date), "ACC202001")));
         upd.caseInformationUpdater.repository = mockRepositoryAssigningRecordId("123456789");
 
@@ -155,7 +154,7 @@ public class CaseInformationUpdaterExportTimingIT extends CaseInformationUpdater
     }
 
     @Test
-    public void testUpdateCaseWithNoWeekcode() throws OpenFormatConnectorException {
+    public void testUpdateCaseWithNoWeekcode() throws FbiApiConnectorException {
 
         // Create a case
         CaseRequest dto = new CaseRequest()
@@ -177,7 +176,7 @@ public class CaseInformationUpdaterExportTimingIT extends CaseInformationUpdater
         PromatCase created = postAndAssert("v1/api/cases", dto, PromatCase.class, Response.Status.CREATED);
 
         ScheduledCaseInformationUpdater upd = configure();
-        upd.caseInformationUpdater.openFormatHandler = mockOpenFormat(new BibliographicInformation()
+        upd.caseInformationUpdater.fbiApiHandler = mockFbiApiHandler(new BibliographicInformation()
                 .withCatalogcodes(List.of("ACC202001")));
         upd.caseInformationUpdater.repository = mock(Repository.class);
 
@@ -201,7 +200,7 @@ public class CaseInformationUpdaterExportTimingIT extends CaseInformationUpdater
     }
 
     @Test
-    public void testUpdateCaseWithApprovedForBKMWeekcode() throws OpenFormatConnectorException, OpennumberRollConnectorException {
+    public void testUpdateCaseWithApprovedForBKMWeekcode() throws OpennumberRollConnectorException, FbiApiConnectorException {
 
         // Create a case
         CaseRequest dto = new CaseRequest()
@@ -225,7 +224,7 @@ public class CaseInformationUpdaterExportTimingIT extends CaseInformationUpdater
         ScheduledCaseInformationUpdater upd = configure();
         LocalDate date = LocalDate.now().minusWeeks(1);
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyww", dkLocale);
-        upd.caseInformationUpdater.openFormatHandler = mockOpenFormat(new BibliographicInformation()
+        upd.caseInformationUpdater.fbiApiHandler = mockFbiApiHandler(new BibliographicInformation()
                 .withCatalogcodes(Arrays.asList("BKM" + date.format(formatter), "BKX299999", "FFK299999", "ACC202001")));
         upd.caseInformationUpdater.repository = mockRepositoryAssigningRecordId("123456789");
 
@@ -242,7 +241,7 @@ public class CaseInformationUpdaterExportTimingIT extends CaseInformationUpdater
     }
 
     @Test
-    public void testUpdateCaseWithApprovedForBKMAndBkxWeekcode() throws OpenFormatConnectorException, OpennumberRollConnectorException {
+    public void testUpdateCaseWithApprovedForBKMAndBkxWeekcode() throws OpennumberRollConnectorException, FbiApiConnectorException {
 
         // Create a case
         CaseRequest dto = new CaseRequest()
@@ -266,7 +265,7 @@ public class CaseInformationUpdaterExportTimingIT extends CaseInformationUpdater
         ScheduledCaseInformationUpdater upd = configure();
         LocalDate date = LocalDate.now().minusWeeks(1);
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyww", dkLocale);
-        upd.caseInformationUpdater.openFormatHandler = mockOpenFormat(new BibliographicInformation()
+        upd.caseInformationUpdater.fbiApiHandler = mockFbiApiHandler(new BibliographicInformation()
                 .withCatalogcodes(Arrays.asList("BKM" + date.format(formatter), "BKX" + date.format(formatter), "FFK299999", "ACC202001")));
         upd.caseInformationUpdater.repository = mockRepositoryAssigningRecordId("123456789");
 
@@ -283,7 +282,7 @@ public class CaseInformationUpdaterExportTimingIT extends CaseInformationUpdater
     }
 
     @Test
-    public void testUpdateCaseWithPendingExportForBKXWeekcode() throws OpenFormatConnectorException, OpennumberRollConnectorException {
+    public void testUpdateCaseWithPendingExportForBKXWeekcode() throws OpennumberRollConnectorException, FbiApiConnectorException {
 
         // Create a case
         CaseRequest dto = new CaseRequest()
@@ -307,7 +306,7 @@ public class CaseInformationUpdaterExportTimingIT extends CaseInformationUpdater
         ScheduledCaseInformationUpdater upd = configure();
         LocalDate date = LocalDate.now().minusWeeks(1);
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyww", dkLocale);
-        upd.caseInformationUpdater.openFormatHandler = mockOpenFormat(new BibliographicInformation()
+        upd.caseInformationUpdater.fbiApiHandler = mockFbiApiHandler(new BibliographicInformation()
                 .withCatalogcodes(Arrays.asList("BKX" + date.format(formatter), "BKM299999", "ACC202001")));
         upd.caseInformationUpdater.repository = mockRepositoryAssigningRecordId("123456789");
 
@@ -324,7 +323,7 @@ public class CaseInformationUpdaterExportTimingIT extends CaseInformationUpdater
     }
 
     @Test
-    public void testUpdateCaseWithPendingExportForFFKWeekcode() throws OpenFormatConnectorException, OpennumberRollConnectorException {
+    public void testUpdateCaseWithPendingExportForFFKWeekcode() throws OpennumberRollConnectorException, FbiApiConnectorException {
 
         // Create a case
         CaseRequest dto = new CaseRequest()
@@ -348,7 +347,7 @@ public class CaseInformationUpdaterExportTimingIT extends CaseInformationUpdater
         ScheduledCaseInformationUpdater upd = configure();
         LocalDate date = LocalDate.now().minusWeeks(1);
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyww", dkLocale);
-        upd.caseInformationUpdater.openFormatHandler = mockOpenFormat(new BibliographicInformation()
+        upd.caseInformationUpdater.fbiApiHandler = mockFbiApiHandler(new BibliographicInformation()
                 .withCatalogcodes(Arrays.asList("FFK" + date.format(formatter), "BKM299999", "BKX299999", "ACC202001")));
         upd.caseInformationUpdater.repository = mockRepositoryAssigningRecordId("123456789");
 
@@ -365,7 +364,7 @@ public class CaseInformationUpdaterExportTimingIT extends CaseInformationUpdater
     }
 
     @Test
-    public void testUpdateCaseWithWeekcodeMovingToLater() throws OpenFormatConnectorException, OpennumberRollConnectorException {
+    public void testUpdateCaseWithWeekcodeMovingToLater() throws OpennumberRollConnectorException, FbiApiConnectorException {
 
         // Create a case
         CaseRequest dto = new CaseRequest()
@@ -388,7 +387,7 @@ public class CaseInformationUpdaterExportTimingIT extends CaseInformationUpdater
 
         ScheduledCaseInformationUpdater upd = configure();
         LocalDate date = LocalDate.now().plusWeeks(2);
-        upd.caseInformationUpdater.openFormatHandler = mockOpenFormat(new BibliographicInformation()
+        upd.caseInformationUpdater.fbiApiHandler = mockFbiApiHandler(new BibliographicInformation()
                 .withCatalogcodes(Arrays.asList(weekcode("BKM", date), "ACC202001")));
         upd.caseInformationUpdater.repository = mockRepositoryAssigningRecordId("123456789");
 
@@ -404,7 +403,7 @@ public class CaseInformationUpdaterExportTimingIT extends CaseInformationUpdater
     }
 
     @Test
-    public void testUpdateCaseWithWeekcodeNextWeek() throws OpenFormatConnectorException, OpennumberRollConnectorException {
+    public void testUpdateCaseWithWeekcodeNextWeek() throws OpennumberRollConnectorException, FbiApiConnectorException {
 
         // Create a case
         CaseRequest dto = new CaseRequest()
@@ -427,7 +426,7 @@ public class CaseInformationUpdaterExportTimingIT extends CaseInformationUpdater
 
         ScheduledCaseInformationUpdater upd = configure();
         LocalDate date = LocalDate.now().plusWeeks(1);
-        upd.caseInformationUpdater.openFormatHandler = mockOpenFormat(new BibliographicInformation()
+        upd.caseInformationUpdater.fbiApiHandler = mockFbiApiHandler(new BibliographicInformation()
                 .withCatalogcodes(Arrays.asList(weekcode("BKM", date), "ACC202001")));
         upd.caseInformationUpdater.repository = mockRepositoryAssigningRecordId("123456789");
 
@@ -442,7 +441,7 @@ public class CaseInformationUpdaterExportTimingIT extends CaseInformationUpdater
     }
 
     @Test
-    public void testUpdateCaseWithWeekcodeLastWeekOfLastYear() throws OpenFormatConnectorException, JsonProcessingException, OpennumberRollConnectorException {
+    public void testUpdateCaseWithWeekcodeLastWeekOfLastYear() throws OpennumberRollConnectorException, FbiApiConnectorException {
 
         // Create a case
         CaseRequest dto = new CaseRequest()
@@ -464,7 +463,7 @@ public class CaseInformationUpdaterExportTimingIT extends CaseInformationUpdater
         PromatCase created = postAndAssert("v1/api/cases", dto, PromatCase.class, Response.Status.CREATED);
 
         ScheduledCaseInformationUpdater upd = configure();
-        upd.caseInformationUpdater.openFormatHandler = mockOpenFormat(new BibliographicInformation()
+        upd.caseInformationUpdater.fbiApiHandler = mockFbiApiHandler(new BibliographicInformation()
                 .withCatalogcodes(Arrays.asList("BKM202152", "ACC202203")));
         upd.caseInformationUpdater.repository = mockRepositoryAssigningRecordId("123456789");
         when(upd.caseInformationUpdater.dates.getCurrentDate()).thenReturn(LocalDate.parse("2021-12-26"));
@@ -479,7 +478,7 @@ public class CaseInformationUpdaterExportTimingIT extends CaseInformationUpdater
     }
 
     @Test
-    public void testUpdateCaseWithWeekcodeFirstWeekOfNewYear() throws OpenFormatConnectorException, OpennumberRollConnectorException {
+    public void testUpdateCaseWithWeekcodeFirstWeekOfNewYear() throws OpennumberRollConnectorException, FbiApiConnectorException {
 
         // Create a case
         CaseRequest dto = new CaseRequest()
@@ -501,7 +500,7 @@ public class CaseInformationUpdaterExportTimingIT extends CaseInformationUpdater
         PromatCase created = postAndAssert("v1/api/cases", dto, PromatCase.class, Response.Status.CREATED);
 
         ScheduledCaseInformationUpdater upd = configure();
-        upd.caseInformationUpdater.openFormatHandler = mockOpenFormat(new BibliographicInformation()
+        upd.caseInformationUpdater.fbiApiHandler = mockFbiApiHandler(new BibliographicInformation()
                 .withCatalogcodes(Arrays.asList("BKM202201", "ACC202203")));
         upd.caseInformationUpdater.repository = mockRepositoryAssigningRecordId("123456789");
         when(upd.caseInformationUpdater.dates.getCurrentDate()).thenReturn(LocalDate.parse("2022-01-02"));
@@ -516,7 +515,7 @@ public class CaseInformationUpdaterExportTimingIT extends CaseInformationUpdater
     }
 
     @Test
-    public void testUpdateCaseWithWeekcodeSecondWeekOfNewYear() throws OpenFormatConnectorException, OpennumberRollConnectorException {
+    public void testUpdateCaseWithWeekcodeSecondWeekOfNewYear() throws OpennumberRollConnectorException, FbiApiConnectorException {
 
         // Create a case
         CaseRequest dto = new CaseRequest()
@@ -538,7 +537,7 @@ public class CaseInformationUpdaterExportTimingIT extends CaseInformationUpdater
         PromatCase created = postAndAssert("v1/api/cases", dto, PromatCase.class, Response.Status.CREATED);
 
         ScheduledCaseInformationUpdater upd = configure();
-        upd.caseInformationUpdater.openFormatHandler = mockOpenFormat(new BibliographicInformation()
+        upd.caseInformationUpdater.fbiApiHandler = mockFbiApiHandler(new BibliographicInformation()
                 .withCatalogcodes(Arrays.asList("BKM202202", "ACC202203")));
         upd.caseInformationUpdater.repository = mockRepositoryAssigningRecordId("123456789");
         when(upd.caseInformationUpdater.dates.getCurrentDate()).thenReturn(LocalDate.parse("2022-01-03"));
@@ -554,7 +553,7 @@ public class CaseInformationUpdaterExportTimingIT extends CaseInformationUpdater
     }
 
     @Test
-    public void testUpdateCaseWithWeekcodeLastWeekOf2026() throws OpenFormatConnectorException, OpennumberRollConnectorException {
+    public void testUpdateCaseWithWeekcodeLastWeekOf2026() throws OpennumberRollConnectorException, FbiApiConnectorException {
 
         // Create a case
         CaseRequest dto = new CaseRequest()
@@ -576,7 +575,7 @@ public class CaseInformationUpdaterExportTimingIT extends CaseInformationUpdater
         PromatCase created = postAndAssert("v1/api/cases", dto, PromatCase.class, Response.Status.CREATED);
 
         ScheduledCaseInformationUpdater upd = configure();
-        upd.caseInformationUpdater.openFormatHandler = mockOpenFormat(new BibliographicInformation()
+        upd.caseInformationUpdater.fbiApiHandler = mockFbiApiHandler(new BibliographicInformation()
                 .withCatalogcodes(Arrays.asList("BKM202653", "ACC202703")));
         upd.caseInformationUpdater.repository = mockRepositoryAssigningRecordId("123456789");
         when(upd.caseInformationUpdater.dates.getCurrentDate()).thenReturn(LocalDate.parse("2026-12-27"));
@@ -591,7 +590,7 @@ public class CaseInformationUpdaterExportTimingIT extends CaseInformationUpdater
     }
 
     @Test
-    public void testUpdateCaseWithWeekcodeFirstWeekOf2027() throws OpenFormatConnectorException, OpennumberRollConnectorException {
+    public void testUpdateCaseWithWeekcodeFirstWeekOf2027() throws OpennumberRollConnectorException, FbiApiConnectorException {
 
         // Create a case
         CaseRequest dto = new CaseRequest()
@@ -613,7 +612,7 @@ public class CaseInformationUpdaterExportTimingIT extends CaseInformationUpdater
         PromatCase created = postAndAssert("v1/api/cases", dto, PromatCase.class, Response.Status.CREATED);
 
         ScheduledCaseInformationUpdater upd = configure();
-        upd.caseInformationUpdater.openFormatHandler = mockOpenFormat(new BibliographicInformation()
+        upd.caseInformationUpdater.fbiApiHandler = mockFbiApiHandler(new BibliographicInformation()
                 .withCatalogcodes(Arrays.asList("BKM202701", "ACC202203")));
         upd.caseInformationUpdater.repository = mockRepositoryAssigningRecordId("123456789");
         when(upd.caseInformationUpdater.dates.getCurrentDate()).thenReturn(LocalDate.parse("2027-01-02"));
@@ -628,7 +627,7 @@ public class CaseInformationUpdaterExportTimingIT extends CaseInformationUpdater
     }
 
     @Test
-    public void testUpdateCaseWithWeekcodeSecondWeekOf2027() throws OpenFormatConnectorException, OpennumberRollConnectorException {
+    public void testUpdateCaseWithWeekcodeSecondWeekOf2027() throws OpennumberRollConnectorException, FbiApiConnectorException {
 
         // Create a case
         CaseRequest dto = new CaseRequest()
@@ -650,7 +649,7 @@ public class CaseInformationUpdaterExportTimingIT extends CaseInformationUpdater
         PromatCase created = postAndAssert("v1/api/cases", dto, PromatCase.class, Response.Status.CREATED);
 
         ScheduledCaseInformationUpdater upd = configure();
-        upd.caseInformationUpdater.openFormatHandler = mockOpenFormat(new BibliographicInformation()
+        upd.caseInformationUpdater.fbiApiHandler = mockFbiApiHandler(new BibliographicInformation()
                 .withCatalogcodes(Arrays.asList("BKM202702", "ACC202203")));
         upd.caseInformationUpdater.repository = mockRepositoryAssigningRecordId("123456789");
         when(upd.caseInformationUpdater.dates.getCurrentDate()).thenReturn(LocalDate.parse("2027-01-04"));

@@ -1,9 +1,8 @@
 package dk.dbc.promat.service.batch;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import dk.dbc.promat.service.api.BibliographicInformation;
-import dk.dbc.promat.service.api.OpenFormatHandler;
-import dk.dbc.promat.service.connectors.OpenFormatConnectorException;
+import dk.dbc.promat.service.api.FbiApiHandler;
+import dk.dbc.promat.service.connectors.FbiApiConnectorException;
 import dk.dbc.promat.service.dto.CaseRequest;
 import dk.dbc.promat.service.dto.TaskDto;
 import dk.dbc.promat.service.persistence.CaseStatus;
@@ -69,19 +68,19 @@ public class CaseInformationUpdaterSideEffectsIT extends CaseInformationUpdaterT
 
         PromatCase created = postAndAssert("v1/api/cases", dto, PromatCase.class, Response.Status.CREATED);
 
-        Map<String, BibliographicInformation> openFormatResponse =
+        Map<String, BibliographicInformation> fbiApiHandlerResponse =
                 Map.of(
-                        "48959939", getOpenformatResponseFromResource("48959939").withMetakompassubject(null),
-                        "48959912", getOpenformatResponseFromResource("48959912").withMetakompassubject("false"),
-                        "48959955", getOpenformatResponseFromResource("48959955").withMetakompassubject(null)
+                        "48959939", getFbiApiResponseFromResource("48959939").withMetakompassubject(null),
+                        "48959912", getFbiApiResponseFromResource("48959912").withMetakompassubject("false"),
+                        "48959955", getFbiApiResponseFromResource("48959955").withMetakompassubject(null)
                 );
 
         PromatCase promatCase = getCaseWithId(created.getId());
         ScheduledCaseInformationUpdater upd = configure();
-        OpenFormatHandler openFormatHandler = mock(OpenFormatHandler.class);
-        upd.caseInformationUpdater.openFormatHandler = openFormatHandler;
-        when(openFormatHandler.format(anyString()))
-                .thenAnswer(invocationOnMock -> openFormatResponse.get(invocationOnMock.getArgument(0)));
+        FbiApiHandler fbiApiHandler = mock(FbiApiHandler.class);
+        upd.caseInformationUpdater.fbiApiHandler = fbiApiHandler;
+        when(fbiApiHandler.format(anyString()))
+                .thenAnswer(invocationOnMock -> fbiApiHandlerResponse.get(invocationOnMock.getArgument(0)));
 
         //
         // First round: Lets say that none are ready yet.
@@ -97,7 +96,7 @@ public class CaseInformationUpdaterSideEffectsIT extends CaseInformationUpdaterT
         //
         // Second round: lets say metakompasdata for primary faust now has been done.
         //
-        openFormatResponse.get("48959939").setMetakompassubject(CaseInformationUpdater.METAKOMPASDATA_PRESENT);
+        fbiApiHandlerResponse.get("48959939").setMetakompassubject(CaseInformationUpdater.METAKOMPASDATA_PRESENT);
         persistenceContext.run(() -> upd.caseInformationUpdater.updateCaseInformation(promatCase));
         created = getCaseWithId(promatCase.getId());
         List<PromatTask> tasks = getTasksWhereMetakompasIsPresent(created);
@@ -108,7 +107,7 @@ public class CaseInformationUpdaterSideEffectsIT extends CaseInformationUpdaterT
         // Third round: Metadata for one of the related faust has been done. There is still only one in
         // the list of done Metakompas tasks.
         //
-        openFormatResponse.get("48959955").setMetakompassubject(CaseInformationUpdater.METAKOMPASDATA_PRESENT);
+        fbiApiHandlerResponse.get("48959955").setMetakompassubject(CaseInformationUpdater.METAKOMPASDATA_PRESENT);
         persistenceContext.run(() -> upd.caseInformationUpdater.updateCaseInformation(promatCase));
         created = getCaseWithId(promatCase.getId());
         tasks = getTasksWhereMetakompasIsPresent(created);
@@ -121,7 +120,7 @@ public class CaseInformationUpdaterSideEffectsIT extends CaseInformationUpdaterT
         //
         promatCase.setStatus(CaseStatus.PENDING_EXTERNAL);
         entityManager.persist(promatCase);
-        openFormatResponse.get("48959912").setMetakompassubject(CaseInformationUpdater.METAKOMPASDATA_PRESENT);
+        fbiApiHandlerResponse.get("48959912").setMetakompassubject(CaseInformationUpdater.METAKOMPASDATA_PRESENT);
         persistenceContext.run(() -> upd.caseInformationUpdater.updateCaseInformation(promatCase));
         created = getCaseWithId(promatCase.getId());
 
@@ -136,7 +135,7 @@ public class CaseInformationUpdaterSideEffectsIT extends CaseInformationUpdaterT
     }
 
     @Test
-    public void testThatFulltextLinksAreUpdated() throws OpenFormatConnectorException {
+    public void testThatFulltextLinksAreUpdated() throws FbiApiConnectorException {
         final String DOWNLOAD_LINK = "http://host.testcontainers.internal:" + wireMockServer.port() +
                 "?faust=48959940";
 
@@ -161,7 +160,7 @@ public class CaseInformationUpdaterSideEffectsIT extends CaseInformationUpdaterT
 
         PromatCase promatCase = getCaseWithId(created.getId());
         ScheduledCaseInformationUpdater upd = configure();
-        upd.caseInformationUpdater.openFormatHandler = mockOpenFormat(new BibliographicInformation()
+        upd.caseInformationUpdater.fbiApiHandler = mockFbiApiHandler(new BibliographicInformation()
                 .withCatalogcodes(new ArrayList<>()));
 
         ContentLookUp contentLookUpMock = mock(ContentLookUp.class);
@@ -193,7 +192,7 @@ public class CaseInformationUpdaterSideEffectsIT extends CaseInformationUpdaterT
         return query.getSingleResult();
     }
 
-    private BibliographicInformation getOpenformatResponseFromResource(String faust) throws IOException {
+    private BibliographicInformation getFbiApiResponseFromResource(String faust) throws IOException {
         return mapper.readValue(
                 Files.readString(
                         Path.of(Objects.requireNonNull(CaseInformationUpdaterSideEffectsIT.class

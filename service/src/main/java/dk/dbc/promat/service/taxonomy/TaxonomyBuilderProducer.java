@@ -73,7 +73,8 @@ public class TaxonomyBuilderProducer {
                 .map(url -> (TaxonomyBuilder) new DM2Builder(url, readTimeout))
                 // Optional.orElse(null): "if empty, use null instead" - unwraps the Optional
                 // into a plain (possibly-null) TaxonomyBuilder, since @Produces methods return
-                // the bean type directly, not wrapped in Optional.
+                // the bean type directly, not wrapped in Optional. DM3 builder will eventually
+                // be initiated here (RECORD_SERVICE url is null).
                 .orElse(null);
     }
 

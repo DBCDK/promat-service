@@ -3,8 +3,9 @@ package dk.dbc.promat.service.api;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import dk.dbc.promat.service.connectors.OpenFormatConnectorException;
+import dk.dbc.promat.service.connectors.FbiApiConnectorException;
 import dk.dbc.promat.service.Repository;
+import dk.dbc.promat.service.batch.CaseInformationUpdater;
 import dk.dbc.promat.service.batch.ContentLookUp;
 import dk.dbc.promat.service.batch.Reminders;
 import dk.dbc.promat.service.dto.CaseRequest;
@@ -101,6 +102,9 @@ public class Cases {
 
     @EJB
     Reminders reminders;
+
+    @EJB
+    CaseInformationUpdater caseInformationUpdater;
 
     @Inject
     @ConfigProperty(name = "EMATERIAL_CONTENT_REPO")
@@ -891,6 +895,21 @@ public class Cases {
     }
 
     @POST
+    @Path("cases/{id}/update")
+    @Produces(MediaType.APPLICATION_JSON)
+    @JsonView({CaseView.Case.class})
+    public Response updateCaseInformation(@PathParam("id") final Integer id) {
+        // Fetch the case
+        PromatCase promatCase = entityManager.find(PromatCase.class, id);
+        if(promatCase == null) {
+            LOGGER.info("No case with id {}", id);
+            return ServiceErrorDto.NotFound("No such case", String.format("No case with id %d exists", id));
+        }
+        caseInformationUpdater.updateCaseInformation(promatCase);
+        return Response.ok(asCase(promatCase)).build();
+    }
+
+    @POST
     @Path("drafts")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
@@ -1092,7 +1111,7 @@ public class Cases {
     }
 
     private void notifyOnReviewerChanged(PromatCase promatCase)
-            throws NotificationFactory.ValidateException, OpenFormatConnectorException {
+            throws NotificationFactory.ValidateException, FbiApiConnectorException {
 
         if (promatCase.getId() == null) {
             entityManager.flush();
