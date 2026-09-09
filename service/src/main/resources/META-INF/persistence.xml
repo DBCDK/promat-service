@@ -45,11 +45,9 @@
     <class>dk.dbc.promat.service.persistence.PromatMessage</class>
     <class>dk.dbc.promat.service.persistence.SubjectNote</class>
     <class>dk.dbc.promat.service.persistence.ReviewerDataStash</class>
-    <!-- Added for the taxonomy/Kafka + Buggi options work - see the file-level comment above
-         for why these must be listed explicitly, and what happens if you forget. -->
+    <!-- Added for the taxonomy/Kafka work - see the file-level comment above for why these
+         must be listed explicitly, and what happens if you forget. -->
     <class>dk.dbc.promat.service.persistence.TaxonomySnapshot</class>
-    <class>dk.dbc.promat.service.persistence.BuggiOptionGroup</class>
-    <class>dk.dbc.promat.service.persistence.BuggiOption</class>
     <shared-cache-mode>DISABLE_SELECTIVE</shared-cache-mode>
     <properties>
       <property name="jakarta.persistence.schema-generation.database.action" value="none"/>
@@ -80,8 +78,6 @@
     <class>dk.dbc.promat.service.persistence.SubjectNote</class>
     <class>dk.dbc.promat.service.persistence.ReviewerDataStash</class>
     <class>dk.dbc.promat.service.persistence.TaxonomySnapshot</class>
-    <class>dk.dbc.promat.service.persistence.BuggiOptionGroup</class>
-    <class>dk.dbc.promat.service.persistence.BuggiOption</class>
     <properties>
       <property name="jakarta.persistence.schema-generation.database.action" value="none"/>
     </properties>
