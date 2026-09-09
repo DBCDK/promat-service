@@ -15,6 +15,7 @@ import dk.dbc.rawrepo.record.RecordServiceConnector;
 import dk.dbc.rawrepo.record.RecordServiceConnectorException;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import jakarta.ws.rs.ProcessingException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -116,17 +117,31 @@ public class RecordsProvider {
     // "245" is the MARC field for a record's title; subfield 'a' is the main title text.
     private static final String TITLE_FIELD = "245";
 
+    // MarcBinding only carries Jackson (JSON) bindings, no JAXB/XML support at all. The
+    // record-service /content endpoint's *default* response format differs by backend:
+    // DM3 (datawell-test) defaults to JSON there, so it happens to work with no params -
+    // but DM2 (cisterne, fbstest) defaults to marcxchange XML, which MarcBinding cannot be
+    // deserialized from, so the call throws MessageBodyProviderNotFoundException (a
+    // RuntimeException, NOT a RecordServiceConnectorException, so it isn't caught below
+    // either - it escapes as an unhandled error rather than degrading gracefully).
+    // Requesting MARC_JSON explicitly makes both backends respond identically, verified
+    // against DM3 (datawell-test) and DM2 (cisterne, fbstest) with the same faust.
+    private static final RecordServiceConnector.Params CONTENT_PARAMS = new RecordServiceConnector.Params()
+            .withOutputFormat(RecordServiceConnector.Params.OutputFormat.MARC_JSON);
+
     // Best-effort title lookup for records rawrepo knows about but fbi-api has no data for.
     // Failures here should not fail the overall lookup - a record without a title is still
-    // more useful to the caller than no record at all.
+    // more useful to the caller than no record at all. Also catches ProcessingException so
+    // that if a backend ever responds in a format CONTENT_PARAMS didn't anticipate (see its
+    // comment above), we degrade to a missing title instead of an unhandled error.
     private String resolveTitle(String id) {
         try {
-            return recordServiceConnector.getRecordContentCollection(DBC_AGENCY, id).stream()
+            return recordServiceConnector.getRecordContentCollection(DBC_AGENCY, id, CONTENT_PARAMS).stream()
                     .map(marcBinding -> marcBinding.getSubFieldValue(TITLE_FIELD, 'a'))
                     .filter(Objects::nonNull)
                     .findFirst()
                     .orElse(null);
-        } catch (RecordServiceConnectorException e) {
+        } catch (RecordServiceConnectorException | ProcessingException e) {
             LOGGER.warn("Unable to resolve title for id {} via rawrepo-record-service", id, e);
             return null;
         }

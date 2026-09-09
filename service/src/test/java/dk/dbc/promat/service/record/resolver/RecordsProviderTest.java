@@ -29,6 +29,7 @@ import static org.hamcrest.core.IsNull.nullValue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -324,7 +325,7 @@ class RecordsProviderTest {
         when(recordServiceConnector.recordExists(RecordsProvider.DBC_AGENCY, faust)).thenReturn(true);
         MarcBinding marcBinding = new MarcBinding().addField(
                 new DataField("245", "00").addSubField(new SubField('a', "Den lukkede bog")));
-        when(recordServiceConnector.getRecordContentCollection(RecordsProvider.DBC_AGENCY, faust))
+        when(recordServiceConnector.getRecordContentCollection(eq(RecordsProvider.DBC_AGENCY), eq(faust), any()))
                 .thenReturn(List.of(marcBinding));
 
         RecordsListDto recordsListDto = provider.getRecords(faust);
@@ -341,7 +342,7 @@ class RecordsProviderTest {
                 .thenAnswer(invocation -> MAPPER.treeToValue(
                         MAPPER.createObjectNode().putNull("manifestation"), invocation.getArgument(2, Class.class)));
         when(recordServiceConnector.recordExists(RecordsProvider.DBC_AGENCY, faust)).thenReturn(true);
-        when(recordServiceConnector.getRecordContentCollection(RecordsProvider.DBC_AGENCY, faust))
+        when(recordServiceConnector.getRecordContentCollection(eq(RecordsProvider.DBC_AGENCY), eq(faust), any()))
                 .thenReturn(List.of(new MarcBinding()));
 
         RecordsListDto recordsListDto = provider.getRecords(faust);

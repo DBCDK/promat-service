@@ -1,6 +1,5 @@
 package dk.dbc.promat.service.api;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import dk.dbc.promat.service.connectors.FbiApiConnector;
 import dk.dbc.promat.service.connectors.FbiApiConnectorException;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -418,22 +417,16 @@ public class FbiApiHandler {
         }
     }
 
-    @JsonIgnoreProperties(ignoreUnknown = true)
     private record ManifestationResponse(Manifestation manifestation) {}
 
-    @JsonIgnoreProperties(ignoreUnknown = true)
     private record ComplexSearchResponse(ComplexSearch complexSearch) {}
 
-    @JsonIgnoreProperties(ignoreUnknown = true)
     private record ComplexSearch(Integer hitcount, String errorMessage, List<Work> works) {}
 
-    @JsonIgnoreProperties(ignoreUnknown = true)
     private record Work(WorkManifestations manifestations) {}
 
-    @JsonIgnoreProperties(ignoreUnknown = true)
     private record WorkManifestations(List<Manifestation> bestRepresentations) {}
 
-    @JsonIgnoreProperties(ignoreUnknown = true)
     private record Manifestation(
             String pid,
             List<Creator> creators,
@@ -449,45 +442,31 @@ public class FbiApiHandler {
             Subjects subjects,
             List<Series> series) {}
 
-    @JsonIgnoreProperties(ignoreUnknown = true)
     private record Creator(String display) {}
 
-    @JsonIgnoreProperties(ignoreUnknown = true)
     private record Classification(String dk5Heading, String entryType) {}
 
-    @JsonIgnoreProperties(ignoreUnknown = true)
     private record Edition(String edition) {}
 
-    @JsonIgnoreProperties(ignoreUnknown = true)
     private record Identifier(String type, String value) {}
 
-    @JsonIgnoreProperties(ignoreUnknown = true)
     private record MaterialType(MaterialTypeCode materialTypeGeneral, MaterialTypeCode materialTypeSpecific) {}
 
-    @JsonIgnoreProperties(ignoreUnknown = true)
     private record MaterialTypeCode(String code, String display) {}
 
-    @JsonIgnoreProperties(ignoreUnknown = true)
     private record PhysicalDescription(String summaryFull) {}
 
-    @JsonIgnoreProperties(ignoreUnknown = true)
     private record CatalogueCodes(List<String> nationalBibliography, List<String> otherCatalogues) {}
 
-    @JsonIgnoreProperties(ignoreUnknown = true)
     private record Titles(List<String> main) {}
 
-    @JsonIgnoreProperties(ignoreUnknown = true)
     private record MaterialSelection(List<SelectionGroup> selectionGroup) {}
 
-    @JsonIgnoreProperties(ignoreUnknown = true)
     private record SelectionGroup(String display) {}
 
-    @JsonIgnoreProperties(ignoreUnknown = true)
     private record Subjects(List<DbcVerifiedSubject> dbcVerified) {}
 
-    @JsonIgnoreProperties(ignoreUnknown = true)
     private record DbcVerifiedSubject(String type, String display, String local) {}
 
-    @JsonIgnoreProperties(ignoreUnknown = true)
     private record Series(String title, String numberInSeries) {}
 }
