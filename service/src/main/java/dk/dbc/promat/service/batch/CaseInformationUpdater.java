@@ -103,6 +103,13 @@ public class CaseInformationUpdater {
                 promatCase.setPublisher(bibliographicInformation.getPublisher());
             }
 
+            // Update extent, if changed
+            if(useSameOrUpdateValue(promatCase.getExtent(), bibliographicInformation.getExtent(), false)) {
+                LOGGER.info("Updating extent: '{}' ==> '{}' of case with id {}", promatCase.getExtent(),
+                        bibliographicInformation.getExtent(), promatCase.getId());
+                promatCase.setExtent(bibliographicInformation.getExtent());
+            }
+
             // Check if the record has a BKMxxxxxx catalog code, if so - then check if we need to update the case,
             // otherwise check if we need to clear an existing weekcode (record may have been pulled back for further
             // editing by the cataloging team)
@@ -132,6 +139,21 @@ public class CaseInformationUpdater {
                 promatCase.setCodes(bibliographicInformation.getCatalogcodes().stream()
                         .map(String::toUpperCase)
                         .collect(Collectors.toList()));
+            }
+
+            // Supplementary, purely informational fields - just set whenever fbi-api
+            // has a non-empty value, no change-tracking needed.
+            if( bibliographicInformation.getIsbn() != null && !bibliographicInformation.getIsbn().isEmpty() ) {
+                promatCase.setIsbn(bibliographicInformation.getIsbn());
+            }
+            if( bibliographicInformation.getDk5() != null && !bibliographicInformation.getDk5().isEmpty() ) {
+                promatCase.setDk5(bibliographicInformation.getDk5());
+            }
+            if( bibliographicInformation.getMaterialtypes() != null && !bibliographicInformation.getMaterialtypes().isEmpty() ) {
+                promatCase.setMaterialTypes(bibliographicInformation.getMaterialtypes());
+            }
+            if( bibliographicInformation.getSeries() != null && !bibliographicInformation.getSeries().isEmpty() ) {
+                promatCase.setSeries(bibliographicInformation.getSeries());
             }
 
             // Check and update case with Metakompasdata

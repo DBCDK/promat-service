@@ -14,6 +14,7 @@ public class BibliographicInformation {
     private String publisher = "";
     private List<String> catalogcodes = new ArrayList<>();
     private String title = "";
+    private List<String> series = new ArrayList<>();
     private List<String> targetgroup = new ArrayList<>();
     private String metakompassubject = "";
     private String error = "";
@@ -52,6 +53,10 @@ public class BibliographicInformation {
 
     public String getTitle() {
         return title;
+    }
+
+    public List<String> getSeries() {
+        return series;
     }
 
     public List<String> getTargetgroup() {
@@ -104,6 +109,10 @@ public class BibliographicInformation {
 
     public void setTitle(String title) {
         this.title = title;
+    }
+
+    public void setSeries(List<String> series) {
+        this.series = series;
     }
 
     public void setTargetgroup(List<String> targetgroup) {
@@ -163,6 +172,11 @@ public class BibliographicInformation {
         return this;
     }
 
+    public BibliographicInformation withSeries(List<String> series) {
+        this.series = series;
+        return this;
+    }
+
     public BibliographicInformation withTargetgroup(List<String> targetgroup) {
         this.targetgroup = targetgroup;
         return this;
@@ -190,6 +204,7 @@ public class BibliographicInformation {
                 ", publisher='" + publisher + '\'' +
                 ", catalogcodes=" + catalogcodes +
                 ", title='" + title + '\'' +
+                ", series=" + series +
                 ", targetgroup='" + targetgroup + '\'' +
                 ", error='" + error + '\'' +
                 '}';

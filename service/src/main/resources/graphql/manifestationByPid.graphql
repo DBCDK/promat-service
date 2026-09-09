@@ -18,5 +18,6 @@ query ManifestationByPid($pid: String!) {
         subjects {
             dbcVerified { type display local }
         }
+        series { title numberInSeries }
     }
 }

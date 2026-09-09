@@ -147,7 +147,7 @@ public class PromatCase {
 
     public static final String GET_COUNT_OF_CASES_IN_PROCESSING_STATE_NAME =
             "PromatCase.get.count.of.cases.in.processing.state";
-    public static final String GET_COUNT_OF_CASES_IN_PROCESSING_STATE_QUERY = "select count(1)" +
+    public static final String GET_COUNT_OF_CASES_IN_PROCESSING_STATE_QUERY = "select count(c)" +
             "                                                  from PromatCase c" +
             "                                                 where c.status = dk.dbc.promat.service.persistence.CaseStatus.PROCESSING";
 
@@ -235,6 +235,31 @@ public class PromatCase {
 
     @JsonView({CaseView.Export.class, CaseView.Summary.class, CaseView.Case.class})
     private String publisher;
+
+    // isbn, dk5, extent, materialTypes and series are bibliographic data
+    // copied onto the case from fbi-api by CaseInformationUpdater.
+    @Column(columnDefinition = "jsonb")
+    @Convert(converter = StringListToJsonArrayConverter.class)
+    @JsonView({CaseView.Export.class, CaseView.Summary.class, CaseView.Case.class})
+    private List<String> isbn;
+
+    @Column(columnDefinition = "jsonb")
+    @Convert(converter = StringListToJsonArrayConverter.class)
+    @JsonView({CaseView.Export.class, CaseView.Summary.class, CaseView.Case.class})
+    private List<String> dk5;
+
+    @JsonView({CaseView.Export.class, CaseView.Summary.class, CaseView.Case.class})
+    private String extent;
+
+    @Column(columnDefinition = "jsonb")
+    @Convert(converter = StringListToJsonArrayConverter.class)
+    @JsonView({CaseView.Export.class, CaseView.Summary.class, CaseView.Case.class})
+    private List<String> materialTypes;
+
+    @Column(columnDefinition = "jsonb")
+    @Convert(converter = StringListToJsonArrayConverter.class)
+    @JsonView({CaseView.Export.class, CaseView.Summary.class, CaseView.Case.class})
+    private List<String> series;
 
     @JsonView({CaseView.Export.class, CaseView.Summary.class, CaseView.Case.class})
     private String fulltextLink;
@@ -435,6 +460,46 @@ public class PromatCase {
         this.publisher = publisher;
     }
 
+    public List<String> getIsbn() {
+        return isbn;
+    }
+
+    public void setIsbn(List<String> isbn) {
+        this.isbn = isbn;
+    }
+
+    public List<String> getDk5() {
+        return dk5;
+    }
+
+    public void setDk5(List<String> dk5) {
+        this.dk5 = dk5;
+    }
+
+    public String getExtent() {
+        return extent;
+    }
+
+    public void setExtent(String extent) {
+        this.extent = extent;
+    }
+
+    public List<String> getMaterialTypes() {
+        return materialTypes;
+    }
+
+    public void setMaterialTypes(List<String> materialTypes) {
+        this.materialTypes = materialTypes;
+    }
+
+    public List<String> getSeries() {
+        return series;
+    }
+
+    public void setSeries(List<String> series) {
+        this.series = series;
+    }
+
     public PromatCase withId(Integer id) {
         this.id = id;
         return this;
@@ -522,6 +587,31 @@ public class PromatCase {
 
     public PromatCase withPublisher(String publisher) {
         this.publisher = publisher;
+        return this;
+    }
+
+    public PromatCase withIsbn(List<String> isbn) {
+        this.isbn = isbn;
+        return this;
+    }
+
+    public PromatCase withDk5(List<String> dk5) {
+        this.dk5 = dk5;
+        return this;
+    }
+
+    public PromatCase withExtent(String extent) {
+        this.extent = extent;
+        return this;
+    }
+
+    public PromatCase withMaterialTypes(List<String> materialTypes) {
+        this.materialTypes = materialTypes;
+        return this;
+    }
+
+    public PromatCase withSeries(List<String> series) {
+        this.series = series;
         return this;
     }
 
@@ -663,6 +753,11 @@ public class PromatCase {
                 Objects.equals(author, aCase.author) &&
                 Objects.equals(creator, aCase.creator) &&
                 Objects.equals(publisher, aCase.publisher) &&
+                Objects.equals(isbn, aCase.isbn) &&
+                Objects.equals(dk5, aCase.dk5) &&
+                Objects.equals(extent, aCase.extent) &&
+                Objects.equals(materialTypes, aCase.materialTypes) &&
+                Objects.equals(series, aCase.series) &&
                 Objects.equals(fulltextLink, aCase.fulltextLink) &&
                 Objects.equals(internalNote, aCase.internalNote) &&
                 newMessagesToEditor == aCase.newMessagesToEditor &&
@@ -676,6 +771,7 @@ public class PromatCase {
     public int hashCode() {
         return Objects.hash(id, title, details, primaryFaust, relatedFausts, reviewer, editor, subjects, created,
                 deadline, assigned, status, materialType, tasks, weekCode, trimmedWeekCode, author, creator, publisher,
+                isbn, dk5, extent, materialTypes, series,
                 fulltextLink, newMessagesToEditor, newMessagesToReviewer, reminderSent, codes, keepEditor, internalNote);
     }
 
@@ -701,6 +797,11 @@ public class PromatCase {
                 ", author='" + author + '\'' +
                 ", creator=" + creator +
                 ", publisher='" + publisher + '\'' +
+                ", isbn=" + isbn +
+                ", dk5=" + dk5 +
+                ", extent='" + extent + '\'' +
+                ", materialTypes=" + materialTypes +
+                ", series=" + series +
                 ", fulltextLink='" + fulltextLink + '\'' +
                 ", newMessagesToEditor='" + newMessagesToEditor + '\'' +
                 ", newMessagesToReviewer='" + newMessagesToReviewer + '\'' +

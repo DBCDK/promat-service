@@ -1,6 +1,5 @@
 package dk.dbc.promat.service.api;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import dk.dbc.promat.service.connectors.FbiApiConnector;
 import dk.dbc.promat.service.connectors.FbiApiConnectorException;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -23,6 +22,9 @@ public class FbiApiHandler {
     private static final Logger LOGGER = LoggerFactory.getLogger(FbiApiHandler.class);
     private static final String AGENCY_ID = "870970";
     private static final String METAKOMPASDATA_PRESENT = "true";
+    // Field-list alignment with `Manifestation` is enforced by FbiApiHandlerQueryFieldsTest.
+    // Editing this file also requires updating the WireMock fixtures under
+    // service/src/test/resources/mappings/, which match on this exact query text.
     private static final String QUERY = loadQuery();
 
     private FbiApiConnector connector;
@@ -78,33 +80,147 @@ public class FbiApiHandler {
         throw new IllegalArgumentException("Unsupported return type: " + clazz.getName());
     }
 
-    public record MaterialTypeInfo(String faust, String code, String display) {}
+    /**
+     * One manifestation's general/specific material type pair - a manifestation can list
+     * several of these (e.g. a combined print+ebook record), each kept together so the two
+     * stay correctly matched instead of being derived independently.
+     */
+    public record MaterialTypePair(String generalCode, String specificDisplay) {}
 
-    public List<MaterialTypeInfo> materialTypeInfo(Set<String> fausts) throws FbiApiConnectorException {
-        final List<MaterialTypeInfo> result = new ArrayList<>();
+    /**
+     * Full bibliographic data for a single manifestation, plus every general/specific material
+     * type pair it lists (usually just one).
+     */
+    public record RecordInfo(
+            String faust,
+            String title,
+            String creator,
+            String publisher,
+            String extent,
+            String edition,
+            List<String> isbn,
+            List<String> dk5,
+            List<String> series,
+            List<String> targetgroup,
+            List<String> catalogcodes,
+            List<MaterialTypePair> materialTypes) {}
+
+    // One fbi-api round trip per faust - see toRecordInfo below for the field mapping.
+    public List<RecordInfo> recordInfo(Set<String> fausts) throws FbiApiConnectorException {
+        final List<RecordInfo> result = new ArrayList<>();
         for (String faust : fausts) {
             final Manifestation manifestation = fetchManifestation(faust);
             if (manifestation == null) {
                 continue;
             }
-            final MaterialTypeCode general = firstMaterialType(manifestation, false);
-            final MaterialTypeCode specific = firstMaterialType(manifestation, true);
-            result.add(new MaterialTypeInfo(
-                    faust,
-                    general != null ? general.code() : null,
-                    specific != null ? specific.display() : null));
+            result.add(toRecordInfo(faust, manifestation));
         }
         return result;
     }
 
-    private MaterialTypeCode firstMaterialType(Manifestation m, boolean specific) {
-        if (m.materialTypes() == null || m.materialTypes().isEmpty()) {
+    private static final String SEARCH_QUERY = loadResource("/graphql/complexSearchByCql.graphql");
+    // fbi-api caps how many results a single complexSearch call can return;
+    // we also don't want an editor's search accidentally asking for
+    // thousands of rows, so this is enforced on our side too (see
+    // Math.min below), not just left to fbi-api to reject.
+    private static final int MAX_SEARCH_LIMIT = 100;
+
+    /**
+     * Free-text search by title and/or creator, via fbi-api's complexSearch.
+     * Returns at most one hit per work (fbi-api's "best representation" pick).
+     */
+    public List<RecordInfo> search(String title, String creator, Integer limit) throws FbiApiConnectorException {
+        final String cql = buildCql(title, creator);
+        // No search terms given -> nothing to search for.
+        if (cql == null) {
+            return List.of();
+        }
+        final int effectiveLimit = limit == null ? MAX_SEARCH_LIMIT : Math.min(limit, MAX_SEARCH_LIMIT);
+        // TODO: offset is always 0 - add real pagination (offset param + surfacing
+        // ComplexSearch.hitcount()) instead of silently truncating at MAX_SEARCH_LIMIT.
+        final Map<String, Object> variables = Map.of(
+                "cql", cql,
+                "offset", 0,
+                "limit", effectiveLimit,
+                "filters", Map.of(),
+                "sort", List.of());
+
+        final ComplexSearchResponse response = connector.execute(SEARCH_QUERY, variables, ComplexSearchResponse.class);
+        if (response.complexSearch() == null || response.complexSearch().works() == null) {
+            return List.of();
+        }
+
+        // complexSearch groups hits by "work"; fbi-api already picks one
+        // representative manifestation per work for us ("bestRepresentations").
+        final List<RecordInfo> result = new ArrayList<>();
+        for (Work work : response.complexSearch().works()) {
+            if (work.manifestations() == null || work.manifestations().bestRepresentations() == null) {
+                continue;
+            }
+            for (Manifestation m : work.manifestations().bestRepresentations()) {
+                result.add(toRecordInfo(faustFromPid(m.pid()), m));
+            }
+        }
+        return result;
+    }
+
+    // CQL is the query syntax fbi-api's search expects, e.g.
+    // term.title='some title' AND term.creator='some author'.
+    private static String buildCql(String title, String creator) {
+        final List<String> clauses = new ArrayList<>();
+        if (title != null && !title.isBlank()) {
+            clauses.add("term.title=" + cqlQuote(title));
+        }
+        if (creator != null && !creator.isBlank()) {
+            clauses.add("term.creator=" + cqlQuote(creator));
+        }
+        return clauses.isEmpty() ? null : String.join(" AND ", clauses);
+    }
+
+    // Search terms are dropped straight into a CQL string literal, so an
+    // embedded quote (e.g. "Don't Look Now") needs escaping to avoid ending
+    // the literal early and corrupting the query.
+    private static String cqlQuote(String value) {
+        return "'" + value.replace("'", "''") + "'";
+    }
+
+    private static String faustFromPid(String pid) {
+        if (pid == null) {
             return null;
         }
-        if (specific) {
-            return m.materialTypes().getFirst().materialTypeSpecific();
+        final int lastColon = pid.lastIndexOf(':');
+        return lastColon >= 0 ? pid.substring(lastColon + 1) : pid;
+    }
+
+    // Shared by recordInfo() and search() so the general/specific material
+    // type always comes from the same manifestation fetch.
+    private RecordInfo toRecordInfo(String faust, Manifestation manifestation) {
+        final List<String> creators = creators(manifestation);
+        final List<String> publishers = publisher(manifestation);
+        return new RecordInfo(
+                faust,
+                title(manifestation).stream().findFirst().orElse(null),
+                creators.isEmpty() ? null : String.join(", ", creators),
+                publishers.isEmpty() ? null : String.join(", ", publishers),
+                extent(manifestation).stream().findFirst().orElse(null),
+                edition(manifestation).stream().findFirst().orElse(null),
+                isbn(manifestation),
+                dk5(manifestation),
+                series(manifestation),
+                targetgroup(manifestation),
+                catalogcodes(manifestation),
+                materialTypePairs(manifestation));
+    }
+
+    private List<MaterialTypePair> materialTypePairs(Manifestation m) {
+        if (m.materialTypes() == null) {
+            return List.of();
         }
-        return m.materialTypes().getFirst().materialTypeGeneral();
+        return m.materialTypes().stream()
+                .map(mt -> new MaterialTypePair(
+                        mt.materialTypeGeneral() != null ? mt.materialTypeGeneral().code() : null,
+                        mt.materialTypeSpecific() != null ? mt.materialTypeSpecific().display() : null))
+                .toList();
     }
 
 
@@ -139,6 +255,7 @@ public class FbiApiHandler {
                         ? e.catalogcodes().code()
                         : new ArrayList<>())
                 .withTitle(e.title() != null ? e.title().stream().findFirst().orElse("") : "")
+                .withSeries(e.series() != null ? e.series() : new ArrayList<>())
                 .withTargetgroup(e.targetgroup() != null ? e.targetgroup() : new ArrayList<>())
                 .withMetakompassubject(e.metakompassubject() != null
                         ? e.metakompassubject().stream().findFirst().orElse("")
@@ -156,7 +273,7 @@ public class FbiApiHandler {
                 extent(m),
                 publisher(m),
                 edition(m),
-                List.of(),
+                series(m),
                 new FbiApiConnector.PromatElements.CodeList(catalogcodes(m)),
                 title(m),
                 targetgroup(m),
@@ -233,6 +350,19 @@ public class FbiApiHandler {
         return List.of(m.edition().edition());
     }
 
+    // Includes the number within the series when present, e.g. "Harry Potter, 3".
+    private List<String> series(Manifestation m) {
+        if (m.series() == null) {
+            return List.of();
+        }
+        return m.series().stream()
+                .map(s -> s.numberInSeries() != null
+                        ? String.format("%s, %s", s.title(), s.numberInSeries())
+                        : s.title())
+                .filter(Objects::nonNull)
+                .toList();
+    }
+
     private List<String> catalogcodes(Manifestation m) {
         if (m.catalogueCodes() == null) {
             return List.of();
@@ -261,6 +391,7 @@ public class FbiApiHandler {
         return m.materialSelection().selectionGroup().stream()
                 .map(SelectionGroup::display)
                 .filter(Objects::nonNull)
+                .distinct()
                 .toList();
     }
 
@@ -272,9 +403,13 @@ public class FbiApiHandler {
     }
 
     private static String loadQuery() {
-        try (InputStream is = FbiApiHandler.class.getResourceAsStream("/graphql/manifestationByPid.graphql")) {
+        return loadResource("/graphql/manifestationByPid.graphql");
+    }
+
+    private static String loadResource(String path) {
+        try (InputStream is = FbiApiHandler.class.getResourceAsStream(path)) {
             if (is == null) {
-                throw new IllegalStateException("Unable to find /graphql/manifestationByPid.graphql on classpath");
+                throw new IllegalStateException("Unable to find " + path + " on classpath");
             }
             return new String(is.readAllBytes(), StandardCharsets.UTF_8);
         } catch (IOException e) {
@@ -282,10 +417,16 @@ public class FbiApiHandler {
         }
     }
 
-    @JsonIgnoreProperties(ignoreUnknown = true)
     private record ManifestationResponse(Manifestation manifestation) {}
 
-    @JsonIgnoreProperties(ignoreUnknown = true)
+    private record ComplexSearchResponse(ComplexSearch complexSearch) {}
+
+    private record ComplexSearch(Integer hitcount, String errorMessage, List<Work> works) {}
+
+    private record Work(WorkManifestations manifestations) {}
+
+    private record WorkManifestations(List<Manifestation> bestRepresentations) {}
+
     private record Manifestation(
             String pid,
             List<Creator> creators,
@@ -298,44 +439,34 @@ public class FbiApiHandler {
             CatalogueCodes catalogueCodes,
             Titles titles,
             MaterialSelection materialSelection,
-            Subjects subjects) {}
+            Subjects subjects,
+            List<Series> series) {}
 
-    @JsonIgnoreProperties(ignoreUnknown = true)
     private record Creator(String display) {}
 
-    @JsonIgnoreProperties(ignoreUnknown = true)
     private record Classification(String dk5Heading, String entryType) {}
 
-    @JsonIgnoreProperties(ignoreUnknown = true)
     private record Edition(String edition) {}
 
-    @JsonIgnoreProperties(ignoreUnknown = true)
     private record Identifier(String type, String value) {}
 
-    @JsonIgnoreProperties(ignoreUnknown = true)
     private record MaterialType(MaterialTypeCode materialTypeGeneral, MaterialTypeCode materialTypeSpecific) {}
 
-    @JsonIgnoreProperties(ignoreUnknown = true)
     private record MaterialTypeCode(String code, String display) {}
 
-    @JsonIgnoreProperties(ignoreUnknown = true)
     private record PhysicalDescription(String summaryFull) {}
 
-    @JsonIgnoreProperties(ignoreUnknown = true)
     private record CatalogueCodes(List<String> nationalBibliography, List<String> otherCatalogues) {}
 
-    @JsonIgnoreProperties(ignoreUnknown = true)
     private record Titles(List<String> main) {}
 
-    @JsonIgnoreProperties(ignoreUnknown = true)
     private record MaterialSelection(List<SelectionGroup> selectionGroup) {}
 
-    @JsonIgnoreProperties(ignoreUnknown = true)
     private record SelectionGroup(String display) {}
 
-    @JsonIgnoreProperties(ignoreUnknown = true)
     private record Subjects(List<DbcVerifiedSubject> dbcVerified) {}
 
-    @JsonIgnoreProperties(ignoreUnknown = true)
     private record DbcVerifiedSubject(String type, String display, String local) {}
+
+    private record Series(String title, String numberInSeries) {}
 }
