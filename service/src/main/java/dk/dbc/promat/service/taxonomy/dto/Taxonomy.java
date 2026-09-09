@@ -81,26 +81,16 @@ public class Taxonomy  implements Serializable {
         return stripSubjects(root);
     }
 
-    // Overload #1: varargs convenience - lets callers write put(subject, "handling", "handler om")
-    // instead of building a List themselves. It just wraps the array as a List and delegates
-    // to overload #2.
     public void put(Subject subject, String... path) {
         put(subject, Arrays.asList(path));
     }
 
-    // Overload #2: the actual logic - find the leaf list this path points at, and append the
-    // subject's plain-Map representation (Subject.toHashMap()) to it. Subjects are stored as
-    // LinkedHashMaps, not Subject objects, throughout this tree - see getList()'s comment
-    // below for why that matters when reading them back out.
     public void put(Subject subject, List<String> path) {
         getList(path).add(subject.toHashMap());
     }
 
     public Subject get(String... path) {
         List<String> pathList =  new ArrayList<>(Arrays.asList(path));
-        // List.removeLast() (Java 21+): removes and returns the final element - used here to
-        // split the given path into "the category to look inside" (everything but the last
-        // segment) and "which subject's title to look for there" (the last segment itself).
         String key = pathList.removeLast();
         List<LinkedHashMap<String, Object>> s = getList(pathList);
         return s.stream().map(Subject::of)
@@ -109,13 +99,10 @@ public class Taxonomy  implements Serializable {
                 .orElse(null);
     }
 
-    // Returns everything under a path as proper Subject objects. Note this ALWAYS
-    // re-materializes every entry in the target list via Subject::of (a method reference to
-    // Subject's static factory method - see Subject.java), every single call - fine for small
-    // categories, but for one with thousands of subjects (like "handling->handler om"), that
-    // means fully rebuilding thousands of Subject objects just to serve one request. This is
-    // exactly why searchList() below deliberately does its filtering BEFORE calling
-    // Subject::of, rather than reusing this method and filtering the result afterwards.
+    // Rebuilds a Subject object for every entry in the list on every call - fine for small
+    // categories, but "handling->handler om" alone has thousands of subjects on the real
+    // topic. searchList() below exists specifically to avoid that cost for search requests:
+    // it filters the raw entries first and only converts the (at most `limit`) matches.
     public List<Subject> getList(String... path) {
         List<LinkedHashMap<String, Object>> list = getList(new ArrayList<>(Arrays.asList(path)));
         return list.stream().map(Subject::of).toList();
@@ -129,13 +116,8 @@ public class Taxonomy  implements Serializable {
     public List<Subject> searchList(String[] path, String query, int limit) {
         List<LinkedHashMap<String, Object>> list = getList(new ArrayList<>(Arrays.asList(path)));
         String lowerQuery = query.toLowerCase();
-        // Deliberately filters (and limits) the raw LinkedHashMap entries FIRST, and only
-        // calls Subject::of on whatever's left afterwards - the expensive
-        // map-to-Subject-object conversion only happens for the (at most `limit`) actual
-        // matches, not for every entry in a potentially huge list. `entry.get("title")
-        // instanceof String title` is a Java 16+ "pattern variable" - it checks the type AND
-        // binds a usable, already-cast variable (`title`) in one expression, instead of a
-        // separate instanceof check followed by an explicit cast.
+        // Filters and limits before mapping to Subject - see getList()'s comment on why that
+        // conversion is worth avoiding for entries that don't match anyway.
         return list.stream()
                 .filter(entry -> entry.get("title") instanceof String title && title.toLowerCase().contains(lowerQuery))
                 .limit(limit)
@@ -143,19 +125,12 @@ public class Taxonomy  implements Serializable {
                 .toList();
     }
 
-    // @SuppressWarnings("unchecked") silences the compiler's warning about the unchecked cast
-    // to Map<String, Object> below - Java's generics are "erased" at runtime (a List<String>
-    // and a List<Integer> are indistinguishable to the JVM once compiled), so casting an
-    // Object that's merely known to be *some* Map into a Map<String, Object> can't actually be
-    // verified by the compiler; this annotation is how you tell the compiler "I've reasoned
-    // about this and it's fine", rather than leaving a warning in every build's output.
     @SuppressWarnings("unchecked")
     private List<LinkedHashMap<String, Object>> getList(List<String> path) {
         Map<String, Object> current = root;
-        // Walks every path segment except the LAST one, descending one Map level per segment
-        // (this is why put()/getList() throw IllegalArgumentException for an unknown path -
-        // see TaxonomyService, which turns that into an HTTP 404 - if a segment along the way
-        // isn't actually a nested Map).
+        // IllegalArgumentException here means "path doesn't exist in the tree" - callers rely
+        // on this: DbTaxonomyBuilder catches it to skip an unresolvable subject, and
+        // TaxonomyService turns it into an HTTP 404.
         for (int i = 0; i < path.size() - 1; i++) {
             String key = path.get(i);
             Object next = current.get(key);
@@ -185,12 +160,6 @@ public class Taxonomy  implements Serializable {
         Map<String, Object> structure = new LinkedHashMap<>();
         for (Map.Entry<String, Object> entry : source.entrySet()) {
             Object value = entry.getValue();
-            // `instanceof Map<?, ?> childMap` - another pattern-variable instanceof (see
-            // searchList() above): checks the type and binds `childMap` in one step. `<?, ?>`
-            // is a "wildcard" generic type meaning "a Map of some unknown key/value types" -
-            // needed because you can't check `instanceof Map<String, Object>` directly (generic
-            // type parameters are erased at runtime, as mentioned above, so the JVM has no way
-            // to verify them at an instanceof check).
             if (value instanceof Map<?, ?> childMap) {
                 structure.put(entry.getKey(), stripSubjects((Map<String, Object>) childMap));
             } else if (value instanceof List<?>) {

@@ -16,11 +16,11 @@ import org.slf4j.LoggerFactory;
 import java.time.LocalDateTime;
 import java.util.Collection;
 
-// @Stateless is a lighter-weight EJB stereotype than @Singleton (see
-// ScheduledTaxonomyKafkaSync.java for that one): the container maintains a *pool* of
-// interchangeable instances rather than exactly one. There's no meaningful "state" carried
-// between calls (hence the name) - every method here starts fresh from its arguments and the
-// injected EntityManager.
+// Writes the Kafka sync's result as a single-row snapshot (see TaxonomySnapshot) rather than
+// one row per subject - the consumer already re-reads the whole topic every run (see
+// ScheduledTaxonomyKafkaSync), so there's no incremental-update case to optimize for, and
+// nothing queries individual subjects at the SQL level (TaxonomyService/TaxonomyCache only
+// ever read the whole tree back out of memory).
 @Stateless
 public class TaxonomyKafkaPersistence {
     private static final Logger LOGGER = LoggerFactory.getLogger(TaxonomyKafkaPersistence.class);
@@ -38,10 +38,9 @@ public class TaxonomyKafkaPersistence {
     @ConfigProperty(name = "TAXONOMY_SUBJECT_DELETE_THRESHOLD_PERCENT", defaultValue = "15")
     int deleteThresholdPercent;
 
-    // @TransactionAttribute(REQUIRES_NEW): the caller (ScheduledTaxonomyKafkaSync.run())
-    // deliberately opts OUT of container transactions entirely (NOT_SUPPORTED) because it
-    // spends most of its time on non-transactional Kafka I/O - REQUIRES_NEW is what makes
-    // sure the actual database write in THIS method still gets a proper transaction.
+    // REQUIRES_NEW: the caller opts out of container transactions entirely (NOT_SUPPORTED,
+    // since it spends most of its time on non-transactional Kafka I/O) - this is what gives
+    // the actual database write below its own real transaction regardless.
     @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
     public PersistenceResult applyToDatabase(Collection<ScheduledTaxonomyKafkaSync.KafkaTaxonomyItem> seenSubjects) {
         TaxonomySnapshot existing = entityManager.find(TaxonomySnapshot.class, SNAPSHOT_ID);
@@ -70,9 +69,8 @@ public class TaxonomyKafkaPersistence {
                     .withSubjectCount(newCount)
                     .withUpdatedAt(LocalDateTime.now()));
         } else {
-            // No entityManager.merge()/update() call needed - `existing` is a "managed" entity
-            // (it came from find(), inside this transaction), so calling its setters is enough;
-            // JPA's dirty checking includes an UPDATE for it in the next flush.
+            // No merge()/persist() call needed here - `existing` is managed (came from find()
+            // in this transaction), so JPA's dirty checking picks up these setters on its own.
             existing.setData(data);
             existing.setSubjectCount(newCount);
             existing.setUpdatedAt(LocalDateTime.now());
