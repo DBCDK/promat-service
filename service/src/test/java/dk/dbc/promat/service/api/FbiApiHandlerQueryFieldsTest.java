@@ -14,8 +14,9 @@ import static org.hamcrest.Matchers.is;
 
 /**
  * Guards against manifestationByPid.graphql and FbiApiHandler.Manifestation silently drifting
- * apart: since every record here is @JsonIgnoreProperties(ignoreUnknown = true), a field added
- * to one but not the other doesn't fail loudly - it just means that field is always missing.
+ * apart in one specific direction: a record component with no matching query field just
+ * deserializes to null, with no exception - the reverse (a query field with no matching record
+ * component) already fails loudly since Jackson rejects unrecognized properties by default.
  */
 class FbiApiHandlerQueryFieldsTest {
 
