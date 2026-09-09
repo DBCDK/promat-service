@@ -10,13 +10,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-// A much smaller JAX-RS resource than TaxonomyService - see that class for the general
-// @Stateless/@Path/@GET/@Produces explanations, which all apply identically here. Buggi's
-// option vocabulary (4 groups, 22 options total, unchanged since metakompasset's
-// DanMARC2Converter.buggiToDanMARC2()) has no external source at all - not Kafka-fed like the
-// taxonomy, and not curated through any admin screen or API either - so it's hardcoded here
-// the same way Taxonomy.java hardcodes its category skeleton, rather than kept in its own
-// database tables.
+// Buggi's option vocabulary (4 groups, 22 options total) has no external source - nothing
+// syncs it and no admin screen edits it - so it's hardcoded directly here.
 @Stateless
 @Path("buggi")
 public class BuggiOptionsService {
@@ -38,9 +33,8 @@ public class BuggiOptionsService {
         return Response.ok().entity(OPTIONS).build();
     }
 
-    // LinkedHashMap (not a plain HashMap) so the JSON fields come out in this order every
-    // time - "name", "subfieldCode", "requiresNonzeroValue", "options" - matching the shape
-    // the DB-backed version used to serve, since the frontend already depends on it.
+    // LinkedHashMap, not a plain HashMap, so the JSON fields come out in a fixed order every
+    // time: "name", "subfieldCode", "requiresNonzeroValue", "options".
     private static Map<String, Object> group(String name, String subfieldCode, boolean requiresNonzeroValue, String... options) {
         Map<String, Object> entry = new LinkedHashMap<>();
         entry.put("name", name);

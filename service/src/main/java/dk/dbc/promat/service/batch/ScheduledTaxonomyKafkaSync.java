@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dk.dbc.commons.kafka.consumer.TopicConsumer;
-import dk.dbc.commons.kafka.consumer.TopicConsumerException;
 import dk.dbc.promat.service.cluster.ServerRole;
 import dk.dbc.promat.service.persistence.JsonMapperProvider;
 import dk.dbc.promat.service.taxonomy.TaxonomyCache;
@@ -181,8 +180,6 @@ public class ScheduledTaxonomyKafkaSync {
         } catch (InterruptedException e) {
             LOGGER.warn("Taxonomy Kafka sync interrupted for topic '{}'", topic, e);
             Thread.currentThread().interrupt();
-        } catch (TopicConsumerException e) {
-            LOGGER.error("Taxonomy Kafka sync failed for topic '{}'", topic, e);
         } catch (Exception e) {
             LOGGER.error("Taxonomy Kafka sync failed for topic '{}'", topic, e);
         }
