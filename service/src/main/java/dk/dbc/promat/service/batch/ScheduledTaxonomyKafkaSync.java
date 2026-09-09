@@ -41,8 +41,8 @@ import java.util.concurrent.ConcurrentHashMap;
 // singleton (running its own @PostConstruct to completion) before starting this one". Without
 // this, the container is free to initialize @Startup singletons in any order - which caused a
 // real bug during this project's testing: on a fresh database, this bean's @PostConstruct
-// sometimes ran before DatabaseMigrator had created the taxonomy_category/taxonomy_subject
-// tables, so the very first query failed with "relation does not exist". It never showed up
+// sometimes ran before DatabaseMigrator had created the taxonomy_snapshot table, so the very
+// first query failed with "relation does not exist". It never showed up
 // against a database that already had the tables from a previous run, which is exactly why
 // it went unnoticed until testing against a genuinely empty database.
 @Startup
@@ -217,23 +217,19 @@ public class ScheduledTaxonomyKafkaSync {
                         topic, parseErrorCount.get(), seenSubjects.size());
             }
             TaxonomyKafkaPersistence.PersistenceResult result = persistence.applyToDatabase(seenSubjects.values());
-            taxonomyCache.refresh();
-            if (result.deletionThresholdExceeded()) {
-                LOGGER.error("Taxonomy Kafka sync for topic '{}' skipped deleting {} of {} existing subjects because it exceeded the delete-safety threshold - " +
-                                "upserts were still applied, but this run likely did not see the full topic. Investigate before the next scheduled run.",
-                        topic, result.subjectsThatWouldHaveBeenDeleted(), result.existingSubjectCountBeforeDelete());
+            if (result.thresholdExceeded()) {
+                LOGGER.error("Taxonomy Kafka sync for topic '{}' left the existing snapshot untouched: replacing it would have dropped subject count from {} to {}, " +
+                                "which exceeds the delete-safety threshold - this run likely did not see the full topic. Investigate before the next scheduled run.",
+                        topic, result.previousSubjectCount(), result.newSubjectCount());
+                return;
             }
-            LOGGER.info("Taxonomy Kafka sync completed for topic '{}': {} records processed, {} tombstones, {} parse errors, {} subjects seen, {} categories created, {} subjects inserted, {} subjects updated, {} subjects deleted, {} subjects skipped",
+            taxonomyCache.refresh();
+            LOGGER.info("Taxonomy Kafka sync completed for topic '{}': {} records processed, {} tombstones, {} parse errors, {} subjects written to snapshot",
                     topic,
                     processedItems.get(),
                     tombstoneCount.get(),
                     parseErrorCount.get(),
-                    seenSubjects.size(),
-                    result.createdCategories(),
-                    result.insertedSubjects(),
-                    result.updatedSubjects(),
-                    result.deletedSubjects(),
-                    result.skippedSubjects());
+                    result.writtenSubjects());
         } catch (InterruptedException e) {
             // InterruptedException is Java's cooperative way of asking a thread to stop what
             // it's doing (e.g. the app server shutting down mid-sync). The convention when
@@ -268,10 +264,9 @@ public class ScheduledTaxonomyKafkaSync {
     // populate fields from JSON, the same mechanism JPA uses for entities). It's `static`
     // so it doesn't implicitly hold a reference to an enclosing ScheduledTaxonomyKafkaSync
     // instance (a non-static inner class would, needlessly, since this is just a data shape).
-    // It's deliberately a separate, minimal type from the TaxonomySubject JPA entity - this
-    // one's shape is dictated by what the Kafka topic's producer sends, while TaxonomySubject's
-    // shape is dictated by the database schema; keeping them separate means either side can
-    // change independently without the other needing to.
+    // This is also, unmodified, the exact JSON shape stored in TaxonomySnapshot.data - the
+    // same class is reused for both parsing Kafka messages and round-tripping the snapshot
+    // (see DbTaxonomyBuilder), rather than keeping a separate near-identical DTO for each.
     public static class KafkaTaxonomyItem {
         private String title;
         private List<String> note = new ArrayList<>();

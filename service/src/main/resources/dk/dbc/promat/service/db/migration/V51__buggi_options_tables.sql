@@ -1,7 +1,5 @@
--- A simpler sibling of V49's taxonomy_category/taxonomy_subject: a plain one-to-many rather
--- than a self-referencing tree, since Buggi's tag vocabulary only ever needs one level of
--- grouping (see BuggiOptionGroup.java/BuggiOption.java for the JPA entities mapped to these
--- two tables).
+-- A plain one-to-many (see BuggiOptionGroup.java/BuggiOption.java for the JPA entities mapped
+-- to these two tables) since Buggi's tag vocabulary only ever needs one level of grouping.
 CREATE TABLE buggi_option_group
 (
     id                     serial PRIMARY KEY NOT NULL,
@@ -16,8 +14,7 @@ CREATE TABLE buggi_option
 (
     id            serial PRIMARY KEY NOT NULL,
     -- `REFERENCES buggi_option_group (id)` written directly on the column, rather than as a
-    -- separate named CONSTRAINT ... FOREIGN KEY clause (compare to V49's taxonomy_subject,
-    -- which uses the more verbose named-constraint style) - both forms create an equivalent
+    -- separate named CONSTRAINT ... FOREIGN KEY clause - both forms create an equivalent
     -- foreign key; this shorthand is fine when you don't need to reference the constraint by
     -- name later (e.g. to drop or alter it in a future migration).
     group_id      integer NOT NULL REFERENCES buggi_option_group (id),

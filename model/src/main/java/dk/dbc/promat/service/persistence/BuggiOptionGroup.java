@@ -11,11 +11,10 @@ import jakarta.persistence.Table;
 import java.util.ArrayList;
 import java.util.List;
 
-// A simpler, flat sibling of TaxonomyCategory/TaxonomySubject: one group (e.g. "Stemning")
-// has many options (e.g. "sjov", "trist") - a plain one-to-many, not a self-referencing tree,
-// since Buggi's tag vocabulary only ever needs this one level of grouping. See
-// TaxonomyCategory.java for detailed notes on @Entity/@Table/@Id/@Column basics, which apply
-// here identically.
+// One group (e.g. "Stemning") has many options (e.g. "sjov", "trist") - a plain one-to-many,
+// not a self-referencing tree, since Buggi's tag vocabulary only ever needs this one level of
+// grouping. See PromatCase.java or any other entity in this package for @Entity/@Table/@Id/
+// @Column basics, which apply here identically.
 @Entity
 @Table(name = "buggi_option_group")
 public class BuggiOptionGroup {

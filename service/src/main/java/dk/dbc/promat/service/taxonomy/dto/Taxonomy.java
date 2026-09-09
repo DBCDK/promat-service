@@ -10,23 +10,20 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-// This class predates tonight's Kafka/database work (only setRoot(...) and searchList(...)
-// below are new) - it's the in-memory representation of the whole taxonomy tree that
-// TaxonomyCache holds onto and TaxonomyService serves over REST. Structurally it's just a
-// nested Map<String, Object>: each key is a category name, and each value is either another
-// nested Map (a sub-category) or a List (a leaf category's actual subjects) - a generic,
-// JSON-shaped tree with no dedicated "Category"/"Node" class of its own.
+// The in-memory representation of the whole taxonomy tree that TaxonomyCache holds onto and
+// TaxonomyService serves over REST. Structurally it's just a nested Map<String, Object>: each
+// key is a category name, and each value is either another nested Map (a sub-category) or a
+// List (a leaf category's actual subjects) - a generic, JSON-shaped tree with no dedicated
+// "Category"/"Node" class of its own. searchList() below is the only addition on top of the
+// original shape, for the taxonomy/Kafka work's subtree-search endpoint.
 public class Taxonomy  implements Serializable {
     private static final JSONBContext JSONB_CONTEXT =  new JSONBContext();
     private Map<String, Object> root = new LinkedHashMap<>();
 
-    // Historically, this constructor was the ONLY way the tree's structure got built - every
-    // category name was hardcoded directly in Java, by hand, matching what used to be the
-    // taxonomy's one fixed shape. Now that the structure can also come from the database (see
-    // DbTaxonomyBuilder, which calls setRoot(...) below to replace this hardcoded skeleton
-    // entirely), this constructor mostly matters as: (a) the default/fallback shape if no
-    // TaxonomyBuilder is configured at all, and (b) what TaxonomyCache starts with before its
-    // very first successful refresh.
+    // The category tree's structure is hardcoded here, by hand - it has always been fixed
+    // (confirmed against the taxonomy Kafka topic: every subject's path resolves into one of
+    // these branches, none introduce a new one), so both DM2Builder and DbTaxonomyBuilder only
+    // ever add SUBJECTS into this fixed skeleton via put(...) below, never replace it.
     public Taxonomy() {
 
         // Settings (Ramme)
@@ -78,15 +75,6 @@ public class Taxonomy  implements Serializable {
 
     public Map<String, Object> getRoot() {
         return root;
-    }
-
-    // Added for DbTaxonomyBuilder: lets that class throw away the hardcoded structure built
-    // by the constructor above and replace it wholesale with one derived from the
-    // taxonomy_category table instead. A plain setter, nothing Jakarta-specific about it -
-    // it's just how a builder that constructs the tree from a different source (the database
-    // instead of hardcoded Java) gets to install its result.
-    public void setRoot(Map<String, Object> root) {
-        this.root = root;
     }
 
     public Map<String, Object> getStructure() {

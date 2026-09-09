@@ -10,10 +10,10 @@
   IMPORTANT, learned the hard way while building the taxonomy/Kafka feature: this project does
   NOT rely on JPA's automatic classpath scanning to discover @Entity classes - every single
   entity (and @Converter) must be listed explicitly below, in BOTH persistence units, or the
-  JPA provider (EclipseLink) has literally no metadata for it. Forgetting to add
-  TaxonomyCategory/TaxonomySubject here initially produced a runtime error like "The abstract
-  schema type 'TaxonomyCategory' is unknown" the moment a JPQL query tried to reference it -
-  not a compile-time error, since Java itself has no idea persistence.xml even exists.
+  JPA provider (EclipseLink) has literally no metadata for it. Forgetting to add a new entity
+  here produces a runtime error like "The abstract schema type 'X' is unknown" the moment a
+  JPQL query tries to reference it - not a compile-time error, since Java itself has no idea
+  persistence.xml even exists.
 -->
 <persistence version="3.0"
              xmlns="https://jakarta.ee/xml/ns/persistence" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -47,9 +47,7 @@
     <class>dk.dbc.promat.service.persistence.ReviewerDataStash</class>
     <!-- Added for the taxonomy/Kafka + Buggi options work - see the file-level comment above
          for why these must be listed explicitly, and what happens if you forget. -->
-    <class>dk.dbc.promat.service.persistence.TaxonomyCategory</class>
-    <class>dk.dbc.promat.service.persistence.TaxonomySubject</class>
-    <class>dk.dbc.promat.service.persistence.StringArrayConverter</class>
+    <class>dk.dbc.promat.service.persistence.TaxonomySnapshot</class>
     <class>dk.dbc.promat.service.persistence.BuggiOptionGroup</class>
     <class>dk.dbc.promat.service.persistence.BuggiOption</class>
     <shared-cache-mode>DISABLE_SELECTIVE</shared-cache-mode>
@@ -81,9 +79,7 @@
     <class>dk.dbc.promat.service.persistence.RoleConverter</class>
     <class>dk.dbc.promat.service.persistence.SubjectNote</class>
     <class>dk.dbc.promat.service.persistence.ReviewerDataStash</class>
-    <class>dk.dbc.promat.service.persistence.TaxonomyCategory</class>
-    <class>dk.dbc.promat.service.persistence.TaxonomySubject</class>
-    <class>dk.dbc.promat.service.persistence.StringArrayConverter</class>
+    <class>dk.dbc.promat.service.persistence.TaxonomySnapshot</class>
     <class>dk.dbc.promat.service.persistence.BuggiOptionGroup</class>
     <class>dk.dbc.promat.service.persistence.BuggiOption</class>
     <properties>

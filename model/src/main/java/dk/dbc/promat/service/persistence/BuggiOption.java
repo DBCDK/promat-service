@@ -10,7 +10,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
 // The "many" side of BuggiOptionGroup's one-to-many - see that class for the relationship
-// explanation, and TaxonomyCategory.java for @Entity/@Table/@Id basics.
+// explanation and general @Entity/@Table/@Id basics.
 @Entity
 @Table(name = "buggi_option")
 public class BuggiOption {
