@@ -11,21 +11,11 @@ import org.microprofileext.openapi.swaggerui.OpenApiUiService;
 
 import java.util.Set;
 
-// javax.ws.rs.core.Application (here: its jakarta.* successor) is JAX-RS's own registration
-// mechanism, separate from and unrelated to CDI/EJB dependency injection. Only classes
-// returned from getClasses() (or getSingletons(), not used in this project) are wired into
-// JAX-RS's HTTP routing table - a class can have every @GET/@Path annotation correctly in
-// place and still be completely unreachable over HTTP if it isn't listed here. This is a
-// DELIBERATE choice this project makes (JAX-RS also supports automatic classpath scanning for
-// @Path-annotated classes as an alternative, not used here) - the tradeoff is an explicit,
-// single-file manifest of the whole REST API surface, at the cost of every new resource class
-// needing to be added here by hand (TaxonomyService.class and BuggiOptionsService.class,
-// added as part of this project's Kafka/database taxonomy work, are both new entries).
-//
-// This is UNRELATED to whether a class is a working CDI/EJB bean - @Singleton/@Stateless
-// beans (like the batch/ package's scheduled jobs) are discovered and managed automatically
-// by the container with no equivalent registration list; this file specifically governs "is
-// this class also reachable as an HTTP endpoint", nothing more.
+// GOTCHA: this project doesn't use JAX-RS's classpath auto-scanning - a resource class with
+// correct @GET/@Path annotations is still unreachable over HTTP unless it's listed in
+// getClasses() below. Unrelated to CDI/EJB registration (e.g. the batch/ package's scheduled
+// jobs need no such list) - this only governs HTTP routing. TaxonomyService and
+// BuggiOptionsService were added here as part of the taxonomy/Kafka work.
 @ApplicationPath("v1/api")
 @DeclareRoles("authenticated-user")
 public class PromatApplication extends Application {

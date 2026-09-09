@@ -16,12 +16,9 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
-// One of two implementations of the TaxonomyBuilder interface (see that file) - builds the
-// Taxonomy tree the same way DM2Builder does: start from Taxonomy's own hardcoded category
-// skeleton and add subjects into it one at a time via taxonomy.put(subject, path). The only
-// difference is where the subjects come from - this project's own taxonomy_snapshot table
-// (the last successful read of the taxonomy Kafka topic, see ScheduledTaxonomyKafkaSync)
-// instead of a live HTTP call to rawrepo-record-service.
+// Reads the taxonomy_snapshot row (see ScheduledTaxonomyKafkaSync, which writes it), then
+// places each subject into Taxonomy's hardcoded category skeleton via taxonomy.put(subject,
+// path).
 public class DbTaxonomyBuilder implements TaxonomyBuilder {
     private static final Logger LOGGER = LoggerFactory.getLogger(DbTaxonomyBuilder.class);
     private static final ObjectMapper OBJECT_MAPPER = new JsonMapperProvider().getObjectMapper();
