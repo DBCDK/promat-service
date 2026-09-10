@@ -124,6 +124,21 @@ class ReviewersIT extends ContainerTest {
     }
 
     @Test
+    void createReviewerRejectsEmailShapedUserId() {
+        final ReviewerRequest reviewerRequest = new ReviewerRequest()
+                .withPaycode(6666)
+                .withFirstName("Peder")
+                .withLastName("Pedersen")
+                .withEmail("peder@pedersen.dk")
+                .withInstitution("Peder Pedersens pedaler")
+                .withAgency("790900")
+                .withUserId("pedp@dbc.dk");
+
+        final ServiceErrorDto serviceError = postAndAssert("v1/api/reviewers", reviewerRequest, "2-3-4-5-6", ServiceErrorDto.class, Response.Status.BAD_REQUEST);
+        assertThat("service error", serviceError.getCode(), is(ServiceErrorCode.INVALID_REQUEST));
+    }
+
+    @Test
     void getReviewerWithoutAuthToken() {
         final Response response = getResponse("v1/api/reviewers/1");
         assertThat("response status", response.getStatus(), is(401));
@@ -340,6 +355,15 @@ class ReviewersIT extends ContainerTest {
         //[docker-java-stream-1861590606] INFO dk.dbc.promat.service.ContainerTest - STDOUT: {"timestamp":"2021-08-04T23:19:49.614198+02:00","sys_event_type":"audit","client_ip":["172.17.0.1"],"app_name":"PROMAT","action":"UPDATE","accessing_user":{"token":"2-3-4-5-6"},"owning_user":"7777/190976","PROMAT":{"Update and view full profile":"reviewers/3","Response":"200"}}
         assertThat("auditlog paycode change", promatServiceContainer.getLogs().contains("{\"Change of paycode (owning id)\":\"reviewers/3\",\"Current value\":\"22\",\"New value\":\"7777\"}"));
         assertThat("auditlog update", promatServiceContainer.getLogs().contains("{\"Update and view full reviewer profile\":\"reviewers/3\",\"Response\":\"200\"}"));
+    }
+
+    @Test
+    void updateReviewerRejectsEmailShapedUserId() {
+        final ReviewerRequest reviewerRequest = new ReviewerRequest()
+                .withUserId("pepe@dbc.dk");
+
+        final Response response = putResponse("v1/api/reviewers/3", reviewerRequest, "2-3-4-5-6");
+        assertThat("response status", response.getStatus(), is(400));
     }
 
     @Test
