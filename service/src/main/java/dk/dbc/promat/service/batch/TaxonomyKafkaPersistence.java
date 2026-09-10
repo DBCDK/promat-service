@@ -47,10 +47,10 @@ public class TaxonomyKafkaPersistence {
         int previousCount = existing == null ? 0 : existing.getSubjectCount();
         int newCount = seenSubjects.size();
 
-        if (previousCount > 0 && newCount < previousCount * (1 - deleteThresholdPercent / 100.0)) {
+        if (exceedsDeleteThreshold(previousCount, newCount)) {
             LOGGER.error("Refusing to replace taxonomy snapshot: new read has {} subjects, down from {} ({}% drop, exceeds the {}% safety threshold) - " +
                             "this looks like a bad or incomplete Kafka read rather than an intentional bulk removal. Snapshot left untouched.",
-                    newCount, previousCount, Math.round(100.0 * (previousCount - newCount) / previousCount), deleteThresholdPercent);
+                    newCount, previousCount, percentDrop(previousCount, newCount), deleteThresholdPercent);
             return new PersistenceResult(0, true, previousCount, newCount);
         }
 
@@ -62,21 +62,32 @@ public class TaxonomyKafkaPersistence {
             return new PersistenceResult(0, false, previousCount, newCount);
         }
 
+        writeSnapshot(existing, data, newCount);
+        return new PersistenceResult(newCount, false, previousCount, newCount);
+    }
+
+    private boolean exceedsDeleteThreshold(int previousCount, int newCount) {
+        return previousCount > 0 && newCount < previousCount * (1 - deleteThresholdPercent / 100.0);
+    }
+
+    private static long percentDrop(int previousCount, int newCount) {
+        return Math.round(100.0 * (previousCount - newCount) / previousCount);
+    }
+
+    private void writeSnapshot(TaxonomySnapshot existing, String data, int subjectCount) {
         if (existing == null) {
             entityManager.persist(new TaxonomySnapshot()
                     .withId(SNAPSHOT_ID)
                     .withData(data)
-                    .withSubjectCount(newCount)
+                    .withSubjectCount(subjectCount)
                     .withUpdatedAt(LocalDateTime.now()));
-        } else {
-            // No merge()/persist() call needed here - `existing` is managed (came from find()
-            // in this transaction), so JPA's dirty checking picks up these setters on its own.
-            existing.setData(data);
-            existing.setSubjectCount(newCount);
-            existing.setUpdatedAt(LocalDateTime.now());
+            return;
         }
-
-        return new PersistenceResult(newCount, false, previousCount, newCount);
+        // No merge()/persist() call needed here - `existing` is managed (came from find() in
+        // this transaction), so JPA's dirty checking picks up these setters on its own.
+        existing.setData(data);
+        existing.setSubjectCount(subjectCount);
+        existing.setUpdatedAt(LocalDateTime.now());
     }
 
     public record PersistenceResult(int writtenSubjects,

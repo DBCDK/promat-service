@@ -2,6 +2,9 @@
 
 set -e
 
+# Plain awk, no bash-only syntax (an earlier version used `read -a`, which errors under zsh -
+# macOS's default shell - when this file is sourced directly rather than run via its own bash
+# shebang). Linux devs generally default to bash, so they never hit this.
 getMyIP() {
     LANG=C /sbin/ifconfig 2>/dev/null | awk '/inet / && $2 != "127.0.0.1" { print $2; exit }'
 }
@@ -15,6 +18,10 @@ DOCKER_REPOSITORY=${DOCKER_NAMESPACE}/${DOCKER_NAME}
 
 # sample app values
 EMATERIAL_CONTENT_REPO=${EMATERIAL_CONTENT_REPO:-"http://dmat.dbc.dk/eVALU/get.php?faust=%s"}
+# host.docker.internal, not $(getMyIP): a native local Postgres (e.g. Postgres.app on Mac)
+# binds to localhost only, not the LAN interface - only host.docker.internal reaches it from a
+# container. Linux devs usually run Postgres via scripts/start-database instead, which publishes
+# on all interfaces, so either hostname would work for them.
 PROMAT_DB_URL=${PROMAT_DB_URL:-"${USER}:${USER}@host.docker.internal:${DB_PORT}/${USER}"}
 CULR_SERVICE_URL=${CULR_SERVICE_URL:-"none"}
 CULR_SERVICE_USER_ID=${CULR_SERVICE_USER_ID:-"none"}

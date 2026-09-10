@@ -112,16 +112,7 @@ public class ScheduledTaxonomyKafkaSync {
                             try {
                                 KafkaTaxonomyItem subject = parseKafkaTaxonomyItem(value);
                                 subject.setSourceRecordId(key);
-                                if (subject.getId() <= 0) {
-                                    parseErrorCount.incrementAndGet();
-                                    LOGGER.warn("Skipping taxonomy Kafka record with key '{}' from topic '{}': missing or non-positive \"id\"",
-                                            key, topic);
-                                    return;
-                                }
-                                if (subject.getTitle() == null) {
-                                    parseErrorCount.incrementAndGet();
-                                    LOGGER.warn("Skipping taxonomy Kafka record with key '{}' from topic '{}': missing \"title\"",
-                                            key, topic);
+                                if (isInvalid(subject, key, topic, parseErrorCount)) {
                                     return;
                                 }
                                 seenSubjects.put(subject.getId(), subject);
@@ -133,17 +124,19 @@ public class ScheduledTaxonomyKafkaSync {
                         };
                     });
             consumer.run();
-            int nonTombstoneCount = processedItems.get() - tombstoneCount.get();
-            if (nonTombstoneCount > 0 && seenSubjects.isEmpty()) {
+            SyncStats stats = new SyncStats(processedItems.get(), tombstoneCount.get(), parseErrorCount.get());
+
+            if (stats.nonTombstoneCount() > 0 && seenSubjects.isEmpty()) {
                 // Nothing parsed - don't overwrite a good snapshot with an empty one.
                 LOGGER.error("Taxonomy Kafka sync aborted for topic '{}': {} records processed but zero subjects could be parsed ({} parse errors); database was not updated",
-                        topic, processedItems.get(), parseErrorCount.get());
+                        topic, stats.processed(), stats.parseErrors());
                 return;
             }
-            if (parseErrorCount.get() > 0) {
+            if (stats.parseErrors() > 0) {
                 LOGGER.warn("Taxonomy Kafka sync for topic '{}' had {} parse errors; affected records were skipped, proceeding with {} successfully parsed subjects",
-                        topic, parseErrorCount.get(), seenSubjects.size());
+                        topic, stats.parseErrors(), seenSubjects.size());
             }
+
             TaxonomyKafkaPersistence.PersistenceResult result = persistence.applyToDatabase(seenSubjects.values());
             if (result.thresholdExceeded()) {
                 LOGGER.error("Taxonomy Kafka sync for topic '{}' left the existing snapshot untouched: replacing it would have dropped subject count from {} to {}, " +
@@ -151,13 +144,10 @@ public class ScheduledTaxonomyKafkaSync {
                         topic, result.previousSubjectCount(), result.newSubjectCount());
                 return;
             }
+
             taxonomyCache.refresh();
             LOGGER.info("Taxonomy Kafka sync completed for topic '{}': {} records processed, {} tombstones, {} parse errors, {} subjects written to snapshot",
-                    topic,
-                    processedItems.get(),
-                    tombstoneCount.get(),
-                    parseErrorCount.get(),
-                    result.writtenSubjects());
+                    topic, stats.processed(), stats.tombstones(), stats.parseErrors(), result.writtenSubjects());
         } catch (InterruptedException e) {
             LOGGER.warn("Taxonomy Kafka sync interrupted for topic '{}'", topic, e);
             Thread.currentThread().interrupt();
@@ -170,6 +160,29 @@ public class ScheduledTaxonomyKafkaSync {
         JsonNode root = OBJECT_MAPPER.readTree(value);
         JsonNode payload = root.has("value") ? root.get("value") : root;
         return OBJECT_MAPPER.treeToValue(payload, KafkaTaxonomyItem.class);
+    }
+
+    // Checked separately (not just caught as a parse failure) since a missing id/title is
+    // valid JSON, just unusable - each gets its own specific log message instead of a generic
+    // "parse/build failure".
+    private boolean isInvalid(KafkaTaxonomyItem subject, String key, String topic, AtomicInteger parseErrorCount) {
+        if (subject.getId() <= 0) {
+            parseErrorCount.incrementAndGet();
+            LOGGER.warn("Skipping taxonomy Kafka record with key '{}' from topic '{}': missing or non-positive \"id\"", key, topic);
+            return true;
+        }
+        if (subject.getTitle() == null) {
+            parseErrorCount.incrementAndGet();
+            LOGGER.warn("Skipping taxonomy Kafka record with key '{}' from topic '{}': missing \"title\"", key, topic);
+            return true;
+        }
+        return false;
+    }
+
+    private record SyncStats(int processed, int tombstones, int parseErrors) {
+        int nonTombstoneCount() {
+            return processed - tombstones;
+        }
     }
 
     // Also the exact shape stored in TaxonomySnapshot.data - DbTaxonomyBuilder reuses this

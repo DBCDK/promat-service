@@ -3,6 +3,7 @@ package dk.dbc.promat.service.batch;
 import dk.dbc.promat.service.taxonomy.TaxonomyCache;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.Resource;
+import jakarta.ejb.DependsOn;
 import jakarta.ejb.Singleton;
 import jakarta.ejb.Startup;
 import jakarta.ejb.Timeout;
@@ -13,8 +14,13 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+// GOTCHA: @DependsOn("DatabaseMigrator") is required here since the taxonomy/Kafka work -
+// init() below calls updateTaxonomy() immediately, which (when TaxonomyBuilderProducer hands
+// out DbTaxonomyBuilder) queries taxonomy_snapshot, so this can race DatabaseMigrator on a
+// fresh database the same way ScheduledTaxonomyKafkaSync can.
 @Startup
 @Singleton
+@DependsOn("DatabaseMigrator")
 public class ScheduledTaxonomyUpdater {
     private static final Logger LOGGER = LoggerFactory.getLogger(ScheduledTaxonomyUpdater.class);
 
