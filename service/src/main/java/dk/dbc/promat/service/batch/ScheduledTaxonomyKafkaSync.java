@@ -29,26 +29,18 @@ import java.util.concurrent.ConcurrentHashMap;
 // Reads the whole TAXONOMY_KAFKA_TOPIC topic and hands the result to TaxonomyKafkaPersistence
 // to write as a snapshot. Runs at startup and hourly; only on the PRIMARY cluster node.
 //
-// GOTCHA: no groupId is set on the TopicConsumer below, which (confirmed by decompiling
-// dbc-commons-kafka-consumer) makes it assign()+seekToBeginning() instead of tracking
-// committed offsets - every run is a full topic replay, not incremental deltas since the last
-// run. That's deliberate: it means TaxonomySnapshot always reflects the *complete* current
-// state of the topic in one go, so there's no accumulated-state bug to worry about across
-// restarts - but it does mean this job's cost scales with the whole topic, every time.
+// GOTCHA: with no groupId set, this TopicConsumer reads the entire topic from the start on
+// every run, not just new messages since last time.
 //
-// GOTCHA: @DependsOn("DatabaseMigrator") is required, not decorative - without it the EJB
-// container is free to start @Startup singletons in any order, and this bean's first query
-// has actually hit "relation does not exist" on a fresh database when it ran before
-// DatabaseMigrator had created taxonomy_snapshot. Only shows up against a genuinely empty
-// database, which is why it went unnoticed for a while.
+// GOTCHA: @DependsOn("DatabaseMigrator") is required - without it this can run before the
+// taxonomy_snapshot table exists on a fresh database.
 @Startup
 @Singleton
 @DependsOn("DatabaseMigrator")
 public class ScheduledTaxonomyKafkaSync {
     private static final Logger LOGGER = LoggerFactory.getLogger(ScheduledTaxonomyKafkaSync.class);
-    // A dedicated copy of the shared ObjectMapper, tolerant of unknown fields: the topic's
-    // producer may add fields we don't model, and the shared instance is also used for REST
-    // (de)serialization, where unknown-property strictness is still wanted there.
+    // A separate copy, tolerant of unknown fields - the shared ObjectMapper is also used for
+    // REST (de)serialization, where unknown-property strictness is still wanted.
     private static final ObjectMapper OBJECT_MAPPER = new JsonMapperProvider().getObjectMapper()
             .copy()
             .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
@@ -76,13 +68,10 @@ public class ScheduledTaxonomyKafkaSync {
         run();
     }
 
-    // persistent = false: if the app restarts mid-hour, it waits for the next scheduled hour
-    // rather than trying to catch up a missed run (init() above already covers "run once on
-    // startup" separately).
+    // persistent = false: don't try to catch up a missed run after a restart.
     @Schedule(second = "0", minute = "0", hour = "*", persistent = false)
-    // NOT_SUPPORTED: this method spends most of its time on non-transactional Kafka I/O; the
-    // actual database write happens inside TaxonomyKafkaPersistence.applyToDatabase, which has
-    // its own REQUIRES_NEW transaction.
+    // NOT_SUPPORTED: the database write happens separately, inside
+    // TaxonomyKafkaPersistence.applyToDatabase's own REQUIRES_NEW transaction.
     @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
     public void run() {
         String bootstrapServersValue = bootstrapServers.orElse("");
@@ -100,8 +89,7 @@ public class ScheduledTaxonomyKafkaSync {
     }
 
     void syncTopic(String bootstrapServers, String topic) {
-        // ConcurrentHashMap/AtomicInteger, not HashMap/int: TopicConsumer runs 4 worker
-        // threads below, all reading/writing these concurrently.
+        // Concurrent types: TopicConsumer runs 4 worker threads writing these.
         Map<Integer, KafkaTaxonomyItem> seenSubjects = new ConcurrentHashMap<>();
         AtomicInteger processedItems = new AtomicInteger();
         AtomicInteger tombstoneCount = new AtomicInteger();
@@ -114,8 +102,7 @@ public class ScheduledTaxonomyKafkaSync {
                     .maxPendingJobsPrThread(1000)
                     .build(threads, workerNo -> {
                         return (key, value) -> {
-                            // A null value is Kafka's tombstone convention: this key no longer
-                            // has a value on a compacted topic.
+                            // null value = Kafka tombstone (deletion).
                             if (value == null) {
                                 processedItems.incrementAndGet();
                                 tombstoneCount.incrementAndGet();
@@ -125,8 +112,6 @@ public class ScheduledTaxonomyKafkaSync {
                             try {
                                 KafkaTaxonomyItem subject = parseKafkaTaxonomyItem(value);
                                 subject.setSourceRecordId(key);
-                                // Validated here rather than downstream, so everything that
-                                // ends up in seenSubjects can be assumed well-formed already.
                                 if (subject.getId() <= 0) {
                                     parseErrorCount.incrementAndGet();
                                     LOGGER.warn("Skipping taxonomy Kafka record with key '{}' from topic '{}': missing or non-positive \"id\"",
@@ -147,14 +132,10 @@ public class ScheduledTaxonomyKafkaSync {
                             }
                         };
                     });
-            // Blocks until the whole topic has been read - see the class-level gotcha on why
-            // this is a full replay every run.
             consumer.run();
             int nonTombstoneCount = processedItems.get() - tombstoneCount.get();
             if (nonTombstoneCount > 0 && seenSubjects.isEmpty()) {
-                // Every non-tombstone record failed to parse - something is fundamentally
-                // wrong (wrong topic, format changed entirely). Bail out rather than writing
-                // an empty snapshot over a good one.
+                // Nothing parsed - don't overwrite a good snapshot with an empty one.
                 LOGGER.error("Taxonomy Kafka sync aborted for topic '{}': {} records processed but zero subjects could be parsed ({} parse errors); database was not updated",
                         topic, processedItems.get(), parseErrorCount.get());
                 return;
@@ -191,9 +172,8 @@ public class ScheduledTaxonomyKafkaSync {
         return OBJECT_MAPPER.treeToValue(payload, KafkaTaxonomyItem.class);
     }
 
-    // Jackson deserialization target for one Kafka message - also, unmodified, the exact JSON
-    // shape stored in TaxonomySnapshot.data (see DbTaxonomyBuilder, which reuses this same
-    // class to read the snapshot back rather than keeping a second near-identical DTO).
+    // Also the exact shape stored in TaxonomySnapshot.data - DbTaxonomyBuilder reuses this
+    // class to read the snapshot back.
     public static class KafkaTaxonomyItem {
         private String title;
         private List<String> note = new ArrayList<>();

@@ -11,11 +11,8 @@ import org.microprofileext.openapi.swaggerui.OpenApiUiService;
 
 import java.util.Set;
 
-// GOTCHA: this project doesn't use JAX-RS's classpath auto-scanning - a resource class with
-// correct @GET/@Path annotations is still unreachable over HTTP unless it's listed in
-// getClasses() below. Unrelated to CDI/EJB registration (e.g. the batch/ package's scheduled
-// jobs need no such list) - this only governs HTTP routing. TaxonomyService and
-// BuggiOptionsService were added here as part of the taxonomy/Kafka work.
+// GOTCHA: no JAX-RS classpath auto-scanning - a resource class is unreachable over HTTP
+// unless listed in getClasses() below, regardless of its @GET/@Path annotations.
 @ApplicationPath("v1/api")
 @DeclareRoles("authenticated-user")
 public class PromatApplication extends Application {
