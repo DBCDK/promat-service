@@ -324,6 +324,9 @@ public abstract class ContainerTest extends IntegrationTestIT {
                 .withEnv("OAUTH2_INTROSPECTION_URL", "http://host.testcontainers.internal:" + wireMockServer.port() + "/oauth/introspection")
                 .withEnv("OAUTH2_USERINFO_URL", "http://host.testcontainers.internal:" + wireMockServer.port() + "/userinfo")
                 .withEnv("RAWREPO_RECORD_SERVICE_URL", "http://host.testcontainers.internal:" + wireMockServer.port())
+                // Distinct property from RAWREPO_RECORD_SERVICE_URL above - without it
+                // TaxonomyBuilderProducer has no builder to give TaxonomyCache.
+                .withEnv("RECORD_SERVICE", "http://host.testcontainers.internal:" + wireMockServer.port())
                 .withEnv("FAUST_RESOLVER_URL", "http://host.testcontainers.internal:" + wireMockServer.port())
                 //.withEnv("FBI_API_URL", "http://172.17.33.94:8082")
                 .withEnv("FBI_API_URL", "http://host.testcontainers.internal:" + wireMockServer.port())
