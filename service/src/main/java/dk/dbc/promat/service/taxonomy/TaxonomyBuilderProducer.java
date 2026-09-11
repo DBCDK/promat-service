@@ -8,25 +8,27 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
 import java.time.Duration;
 import java.util.Optional;
 
+// Decides which TaxonomyBuilder implementation gets injected into TaxonomyCache, used by
+// ScheduledTaxonomyUpdater.
 @ApplicationScoped
 public class TaxonomyBuilderProducer {
-    Optional<String> recordService;
-    Duration readTimeout;
+    private final Optional<String> recordService;
+    private final Duration readTimeout;
 
     @Inject
-    public TaxonomyBuilderProducer(@ConfigProperty(name = "RAWREPO_RECORD_SERVICE_URL") Optional<String> recordService,
+    public TaxonomyBuilderProducer(@ConfigProperty(name = "RECORD_SERVICE") Optional<String> recordService,
                                    @ConfigProperty(name = "TOPICS_FETCH_READ_TIMEOUT", defaultValue = "PT20S") Duration readTimeout) {
         this.recordService = recordService;
         this.readTimeout = readTimeout;
-
     }
 
+    // DM2Builder if RECORD_SERVICE is set; otherwise null (TaxonomyCache treats a null builder
+    // as "never refreshes", logging an error instead of crashing).
     @Produces
     public TaxonomyBuilder produce() {
         return recordService
+                .filter(url -> !url.isBlank())
                 .map(url -> (TaxonomyBuilder) new DM2Builder(url, readTimeout))
-
-                // DM3 builder will eventually be initiated here. (RAWREPO_RECORD_SERVICE_URL url is null).
                 .orElse(null);
     }
 }

@@ -32,6 +32,10 @@ tags:
     description: Payments preview, execute and lock, history
   - name: drafts
     description: Incomplete cases in need of further refinement
+  - name: taxonomy
+    description: Metakompas subject ("emneord") taxonomy tree
+  - name: buggi
+    description: Buggi tag vocabulary
 
 paths:
   /reviewers:
@@ -1115,6 +1119,8 @@ paths:
 
   /taxonomy/structure:
     get:
+      tags:
+        - taxonomy
       summary: "GET v1/api/taxonomy/structure"
       operationId: "getStructure"
       responses:
@@ -1127,6 +1133,8 @@ paths:
 
   /taxonomy/tree:
     get:
+      tags:
+        - taxonomy
       summary: "GET v1/api/taxonomy/tree"
       operationId: "getTaxonomy"
       responses:
@@ -1139,6 +1147,8 @@ paths:
 
   /taxonomy/cache:
     delete:
+      tags:
+        - taxonomy
       summary: "DELETE v1/api/taxonomy/cache"
       operationId: "clearCache"
       responses:
@@ -1147,6 +1157,8 @@ paths:
 
   /taxonomy/subtree:
     post:
+      tags:
+        - taxonomy
       summary: "POST v1/api/taxonomy/subtree"
       operationId: "getTaxonomySubtree"
       requestBody:
@@ -1169,6 +1181,8 @@ paths:
 
   /taxonomy/subtree/{alias}:
     get:
+      tags:
+        - taxonomy
       summary: "GET v1/api/taxonomy/subtree/{alias}"
       operationId: "getTaxonomySubtreeByAlias"
       parameters:
@@ -1186,6 +1200,54 @@ paths:
                 $ref: "#/components/schemas/TaxonomyTree"
         "404":
           description: "Path not found in taxonomy tree"
+
+  /taxonomy/subtree/search:
+    post:
+      tags:
+        - taxonomy
+      summary: "POST v1/api/taxonomy/subtree/search"
+      operationId: "searchTaxonomySubtree"
+      parameters:
+        - name: "q"
+          in: "query"
+          required: true
+          schema:
+            type: "string"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: "array"
+              items:
+                type: "string"
+        required: true
+      responses:
+        "200":
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TaxonomySubjectList"
+        "400":
+          description: "Missing query parameter 'q'"
+        "404":
+          description: "Path not found in taxonomy tree"
+
+  /buggi/options:
+    get:
+      tags:
+        - buggi
+      summary: "GET v1/api/buggi/options"
+      operationId: "getBuggiOptions"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                type: "array"
+                items:
+                  $ref: "#/components/schemas/BuggiOptionGroup"
 
 components:
   schemas:
@@ -2187,3 +2249,22 @@ components:
       type: array
       items:
         $ref: '#/components/schemas/TaxonomySubject'
+
+    BuggiOptionGroup:
+      type: object
+      properties:
+        name:
+          type: string
+        subfieldCode:
+          type: string
+        requiresNonzeroValue:
+          type: boolean
+        options:
+          type: array
+          items:
+            type: string
+      required:
+        - name
+        - subfieldCode
+        - requiresNonzeroValue
+        - options

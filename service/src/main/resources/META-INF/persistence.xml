@@ -1,8 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<!--
+  GOTCHA, learned the hard way while building the taxonomy/Kafka feature: this project does
+  NOT rely on JPA's automatic classpath scanning to discover @Entity classes - every entity
+  (and @Converter) must be listed explicitly below, in BOTH persistence units, or the JPA
+  provider (EclipseLink) has no metadata for it. Forgetting produces a runtime error like "The
+  abstract schema type 'X' is unknown" the moment a JPQL query references it - not a
+  compile-time error, since Java has no idea persistence.xml even exists.
+-->
 <persistence version="3.0"
              xmlns="https://jakarta.ee/xml/ns/persistence" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
              xsi:schemaLocation="https://jakarta.ee/xml/ns/persistence https://jakarta.ee/xml/ns/persistence/persistence_3_0.xsd">
+  <!-- promatPU: the real, production persistence unit (container-managed JTA transactions). -->
   <persistence-unit name="promatPU" transaction-type="JTA">
     <jta-data-source>jdbc/promat</jta-data-source>
     <class>dk.dbc.commons.jpa.converter.EnumConverter</class>
@@ -28,6 +37,8 @@
       <property name="eclipselink.cache.coordination.channel" value="promatPUChannel"/>
     </properties>
   </persistence-unit>
+  <!-- promatITPU: used by integration tests (RESOURCE_LOCAL - no container transaction
+       manager available against a TestContainers-managed Postgres). -->
   <persistence-unit name="promatITPU" transaction-type="RESOURCE_LOCAL">
     <class>dk.dbc.commons.jpa.converter.EnumConverter</class>
     <class>dk.dbc.promat.service.persistence.Notification</class>
