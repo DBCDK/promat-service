@@ -32,4 +32,9 @@ public class TaxonomyCache {
         builder.buildTaxonomy(next);
         current.set(next);
     }
+
+    // Publishes an already-built Taxonomy directly, without going through TaxonomyBuilder.
+    public void set(Taxonomy taxonomy) {
+        current.set(taxonomy);
+    }
 }

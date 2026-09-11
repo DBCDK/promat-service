@@ -30,7 +30,6 @@
     <class>dk.dbc.promat.service.persistence.PromatMessage</class>
     <class>dk.dbc.promat.service.persistence.SubjectNote</class>
     <class>dk.dbc.promat.service.persistence.ReviewerDataStash</class>
-    <class>dk.dbc.promat.service.persistence.TaxonomySnapshot</class>
     <shared-cache-mode>DISABLE_SELECTIVE</shared-cache-mode>
     <properties>
       <property name="jakarta.persistence.schema-generation.database.action" value="none"/>
@@ -55,7 +54,6 @@
     <class>dk.dbc.promat.service.persistence.RoleConverter</class>
     <class>dk.dbc.promat.service.persistence.SubjectNote</class>
     <class>dk.dbc.promat.service.persistence.ReviewerDataStash</class>
-    <class>dk.dbc.promat.service.persistence.TaxonomySnapshot</class>
     <properties>
       <property name="jakarta.persistence.schema-generation.database.action" value="none"/>
     </properties>

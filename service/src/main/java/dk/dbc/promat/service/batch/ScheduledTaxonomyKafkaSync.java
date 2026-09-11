@@ -4,11 +4,12 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dk.dbc.commons.kafka.consumer.TopicConsumer;
-import dk.dbc.promat.service.cluster.ServerRole;
 import dk.dbc.promat.service.persistence.JsonMapperProvider;
 import dk.dbc.promat.service.taxonomy.TaxonomyCache;
+import dk.dbc.promat.service.taxonomy.TaxonomyPopulator;
+import dk.dbc.promat.service.taxonomy.dto.Subject;
+import dk.dbc.promat.service.taxonomy.dto.Taxonomy;
 import jakarta.annotation.PostConstruct;
-import jakarta.ejb.DependsOn;
 import jakarta.ejb.Schedule;
 import jakarta.ejb.Singleton;
 import jakarta.ejb.Startup;
@@ -16,27 +17,36 @@ import jakarta.ejb.TransactionAttribute;
 import jakarta.ejb.TransactionAttributeType;
 import jakarta.inject.Inject;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.eclipse.microprofile.metrics.Metadata;
+import org.eclipse.microprofile.metrics.MetricRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.ConcurrentHashMap;
 
-// Reads the whole TAXONOMY_KAFKA_TOPIC topic and hands the result to TaxonomyKafkaPersistence
-// to write as a snapshot. Runs at startup and hourly; only on the PRIMARY cluster node.
+// Every pod consumes the whole TAXONOMY_KAFKA_TOPIC topic independently, straight into memory.
+// Runs at startup and hourly.
 //
-// GOTCHA: with no groupId set, this TopicConsumer reads the entire topic from the start on
-// every run, not just new messages since last time.
+// groupId is unique per pod and fresh on every restart (hostname + a UUID). Two pods must never
+// share a group id - Kafka would split the topic's partitions between them, so neither pod
+// would see the whole topic. A fresh id every restart means a restarted pod always starts a
+// clean read rather than resuming a previous incarnation's committed offsets.
 //
-// GOTCHA: @DependsOn("DatabaseMigrator") is required - without it this can run before the
-// taxonomy_snapshot table exists on a fresh database.
+// A fresh group id has no committed offset yet, so the first run does a full topic replay
+// (auto.offset.reset=earliest); every run after that, for the rest of this pod's lifetime, only
+// sees new/changed/tombstoned messages. Since later runs only see deltas, this class keeps a
+// persistent, cumulative view of every subject currently known (subjects field, keyed by the
+// Kafka message key, since tombstones carry no subject id) and rebuilds the full Taxonomy from
+// that complete view after every run.
+//
+// Kafka messages parse directly into taxonomy.dto.Subject via Jackson's fluent-setter support.
 @Startup
 @Singleton
-@DependsOn("DatabaseMigrator")
 public class ScheduledTaxonomyKafkaSync {
     private static final Logger LOGGER = LoggerFactory.getLogger(ScheduledTaxonomyKafkaSync.class);
     // A separate copy, tolerant of unknown fields - the shared ObjectMapper is also used for
@@ -54,32 +64,47 @@ public class ScheduledTaxonomyKafkaSync {
     Optional<String> topic;
 
     @Inject
-    ServerRole serverRole;
-
-    @Inject
-    TaxonomyKafkaPersistence persistence;
+    @ConfigProperty(name = "HOSTNAME", defaultValue = "promat-service")
+    String hostname;
 
     @Inject
     TaxonomyCache taxonomyCache;
 
+    @Inject
+    MetricRegistry metricRegistry;
+
+    static final Metadata syncFailureCounterMetadata = Metadata.builder()
+            .withName("promat_service_taxonomy_kafka_sync_failures")
+            .withDescription("Number of taxonomy Kafka sync runs that failed or were aborted")
+            .withUnit("failures")
+            .build();
+
+    // Cumulative across every scheduled run for this pod's lifetime, keyed by Kafka message key.
+    private final Map<String, Subject> subjects = new ConcurrentHashMap<>();
+
+    private String groupId;
+    private volatile LocalDateTime lastSuccessfulSyncAt;
+
     @PostConstruct
     void init() {
+        groupId = hostname + "-" + UUID.randomUUID();
+        LOGGER.info("Taxonomy Kafka sync starting with consumer group id '{}'", groupId);
         LOGGER.info("Running initial taxonomy Kafka sync at startup");
         run();
     }
 
+    public LocalDateTime getLastSuccessfulSyncAt() {
+        return lastSuccessfulSyncAt;
+    }
+
     // persistent = false: don't try to catch up a missed run after a restart.
     @Schedule(second = "0", minute = "0", hour = "*", persistent = false)
-    // NOT_SUPPORTED: the database write happens separately, inside
-    // TaxonomyKafkaPersistence.applyToDatabase's own REQUIRES_NEW transaction.
+    // NOT_SUPPORTED: nothing here touches the database - this is pure Kafka I/O plus in-memory
+    // state.
     @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
     public void run() {
         String bootstrapServersValue = bootstrapServers.orElse("");
         String topicValue = topic.orElse("");
-        if (serverRole != ServerRole.PRIMARY) {
-            LOGGER.debug("Skipping taxonomy Kafka sync on secondary node");
-            return;
-        }
         if (bootstrapServersValue.isBlank() || topicValue.isBlank()) {
             LOGGER.info("Skipping taxonomy Kafka sync because TAXONOMY_KAFKA_BOOTSTRAP_SERVERS or TAXONOMY_KAFKA_TOPIC is not configured");
             return;
@@ -89,15 +114,15 @@ public class ScheduledTaxonomyKafkaSync {
     }
 
     void syncTopic(String bootstrapServers, String topic) {
-        // Concurrent types: TopicConsumer runs 4 worker threads writing these.
-        Map<Integer, KafkaTaxonomyItem> seenSubjects = new ConcurrentHashMap<>();
         AtomicInteger processedItems = new AtomicInteger();
         AtomicInteger tombstoneCount = new AtomicInteger();
         AtomicInteger parseErrorCount = new AtomicInteger();
+        AtomicInteger appliedUpdateCount = new AtomicInteger();
         int threads = 4;
 
         try {
             TopicConsumer consumer = TopicConsumer.builder(bootstrapServers, topic)
+                    .groupId(groupId)
                     .pollTimeout("5s")
                     .maxPendingJobsPrThread(1000)
                     .build(threads, workerNo -> {
@@ -106,16 +131,17 @@ public class ScheduledTaxonomyKafkaSync {
                             if (value == null) {
                                 processedItems.incrementAndGet();
                                 tombstoneCount.incrementAndGet();
+                                subjects.remove(key);
                                 return;
                             }
                             processedItems.incrementAndGet();
                             try {
-                                KafkaTaxonomyItem subject = parseKafkaTaxonomyItem(value);
-                                subject.setSourceRecordId(key);
+                                Subject subject = parseSubject(value);
                                 if (isInvalid(subject, key, topic, parseErrorCount)) {
                                     return;
                                 }
-                                seenSubjects.put(subject.getId(), subject);
+                                subjects.put(key, subject);
+                                appliedUpdateCount.incrementAndGet();
                             } catch (Exception e) {
                                 parseErrorCount.incrementAndGet();
                                 LOGGER.warn("Skipping taxonomy Kafka record with key '{}' from topic '{}' due to parse/build failure",
@@ -126,46 +152,44 @@ public class ScheduledTaxonomyKafkaSync {
             consumer.run();
             SyncStats stats = new SyncStats(processedItems.get(), tombstoneCount.get(), parseErrorCount.get());
 
-            if (stats.nonTombstoneCount() > 0 && seenSubjects.isEmpty()) {
-                // Nothing parsed - don't overwrite a good snapshot with an empty one.
-                LOGGER.error("Taxonomy Kafka sync aborted for topic '{}': {} records processed but zero subjects could be parsed ({} parse errors); database was not updated",
+            if (stats.nonTombstoneCount() > 0 && appliedUpdateCount.get() == 0) {
+                // Records came in but none were usable - leave the current state untouched.
+                LOGGER.error("Taxonomy Kafka sync aborted for topic '{}': {} records processed but zero subjects could be applied ({} parse errors); taxonomy was not updated",
                         topic, stats.processed(), stats.parseErrors());
+                metricRegistry.counter(syncFailureCounterMetadata).inc();
                 return;
             }
             if (stats.parseErrors() > 0) {
-                LOGGER.warn("Taxonomy Kafka sync for topic '{}' had {} parse errors; affected records were skipped, proceeding with {} successfully parsed subjects",
-                        topic, stats.parseErrors(), seenSubjects.size());
+                LOGGER.warn("Taxonomy Kafka sync for topic '{}' had {} parse errors; affected records were skipped",
+                        topic, stats.parseErrors());
             }
 
-            TaxonomyKafkaPersistence.PersistenceResult result = persistence.applyToDatabase(seenSubjects.values());
-            if (result.thresholdExceeded()) {
-                LOGGER.error("Taxonomy Kafka sync for topic '{}' left the existing snapshot untouched: replacing it would have dropped subject count from {} to {}, " +
-                                "which exceeds the delete-safety threshold - this run likely did not see the full topic. Investigate before the next scheduled run.",
-                        topic, result.previousSubjectCount(), result.newSubjectCount());
-                return;
-            }
+            Taxonomy newTaxonomy = new Taxonomy();
+            TaxonomyPopulator.populate(newTaxonomy, subjects.values());
+            taxonomyCache.set(newTaxonomy);
+            lastSuccessfulSyncAt = LocalDateTime.now();
 
-            taxonomyCache.refresh();
-            LOGGER.info("Taxonomy Kafka sync completed for topic '{}': {} records processed, {} tombstones, {} parse errors, {} subjects written to snapshot",
-                    topic, stats.processed(), stats.tombstones(), stats.parseErrors(), result.writtenSubjects());
+            LOGGER.info("Taxonomy Kafka sync completed for topic '{}': {} records processed this run ({} new/updated, {} tombstoned, {} parse errors), {} subjects tracked in total",
+                    topic, stats.processed(), appliedUpdateCount.get(), stats.tombstones(), stats.parseErrors(), subjects.size());
         } catch (InterruptedException e) {
             LOGGER.warn("Taxonomy Kafka sync interrupted for topic '{}'", topic, e);
             Thread.currentThread().interrupt();
         } catch (Exception e) {
             LOGGER.error("Taxonomy Kafka sync failed for topic '{}'", topic, e);
+            metricRegistry.counter(syncFailureCounterMetadata).inc();
         }
     }
 
-    private KafkaTaxonomyItem parseKafkaTaxonomyItem(String value) throws Exception {
+    private Subject parseSubject(String value) throws Exception {
         JsonNode root = OBJECT_MAPPER.readTree(value);
         JsonNode payload = root.has("value") ? root.get("value") : root;
-        return OBJECT_MAPPER.treeToValue(payload, KafkaTaxonomyItem.class);
+        return OBJECT_MAPPER.treeToValue(payload, Subject.class);
     }
 
     // Checked separately (not just caught as a parse failure) since a missing id/title is
     // valid JSON, just unusable - each gets its own specific log message instead of a generic
     // "parse/build failure".
-    private boolean isInvalid(KafkaTaxonomyItem subject, String key, String topic, AtomicInteger parseErrorCount) {
+    private boolean isInvalid(Subject subject, String key, String topic, AtomicInteger parseErrorCount) {
         if (subject.getId() <= 0) {
             parseErrorCount.incrementAndGet();
             LOGGER.warn("Skipping taxonomy Kafka record with key '{}' from topic '{}': missing or non-positive \"id\"", key, topic);
@@ -182,74 +206,6 @@ public class ScheduledTaxonomyKafkaSync {
     private record SyncStats(int processed, int tombstones, int parseErrors) {
         int nonTombstoneCount() {
             return processed - tombstones;
-        }
-    }
-
-    // Also the exact shape stored in TaxonomySnapshot.data - DbTaxonomyBuilder reuses this
-    // class to read the snapshot back.
-    public static class KafkaTaxonomyItem {
-        private String title;
-        private List<String> note = new ArrayList<>();
-        private List<String> path = new ArrayList<>();
-        private int id;
-        private boolean oftenUsed;
-        private String ref;
-        private String sourceRecordId;
-
-        public String getTitle() {
-            return title;
-        }
-
-        public void setTitle(String title) {
-            this.title = title;
-        }
-
-        public List<String> getNote() {
-            return note;
-        }
-
-        public void setNote(List<String> note) {
-            this.note = note;
-        }
-
-        public List<String> getPath() {
-            return path;
-        }
-
-        public void setPath(List<String> path) {
-            this.path = path;
-        }
-
-        public int getId() {
-            return id;
-        }
-
-        public void setId(int id) {
-            this.id = id;
-        }
-
-        public boolean isOftenUsed() {
-            return oftenUsed;
-        }
-
-        public void setOftenUsed(boolean oftenUsed) {
-            this.oftenUsed = oftenUsed;
-        }
-
-        public String getRef() {
-            return ref;
-        }
-
-        public void setRef(String ref) {
-            this.ref = ref;
-        }
-
-        public String getSourceRecordId() {
-            return sourceRecordId;
-        }
-
-        public void setSourceRecordId(String sourceRecordId) {
-            this.sourceRecordId = sourceRecordId;
         }
     }
 }

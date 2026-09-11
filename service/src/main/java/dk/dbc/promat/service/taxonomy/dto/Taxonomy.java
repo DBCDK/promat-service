@@ -22,7 +22,7 @@ public class Taxonomy  implements Serializable {
 
     // The category tree's structure is hardcoded here, by hand - it has always been fixed
     // (confirmed against the taxonomy Kafka topic: every subject's path resolves into one of
-    // these branches, none introduce a new one), so both DM2Builder and DbTaxonomyBuilder only
+    // these branches, none introduce a new one), so both DM2Builder and TaxonomyPopulator only
     // ever add SUBJECTS into this fixed skeleton via put(...) below, never replace it.
     public Taxonomy() {
 
@@ -129,7 +129,7 @@ public class Taxonomy  implements Serializable {
     private List<LinkedHashMap<String, Object>> getList(List<String> path) {
         Map<String, Object> current = root;
         // IllegalArgumentException here means "path doesn't exist in the tree" - callers rely
-        // on this: DbTaxonomyBuilder catches it to skip an unresolvable subject, and
+        // on this: TaxonomyPopulator catches it to skip an unresolvable subject, and
         // TaxonomyService turns it into an HTTP 404.
         for (int i = 0; i < path.size() - 1; i++) {
             String key = path.get(i);

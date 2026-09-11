@@ -3,7 +3,6 @@ package dk.dbc.promat.service.batch;
 import dk.dbc.promat.service.taxonomy.TaxonomyCache;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.Resource;
-import jakarta.ejb.DependsOn;
 import jakarta.ejb.Singleton;
 import jakarta.ejb.Startup;
 import jakarta.ejb.Timeout;
@@ -14,13 +13,12 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-// GOTCHA: @DependsOn("DatabaseMigrator") is required here since the taxonomy/Kafka work -
-// init() below calls updateTaxonomy() immediately, which (when TaxonomyBuilderProducer hands
-// out DbTaxonomyBuilder) queries taxonomy_snapshot, so this can race DatabaseMigrator on a
-// fresh database the same way ScheduledTaxonomyKafkaSync can.
+import java.util.Optional;
+
+// Refreshes TaxonomyCache from the DM2Builder/HTTP path. Skips itself entirely when Kafka is
+// configured, since ScheduledTaxonomyKafkaSync owns TaxonomyCache directly in that case.
 @Startup
 @Singleton
-@DependsOn("DatabaseMigrator")
 public class ScheduledTaxonomyUpdater {
     private static final Logger LOGGER = LoggerFactory.getLogger(ScheduledTaxonomyUpdater.class);
 
@@ -31,6 +29,16 @@ public class ScheduledTaxonomyUpdater {
     TimerService timerService;
 
     private final String hostname;
+
+    // Field injection: constructor-injected Optional<T> @ConfigProperty on an EJB can be null
+    // instead of Optional.empty() for an unset property.
+    @Inject
+    @ConfigProperty(name = "TAXONOMY_KAFKA_BOOTSTRAP_SERVERS")
+    Optional<String> taxonomyKafkaBootstrapServers;
+
+    @Inject
+    @ConfigProperty(name = "TAXONOMY_KAFKA_TOPIC")
+    Optional<String> taxonomyKafkaTopic;
 
     @Inject
     public ScheduledTaxonomyUpdater(
@@ -46,11 +54,20 @@ public class ScheduledTaxonomyUpdater {
      */
     @PostConstruct
     void init() {
+        boolean kafkaConfigured = isConfigured(taxonomyKafkaBootstrapServers) && isConfigured(taxonomyKafkaTopic);
+        if (kafkaConfigured) {
+            LOGGER.info("Taxonomy Kafka sync is configured - ScheduledTaxonomyUpdater is not needed and will not run");
+            return;
+        }
         int offsetMinutes = resolveOffsetMinutes();
         long initialDelay = computeInitialDelay(offsetMinutes);
         LOGGER.info("Taxonomy updater scheduled with offset {} min, first run in {} ms", offsetMinutes, initialDelay);
         timerService.createIntervalTimer(initialDelay, INTERVAL_MS, new TimerConfig(null, false));
         updateTaxonomy();
+    }
+
+    private static boolean isConfigured(Optional<String> value) {
+        return value.filter(v -> !v.isBlank()).isPresent();
     }
 
     private int resolveOffsetMinutes() {
