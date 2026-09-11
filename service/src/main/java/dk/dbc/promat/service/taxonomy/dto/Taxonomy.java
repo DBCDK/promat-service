@@ -155,6 +155,10 @@ public class Taxonomy  implements Serializable {
         return taxonomy;
     }
 
+    // Recursively copies the tree, replacing every leaf subject list with an empty list -
+    // i.e. keeps the category skeleton but throws away the (potentially thousands of)
+    // subjects under each category. Backs getStructure()/GET taxonomy/structure, for callers
+    // that just need the tree's shape (e.g. navigation) without paying to ship every subject.
     @SuppressWarnings("unchecked")
     private Map<String, Object> stripSubjects(Map<String, Object> source) {
         Map<String, Object> structure = new LinkedHashMap<>();
