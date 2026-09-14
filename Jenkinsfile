@@ -1,6 +1,8 @@
 #!groovy
 
 @Library('dependency-track')
+// Import `gitopsSecretsFeatureBranch()`
+@Library('team-x-tools@1.0.0')
 
 def workerNode = "devel12"
 def teamSlackNotice = 'de-notifications'
@@ -11,6 +13,13 @@ pipeline {
 
 	tools {
 		maven 'Maven 3'
+	}
+
+	environment {
+		// mvn verify already builds and tags this image locally for every branch
+		// (service/pom.xml's build-docker-image execution runs scripts/build docker in the
+		// pre-integration-test phase) - this just needs to match that tag exactly.
+		IMAGE = "docker-metascrum.artifacts.dbccloud.dk/promat-service:${env.BRANCH_NAME}-${env.BUILD_NUMBER}"
 	}
 
   triggers {
@@ -88,15 +97,44 @@ pipeline {
             }
         }
 		stage("docker push") {
-			when {
-                branch "master"
-            }
 			steps {
 				script {
-					docker.image("docker-metascrum.artifacts.dbccloud.dk/promat-service:${env.BRANCH_NAME}-${env.BUILD_NUMBER}").push()
+					docker.image(IMAGE).push()
 				}
 			}
 		}
+        stage("Deploy feature branch") {
+            when {
+                not { branch "master" }
+            }
+            steps {
+                script {
+                    // Ephemeral, seeded Postgres for this branch's preview - deployed first so its
+                    // rendered Service name is known before the app is deployed. No PVC on purpose:
+                    // the feature-branch cleanup job only sweeps Deployments/StatefulSets/Services,
+                    // so a PVC would never get cleaned up.
+                    def dbPreviewUrl = gitopsSecretsFeatureBranch(
+                        sourceNamespace: 'promat-features',
+                        manifest: 'promat-service/promat-service-db.yml',
+                        image: 'docker-dbc.artifacts.dbccloud.dk/dbc-postgres-17:latest',
+                        kubeconfigCredentialsId: 'kubecert-team-x',
+                    )
+                    def dbHost = dbPreviewUrl.replace('http://', '')
+
+                    env.PREVIEW_URL = gitopsSecretsFeatureBranch(
+                        sourceNamespace: 'promat-features',
+                        manifest: 'promat-service/promat-service.yml',
+                        image: IMAGE,
+                        kubeconfigCredentialsId: 'kubecert-team-x',
+                        envOverrides: [
+                            PROMAT_DB_URL: "promat:promat@${dbHost}:5432/promat_db",
+                            PROMAT_SEED_DATABASE: 'true',
+                        ],
+                    )
+                    echo "Deployed preview: ${env.PREVIEW_URL}"
+                }
+            }
+        }
         stage("Update staging version number") {
             when {
                 branch "master"

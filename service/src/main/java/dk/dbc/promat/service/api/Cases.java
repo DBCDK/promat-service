@@ -2,6 +2,7 @@ package dk.dbc.promat.service.api;
 
 import com.fasterxml.jackson.annotation.JsonView;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dk.dbc.promat.service.connectors.FbiApiConnectorException;
 import dk.dbc.promat.service.Repository;
@@ -13,15 +14,18 @@ import dk.dbc.promat.service.dto.CaseSummaryList;
 import dk.dbc.promat.service.dto.CreateStatusDto;
 import dk.dbc.promat.service.dto.CriteriaOperator;
 import dk.dbc.promat.service.dto.ListCasesParams;
+import dk.dbc.promat.service.dto.MetakompasSelectionEntry;
 import dk.dbc.promat.service.dto.ServiceErrorCode;
 import dk.dbc.promat.service.dto.ServiceErrorDto;
 import dk.dbc.promat.service.dto.Tag;
 import dk.dbc.promat.service.dto.TagList;
 import dk.dbc.promat.service.dto.TaskDto;
+import dk.dbc.promat.service.persistence.BuggiSelection;
 import dk.dbc.promat.service.persistence.CaseStatus;
 import dk.dbc.promat.service.persistence.CaseView;
 import dk.dbc.promat.service.persistence.Editor;
 import dk.dbc.promat.service.persistence.JsonMapperProvider;
+import dk.dbc.promat.service.persistence.MetakompasSelection;
 import dk.dbc.promat.service.persistence.Notification;
 import dk.dbc.promat.service.persistence.PromatCase;
 import dk.dbc.promat.service.persistence.PromatEntityManager;
@@ -30,9 +34,11 @@ import dk.dbc.promat.service.persistence.PromatTask;
 import dk.dbc.promat.service.persistence.PromatUser;
 import dk.dbc.promat.service.persistence.Reviewer;
 import dk.dbc.promat.service.persistence.Subject;
+import dk.dbc.promat.service.persistence.TaskFaustId;
 import dk.dbc.promat.service.persistence.TaskFieldType;
 import dk.dbc.promat.service.persistence.TaskType;
 import dk.dbc.promat.service.service.CaseSearch;
+import dk.dbc.promat.service.taxonomy.TaxonomyCache;
 import dk.dbc.promat.service.templating.model.CaseViewJsonExtract;
 import dk.dbc.promat.service.templating.CaseviewXmlTransformer;
 import dk.dbc.promat.service.templating.NotificationFactory;
@@ -86,6 +92,7 @@ import static jakarta.ws.rs.core.Response.Status.NO_CONTENT;
 public class Cases {
     private static final Logger LOGGER = LoggerFactory.getLogger(Cases.class);
     private static final Pattern PID_PATTERN = Pattern.compile(".*:(?<faust>\\d+)");
+    private static final ObjectMapper OBJECT_MAPPER = new JsonMapperProvider().getObjectMapper();
 
     @Inject
     @PromatEntityManager
@@ -112,6 +119,9 @@ public class Cases {
     
     @EJB
     CaseSearch caseSearch;
+
+    @Inject
+    TaxonomyCache taxonomyCache;
 
     // Set of allowed states when changing reviewer
     private static final Set<CaseStatus> REVIEWER_CHANGE_ALLOWED_STATES = EnumSet.of(
@@ -297,6 +307,8 @@ public class Cases {
                     areThereNewMessages(id, PromatMessage.Direction.REVIEWER_TO_EDITOR));
             requested.setNewMessagesToReviewer(
                     areThereNewMessages(id, PromatMessage.Direction.EDITOR_TO_REVIEWER));
+
+            attachSelections(requested);
 
             return Response.status(200).entity(asCase(requested)).build();
         } catch(Exception exception) {
@@ -548,10 +560,9 @@ public class Cases {
             LOGGER.warn("Pid {} was not found for request Buggi task approval", pid);
             return Response.status(NO_CONTENT).type(MediaType.APPLICATION_JSON_TYPE).entity(mapper.writeValueAsString(new ServiceErrorDto().withCode(ServiceErrorCode.FAILED))).build();
         }
-        // Todo: We lack a proper way to "store" the presence of BUGGI data, if the BUGGI task has more than one faust.
         return promatCase.getTasks().stream()
                 .filter(t -> t.getTaskFieldType() == TaskFieldType.BUGGI && t.getTargetFausts().contains(faust))
-                .map(t -> setApproveBuggiTask(t, tagList))
+                .map(t -> setApproveBuggiTask(t, faust, tagList))
                 .reduce((t1, t2) -> t1)
                 .map(t -> Response.ok().entity(asSummary(promatCase)).build())
                 .orElse(Response.status(Response.Status.BAD_REQUEST)
@@ -860,6 +871,235 @@ public class Cases {
         }
     }
 
+    @PUT
+    @Path("cases/{caseId}/tasks/{taskId}/metakompas/{faust}")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response putMetakompasSelection(@PathParam("caseId") final Integer caseId,
+                                            @PathParam("taskId") final Integer taskId,
+                                            @PathParam("faust") final String faust,
+                                            List<MetakompasSelectionEntry> entries) {
+        LOGGER.info("cases/{}/tasks/{}/metakompas/{} (PUT)", caseId, taskId, faust);
+        try {
+            resolveTaskForSelection(caseId, taskId, TaskFieldType.METAKOMPAS, faust);
+            List<MetakompasSelectionEntry> saved = writeMetakompasSelection(taskId, faust,
+                    entries == null ? List.of() : entries);
+            return Response.ok(saved).build();
+        } catch(ServiceErrorException serviceErrorException) {
+            return Response.status(serviceErrorException.getHttpStatus()).entity(serviceErrorException.getServiceErrorDto()).build();
+        } catch(Exception exception) {
+            LOGGER.error("Caught exception:", exception);
+            return ServiceErrorDto.Failed(exception.getMessage());
+        }
+    }
+
+    @GET
+    @Path("cases/{caseId}/tasks/{taskId}/metakompas/{faust}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response getMetakompasSelection(@PathParam("caseId") final Integer caseId,
+                                            @PathParam("taskId") final Integer taskId,
+                                            @PathParam("faust") final String faust) {
+        LOGGER.info("cases/{}/tasks/{}/metakompas/{} (GET)", caseId, taskId, faust);
+        try {
+            resolveTaskForSelection(caseId, taskId, TaskFieldType.METAKOMPAS, faust);
+            return Response.ok(readMetakompasSelection(taskId, faust)).build();
+        } catch(ServiceErrorException serviceErrorException) {
+            return Response.status(serviceErrorException.getHttpStatus()).entity(serviceErrorException.getServiceErrorDto()).build();
+        } catch(Exception exception) {
+            LOGGER.error("Caught exception:", exception);
+            return ServiceErrorDto.Failed(exception.getMessage());
+        }
+    }
+
+    @PUT
+    @Path("cases/{caseId}/tasks/{taskId}/buggi/{faust}")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response putBuggiSelection(@PathParam("caseId") final Integer caseId,
+                                       @PathParam("taskId") final Integer taskId,
+                                       @PathParam("faust") final String faust,
+                                       TagList tagList) {
+        LOGGER.info("cases/{}/tasks/{}/buggi/{} (PUT)", caseId, taskId, faust);
+        try {
+            PromatTask task = resolveTaskForSelection(caseId, taskId, TaskFieldType.BUGGI, faust);
+            if(task.getApproved() == null) {
+                LOGGER.info("Updated approve date on task {}", task.getId());
+                task.setApproved(LocalDate.now());
+            }
+            TagList saved = writeBuggiSelection(taskId, faust, tagList == null ? new TagList(new Tag[0]) : tagList);
+            return Response.ok(saved).build();
+        } catch(ServiceErrorException serviceErrorException) {
+            return Response.status(serviceErrorException.getHttpStatus()).entity(serviceErrorException.getServiceErrorDto()).build();
+        } catch(Exception exception) {
+            LOGGER.error("Caught exception:", exception);
+            return ServiceErrorDto.Failed(exception.getMessage());
+        }
+    }
+
+    @GET
+    @Path("cases/{caseId}/tasks/{taskId}/buggi/{faust}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response getBuggiSelection(@PathParam("caseId") final Integer caseId,
+                                       @PathParam("taskId") final Integer taskId,
+                                       @PathParam("faust") final String faust) {
+        LOGGER.info("cases/{}/tasks/{}/buggi/{} (GET)", caseId, taskId, faust);
+        try {
+            resolveTaskForSelection(caseId, taskId, TaskFieldType.BUGGI, faust);
+            return Response.ok(readBuggiSelection(taskId, faust)).build();
+        } catch(ServiceErrorException serviceErrorException) {
+            return Response.status(serviceErrorException.getHttpStatus()).entity(serviceErrorException.getServiceErrorDto()).build();
+        } catch(Exception exception) {
+            LOGGER.error("Caught exception:", exception);
+            return ServiceErrorDto.Failed(exception.getMessage());
+        }
+    }
+
+    // Resolves and validates the task a selection write/read targets: it must belong to the
+    // given case, be of the expected field type, and target the given faust - this is the
+    // (task_id, faust) granularity the metakompas_selection/buggi_selection tables are keyed
+    // by, replacing the old cases/{pid}/buggi endpoint's pid-resolution approach which could
+    // only ever address "the first task matching this faust".
+    private PromatTask resolveTaskForSelection(Integer caseId, Integer taskId, TaskFieldType expectedType, String faust) throws ServiceErrorException {
+        PromatCase promatCase = entityManager.find(PromatCase.class, caseId);
+        if(promatCase == null) {
+            throw new ServiceErrorException(String.format("No case with id %d exists", caseId))
+                    .withHttpStatus(404)
+                    .withCode(ServiceErrorCode.NOT_FOUND)
+                    .withCause("No such case");
+        }
+        PromatTask task = promatCase.getTasks().stream()
+                .filter(t -> t.getId() == taskId)
+                .findFirst()
+                .orElse(null);
+        if(task == null) {
+            throw new ServiceErrorException(String.format("No task with id %d exists on case %d", taskId, caseId))
+                    .withHttpStatus(404)
+                    .withCode(ServiceErrorCode.NOT_FOUND)
+                    .withCause("No such task");
+        }
+        if(task.getTaskFieldType() != expectedType) {
+            throw new ServiceErrorException(String.format("Task %d is not a %s task", taskId, expectedType))
+                    .withHttpStatus(400)
+                    .withCode(ServiceErrorCode.INVALID_REQUEST)
+                    .withCause("Wrong task type");
+        }
+        if(task.getTargetFausts() == null || !task.getTargetFausts().contains(faust)) {
+            throw new ServiceErrorException(String.format("Faust %s is not a target faust of task %d", faust, taskId))
+                    .withHttpStatus(400)
+                    .withCode(ServiceErrorCode.INVALID_REQUEST)
+                    .withCause("Faust not targeted by task");
+        }
+        return task;
+    }
+
+    // Minimal validation only, per design: each entry's path must resolve against the
+    // *current* taxonomy tree at write time. Deliberately not re-validated on read - a subject
+    // can legitimately disappear from the Kafka-fed tree later, and a case's historical
+    // selection referencing it should still display as-is.
+    private void validateMetakompasPaths(List<MetakompasSelectionEntry> entries) throws ServiceErrorException {
+        for(MetakompasSelectionEntry entry : entries) {
+            List<dk.dbc.promat.service.taxonomy.dto.Subject> subjects;
+            try {
+                subjects = taxonomyCache.get().getList(entry.getPath().toArray(new String[0]));
+            } catch(IllegalArgumentException e) {
+                throw new ServiceErrorException(String.format("Metakompas selection path %s does not exist in the taxonomy", entry.getPath()))
+                        .withHttpStatus(400)
+                        .withCode(ServiceErrorCode.INVALID_REQUEST)
+                        .withCause("Invalid metakompas path")
+                        .withDetails(e.getMessage());
+            }
+            boolean resolves = entry.getId() != null &&
+                    subjects.stream().anyMatch(s -> s.getId() == entry.getId());
+            if(!resolves) {
+                throw new ServiceErrorException(String.format("Metakompas subject id %s does not exist at path %s", entry.getId(), entry.getPath()))
+                        .withHttpStatus(400)
+                        .withCode(ServiceErrorCode.INVALID_REQUEST)
+                        .withCause("Invalid metakompas subject");
+            }
+        }
+    }
+
+    private List<MetakompasSelectionEntry> writeMetakompasSelection(Integer taskId, String faust, List<MetakompasSelectionEntry> entries) throws ServiceErrorException {
+        validateMetakompasPaths(entries);
+        repository.getExclusiveAccessToTable(MetakompasSelection.TABLE_NAME);
+        String data;
+        try {
+            data = OBJECT_MAPPER.writeValueAsString(entries);
+        } catch(JsonProcessingException e) {
+            throw new ServiceErrorException("Failed to serialize metakompas selection")
+                    .withHttpStatus(500)
+                    .withCode(ServiceErrorCode.FAILED)
+                    .withDetails(e.getMessage());
+        }
+        MetakompasSelection existing = entityManager.find(MetakompasSelection.class, new TaskFaustId(taskId, faust));
+        if(existing == null) {
+            entityManager.persist(new MetakompasSelection()
+                    .withTaskId(taskId)
+                    .withFaust(faust)
+                    .withData(data)
+                    .withUpdatedAt(LocalDateTime.now()));
+        } else {
+            existing.setData(data);
+            existing.setUpdatedAt(LocalDateTime.now());
+        }
+        return entries;
+    }
+
+    private List<MetakompasSelectionEntry> readMetakompasSelection(Integer taskId, String faust) throws ServiceErrorException {
+        MetakompasSelection existing = entityManager.find(MetakompasSelection.class, new TaskFaustId(taskId, faust));
+        if(existing == null) {
+            return List.of();
+        }
+        try {
+            return OBJECT_MAPPER.readValue(existing.getData(), new TypeReference<List<MetakompasSelectionEntry>>() {});
+        } catch(JsonProcessingException e) {
+            throw new ServiceErrorException("Failed to deserialize metakompas selection")
+                    .withHttpStatus(500)
+                    .withCode(ServiceErrorCode.FAILED)
+                    .withDetails(e.getMessage());
+        }
+    }
+
+    private TagList writeBuggiSelection(Integer taskId, String faust, TagList tags) throws ServiceErrorException {
+        repository.getExclusiveAccessToTable(BuggiSelection.TABLE_NAME);
+        String data;
+        try {
+            data = OBJECT_MAPPER.writeValueAsString(tags);
+        } catch(JsonProcessingException e) {
+            throw new ServiceErrorException("Failed to serialize buggi selection")
+                    .withHttpStatus(500)
+                    .withCode(ServiceErrorCode.FAILED)
+                    .withDetails(e.getMessage());
+        }
+        BuggiSelection existing = entityManager.find(BuggiSelection.class, new TaskFaustId(taskId, faust));
+        if(existing == null) {
+            entityManager.persist(new BuggiSelection()
+                    .withTaskId(taskId)
+                    .withFaust(faust)
+                    .withData(data)
+                    .withUpdatedAt(LocalDateTime.now()));
+        } else {
+            existing.setData(data);
+            existing.setUpdatedAt(LocalDateTime.now());
+        }
+        return tags;
+    }
+
+    private TagList readBuggiSelection(Integer taskId, String faust) throws ServiceErrorException {
+        BuggiSelection existing = entityManager.find(BuggiSelection.class, new TaskFaustId(taskId, faust));
+        if(existing == null) {
+            return new TagList(new Tag[0]);
+        }
+        try {
+            return OBJECT_MAPPER.readValue(existing.getData(), TagList.class);
+        } catch(JsonProcessingException e) {
+            throw new ServiceErrorException("Failed to deserialize buggi selection")
+                    .withHttpStatus(500)
+                    .withCode(ServiceErrorCode.FAILED)
+                    .withDetails(e.getMessage());
+        }
+    }
+
     @DELETE
     @Path("cases/{ids}")
     public Response deleteCase(@PathParam("ids") final String ids) {
@@ -906,6 +1146,7 @@ public class Cases {
             return ServiceErrorDto.NotFound("No such case", String.format("No case with id %d exists", id));
         }
         caseInformationUpdater.updateCaseInformation(promatCase);
+        attachSelections(promatCase);
         return Response.ok(asCase(promatCase)).build();
     }
 
@@ -1069,13 +1310,18 @@ public class Cases {
         }
     }
 
-    private PromatTask setApproveBuggiTask(PromatTask t, TagList tags) {
+    private PromatTask setApproveBuggiTask(PromatTask t, String faust, TagList tags) {
         if(t.getApproved() == null) {
             LOGGER.info("Updated approve date on task {}", t.getId());
             t.setApproved(LocalDate.now());
         }
-        String tagString = tags.getTags().stream().map(Tag::toString).collect(Collectors.joining("\n"));
-        t.setData(tagString);
+        try {
+            writeBuggiSelection(t.getId(), faust, tags);
+        } catch (ServiceErrorException e) {
+            // Only thrown on JSON (de)serialization failure of a plain TagList - not expected
+            // in practice, mirrors how findBuggiCase() handles its own ServiceErrorException.
+            throw new RuntimeException(e);
+        }
         return t;
     }
 
@@ -1308,6 +1554,59 @@ public class Cases {
         for (PromatTask task : existing.getTasks()) {
             if (task.getTaskFieldType().equals(TaskFieldType.BKM)) {
                 task.setApproved(LocalDate.now());
+            }
+        }
+    }
+
+    // Inlines each task's metakompas/buggi selections (keyed by faust) onto the task itself,
+    // so a full case view (asCase) includes them without a separate round trip. Scoped to
+    // CaseView.Case via @JsonView on PromatTask - callers using asSummary() won't see these
+    // fields regardless of whether this is called, but there's no point populating them there.
+    private void attachSelections(PromatCase promatCase) {
+        if(promatCase.getTasks() == null || promatCase.getTasks().isEmpty()) {
+            return;
+        }
+        List<Integer> taskIds = promatCase.getTasks().stream().map(PromatTask::getId).collect(Collectors.toList());
+
+        Map<Integer, List<MetakompasSelection>> metakompasByTask = entityManager
+                .createQuery("SELECT s FROM MetakompasSelection s WHERE s.taskId IN :taskIds", MetakompasSelection.class)
+                .setParameter("taskIds", taskIds)
+                .getResultList()
+                .stream()
+                .collect(Collectors.groupingBy(MetakompasSelection::getTaskId));
+
+        Map<Integer, List<BuggiSelection>> buggiByTask = entityManager
+                .createQuery("SELECT s FROM BuggiSelection s WHERE s.taskId IN :taskIds", BuggiSelection.class)
+                .setParameter("taskIds", taskIds)
+                .getResultList()
+                .stream()
+                .collect(Collectors.groupingBy(BuggiSelection::getTaskId));
+
+        for(PromatTask task : promatCase.getTasks()) {
+            List<MetakompasSelection> metakompasRows = metakompasByTask.get(task.getId());
+            if(metakompasRows != null) {
+                Map<String, List<MetakompasSelectionEntry>> byFaust = new HashMap<>();
+                for(MetakompasSelection row : metakompasRows) {
+                    try {
+                        byFaust.put(row.getFaust(), OBJECT_MAPPER.readValue(row.getData(), new TypeReference<List<MetakompasSelectionEntry>>() {}));
+                    } catch(JsonProcessingException e) {
+                        LOGGER.error("Failed to deserialize metakompas selection for task {} faust {}", row.getTaskId(), row.getFaust(), e);
+                    }
+                }
+                task.setMetakompasSelections(byFaust);
+            }
+
+            List<BuggiSelection> buggiRows = buggiByTask.get(task.getId());
+            if(buggiRows != null) {
+                Map<String, TagList> byFaust = new HashMap<>();
+                for(BuggiSelection row : buggiRows) {
+                    try {
+                        byFaust.put(row.getFaust(), OBJECT_MAPPER.readValue(row.getData(), TagList.class));
+                    } catch(JsonProcessingException e) {
+                        LOGGER.error("Failed to deserialize buggi selection for task {} faust {}", row.getTaskId(), row.getFaust(), e);
+                    }
+                }
+                task.setBuggiSelections(byFaust);
             }
         }
     }

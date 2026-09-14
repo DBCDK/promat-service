@@ -34,6 +34,8 @@ tags:
     description: Incomplete cases in need of further refinement
   - name: taxonomy
     description: Metakompas subject ("emneord") taxonomy tree
+  - name: metakompas
+    description: A reviewer's Metakompas subject selections for a task
   - name: buggi
     description: Buggi tag vocabulary
 
@@ -766,6 +768,196 @@ paths:
                 $ref: '#/components/schemas/Task'
         '409':
           description: Task could not be added, check ServiceError in body for specifics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+
+  /cases/{caseId}/tasks/{taskId}/metakompas/{faust}:
+    put:
+      tags:
+        - metakompas
+      summary: Save a reviewer's Metakompas subject selection for one task/faust
+      operationId: putMetakompasSelection
+      parameters:
+        - in: path
+          name: caseId
+          required: true
+          schema:
+            type: integer
+            description: Case id
+        - in: path
+          name: taskId
+          required: true
+          schema:
+            type: integer
+            description: Id of the METAKOMPAS task on the case
+        - in: path
+          name: faust
+          required: true
+          schema:
+            type: string
+            description: One of the task's target fausts
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MetakompasSelectionEntryList'
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MetakompasSelectionEntryList'
+        '400':
+          description: >-
+            Task is not a METAKOMPAS task, faust is not a target faust of the task, or a
+            selection entry's path/id does not resolve in the current taxonomy tree
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '404':
+          description: No such case or task
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+    get:
+      tags:
+        - metakompas
+      summary: Get a reviewer's Metakompas subject selection for one task/faust
+      operationId: getMetakompasSelection
+      parameters:
+        - in: path
+          name: caseId
+          required: true
+          schema:
+            type: integer
+            description: Case id
+        - in: path
+          name: taskId
+          required: true
+          schema:
+            type: integer
+            description: Id of the METAKOMPAS task on the case
+        - in: path
+          name: faust
+          required: true
+          schema:
+            type: string
+            description: One of the task's target fausts
+      responses:
+        '200':
+          description: successful operation - an empty array if no selection has been saved yet
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MetakompasSelectionEntryList'
+        '400':
+          description: Task is not a METAKOMPAS task, or faust is not a target faust of the task
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '404':
+          description: No such case or task
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+
+  /cases/{caseId}/tasks/{taskId}/buggi/{faust}:
+    put:
+      tags:
+        - buggi
+      summary: Save a reviewer's Buggi tag selection for one task/faust
+      operationId: putBuggiSelection
+      parameters:
+        - in: path
+          name: caseId
+          required: true
+          schema:
+            type: integer
+            description: Case id
+        - in: path
+          name: taskId
+          required: true
+          schema:
+            type: integer
+            description: Id of the BUGGI task on the case
+        - in: path
+          name: faust
+          required: true
+          schema:
+            type: string
+            description: One of the task's target fausts
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TagList'
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TagList'
+        '400':
+          description: Task is not a BUGGI task, or faust is not a target faust of the task
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '404':
+          description: No such case or task
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+    get:
+      tags:
+        - buggi
+      summary: Get a reviewer's Buggi tag selection for one task/faust
+      operationId: getBuggiSelection
+      parameters:
+        - in: path
+          name: caseId
+          required: true
+          schema:
+            type: integer
+            description: Case id
+        - in: path
+          name: taskId
+          required: true
+          schema:
+            type: integer
+            description: Id of the BUGGI task on the case
+        - in: path
+          name: faust
+          required: true
+          schema:
+            type: string
+            description: One of the task's target fausts
+      responses:
+        '200':
+          description: successful operation - an empty tag list if no selection has been saved yet
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TagList'
+        '400':
+          description: Task is not a BUGGI task, or faust is not a target faust of the task
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '404':
+          description: No such case or task
           content:
             application/json:
               schema:
@@ -2008,6 +2200,22 @@ components:
           type: string
           description: The task data
           nullable: true
+        metakompasSelections:
+          type: object
+          nullable: true
+          description: >-
+            Metakompas subject selections for this task, keyed by target faust. Only present
+            on the full case view (GET /cases/{id}), not on case list/search results.
+          additionalProperties:
+            $ref: '#/components/schemas/MetakompasSelectionEntryList'
+        buggiSelections:
+          type: object
+          nullable: true
+          description: >-
+            Buggi tag selections for this task, keyed by target faust. Only present on the
+            full case view (GET /cases/{id}), not on case list/search results.
+          additionalProperties:
+            $ref: '#/components/schemas/TagList'
       required:
         - typeOfTask
         - paycode
@@ -2268,3 +2476,58 @@ components:
         - subfieldCode
         - requiresNonzeroValue
         - options
+
+    Tag:
+      type: object
+      properties:
+        name:
+          type: string
+        value:
+          type: integer
+      required:
+        - name
+        - value
+
+    TagList:
+      type: object
+      properties:
+        tags:
+          type: array
+          items:
+            $ref: '#/components/schemas/Tag'
+      required:
+        - tags
+
+    MetakompasSelectionEntry:
+      type: object
+      description: >-
+        One Metakompas subject picked by a reviewer, with its tree path attached. The path is
+        stored alongside the subject rather than resolved against the live taxonomy tree on
+        read, so a selection stays displayable even if the tree is later restructured.
+      properties:
+        path:
+          type: array
+          items:
+            type: string
+          description: Category path in the Metakompas taxonomy tree, e.g. ["handling", "handler om"]
+        id:
+          type: integer
+        title:
+          type: string
+        note:
+          type: array
+          items:
+            type: string
+        oftenUsed:
+          type: boolean
+        ref:
+          type: string
+      required:
+        - path
+        - id
+        - title
+
+    MetakompasSelectionEntryList:
+      type: array
+      items:
+        $ref: '#/components/schemas/MetakompasSelectionEntry'

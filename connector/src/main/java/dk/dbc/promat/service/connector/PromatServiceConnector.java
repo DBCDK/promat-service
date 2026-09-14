@@ -4,9 +4,11 @@ import dk.dbc.commons.useragent.UserAgent;
 import dk.dbc.httpclient.FailSafeHttpClient;
 import dk.dbc.httpclient.HttpGet;
 import dk.dbc.httpclient.HttpPost;
+import dk.dbc.httpclient.HttpPut;
 import dk.dbc.promat.service.dto.CaseRequest;
 import dk.dbc.promat.service.dto.CaseSummaryList;
 import dk.dbc.promat.service.dto.ListCasesParams;
+import dk.dbc.promat.service.dto.MetakompasSelectionEntry;
 import dk.dbc.promat.service.dto.ServiceErrorDto;
 import dk.dbc.promat.service.dto.TagList;
 import dk.dbc.promat.service.persistence.PromatCase;
@@ -14,11 +16,13 @@ import net.jodah.failsafe.RetryPolicy;
 
 import jakarta.ws.rs.ProcessingException;
 import jakarta.ws.rs.client.Client;
+import jakarta.ws.rs.core.GenericType;
 import jakarta.ws.rs.core.Response;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -192,6 +196,80 @@ public class PromatServiceConnector {
         return readResponseEntity(response, PromatCase.class);
     }
 
+    /**
+     * Saves a reviewer's Metakompas subject selection for one task/faust
+     * @param caseId case id
+     * @param taskId id of the METAKOMPAS task on the case
+     * @param faust one of the task's target fausts
+     * @param entries the selected subjects, with tree path attached
+     * @return the persisted selection
+     * @throws PromatServiceConnectorException on unexpected failure for the operation
+     */
+    public List<MetakompasSelectionEntry> putMetakompasSelection(int caseId, int taskId, String faust, List<MetakompasSelectionEntry> entries)
+            throws PromatServiceConnectorException {
+        final HttpPut httpPut = new HttpPut(failSafeHttpClient)
+                .withBaseUrl(baseUrl)
+                .withPathElements("cases", String.valueOf(caseId), "tasks", String.valueOf(taskId), "metakompas", faust)
+                .withJsonData(entries);
+        final Response response = httpPut.execute();
+        assertResponseStatus(response, Response.Status.OK);
+        return readResponseEntity(response, new GenericType<List<MetakompasSelectionEntry>>() {});
+    }
+
+    /**
+     * Gets a reviewer's Metakompas subject selection for one task/faust
+     * @param caseId case id
+     * @param taskId id of the METAKOMPAS task on the case
+     * @param faust one of the task's target fausts
+     * @return the persisted selection (empty if none saved yet)
+     * @throws PromatServiceConnectorException on unexpected failure for the operation
+     */
+    public List<MetakompasSelectionEntry> getMetakompasSelection(int caseId, int taskId, String faust)
+            throws PromatServiceConnectorException {
+        final HttpGet httpGet = new HttpGet(failSafeHttpClient)
+                .withBaseUrl(baseUrl)
+                .withPathElements("cases", String.valueOf(caseId), "tasks", String.valueOf(taskId), "metakompas", faust);
+        final Response response = httpGet.execute();
+        assertResponseStatus(response, Response.Status.OK);
+        return readResponseEntity(response, new GenericType<List<MetakompasSelectionEntry>>() {});
+    }
+
+    /**
+     * Saves a reviewer's Buggi tag selection for one task/faust
+     * @param caseId case id
+     * @param taskId id of the BUGGI task on the case
+     * @param faust one of the task's target fausts
+     * @param tags the selected tags
+     * @return the persisted selection
+     * @throws PromatServiceConnectorException on unexpected failure for the operation
+     */
+    public TagList putBuggiSelection(int caseId, int taskId, String faust, TagList tags) throws PromatServiceConnectorException {
+        final HttpPut httpPut = new HttpPut(failSafeHttpClient)
+                .withBaseUrl(baseUrl)
+                .withPathElements("cases", String.valueOf(caseId), "tasks", String.valueOf(taskId), "buggi", faust)
+                .withJsonData(tags);
+        final Response response = httpPut.execute();
+        assertResponseStatus(response, Response.Status.OK);
+        return readResponseEntity(response, TagList.class);
+    }
+
+    /**
+     * Gets a reviewer's Buggi tag selection for one task/faust
+     * @param caseId case id
+     * @param taskId id of the BUGGI task on the case
+     * @param faust one of the task's target fausts
+     * @return the persisted selection (empty if none saved yet)
+     * @throws PromatServiceConnectorException on unexpected failure for the operation
+     */
+    public TagList getBuggiSelection(int caseId, int taskId, String faust) throws PromatServiceConnectorException {
+        final HttpGet httpGet = new HttpGet(failSafeHttpClient)
+                .withBaseUrl(baseUrl)
+                .withPathElements("cases", String.valueOf(caseId), "tasks", String.valueOf(taskId), "buggi", faust);
+        final Response response = httpGet.execute();
+        assertResponseStatus(response, Response.Status.OK);
+        return readResponseEntity(response, TagList.class);
+    }
+
     private void assertResponseStatus(Response response, Response.Status... expectedStatus)
             throws PromatServiceConnectorException {
         final Response.Status actualStatus =
@@ -213,6 +291,16 @@ public class PromatServiceConnector {
         if (entity == null) {
             throw new PromatServiceConnectorException(
                     String.format("Promat service returned with null-valued %s entity", type.getName()));
+        }
+        return entity;
+    }
+
+    private <T> T readResponseEntity(Response response, GenericType<T> type)
+            throws PromatServiceConnectorException {
+        final T entity = response.readEntity(type);
+        if (entity == null) {
+            throw new PromatServiceConnectorException(
+                    String.format("Promat service returned with null-valued %s entity", type.getType().getTypeName()));
         }
         return entity;
     }
