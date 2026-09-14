@@ -1,8 +1,7 @@
 #!groovy
 
 @Library('dependency-track')
-// Import `gitopsSecretsFeatureBranch()`
-@Library('team-x-tools@1.0.0')
+@Library('team-x-tools@1.2.0')
 
 def workerNode = "devel12"
 def teamSlackNotice = 'de-notifications'
