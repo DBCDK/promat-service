@@ -1,8 +1,6 @@
 -- Structured storage of what a reviewer actually selected from the Metakompas taxonomy tree
--- and the Buggi tag vocabulary, tied to a specific task + target faust. Replaces the previous
--- approach of stashing Buggi tags as one opaque string on promattask.data (which couldn't
--- represent independent selections for a task with more than one target faust) and adds
--- persistence for Metakompas selections, which previously had none at all.
+-- and the Buggi tag vocabulary, tied to a specific task + target faust. Keyed by (task_id,
+-- faust), since a task can target multiple fausts and each needs its own independent selection.
 CREATE TABLE metakompas_selection
 (
     task_id    integer NOT NULL REFERENCES promattask (id) ON DELETE CASCADE,

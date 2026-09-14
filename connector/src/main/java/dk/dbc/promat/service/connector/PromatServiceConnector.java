@@ -198,18 +198,17 @@ public class PromatServiceConnector {
 
     /**
      * Saves a reviewer's Metakompas subject selection for one task/faust
-     * @param caseId case id
-     * @param taskId id of the METAKOMPAS task on the case
+     * @param taskId id of the METAKOMPAS task (globally unique, not scoped to a case)
      * @param faust one of the task's target fausts
      * @param entries the selected subjects, with tree path attached
      * @return the persisted selection
      * @throws PromatServiceConnectorException on unexpected failure for the operation
      */
-    public List<MetakompasSelectionEntry> putMetakompasSelection(int caseId, int taskId, String faust, List<MetakompasSelectionEntry> entries)
+    public List<MetakompasSelectionEntry> putMetakompasSelection(int taskId, String faust, List<MetakompasSelectionEntry> entries)
             throws PromatServiceConnectorException {
         final HttpPut httpPut = new HttpPut(failSafeHttpClient)
                 .withBaseUrl(baseUrl)
-                .withPathElements("cases", String.valueOf(caseId), "tasks", String.valueOf(taskId), "metakompas", faust)
+                .withPathElements("tasks", String.valueOf(taskId), "metakompas", faust)
                 .withJsonData(entries);
         final Response response = httpPut.execute();
         assertResponseStatus(response, Response.Status.OK);
@@ -218,17 +217,16 @@ public class PromatServiceConnector {
 
     /**
      * Gets a reviewer's Metakompas subject selection for one task/faust
-     * @param caseId case id
-     * @param taskId id of the METAKOMPAS task on the case
+     * @param taskId id of the METAKOMPAS task (globally unique, not scoped to a case)
      * @param faust one of the task's target fausts
      * @return the persisted selection (empty if none saved yet)
      * @throws PromatServiceConnectorException on unexpected failure for the operation
      */
-    public List<MetakompasSelectionEntry> getMetakompasSelection(int caseId, int taskId, String faust)
+    public List<MetakompasSelectionEntry> getMetakompasSelection(int taskId, String faust)
             throws PromatServiceConnectorException {
         final HttpGet httpGet = new HttpGet(failSafeHttpClient)
                 .withBaseUrl(baseUrl)
-                .withPathElements("cases", String.valueOf(caseId), "tasks", String.valueOf(taskId), "metakompas", faust);
+                .withPathElements("tasks", String.valueOf(taskId), "metakompas", faust);
         final Response response = httpGet.execute();
         assertResponseStatus(response, Response.Status.OK);
         return readResponseEntity(response, new GenericType<List<MetakompasSelectionEntry>>() {});
@@ -236,17 +234,16 @@ public class PromatServiceConnector {
 
     /**
      * Saves a reviewer's Buggi tag selection for one task/faust
-     * @param caseId case id
-     * @param taskId id of the BUGGI task on the case
+     * @param taskId id of the BUGGI task (globally unique, not scoped to a case)
      * @param faust one of the task's target fausts
      * @param tags the selected tags
      * @return the persisted selection
      * @throws PromatServiceConnectorException on unexpected failure for the operation
      */
-    public TagList putBuggiSelection(int caseId, int taskId, String faust, TagList tags) throws PromatServiceConnectorException {
+    public TagList putBuggiSelection(int taskId, String faust, TagList tags) throws PromatServiceConnectorException {
         final HttpPut httpPut = new HttpPut(failSafeHttpClient)
                 .withBaseUrl(baseUrl)
-                .withPathElements("cases", String.valueOf(caseId), "tasks", String.valueOf(taskId), "buggi", faust)
+                .withPathElements("tasks", String.valueOf(taskId), "buggi", faust)
                 .withJsonData(tags);
         final Response response = httpPut.execute();
         assertResponseStatus(response, Response.Status.OK);
@@ -255,16 +252,15 @@ public class PromatServiceConnector {
 
     /**
      * Gets a reviewer's Buggi tag selection for one task/faust
-     * @param caseId case id
-     * @param taskId id of the BUGGI task on the case
+     * @param taskId id of the BUGGI task (globally unique, not scoped to a case)
      * @param faust one of the task's target fausts
      * @return the persisted selection (empty if none saved yet)
      * @throws PromatServiceConnectorException on unexpected failure for the operation
      */
-    public TagList getBuggiSelection(int caseId, int taskId, String faust) throws PromatServiceConnectorException {
+    public TagList getBuggiSelection(int taskId, String faust) throws PromatServiceConnectorException {
         final HttpGet httpGet = new HttpGet(failSafeHttpClient)
                 .withBaseUrl(baseUrl)
-                .withPathElements("cases", String.valueOf(caseId), "tasks", String.valueOf(taskId), "buggi", faust);
+                .withPathElements("tasks", String.valueOf(taskId), "buggi", faust);
         final Response response = httpGet.execute();
         assertResponseStatus(response, Response.Status.OK);
         return readResponseEntity(response, TagList.class);

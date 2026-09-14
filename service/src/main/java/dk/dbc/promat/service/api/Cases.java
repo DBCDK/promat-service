@@ -872,16 +872,15 @@ public class Cases {
     }
 
     @PUT
-    @Path("cases/{caseId}/tasks/{taskId}/metakompas/{faust}")
+    @Path("tasks/{taskId}/metakompas/{faust}")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public Response putMetakompasSelection(@PathParam("caseId") final Integer caseId,
-                                            @PathParam("taskId") final Integer taskId,
+    public Response putMetakompasSelection(@PathParam("taskId") final Integer taskId,
                                             @PathParam("faust") final String faust,
                                             List<MetakompasSelectionEntry> entries) {
-        LOGGER.info("cases/{}/tasks/{}/metakompas/{} (PUT)", caseId, taskId, faust);
+        LOGGER.info("tasks/{}/metakompas/{} (PUT)", taskId, faust);
         try {
-            resolveTaskForSelection(caseId, taskId, TaskFieldType.METAKOMPAS, faust);
+            resolveTaskForSelection(taskId, TaskFieldType.METAKOMPAS, faust);
             List<MetakompasSelectionEntry> saved = writeMetakompasSelection(taskId, faust,
                     entries == null ? List.of() : entries);
             return Response.ok(saved).build();
@@ -894,14 +893,13 @@ public class Cases {
     }
 
     @GET
-    @Path("cases/{caseId}/tasks/{taskId}/metakompas/{faust}")
+    @Path("tasks/{taskId}/metakompas/{faust}")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response getMetakompasSelection(@PathParam("caseId") final Integer caseId,
-                                            @PathParam("taskId") final Integer taskId,
+    public Response getMetakompasSelection(@PathParam("taskId") final Integer taskId,
                                             @PathParam("faust") final String faust) {
-        LOGGER.info("cases/{}/tasks/{}/metakompas/{} (GET)", caseId, taskId, faust);
+        LOGGER.info("tasks/{}/metakompas/{} (GET)", taskId, faust);
         try {
-            resolveTaskForSelection(caseId, taskId, TaskFieldType.METAKOMPAS, faust);
+            resolveTaskForSelection(taskId, TaskFieldType.METAKOMPAS, faust);
             return Response.ok(readMetakompasSelection(taskId, faust)).build();
         } catch(ServiceErrorException serviceErrorException) {
             return Response.status(serviceErrorException.getHttpStatus()).entity(serviceErrorException.getServiceErrorDto()).build();
@@ -912,16 +910,15 @@ public class Cases {
     }
 
     @PUT
-    @Path("cases/{caseId}/tasks/{taskId}/buggi/{faust}")
+    @Path("tasks/{taskId}/buggi/{faust}")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public Response putBuggiSelection(@PathParam("caseId") final Integer caseId,
-                                       @PathParam("taskId") final Integer taskId,
+    public Response putBuggiSelection(@PathParam("taskId") final Integer taskId,
                                        @PathParam("faust") final String faust,
                                        TagList tagList) {
-        LOGGER.info("cases/{}/tasks/{}/buggi/{} (PUT)", caseId, taskId, faust);
+        LOGGER.info("tasks/{}/buggi/{} (PUT)", taskId, faust);
         try {
-            PromatTask task = resolveTaskForSelection(caseId, taskId, TaskFieldType.BUGGI, faust);
+            PromatTask task = resolveTaskForSelection(taskId, TaskFieldType.BUGGI, faust);
             if(task.getApproved() == null) {
                 LOGGER.info("Updated approve date on task {}", task.getId());
                 task.setApproved(LocalDate.now());
@@ -937,14 +934,13 @@ public class Cases {
     }
 
     @GET
-    @Path("cases/{caseId}/tasks/{taskId}/buggi/{faust}")
+    @Path("tasks/{taskId}/buggi/{faust}")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response getBuggiSelection(@PathParam("caseId") final Integer caseId,
-                                       @PathParam("taskId") final Integer taskId,
+    public Response getBuggiSelection(@PathParam("taskId") final Integer taskId,
                                        @PathParam("faust") final String faust) {
-        LOGGER.info("cases/{}/tasks/{}/buggi/{} (GET)", caseId, taskId, faust);
+        LOGGER.info("tasks/{}/buggi/{} (GET)", taskId, faust);
         try {
-            resolveTaskForSelection(caseId, taskId, TaskFieldType.BUGGI, faust);
+            resolveTaskForSelection(taskId, TaskFieldType.BUGGI, faust);
             return Response.ok(readBuggiSelection(taskId, faust)).build();
         } catch(ServiceErrorException serviceErrorException) {
             return Response.status(serviceErrorException.getHttpStatus()).entity(serviceErrorException.getServiceErrorDto()).build();
@@ -954,25 +950,13 @@ public class Cases {
         }
     }
 
-    // Resolves and validates the task a selection write/read targets: it must belong to the
-    // given case, be of the expected field type, and target the given faust - this is the
-    // (task_id, faust) granularity the metakompas_selection/buggi_selection tables are keyed
-    // by, replacing the old cases/{pid}/buggi endpoint's pid-resolution approach which could
-    // only ever address "the first task matching this faust".
-    private PromatTask resolveTaskForSelection(Integer caseId, Integer taskId, TaskFieldType expectedType, String faust) throws ServiceErrorException {
-        PromatCase promatCase = entityManager.find(PromatCase.class, caseId);
-        if(promatCase == null) {
-            throw new ServiceErrorException(String.format("No case with id %d exists", caseId))
-                    .withHttpStatus(404)
-                    .withCode(ServiceErrorCode.NOT_FOUND)
-                    .withCause("No such case");
-        }
-        PromatTask task = promatCase.getTasks().stream()
-                .filter(t -> t.getId() == taskId)
-                .findFirst()
-                .orElse(null);
+    // Resolves and validates the task a selection write/read targets: it must exist, be of the
+    // expected field type, and target the given faust - this is the (task_id, faust) granularity
+    // the metakompas_selection/buggi_selection tables are keyed by.
+    private PromatTask resolveTaskForSelection(Integer taskId, TaskFieldType expectedType, String faust) throws ServiceErrorException {
+        PromatTask task = entityManager.find(PromatTask.class, taskId);
         if(task == null) {
-            throw new ServiceErrorException(String.format("No task with id %d exists on case %d", taskId, caseId))
+            throw new ServiceErrorException(String.format("No task with id %d exists", taskId))
                     .withHttpStatus(404)
                     .withCode(ServiceErrorCode.NOT_FOUND)
                     .withCause("No such task");
