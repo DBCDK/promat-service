@@ -1,7 +1,10 @@
 #!groovy
 
 @Library('dependency-track')
-@Library('team-x-tools@1.2.0')
+// Temporarily pinned to the fix-hardcoded-resource-type branch to test the kind-aware
+// delete + rollout-wait fix before merging to main and cutting a new release. Revert to
+// a tagged release (e.g. team-x-tools@1.2.0, or whatever supersedes it) once verified.
+@Library('team-x-tools@fix-hardcoded-resource-type')
 
 def workerNode = "devel12"
 def teamSlackNotice = 'de-notifications'
