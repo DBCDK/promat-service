@@ -36,13 +36,14 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 // Covers the endpoints persisting what a reviewer actually selected from the Metakompas
-// taxonomy tree and the Buggi tag vocabulary for a given task/faust (PUT/GET
-// tasks/{taskId}/metakompas|buggi/{faust}). Separate from CasesIT (which still covers the
+// taxonomy tree and the Buggi tag vocabulary for a given task (PUT/GET
+// tasks/{taskId}/metakompas|buggi). One selection per task, shared across all of its target
+// fausts, same as every other task type's data. Separate from CasesIT (which still covers the
 // legacy POST cases/{pid}/buggi endpoint) to keep this feature's tests together.
 public class CaseTaskSelectionIT extends ContainerTest {
 
     @Test
-    void testBuggiSelectionIsIndependentPerFaust() throws PromatServiceConnectorException {
+    void testBuggiSelectionSharedAcrossTargetFausts() throws PromatServiceConnectorException, IOException {
         String firstFaust = "94001111";
         String secondFaust = "94001112";
         PromatCase aCase = postAndAssert("v1/api/cases",
@@ -50,31 +51,33 @@ public class CaseTaskSelectionIT extends ContainerTest {
                 PromatCase.class, CREATED);
         int taskId = ContainerTest.findTaskByFieldType(aCase, TaskFieldType.BUGGI).getId();
 
-        TagList firstTags = new TagList(new Tag("first", 1));
+        TagList tags = new TagList(new Tag("first", 1));
+        promatServiceConnector.putBuggiSelection(taskId, tags);
+
+        TagList read = promatServiceConnector.getBuggiSelection(taskId);
+        assertThat(read.getTags().get(0).getName(), is("first"));
+
+        // A later write is a plain overwrite of the one shared value - same as PromatTask.data
+        // behaves for every other task type - not independent per faust.
         TagList secondTags = new TagList(new Tag("second", 2));
+        promatServiceConnector.putBuggiSelection(taskId, secondTags);
+        TagList readAfterOverwrite = promatServiceConnector.getBuggiSelection(taskId);
+        assertThat(readAfterOverwrite.getTags().get(0).getName(), is("second"));
 
-        promatServiceConnector.putBuggiSelection(taskId, firstFaust, firstTags);
-        promatServiceConnector.putBuggiSelection(taskId, secondFaust, secondTags);
-
-        TagList readFirst = promatServiceConnector.getBuggiSelection(taskId, firstFaust);
-        TagList readSecond = promatServiceConnector.getBuggiSelection(taskId, secondFaust);
-        assertThat("First faust keeps its own selection", readFirst.getTags().get(0).getName(), is("first"));
-        assertThat("Second faust keeps its own selection", readSecond.getTags().get(0).getName(), is("second"));
-
-        // Also confirm both come back inline on the full case view
+        // Also confirm it comes back inline on the full case view, in the same task.data field
+        // every other task type uses
         PromatCase fullCase = promatServiceConnector.getCase(aCase.getId());
         PromatTask task = ContainerTest.findTaskByFieldType(fullCase, TaskFieldType.BUGGI);
-        assertThat(task.getBuggiSelections().get(firstFaust).getTags().get(0).getName(), is("first"));
-        assertThat(task.getBuggiSelections().get(secondFaust).getTags().get(0).getName(), is("second"));
+        assertThat(mapper.readValue(task.getData(), TagList.class).getTags().get(0).getName(), is("second"));
 
         deleteResponse("v1/api/cases/" + aCase.getId());
     }
 
-    // Regression test for the bug this feature fixes: a single BUGGI task with more than one
-    // target faust used to share one PromatTask.data string, so the second POST cases/{pid}/buggi
-    // call would silently overwrite the first faust's data instead of keeping them independent.
+    // The legacy cases/{pid}/buggi endpoint resolves its task by faust, but the write itself is
+    // task-scoped like everywhere else - approving via either target faust of the same task
+    // writes the one shared selection.
     @Test
-    void testLegacyBuggiEndpointStoresIndependentSelectionsPerFaust() throws PromatServiceConnectorException {
+    void testLegacyBuggiEndpointSharesSelectionAcrossTargetFausts() throws PromatServiceConnectorException {
         String descriptor = "870170-BASIS:";
         String firstFaust = "94001113";
         String secondFaust = "94001114";
@@ -86,10 +89,8 @@ public class CaseTaskSelectionIT extends ContainerTest {
         promatServiceConnector.approveBuggiTask(descriptor + firstFaust, new TagList(new Tag("legacy-first", 1)));
         promatServiceConnector.approveBuggiTask(descriptor + secondFaust, new TagList(new Tag("legacy-second", 2)));
 
-        TagList readFirst = promatServiceConnector.getBuggiSelection(taskId, firstFaust);
-        TagList readSecond = promatServiceConnector.getBuggiSelection(taskId, secondFaust);
-        assertThat(readFirst.getTags().get(0).getName(), is("legacy-first"));
-        assertThat(readSecond.getTags().get(0).getName(), is("legacy-second"));
+        TagList read = promatServiceConnector.getBuggiSelection(taskId);
+        assertThat(read.getTags().get(0).getName(), is("legacy-second"));
 
         deleteResponse("v1/api/cases/" + aCase.getId());
     }
@@ -101,8 +102,8 @@ public class CaseTaskSelectionIT extends ContainerTest {
         PromatCase aCase = postAndAssert("v1/api/cases", makeRequest(faust, TaskFieldType.BKM), PromatCase.class, CREATED);
         int taskId = ContainerTest.findTaskByFieldType(aCase, TaskFieldType.BKM).getId();
 
-        assertPromatThrows(BAD_REQUEST, () -> promatServiceConnector.putBuggiSelection(taskId, faust, new TagList(new Tag("x", 1))));
-        assertPromatThrows(NOT_FOUND, () -> promatServiceConnector.putBuggiSelection(999999, faust, new TagList(new Tag("x", 1))));
+        assertPromatThrows(BAD_REQUEST, () -> promatServiceConnector.putBuggiSelection(taskId, new TagList(new Tag("x", 1))));
+        assertPromatThrows(NOT_FOUND, () -> promatServiceConnector.putBuggiSelection(999999, new TagList(new Tag("x", 1))));
 
         deleteResponse("v1/api/cases/" + aCase.getId());
     }
@@ -131,23 +132,24 @@ public class CaseTaskSelectionIT extends ContainerTest {
                     .withOftenUsed(observerende.isOftenUsed())
                     .withRef(observerende.getRef());
 
-            List<MetakompasSelectionEntry> saved = promatServiceConnector.putMetakompasSelection(taskId, faust, List.of(entry));
+            List<MetakompasSelectionEntry> saved = promatServiceConnector.putMetakompasSelection(taskId, List.of(entry));
             assertThat(saved.get(0).getTitle(), is("observerende"));
 
-            List<MetakompasSelectionEntry> read = promatServiceConnector.getMetakompasSelection(taskId, faust);
+            List<MetakompasSelectionEntry> read = promatServiceConnector.getMetakompasSelection(taskId);
             assertThat(read.get(0).getTitle(), is("observerende"));
 
             PromatCase fullCase = promatServiceConnector.getCase(aCase.getId());
             PromatTask task = ContainerTest.findTaskByFieldType(fullCase, TaskFieldType.METAKOMPAS);
-            assertThat(task.getMetakompasSelections().get(faust).get(0).getTitle(), is("observerende"));
+            List<MetakompasSelectionEntry> inlined = mapper.readValue(task.getData(), new TypeReference<List<MetakompasSelectionEntry>>() {});
+            assertThat(inlined.get(0).getTitle(), is("observerende"));
 
             // A subject id that doesn't exist at the (valid) path should be rejected
             MetakompasSelectionEntry bogus = new MetakompasSelectionEntry().withPath(path).withId(-999).withTitle("does-not-exist");
-            assertPromatThrows(BAD_REQUEST, () -> promatServiceConnector.putMetakompasSelection(taskId, faust, List.of(bogus)));
+            assertPromatThrows(BAD_REQUEST, () -> promatServiceConnector.putMetakompasSelection(taskId, List.of(bogus)));
 
             // A path that doesn't exist in the tree at all should also be rejected
             MetakompasSelectionEntry badPath = new MetakompasSelectionEntry().withPath(List.of("not", "a", "real", "path")).withId(1).withTitle("nope");
-            assertPromatThrows(BAD_REQUEST, () -> promatServiceConnector.putMetakompasSelection(taskId, faust, List.of(badPath)));
+            assertPromatThrows(BAD_REQUEST, () -> promatServiceConnector.putMetakompasSelection(taskId, List.of(badPath)));
 
             deleteResponse("v1/api/cases/" + aCase.getId());
         } finally {
@@ -171,7 +173,7 @@ public class CaseTaskSelectionIT extends ContainerTest {
     }
 
     // Single task of the given type, targeting more than one faust - the shape needed to
-    // exercise (task, faust)-keyed selection storage.
+    // confirm a selection is shared across all of a task's target fausts.
     private CaseRequest makeRequestWithTargetFausts(String primaryFaust, TaskFieldType taskFieldType, String... targetFausts) {
         return makeRequest(primaryFaust)
                 .withTasks(List.of(new TaskDto()

@@ -2,8 +2,6 @@ package dk.dbc.promat.service.persistence;
 
 import com.fasterxml.jackson.annotation.JsonView;
 import dk.dbc.commons.jpa.converter.StringListToJsonArrayConverter;
-import dk.dbc.promat.service.dto.MetakompasSelectionEntry;
-import dk.dbc.promat.service.dto.TagList;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
@@ -18,7 +16,6 @@ import jakarta.persistence.Transient;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 
 @NamedQuery(
@@ -61,18 +58,6 @@ public class PromatTask {
     private List<String> targetFausts;
 
     private String recordId;
-
-    // Not persisted on this entity - populated post-fetch from metakompas_selection/
-    // buggi_selection by the resource layer (same pattern as PromatCase.newMessagesToEditor/
-    // newMessagesToReviewer) so a full case view can include selections without a round trip.
-    // Keyed by faust since one task can target more than one faust, each with its own selection.
-    @Transient
-    @JsonView({CaseView.Case.class})
-    private Map<String, List<MetakompasSelectionEntry>> metakompasSelections;
-
-    @Transient
-    @JsonView({CaseView.Case.class})
-    private Map<String, TagList> buggiSelections;
 
     public int getId() {
         return id;
@@ -207,22 +192,6 @@ public class PromatTask {
     public PromatTask withRecordId(String recordId) {
         this.recordId = recordId;
         return this;
-    }
-
-    public Map<String, List<MetakompasSelectionEntry>> getMetakompasSelections() {
-        return metakompasSelections;
-    }
-
-    public void setMetakompasSelections(Map<String, List<MetakompasSelectionEntry>> metakompasSelections) {
-        this.metakompasSelections = metakompasSelections;
-    }
-
-    public Map<String, TagList> getBuggiSelections() {
-        return buggiSelections;
-    }
-
-    public void setBuggiSelections(Map<String, TagList> buggiSelections) {
-        this.buggiSelections = buggiSelections;
     }
 
     @Override

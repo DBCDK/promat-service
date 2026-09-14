@@ -8,10 +8,6 @@
 
 -- Cleanup
 -- Just delete those we want to create, DO NOT run a complete truncate on any table
-delete from metakompas_selection
-    where task_id in (400035, 400051, 400052, 401118, 401119);
-delete from buggi_selection
-    where task_id in (402001);
 delete from promattask
     where id in (400001, 400002, 400003, 400004, 400005, 400006, 400007, 400008, 400009, 400010, 400011, 400012,
                  400013, 400014, 400015, 400016, 400017, 400018, 400019, 400020, 400021, 400022, 400023);
@@ -23,7 +19,7 @@ delete from promattask
                  401161, 401162, 401163, 401164, 401165, 401166, 401167, 401171, 401172, 401173, 401174, 401175, 401176, 401177,
                  401178, 401181, 401182, 401183, 400024, 400025, 400026, 400027, 400028, 400029, 400030, 400031, 400032, 400033,
                  400034, 400035, 400036, 400037, 400038, 400039, 400040, 400041, 400042, 400043, 400044, 400045, 400046, 400047,
-                 400048, 400049, 400050, 400051, 400052, 402001);
+                 400048, 400049, 400050, 400051, 400052, 402001, 402002);
 
 --
 delete from promatcase
@@ -312,13 +308,12 @@ values (22, 400024),
        (22, 400051),
        (22, 400052);
 
--- Sample Metakompas selections for case 22's two METAKOMPAS tasks with more than one target
--- faust (400035, 400051/400052) - demonstrates that each (task, faust) pair keeps its own
--- independent selection instead of collapsing into one shared value.
-insert into metakompas_selection(task_id, faust, data, updated_at)
-values (400035, '100000', '[{"path":["stemning","dramatisk"],"id":1,"title":"dramatisk","note":[],"oftenUsed":true,"ref":null}]', now()),
-       (400051, '100001', '[{"path":["ramme","geografisk sted"],"id":2,"title":"kystby","note":[],"oftenUsed":false,"ref":null}]', now()),
-       (400052, '100002', '[{"path":["fortælleteknik","tempo"],"id":3,"title":"langsomt tempo","note":[],"oftenUsed":false,"ref":null}]', now());
+-- Sample Metakompas selections for case 22's METAKOMPAS tasks (400035, 400051, 400052) - one
+-- selection per task, shared across all of that task's target fausts, stored directly in
+-- promattask.data like every other task type's content.
+update promattask set data = '[{"path":["stemning","dramatisk"],"id":1,"title":"dramatisk","note":[],"oftenUsed":true,"ref":null}]' where id = 400035;
+update promattask set data = '[{"path":["ramme","geografisk sted"],"id":2,"title":"kystby","note":[],"oftenUsed":false,"ref":null}]' where id = 400051;
+update promattask set data = '[{"path":["fortælleteknik","tempo"],"id":3,"title":"langsomt tempo","note":[],"oftenUsed":false,"ref":null}]' where id = 400052;
 
 --
 insert into promatcase(id, title, details, primaryFaust, relatedFausts, reviewer_id, editor_id, created, deadline, assigned, status, materialType)
@@ -454,11 +449,11 @@ values (1110, 401111),
        (1110, 401118),
        (1110, 401119);
 
--- Second demonstration of independent per-faust Metakompas selections, this time on a task
--- (401118/401119) that belongs to the same case but targets two different fausts.
-insert into metakompas_selection(task_id, faust, data, updated_at)
-values (401118, '1001110', '[{"path":["handling","navngivet hovedperson"],"id":4,"title":"navngivet hovedperson","note":[],"oftenUsed":false,"ref":null}]', now()),
-       (401119, '1001111', '[{"path":["stemning","tankevækkende"],"id":5,"title":"tankevækkende","note":[],"oftenUsed":true,"ref":null}]', now());
+-- Two separate METAKOMPAS tasks on the same case (401118/401119), each targeting one faust -
+-- a case whose Metakompas selection genuinely differs per faust is split into separate tasks
+-- rather than one task carrying more than one selection.
+update promattask set data = '[{"path":["handling","navngivet hovedperson"],"id":4,"title":"navngivet hovedperson","note":[],"oftenUsed":false,"ref":null}]' where id = 401118;
+update promattask set data = '[{"path":["stemning","tankevækkende"],"id":5,"title":"tankevækkende","note":[],"oftenUsed":true,"ref":null}]' where id = 401119;
 
 --
 insert into promatcase(id, title, details, primaryFaust, relatedFausts, reviewer_id, editor_id, created, deadline, assigned, status, materialType)
@@ -473,9 +468,10 @@ values  (401121, 'GROUP_1_LESS_THAN_100_PAGES', 'BRIEF',          '2021-01-13','
         (401126, 'GROUP_1_LESS_THAN_100_PAGES', 'RECOMMENDATION', '2021-01-13', 'GROUP_1_LESS_THAN_100_PAGES', '2021-01-13', NULL, 'Anbefales til biblioteker med fokus på samfundsdebat.', '["1001120", "1001121"]'),
         (401128, 'GROUP_1_LESS_THAN_100_PAGES', 'METAKOMPAS',     '2021-01-13', 'METAKOMPAS',                  '2021-01-13', NULL, NULL, '["1001120"]'),
         (401129, 'GROUP_1_LESS_THAN_100_PAGES', 'METAKOMPAS',     '2021-01-13', 'METAKOMPAS',                  '2021-01-13', NULL, NULL, '["1001121"]'),
-        -- New BUGGI task added to demonstrate independent per-faust Buggi selections (see
-        -- buggi_selection rows below) - this case previously had no BUGGI task at all.
-        (402001, 'GROUP_1_LESS_THAN_100_PAGES', 'BUGGI',          '2021-01-13', 'BUGGI',                       '2021-01-13', NULL, NULL, '["1001120", "1001121"]');
+        -- Two separate BUGGI tasks, one per faust, same pattern as the METAKOMPAS tasks above -
+        -- this case previously had no BUGGI task at all.
+        (402001, 'GROUP_1_LESS_THAN_100_PAGES', 'BUGGI',          '2021-01-13', 'BUGGI',                       '2021-01-13', NULL, NULL, '["1001120"]'),
+        (402002, 'GROUP_1_LESS_THAN_100_PAGES', 'BUGGI',          '2021-01-13', 'BUGGI',                       '2021-01-13', NULL, NULL, '["1001121"]');
 
 insert into casetasks(case_id, task_id)
 values (1120, 401121),
@@ -486,11 +482,11 @@ values (1120, 401121),
        (1120, 401126),
        (1120, 401128),
        (1120, 401129),
-       (1120, 402001);
+       (1120, 402001),
+       (1120, 402002);
 
-insert into buggi_selection(task_id, faust, data, updated_at)
-values (402001, '1001120', '{"tags":[{"name":"hovedperson","value":3},{"name":"handling","value":2}]}', now()),
-       (402001, '1001121', '{"tags":[{"name":"hovedperson","value":1}]}', now());
+update promattask set data = '{"tags":[{"name":"hovedperson","value":3},{"name":"handling","value":2}]}' where id = 402001;
+update promattask set data = '{"tags":[{"name":"hovedperson","value":1}]}' where id = 402002;
 --
 insert into promatcase(id, title, details, primaryFaust, relatedFausts, reviewer_id, editor_id, created, deadline, assigned, status, materialType)
 values (1130, 'Nattetog', 'Instruktøren følger en togkonduktør gennem en enkelt skæbnesvanger nattevagt.', '1001130', '[]', 4901, 4950, '2021-01-13', '2021-02-13', '2021-01-13', 'PENDING_EXPORT', 'MOVIE');

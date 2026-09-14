@@ -771,11 +771,11 @@ paths:
               schema:
                 $ref: '#/components/schemas/ServiceError'
 
-  /tasks/{taskId}/metakompas/{faust}:
+  /tasks/{taskId}/metakompas:
     put:
       tags:
         - tasks
-      summary: Save a reviewer's Metakompas subject selection for one task/faust
+      summary: Save a reviewer's Metakompas subject selection for a task
       operationId: putMetakompasSelection
       parameters:
         - in: path
@@ -784,12 +784,6 @@ paths:
           schema:
             type: integer
             description: Id of the METAKOMPAS task (globally unique, not scoped to a case)
-        - in: path
-          name: faust
-          required: true
-          schema:
-            type: string
-            description: One of the task's target fausts
       requestBody:
         required: true
         content:
@@ -805,8 +799,8 @@ paths:
                 $ref: '#/components/schemas/MetakompasSelectionEntryList'
         '400':
           description: >-
-            Task is not a METAKOMPAS task, faust is not a target faust of the task, or a
-            selection entry's path/id does not resolve in the current taxonomy tree
+            Task is not a METAKOMPAS task, or a selection entry's path/id does not resolve in
+            the current taxonomy tree
           content:
             application/json:
               schema:
@@ -820,7 +814,7 @@ paths:
     get:
       tags:
         - tasks
-      summary: Get a reviewer's Metakompas subject selection for one task/faust
+      summary: Get a reviewer's Metakompas subject selection for a task
       operationId: getMetakompasSelection
       parameters:
         - in: path
@@ -829,12 +823,6 @@ paths:
           schema:
             type: integer
             description: Id of the METAKOMPAS task (globally unique, not scoped to a case)
-        - in: path
-          name: faust
-          required: true
-          schema:
-            type: string
-            description: One of the task's target fausts
       responses:
         '200':
           description: successful operation - an empty array if no selection has been saved yet
@@ -843,7 +831,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/MetakompasSelectionEntryList'
         '400':
-          description: Task is not a METAKOMPAS task, or faust is not a target faust of the task
+          description: Task is not a METAKOMPAS task
           content:
             application/json:
               schema:
@@ -855,11 +843,11 @@ paths:
               schema:
                 $ref: '#/components/schemas/ServiceError'
 
-  /tasks/{taskId}/buggi/{faust}:
+  /tasks/{taskId}/buggi:
     put:
       tags:
         - tasks
-      summary: Save a reviewer's Buggi tag selection for one task/faust
+      summary: Save a reviewer's Buggi tag selection for a task
       operationId: putBuggiSelection
       parameters:
         - in: path
@@ -868,12 +856,6 @@ paths:
           schema:
             type: integer
             description: Id of the BUGGI task (globally unique, not scoped to a case)
-        - in: path
-          name: faust
-          required: true
-          schema:
-            type: string
-            description: One of the task's target fausts
       requestBody:
         required: true
         content:
@@ -888,7 +870,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/TagList'
         '400':
-          description: Task is not a BUGGI task, or faust is not a target faust of the task
+          description: Task is not a BUGGI task
           content:
             application/json:
               schema:
@@ -902,7 +884,7 @@ paths:
     get:
       tags:
         - tasks
-      summary: Get a reviewer's Buggi tag selection for one task/faust
+      summary: Get a reviewer's Buggi tag selection for a task
       operationId: getBuggiSelection
       parameters:
         - in: path
@@ -911,12 +893,6 @@ paths:
           schema:
             type: integer
             description: Id of the BUGGI task (globally unique, not scoped to a case)
-        - in: path
-          name: faust
-          required: true
-          schema:
-            type: string
-            description: One of the task's target fausts
       responses:
         '200':
           description: successful operation - an empty tag list if no selection has been saved yet
@@ -925,7 +901,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/TagList'
         '400':
-          description: Task is not a BUGGI task, or faust is not a target faust of the task
+          description: Task is not a BUGGI task
           content:
             application/json:
               schema:
@@ -2172,24 +2148,13 @@ components:
           description: If data produced by this task only relates to some of the cases related faustnumbers. These numbers must be listed here
         data:
           type: string
-          description: The task data
-          nullable: true
-        metakompasSelections:
-          type: object
-          nullable: true
           description: >-
-            Metakompas subject selections for this task, keyed by target faust. Only present
-            on the full case view (GET /cases/{id}), not on case list/search results.
-          additionalProperties:
-            $ref: '#/components/schemas/MetakompasSelectionEntryList'
-        buggiSelections:
-          type: object
+            The task data. For METAKOMPAS/BUGGI tasks, this is the reviewer's selection
+            serialized as JSON (a MetakompasSelectionEntryList or TagList respectively, shared
+            across all of the task's target fausts) - read/write it directly via this field, or
+            through the typed tasks/{taskId}/metakompas|buggi endpoints, which validate and
+            return it already parsed.
           nullable: true
-          description: >-
-            Buggi tag selections for this task, keyed by target faust. Only present on the
-            full case view (GET /cases/{id}), not on case list/search results.
-          additionalProperties:
-            $ref: '#/components/schemas/TagList'
       required:
         - typeOfTask
         - paycode

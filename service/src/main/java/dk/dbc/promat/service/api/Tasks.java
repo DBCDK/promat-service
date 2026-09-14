@@ -7,6 +7,7 @@ import dk.dbc.promat.service.dto.TaskDto;
 import dk.dbc.promat.service.persistence.PromatCase;
 import dk.dbc.promat.service.persistence.PromatEntityManager;
 import dk.dbc.promat.service.persistence.PromatTask;
+import dk.dbc.promat.service.persistence.TaskFieldType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -87,6 +88,14 @@ public class Tasks {
 
             // Update fields
             if(dto.getData() != null) {
+                // METAKOMPAS/BUGGI tasks store their selection in this same field (see
+                // tasks/{taskId}/metakompas|buggi) - reject a generic write here rather than
+                // let it silently collide with that structured content.
+                if(existing.getTaskFieldType() == TaskFieldType.METAKOMPAS || existing.getTaskFieldType() == TaskFieldType.BUGGI) {
+                    return ServiceErrorDto.InvalidRequest("Invalid field for task type",
+                            String.format("Task data cannot be set directly on a %s task - use the dedicated " +
+                                    "tasks/{taskId}/metakompas or tasks/{taskId}/buggi endpoint instead", existing.getTaskFieldType()));
+                }
                 existing.setData(dto.getData()); // It is allowed to update with an empty value
             }
             if(dto.getTaskType() != null) {
