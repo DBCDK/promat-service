@@ -88,9 +88,8 @@ public class Tasks {
 
             // Update fields
             if(dto.getData() != null) {
-                // METAKOMPAS/BUGGI tasks store their selection in this same field (see
-                // tasks/{taskId}/metakompas|buggi) - reject a generic write here rather than
-                // let it silently collide with that structured content.
+                // METAKOMPAS/BUGGI tasks store their selection in this field via tasks/{taskId}/
+                // metakompas|buggi - reject a generic write instead of letting it collide.
                 if(existing.getTaskFieldType() == TaskFieldType.METAKOMPAS || existing.getTaskFieldType() == TaskFieldType.BUGGI) {
                     return ServiceErrorDto.InvalidRequest("Invalid field for task type",
                             String.format("Task data cannot be set directly on a %s task - use the dedicated " +

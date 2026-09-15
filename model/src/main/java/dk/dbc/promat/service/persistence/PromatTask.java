@@ -1,6 +1,5 @@
 package dk.dbc.promat.service.persistence;
 
-import com.fasterxml.jackson.annotation.JsonView;
 import dk.dbc.commons.jpa.converter.StringListToJsonArrayConverter;
 
 import jakarta.persistence.Column;
@@ -12,7 +11,6 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.NamedQuery;
-import jakarta.persistence.Transient;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;

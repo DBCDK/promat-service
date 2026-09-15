@@ -16,7 +16,6 @@ import net.jodah.failsafe.RetryPolicy;
 
 import jakarta.ws.rs.ProcessingException;
 import jakarta.ws.rs.client.Client;
-import jakarta.ws.rs.core.GenericType;
 import jakarta.ws.rs.core.Response;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
@@ -212,23 +211,7 @@ public class PromatServiceConnector {
                 .withJsonData(entries);
         final Response response = httpPut.execute();
         assertResponseStatus(response, Response.Status.OK);
-        return readResponseEntity(response, new GenericType<List<MetakompasSelectionEntry>>() {});
-    }
-
-    /**
-     * Gets a reviewer's Metakompas subject selection for a task
-     * @param taskId id of the METAKOMPAS task (globally unique, not scoped to a case)
-     * @return the persisted selection (empty if none saved yet)
-     * @throws PromatServiceConnectorException on unexpected failure for the operation
-     */
-    public List<MetakompasSelectionEntry> getMetakompasSelection(int taskId)
-            throws PromatServiceConnectorException {
-        final HttpGet httpGet = new HttpGet(failSafeHttpClient)
-                .withBaseUrl(baseUrl)
-                .withPathElements("tasks", String.valueOf(taskId), "metakompas");
-        final Response response = httpGet.execute();
-        assertResponseStatus(response, Response.Status.OK);
-        return readResponseEntity(response, new GenericType<List<MetakompasSelectionEntry>>() {});
+        return Arrays.asList(readResponseEntity(response, MetakompasSelectionEntry[].class));
     }
 
     /**
@@ -245,21 +228,6 @@ public class PromatServiceConnector {
                 .withPathElements("tasks", String.valueOf(taskId), "buggi")
                 .withJsonData(tags);
         final Response response = httpPut.execute();
-        assertResponseStatus(response, Response.Status.OK);
-        return readResponseEntity(response, TagList.class);
-    }
-
-    /**
-     * Gets a reviewer's Buggi tag selection for a task
-     * @param taskId id of the BUGGI task (globally unique, not scoped to a case)
-     * @return the persisted selection (empty if none saved yet)
-     * @throws PromatServiceConnectorException on unexpected failure for the operation
-     */
-    public TagList getBuggiSelection(int taskId) throws PromatServiceConnectorException {
-        final HttpGet httpGet = new HttpGet(failSafeHttpClient)
-                .withBaseUrl(baseUrl)
-                .withPathElements("tasks", String.valueOf(taskId), "buggi");
-        final Response response = httpGet.execute();
         assertResponseStatus(response, Response.Status.OK);
         return readResponseEntity(response, TagList.class);
     }
@@ -285,16 +253,6 @@ public class PromatServiceConnector {
         if (entity == null) {
             throw new PromatServiceConnectorException(
                     String.format("Promat service returned with null-valued %s entity", type.getName()));
-        }
-        return entity;
-    }
-
-    private <T> T readResponseEntity(Response response, GenericType<T> type)
-            throws PromatServiceConnectorException {
-        final T entity = response.readEntity(type);
-        if (entity == null) {
-            throw new PromatServiceConnectorException(
-                    String.format("Promat service returned with null-valued %s entity", type.getType().getTypeName()));
         }
         return entity;
     }

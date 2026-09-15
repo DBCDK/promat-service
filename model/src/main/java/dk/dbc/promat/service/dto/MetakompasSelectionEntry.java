@@ -3,10 +3,9 @@ package dk.dbc.promat.service.dto;
 import java.util.List;
 import java.util.Objects;
 
-// One Metakompas subject picked by a reviewer for a task/faust, with its tree path attached.
-// Deliberately decoupled from the taxonomy's hardcoded category names on the server side
-// (dk.dbc.promat.service.taxonomy.dto.Taxonomy) - if those are ever renamed/restructured, old
-// saved selections don't need migrating, they just carry a path that may no longer resolve.
+// One Metakompas subject picked by a reviewer, with its tree path attached - deliberately not
+// a reference into Taxonomy's category tree, so renaming/restructuring it never requires
+// migrating old selections.
 public class MetakompasSelectionEntry {
 
     private List<String> path;

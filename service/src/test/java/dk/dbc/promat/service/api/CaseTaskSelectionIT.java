@@ -35,11 +35,9 @@ import static jakarta.ws.rs.core.Response.Status.NOT_FOUND;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
-// Covers the endpoints persisting what a reviewer actually selected from the Metakompas
-// taxonomy tree and the Buggi tag vocabulary for a given task (PUT/GET
-// tasks/{taskId}/metakompas|buggi). One selection per task, shared across all of its target
-// fausts, same as every other task type's data. Separate from CasesIT (which still covers the
-// legacy POST cases/{pid}/buggi endpoint) to keep this feature's tests together.
+// Covers the PUT tasks/{taskId}/metakompas|buggi endpoints: one selection per task, shared
+// across its target fausts, verified via the full case view (task.data). Separate from CasesIT,
+// which covers the legacy POST cases/{pid}/buggi endpoint.
 public class CaseTaskSelectionIT extends ContainerTest {
 
     @Test
@@ -52,20 +50,15 @@ public class CaseTaskSelectionIT extends ContainerTest {
         int taskId = ContainerTest.findTaskByFieldType(aCase, TaskFieldType.BUGGI).getId();
 
         TagList tags = new TagList(new Tag("first", 1));
-        promatServiceConnector.putBuggiSelection(taskId, tags);
+        TagList saved = promatServiceConnector.putBuggiSelection(taskId, tags);
+        assertThat(saved.getTags().get(0).getName(), is("first"));
 
-        TagList read = promatServiceConnector.getBuggiSelection(taskId);
-        assertThat(read.getTags().get(0).getName(), is("first"));
-
-        // A later write is a plain overwrite of the one shared value - same as PromatTask.data
-        // behaves for every other task type - not independent per faust.
+        // A later write overwrites the one shared value - not independent per faust.
         TagList secondTags = new TagList(new Tag("second", 2));
-        promatServiceConnector.putBuggiSelection(taskId, secondTags);
-        TagList readAfterOverwrite = promatServiceConnector.getBuggiSelection(taskId);
-        assertThat(readAfterOverwrite.getTags().get(0).getName(), is("second"));
+        TagList savedAfterOverwrite = promatServiceConnector.putBuggiSelection(taskId, secondTags);
+        assertThat(savedAfterOverwrite.getTags().get(0).getName(), is("second"));
 
-        // Also confirm it comes back inline on the full case view, in the same task.data field
-        // every other task type uses
+        // Also confirm it comes back inline on the full case view (task.data)
         PromatCase fullCase = promatServiceConnector.getCase(aCase.getId());
         PromatTask task = ContainerTest.findTaskByFieldType(fullCase, TaskFieldType.BUGGI);
         assertThat(mapper.readValue(task.getData(), TagList.class).getTags().get(0).getName(), is("second"));
@@ -73,11 +66,10 @@ public class CaseTaskSelectionIT extends ContainerTest {
         deleteResponse("v1/api/cases/" + aCase.getId());
     }
 
-    // The legacy cases/{pid}/buggi endpoint resolves its task by faust, but the write itself is
-    // task-scoped like everywhere else - approving via either target faust of the same task
-    // writes the one shared selection.
+    // The legacy endpoint resolves its task by faust, but the write is task-scoped - approving
+    // via either faust writes the one shared selection.
     @Test
-    void testLegacyBuggiEndpointSharesSelectionAcrossTargetFausts() throws PromatServiceConnectorException {
+    void testLegacyBuggiEndpointSharesSelectionAcrossTargetFausts() throws PromatServiceConnectorException, IOException {
         String descriptor = "870170-BASIS:";
         String firstFaust = "94001113";
         String secondFaust = "94001114";
@@ -89,8 +81,9 @@ public class CaseTaskSelectionIT extends ContainerTest {
         promatServiceConnector.approveBuggiTask(descriptor + firstFaust, new TagList(new Tag("legacy-first", 1)));
         promatServiceConnector.approveBuggiTask(descriptor + secondFaust, new TagList(new Tag("legacy-second", 2)));
 
-        TagList read = promatServiceConnector.getBuggiSelection(taskId);
-        assertThat(read.getTags().get(0).getName(), is("legacy-second"));
+        PromatCase fullCase = promatServiceConnector.getCase(aCase.getId());
+        PromatTask task = ContainerTest.findTaskByFieldType(fullCase, TaskFieldType.BUGGI);
+        assertThat(mapper.readValue(task.getData(), TagList.class).getTags().get(0).getName(), is("legacy-second"));
 
         deleteResponse("v1/api/cases/" + aCase.getId());
     }
@@ -98,7 +91,7 @@ public class CaseTaskSelectionIT extends ContainerTest {
     @Test
     void testBuggiSelectionValidation() throws PromatServiceConnectorException {
         String faust = "94001116";
-        // A BKM task, not BUGGI - the endpoint should reject writes/reads targeting it as BUGGI
+        // A BKM task, not BUGGI - the endpoint should reject writing to it
         PromatCase aCase = postAndAssert("v1/api/cases", makeRequest(faust, TaskFieldType.BKM), PromatCase.class, CREATED);
         int taskId = ContainerTest.findTaskByFieldType(aCase, TaskFieldType.BKM).getId();
 
@@ -135,9 +128,6 @@ public class CaseTaskSelectionIT extends ContainerTest {
             List<MetakompasSelectionEntry> saved = promatServiceConnector.putMetakompasSelection(taskId, List.of(entry));
             assertThat(saved.get(0).getTitle(), is("observerende"));
 
-            List<MetakompasSelectionEntry> read = promatServiceConnector.getMetakompasSelection(taskId);
-            assertThat(read.get(0).getTitle(), is("observerende"));
-
             PromatCase fullCase = promatServiceConnector.getCase(aCase.getId());
             PromatTask task = ContainerTest.findTaskByFieldType(fullCase, TaskFieldType.METAKOMPAS);
             List<MetakompasSelectionEntry> inlined = mapper.readValue(task.getData(), new TypeReference<List<MetakompasSelectionEntry>>() {});
@@ -172,8 +162,7 @@ public class CaseTaskSelectionIT extends ContainerTest {
                         .toList());
     }
 
-    // Single task of the given type, targeting more than one faust - the shape needed to
-    // confirm a selection is shared across all of a task's target fausts.
+    // A single task targeting more than one faust, for the shared-selection tests.
     private CaseRequest makeRequestWithTargetFausts(String primaryFaust, TaskFieldType taskFieldType, String... targetFausts) {
         return makeRequest(primaryFaust)
                 .withTasks(List.of(new TaskDto()

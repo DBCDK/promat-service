@@ -811,37 +811,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ServiceError'
-    get:
-      tags:
-        - tasks
-      summary: Get a reviewer's Metakompas subject selection for a task
-      operationId: getMetakompasSelection
-      parameters:
-        - in: path
-          name: taskId
-          required: true
-          schema:
-            type: integer
-            description: Id of the METAKOMPAS task (globally unique, not scoped to a case)
-      responses:
-        '200':
-          description: successful operation - an empty array if no selection has been saved yet
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/MetakompasSelectionEntryList'
-        '400':
-          description: Task is not a METAKOMPAS task
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ServiceError'
-        '404':
-          description: No such task
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ServiceError'
 
   /tasks/{taskId}/buggi:
     put:
@@ -865,37 +834,6 @@ paths:
       responses:
         '200':
           description: successful operation
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/TagList'
-        '400':
-          description: Task is not a BUGGI task
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ServiceError'
-        '404':
-          description: No such task
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ServiceError'
-    get:
-      tags:
-        - tasks
-      summary: Get a reviewer's Buggi tag selection for a task
-      operationId: getBuggiSelection
-      parameters:
-        - in: path
-          name: taskId
-          required: true
-          schema:
-            type: integer
-            description: Id of the BUGGI task (globally unique, not scoped to a case)
-      responses:
-        '200':
-          description: successful operation - an empty tag list if no selection has been saved yet
           content:
             application/json:
               schema:
@@ -2149,11 +2087,9 @@ components:
         data:
           type: string
           description: >-
-            The task data. For METAKOMPAS/BUGGI tasks, this is the reviewer's selection
-            serialized as JSON (a MetakompasSelectionEntryList or TagList respectively, shared
-            across all of the task's target fausts) - read/write it directly via this field, or
-            through the typed tasks/{taskId}/metakompas|buggi endpoints, which validate and
-            return it already parsed.
+            The task data. For METAKOMPAS/BUGGI tasks, this holds the reviewer's selection as
+            JSON (a MetakompasSelectionEntryList or TagList) - write it via the typed
+            tasks/{taskId}/metakompas|buggi PUT endpoint, which validates it.
           nullable: true
       required:
         - typeOfTask
@@ -2440,9 +2376,9 @@ components:
     MetakompasSelectionEntry:
       type: object
       description: >-
-        One Metakompas subject picked by a reviewer, with its tree path attached. The path is
-        stored alongside the subject rather than resolved against the live taxonomy tree on
-        read, so a selection stays displayable even if the tree is later restructured.
+        One Metakompas subject a reviewer picked, with its tree path attached - stored as-is
+        rather than resolved live, so a selection stays valid even if the taxonomy tree is later
+        restructured.
       properties:
         path:
           type: array

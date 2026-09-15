@@ -23,10 +23,7 @@ import static org.mockito.Mockito.when;
 
 /**
  * Tests for the fulltext-link lookup side effect CaseInformationUpdater applies alongside the
- * main title/weekcode sync. (The Metakompas subject-data tracking side effect that used to live
- * here was removed - promat-service now stores the reviewer's actual Metakompas selection
- * directly on the task itself, via tasks/{taskId}/metakompas, rather than inferring completion
- * indirectly from fbi-api's bibliographic metadata.)
+ * main title/weekcode sync.
  */
 public class CaseInformationUpdaterSideEffectsIT extends CaseInformationUpdaterTestBase {
 

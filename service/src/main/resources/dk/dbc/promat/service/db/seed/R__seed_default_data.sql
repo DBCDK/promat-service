@@ -322,9 +322,7 @@ values (22, 400024),
        (22, 400051),
        (22, 400052);
 
--- Sample Metakompas selections for case 22's METAKOMPAS tasks (400035, 400051, 400052) - one
--- selection per task, shared across all of that task's target fausts, stored directly in
--- promattask.data like every other task type's content.
+-- Sample Metakompas selections for case 22's METAKOMPAS tasks (400035, 400051, 400052).
 update promattask set data = '[{"path":["stemning","dramatisk"],"id":1,"title":"dramatisk","note":[],"oftenUsed":true,"ref":null}]' where id = 400035;
 update promattask set data = '[{"path":["ramme","geografisk sted"],"id":2,"title":"kystby","note":[],"oftenUsed":false,"ref":null}]' where id = 400051;
 update promattask set data = '[{"path":["fortælleteknik","tempo"],"id":3,"title":"langsomt tempo","note":[],"oftenUsed":false,"ref":null}]' where id = 400052;
@@ -463,9 +461,7 @@ values (1110, 401111),
        (1110, 401118),
        (1110, 401119);
 
--- Two separate METAKOMPAS tasks on the same case (401118/401119), each targeting one faust -
--- a case whose Metakompas selection genuinely differs per faust is split into separate tasks
--- rather than one task carrying more than one selection.
+-- Two METAKOMPAS tasks (401118/401119), one per faust, since their selections differ.
 update promattask set data = '[{"path":["handling","navngivet hovedperson"],"id":4,"title":"navngivet hovedperson","note":[],"oftenUsed":false,"ref":null}]' where id = 401118;
 update promattask set data = '[{"path":["stemning","tankevækkende"],"id":5,"title":"tankevækkende","note":[],"oftenUsed":true,"ref":null}]' where id = 401119;
 
@@ -482,8 +478,7 @@ values  (401121, 'GROUP_1_LESS_THAN_100_PAGES', 'BRIEF',          '2021-01-13','
         (401126, 'GROUP_1_LESS_THAN_100_PAGES', 'RECOMMENDATION', '2021-01-13', 'GROUP_1_LESS_THAN_100_PAGES', '2021-01-13', NULL, 'Anbefales til biblioteker med fokus på samfundsdebat.', '["1001120", "1001121"]'),
         (401128, 'GROUP_1_LESS_THAN_100_PAGES', 'METAKOMPAS',     '2021-01-13', 'METAKOMPAS',                  '2021-01-13', NULL, NULL, '["1001120"]'),
         (401129, 'GROUP_1_LESS_THAN_100_PAGES', 'METAKOMPAS',     '2021-01-13', 'METAKOMPAS',                  '2021-01-13', NULL, NULL, '["1001121"]'),
-        -- Two separate BUGGI tasks, one per faust, same pattern as the METAKOMPAS tasks above -
-        -- this case previously had no BUGGI task at all.
+        -- Two BUGGI tasks, one per faust, same pattern as the METAKOMPAS tasks above.
         (402001, 'GROUP_1_LESS_THAN_100_PAGES', 'BUGGI',          '2021-01-13', 'BUGGI',                       '2021-01-13', NULL, NULL, '["1001120"]'),
         (402002, 'GROUP_1_LESS_THAN_100_PAGES', 'BUGGI',          '2021-01-13', 'BUGGI',                       '2021-01-13', NULL, NULL, '["1001121"]');
 
