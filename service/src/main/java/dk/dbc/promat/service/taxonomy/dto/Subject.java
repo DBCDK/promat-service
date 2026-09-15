@@ -1,6 +1,7 @@
 package dk.dbc.promat.service.taxonomy.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -24,6 +25,12 @@ public class Subject implements Serializable {
 
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     String ref;
+
+    // Where this subject belongs in the tree - used only at insertion (taxonomy.put(subject,
+    // path)), not part of toHashMap()/of() or equals()/hashCode(). WRITE_ONLY: deserializes from
+    // Kafka JSON, never appears in REST responses.
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
+    List<String> path = new ArrayList<>();
 
 
     public String getTitle() {
@@ -94,6 +101,15 @@ public class Subject implements Serializable {
 
     public Subject withRef(String ref) {
         this.ref = ref;
+        return this;
+    }
+
+    public List<String> getPath() {
+        return path;
+    }
+
+    public Subject withPath(List<String> path) {
+        this.path = path;
         return this;
     }
 

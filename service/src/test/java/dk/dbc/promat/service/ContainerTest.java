@@ -38,7 +38,6 @@ import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options
 import static dk.dbc.promat.service.AuthMocks.mockAuthenticationResponses;
 import static dk.dbc.promat.service.FaustResolverMocks.mockFaustResolverResponses;
 import static dk.dbc.promat.service.FbiApiMocks.mockFbiApiResponses;
-import static dk.dbc.promat.service.taxonomy.RecordServiceMocks.mockRecordServiceAgencyDump;
 
 public abstract class ContainerTest extends IntegrationTestIT {
     protected static final Logger LOGGER = LoggerFactory.getLogger(ContainerTest.class);
@@ -278,7 +277,6 @@ public abstract class ContainerTest extends IntegrationTestIT {
 
         mockAuthenticationResponses(wireMockServer);
         mockFbiApiResponses(wireMockServer);
-        mockRecordServiceAgencyDump(wireMockServer);
         mockFaustResolverResponses(wireMockServer);
 
         wireMockServer.start();

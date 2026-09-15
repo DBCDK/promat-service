@@ -13,6 +13,8 @@ All variables default to sensible values for local development in `scripts/commo
 * OPENSEARCH_AGENCY - OpenSearch agency (default `010100`)
 * OPENSEARCH_REPOSITORY - OpenSearch repository (default `rawrepo_basis`)
 * RECORD_SERVICE - rawrepo record service URL, used for material records + taxonomy dump
+* TAXONOMY_KAFKA_BOOTSTRAP_SERVERS - Kafka bootstrap servers for taxonomy sync (empty by default)
+* TAXONOMY_KAFKA_TOPIC - Kafka topic name for taxonomy sync (empty by default)
 * OPENNUMBERROLL_SERVICE_URL / OPENNUMBERROLL_NUMBERROLLNAME - FAUST number generation service
 * FAUST_RESOLVER_URL - FAUST resolver service URL (required, no default in the app itself — only defaulted here in `scripts/common`)
 * CULR_SERVICE_URL / CULR_SERVICE_USER_ID / CULR_SERVICE_PASSWORD - CULR user/reviewer sync service (default `none`, disables the integration)
