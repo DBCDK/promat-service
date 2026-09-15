@@ -14,16 +14,15 @@ import java.util.Objects;
 // TaxonomyService serves over REST. Structurally it's just a nested Map<String, Object>: each
 // key is a category name, and each value is either another nested Map (a sub-category) or a
 // List (a leaf category's actual subjects) - a generic, JSON-shaped tree with no dedicated
-// "Category"/"Node" class of its own. searchList() below is the only addition on top of the
-// original shape, for the taxonomy/Kafka work's subtree-search endpoint.
+// "Category"/"Node" class of its own.
 public class Taxonomy  implements Serializable {
     private static final JSONBContext JSONB_CONTEXT =  new JSONBContext();
     private Map<String, Object> root = new LinkedHashMap<>();
 
     // The category tree's structure is hardcoded here, by hand - it has always been fixed
     // (confirmed against the taxonomy Kafka topic: every subject's path resolves into one of
-    // these branches, none introduce a new one), so both DM2Builder and TaxonomyPopulator only
-    // ever add SUBJECTS into this fixed skeleton via put(...) below, never replace it.
+    // these branches, none introduce a new one), so TaxonomyPopulator only ever adds SUBJECTS
+    // into this fixed skeleton via put(...) below, never replaces it.
     public Taxonomy() {
 
         // Settings (Ramme)
@@ -99,30 +98,12 @@ public class Taxonomy  implements Serializable {
                 .orElse(null);
     }
 
-    // Rebuilds a Subject object for every entry in the list on every call - fine for small
-    // categories, but "handling->handler om" alone has thousands of subjects on the real
-    // topic. searchList() below exists specifically to avoid that cost for search requests:
-    // it filters the raw entries first and only converts the (at most `limit`) matches.
+    // Converts every entry fresh on each call, no caching - caching would mean holding both the
+    // raw map and the converted Subject list per path, doubling memory. Not worth it until this
+    // is shown to actually be slow.
     public List<Subject> getList(String... path) {
         List<LinkedHashMap<String, Object>> list = getList(new ArrayList<>(Arrays.asList(path)));
         return list.stream().map(Subject::of).toList();
-    }
-
-    /**
-     * Case-insensitive substring search over the titles of subjects at the given path,
-     * sourced from the same in-memory cache as {@link #getList}, so it works regardless
-     * of which {@code TaxonomyBuilder} populated it.
-     */
-    public List<Subject> searchList(String[] path, String query, int limit) {
-        List<LinkedHashMap<String, Object>> list = getList(new ArrayList<>(Arrays.asList(path)));
-        String lowerQuery = query.toLowerCase();
-        // Filters and limits before mapping to Subject - see getList()'s comment on why that
-        // conversion is worth avoiding for entries that don't match anyway.
-        return list.stream()
-                .filter(entry -> entry.get("title") instanceof String title && title.toLowerCase().contains(lowerQuery))
-                .limit(limit)
-                .map(Subject::of)
-                .toList();
     }
 
     @SuppressWarnings("unchecked")

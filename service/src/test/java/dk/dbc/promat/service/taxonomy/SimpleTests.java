@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import dk.dbc.commons.jsonb.JSONBContext;
 import dk.dbc.commons.jsonb.JSONBException;
 import dk.dbc.promat.service.TestUtils;
-import dk.dbc.promat.service.taxonomy.dto.PathSubject;
 import dk.dbc.promat.service.taxonomy.dto.Subject;
 import dk.dbc.promat.service.taxonomy.dto.Taxonomy;
 import org.junit.Test;
@@ -67,7 +66,7 @@ public class SimpleTests extends TestUtils {
         assertThat(actual.get("ramme", "genre", "Some title 1"), is(s1));
         assertThat(actual.get("handling", "hovedperson(er) - beskrivelse", "hovedpersonens karaktertræk", "Some title 2"), is(s2));
 
-        PathSubject pathSubject = new PathSubject()
+        Subject pathSubject = new Subject()
                 .withPath(List.of("handling", "navngivet hovedperson"));
         pathSubject.withNote("Some note")
                 .withId(12)
@@ -81,7 +80,7 @@ public class SimpleTests extends TestUtils {
 
         assertThat(actual.get("handling", "navngivet hovedperson", "Tiny O'Mara"), is(expectedSubject));
 
-        pathSubject = new PathSubject()
+        pathSubject = new Subject()
                 .withPath(List.of("ramme", "handlingens tid udtrykt i tal"));
         pathSubject.withNote("Some note")
                 .withId(13)
