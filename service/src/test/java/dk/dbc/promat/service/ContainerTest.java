@@ -38,7 +38,6 @@ import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options
 import static dk.dbc.promat.service.AuthMocks.mockAuthenticationResponses;
 import static dk.dbc.promat.service.FaustResolverMocks.mockFaustResolverResponses;
 import static dk.dbc.promat.service.FbiApiMocks.mockFbiApiResponses;
-import static dk.dbc.promat.service.taxonomy.RecordServiceMocks.mockRecordServiceAgencyDump;
 
 public abstract class ContainerTest extends IntegrationTestIT {
     protected static final Logger LOGGER = LoggerFactory.getLogger(ContainerTest.class);
@@ -278,7 +277,6 @@ public abstract class ContainerTest extends IntegrationTestIT {
 
         mockAuthenticationResponses(wireMockServer);
         mockFbiApiResponses(wireMockServer);
-        mockRecordServiceAgencyDump(wireMockServer);
         mockFaustResolverResponses(wireMockServer);
 
         wireMockServer.start();
@@ -324,9 +322,6 @@ public abstract class ContainerTest extends IntegrationTestIT {
                 .withEnv("OAUTH2_INTROSPECTION_URL", "http://host.testcontainers.internal:" + wireMockServer.port() + "/oauth/introspection")
                 .withEnv("OAUTH2_USERINFO_URL", "http://host.testcontainers.internal:" + wireMockServer.port() + "/userinfo")
                 .withEnv("RAWREPO_RECORD_SERVICE_URL", "http://host.testcontainers.internal:" + wireMockServer.port())
-                // Distinct property from RAWREPO_RECORD_SERVICE_URL above - without it
-                // TaxonomyBuilderProducer has no builder to give TaxonomyCache.
-                .withEnv("RECORD_SERVICE", "http://host.testcontainers.internal:" + wireMockServer.port())
                 .withEnv("FAUST_RESOLVER_URL", "http://host.testcontainers.internal:" + wireMockServer.port())
                 //.withEnv("FBI_API_URL", "http://172.17.33.94:8082")
                 .withEnv("FBI_API_URL", "http://host.testcontainers.internal:" + wireMockServer.port())

@@ -19,9 +19,11 @@ import jakarta.inject.Inject;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.metrics.Metadata;
 import org.eclipse.microprofile.metrics.MetricRegistry;
+import org.eclipse.microprofile.metrics.MetricUnits;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.Optional;
@@ -79,6 +81,15 @@ public class ScheduledTaxonomyKafkaSync {
             .withUnit("failures")
             .build();
 
+    // Distinguishes "never synced" from an actual age, without the gauge returning null.
+    private static final long NEVER_SYNCED_YET = -1L;
+
+    static final Metadata syncAgeGaugeMetadata = Metadata.builder()
+            .withName("promat_service_taxonomy_last_sync_age")
+            .withDescription("Seconds since this pod's taxonomy Kafka sync last completed successfully, or -1 if it never has")
+            .withUnit(MetricUnits.SECONDS)
+            .build();
+
     // Cumulative across every scheduled run for this pod's lifetime, keyed by Kafka message key.
     private final Map<String, Subject> subjects = new ConcurrentHashMap<>();
 
@@ -89,12 +100,19 @@ public class ScheduledTaxonomyKafkaSync {
     void init() {
         groupId = hostname + "-" + UUID.randomUUID();
         LOGGER.info("Taxonomy Kafka sync starting with consumer group id '{}'", groupId);
+        metricRegistry.gauge(syncAgeGaugeMetadata, this::getSyncAgeSeconds);
         LOGGER.info("Running initial taxonomy Kafka sync at startup");
         run();
     }
 
     public LocalDateTime getLastSuccessfulSyncAt() {
         return lastSuccessfulSyncAt;
+    }
+
+    private long getSyncAgeSeconds() {
+        return lastSuccessfulSyncAt == null
+                ? NEVER_SYNCED_YET
+                : Duration.between(lastSuccessfulSyncAt, LocalDateTime.now()).toSeconds();
     }
 
     // persistent = false: don't try to catch up a missed run after a restart.

@@ -40,7 +40,6 @@ Integration tests (`*IT.java`) use TestContainers (spins up PostgreSQL + Payara 
 Environment is configured via `scripts/common` (defaults) or `.env.local` (local overrides). Required env vars: 
 * `PROMAT_DB_URL`, 
 * `OPENSEARCH_SERVICE_URL`, 
-* `RECORD_SERVICE`, 
 * `FAUST_RESOLVER_URL`,  
 * `OPENNUMBERROLL_SERVICE_URL`, 
 * `APP_NAME`.
@@ -83,7 +82,7 @@ Singleton EJBs in `service/src/main/java/dk/dbc/promat/service/batch/`:
 
 ### Taxonomy Service
 
-`TaxonomyService` fetches all records from agency `190004` via rawrepo record service, builds a hierarchical tree for Metakompas subject classification. Cache refreshes hourly. See `service/src/main/java/dk/dbc/promat/service/taxonomy/README.md` for tree structure.
+`TaxonomyService` serves a hierarchical tree for Metakompas subject classification from an in-memory cache (`TaxonomyCache`). Every pod populates it independently by consuming the taxonomy Kafka topic (`ScheduledTaxonomyKafkaSync`) - full replay on startup, incremental deltas hourly. See `service/src/main/java/dk/dbc/promat/service/taxonomy/README.md` for tree structure.
 
 ### Database
 

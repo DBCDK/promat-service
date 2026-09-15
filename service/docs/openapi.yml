@@ -1145,16 +1145,6 @@ paths:
               schema:
                 $ref: "#/components/schemas/TaxonomyTree"
 
-  /taxonomy/cache:
-    delete:
-      tags:
-        - taxonomy
-      summary: "DELETE v1/api/taxonomy/cache"
-      operationId: "clearCache"
-      responses:
-        "200":
-          description: "OK"
-
   /taxonomy/subtree:
     post:
       tags:
@@ -1198,38 +1188,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/TaxonomyTree"
-        "404":
-          description: "Path not found in taxonomy tree"
-
-  /taxonomy/subtree/search:
-    post:
-      tags:
-        - taxonomy
-      summary: "POST v1/api/taxonomy/subtree/search"
-      operationId: "searchTaxonomySubtree"
-      parameters:
-        - name: "q"
-          in: "query"
-          required: true
-          schema:
-            type: "string"
-      requestBody:
-        content:
-          application/json:
-            schema:
-              type: "array"
-              items:
-                type: "string"
-        required: true
-      responses:
-        "200":
-          description: "OK"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/TaxonomySubjectList"
-        "400":
-          description: "Missing query parameter 'q'"
         "404":
           description: "Path not found in taxonomy tree"
 
