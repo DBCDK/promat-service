@@ -18,9 +18,6 @@ pipeline {
 	}
 
 	environment {
-		// mvn verify already builds and tags this image locally for every branch
-		// (service/pom.xml's build-docker-image execution runs scripts/build docker in the
-		// pre-integration-test phase) - this just needs to match that tag exactly.
 		IMAGE = "docker-metascrum.artifacts.dbccloud.dk/promat-service:${env.BRANCH_NAME}-${env.BUILD_NUMBER}"
 	}
 

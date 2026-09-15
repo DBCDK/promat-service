@@ -31,7 +31,7 @@ delete from notification
     where id in (1, 2, 3);
 --
 delete from reviewersubjectnotes
-where reviewer_id in (4900, 4901);
+where reviewer_id in (4900, 4901, 4902);
 ---
 delete from subjectnote
     where id in (1, 2, 3);
@@ -40,23 +40,37 @@ delete from subject
 where id in (4901, 4902, 4903, 4904, 4905);
 --
 delete from promatuser
-where id in (4900, 4901, 4950, 4951, 4952, 4953, 4954);
+where id in (4900, 4901, 4902, 4950, 4951, 4952, 4953, 4954, 4955,
+             4956, 4957, 4958, 4959, 4960, 4961, 4962, 4963);
 --
 
 -- Reviewers
 -- Last migrated reviewer has id 3441, sequence restarts at 5000 = put reviewers in range 4900-4949
-insert into promatuser(id, role, active, culrid, firstname, lastname, email, address1, zip, city, institution, paycode, hiatus_begin, hiatus_end, accepts, note, capacity)
-values (4900, 'REVIEWER', true, '41', 'Hans', 'Hansen', 'hans.hansen@eksempel.dk', 'Lillegade 1', '9999', 'Lilleved', 'Frederiksberg Bibliotek', 123, '2020-10-28', '2020-11-01', '["MULTIMEDIA", "PS4", "PS5"]', 'Anmelder primært skønlitteratur for voksne', 1),
-       (4901, 'REVIEWER', true, '42', 'Ole', 'Olsen', 'ole.olsen@eksempel.dk', 'Storegade 99', '1111', 'Storeved', 'Aarhus Hovedbibliotek', 456, '2020-11-28', '2020-12-01', '["MULTIMEDIA", "PS4", "PS5"]', 'Anmelder primært film og multimedie', 2);
+insert into promatuser(id, role, active, culrid, firstname, lastname, email, address1, zip, city, institution, paycode, hiatus_begin, hiatus_end, accepts, note, capacity, agency, userid)
+values (4900, 'REVIEWER', true, '41', 'Hans', 'Hansen', 'hans.hansen@eksempel.dk', 'Lillegade 1', '9999', 'Lilleved', 'Frederiksberg Bibliotek', 123, '2020-10-28', '2020-11-01', '["MULTIMEDIA", "PS4", "PS5"]', 'Anmelder primært skønlitteratur for voksne', 1, NULL, NULL),
+       (4901, 'REVIEWER', true, '42', 'Ole', 'Olsen', 'ole.olsen@eksempel.dk', 'Storegade 99', '1111', 'Storeved', 'Aarhus Hovedbibliotek', 456, '2020-11-28', '2020-12-01', '["MULTIMEDIA", "PS4", "PS5"]', 'Anmelder primært film og multimedie', 2, NULL, NULL),
+       -- Netpunkt/CULR login user for feature-branch preview testing.
+       (4902, 'REVIEWER', true, '43', 'Peter', 'Andersen', 'proanm1@dbc.dk', 'Testvej 12', '2100', 'København Ø', 'Testbiblioteket', 789, NULL, NULL, '["MULTIMEDIA", "PS4", "PS5"]', 'Testbruger til feature branch preview', 1, '790900', 'proanm1');
 
 -- Editors
 -- Migrated editors has id 10001-10006, sequence restarts at 5000 = put editors in range 4950-4999
-insert into promatuser(id, role, active, culrid, firstname, lastname, email, paycode)
-values (4950, 'EDITOR', true, '51', 'Anne', 'Kristensen', 'anne.kristensen@dbc.dk', 5678),
-       (4951, 'EDITOR', true, '52', 'Thomas', 'Berg', 'thomas.berg@dbc.dk', 1111),
-       (4952, 'EDITOR', true, '53', 'Camilla', 'Dahl', 'camilla.dahl@dbc.dk', 2760),
-       (4953, 'EDITOR', true, '54', 'Soeren', 'Vig', 'soeren.vig@dbc.dk', 2222),
-       (4954, 'EDITOR', true, '56', 'Louise', 'Holm', 'louise.holm@dbc.dk', 2860);
+insert into promatuser(id, role, active, culrid, firstname, lastname, email, paycode, agency, userid)
+values (4950, 'EDITOR', true, '51', 'Anne', 'Kristensen', 'anne.kristensen@dbc.dk', 5678, NULL, NULL),
+       (4951, 'EDITOR', true, '52', 'Thomas', 'Berg', 'thomas.berg@dbc.dk', 1111, NULL, NULL),
+       (4952, 'EDITOR', true, '53', 'Camilla', 'Dahl', 'camilla.dahl@dbc.dk', 2760, NULL, NULL),
+       (4953, 'EDITOR', true, '54', 'Soeren', 'Vig', 'soeren.vig@dbc.dk', 2222, NULL, NULL),
+       (4954, 'EDITOR', true, '56', 'Louise', 'Holm', 'louise.holm@dbc.dk', 2860, NULL, NULL),
+       -- Netpunkt/CULR login user for feature-branch preview testing.
+       (4955, 'EDITOR', true, '55', 'Pernille', 'Rode', 'prored1@dbc.dk', 3333, '790900', 'prored1'),
+       -- Netpunkt/CULR login users for feature-branch preview testing, one per real editor's initials.
+       (4956, 'EDITOR', true, '57', 'Ludvig', 'Borup', 'ludvig.borup@dbc.dk', 4001, '790900', 'lubo'),
+       (4957, 'EDITOR', true, '58', 'Kim', 'Petersen', 'kim.petersen@dbc.dk', 4002, '790900', 'kipe'),
+       (4958, 'EDITOR', true, '59', 'Aksel', 'Riis', 'aksel.riis@dbc.dk', 4003, '790900', 'akri'),
+       (4959, 'EDITOR', true, '60', 'Kirsten', 'Schmidt', 'kirsten.schmidt@dbc.dk', 4004, '790900', 'kisc'),
+       (4960, 'EDITOR', true, '61', 'Svend', 'Ibsen', 'svend.ibsen@dbc.dk', 4005, '790900', 'svib'),
+       (4961, 'EDITOR', true, '62', 'Jens Gunnar', 'Nielsen', 'jens.gunnar.nielsen@dbc.dk', 4006, '790900', 'jgn'),
+       (4962, 'EDITOR', true, '63', 'Jonas Bo', 'Ravn', 'jonas.bo.ravn@dbc.dk', 4007, '790900', 'jbr'),
+       (4963, 'EDITOR', true, '64', 'Peter Mogens', 'Lund', 'peter.mogens.lund@dbc.dk', 4008, '790900', 'pml');
 
 -- Notifications
 INSERT INTO notification(id, bodytext, subject, toaddress, status, created)
