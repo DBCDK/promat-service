@@ -12,7 +12,7 @@ All variables default to sensible values for local development in `scripts/commo
 * OPENSEARCH_PROFILE - OpenSearch profile (default `dbckat`)
 * OPENSEARCH_AGENCY - OpenSearch agency (default `010100`)
 * OPENSEARCH_REPOSITORY - OpenSearch repository (default `rawrepo_basis`)
-* RECORD_SERVICE - rawrepo record service URL, used for material records + taxonomy dump
+* RAWREPO_RECORD_SERVICE_URL - rawrepo record service URL, used for material records + taxonomy dump
 * TAXONOMY_KAFKA_BOOTSTRAP_SERVERS - Kafka bootstrap servers for taxonomy sync (empty by default)
 * TAXONOMY_KAFKA_TOPIC - Kafka topic name for taxonomy sync (empty by default)
 * OPENNUMBERROLL_SERVICE_URL / OPENNUMBERROLL_NUMBERROLLNAME - FAUST number generation service

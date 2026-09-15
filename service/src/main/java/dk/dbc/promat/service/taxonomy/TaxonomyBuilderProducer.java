@@ -16,14 +16,14 @@ public class TaxonomyBuilderProducer {
     private final Duration readTimeout;
 
     @Inject
-    public TaxonomyBuilderProducer(@ConfigProperty(name = "RECORD_SERVICE") Optional<String> recordService,
+    public TaxonomyBuilderProducer(@ConfigProperty(name = "RAWREPO_RECORD_SERVICE_URL") Optional<String> recordService,
                                    @ConfigProperty(name = "TOPICS_FETCH_READ_TIMEOUT", defaultValue = "PT20S") Duration readTimeout) {
         this.recordService = recordService;
         this.readTimeout = readTimeout;
     }
 
-    // DM2Builder if RECORD_SERVICE is set; otherwise null (TaxonomyCache treats a null builder
-    // as "never refreshes", logging an error instead of crashing).
+    // DM2Builder if RAWREPO_RECORD_SERVICE_URL is set; otherwise null (TaxonomyCache treats a
+    // null builder as "never refreshes", logging an error instead of crashing).
     @Produces
     public TaxonomyBuilder produce() {
         return recordService
