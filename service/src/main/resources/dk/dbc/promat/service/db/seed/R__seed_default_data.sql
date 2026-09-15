@@ -70,7 +70,7 @@ values (4950, 'EDITOR', true, '51', 'Anne', 'Kristensen', 'anne.kristensen@dbc.d
        (4960, 'EDITOR', true, '61', 'Svend', 'Ibsen', 'svend.ibsen@dbc.dk', 4005, '790900', 'svib'),
        (4961, 'EDITOR', true, '62', 'Jens Gunnar', 'Nielsen', 'jens.gunnar.nielsen@dbc.dk', 4006, '790900', 'jgn'),
        (4962, 'EDITOR', true, '63', 'Jonas Bo', 'Ravn', 'jonas.bo.ravn@dbc.dk', 4007, '790900', 'jbr'),
-       (4963, 'EDITOR', true, '64', 'Peter Mogens', 'Lund', 'peter.mogens.lund@dbc.dk', 4008, '790900', 'pml');
+       (4963, 'EDITOR', true, '64', 'Pia Margrethe', 'Lund', 'pia.margrethe.lund@dbc.dk', 4008, '790900', 'pml');
 
 -- Notifications
 INSERT INTO notification(id, bodytext, subject, toaddress, status, created)
