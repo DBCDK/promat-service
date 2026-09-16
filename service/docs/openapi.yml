@@ -783,7 +783,7 @@ paths:
           required: true
           schema:
             type: integer
-            description: Id of the METAKOMPAS task (globally unique, not scoped to a case)
+            description: Id of the METAKOMPAS task
       requestBody:
         required: true
         content:
@@ -824,7 +824,7 @@ paths:
           required: true
           schema:
             type: integer
-            description: Id of the BUGGI task (globally unique, not scoped to a case)
+            description: Id of the BUGGI task
       requestBody:
         required: true
         content:

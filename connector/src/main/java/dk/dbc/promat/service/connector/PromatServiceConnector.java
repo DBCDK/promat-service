@@ -198,7 +198,7 @@ public class PromatServiceConnector {
     /**
      * Saves a reviewer's Metakompas subject selection for a task, shared across all of the
      * task's target fausts
-     * @param taskId id of the METAKOMPAS task (globally unique, not scoped to a case)
+     * @param taskId id of the METAKOMPAS task
      * @param entries the selected subjects, with tree path attached
      * @return the persisted selection
      * @throws PromatServiceConnectorException on unexpected failure for the operation
@@ -217,7 +217,7 @@ public class PromatServiceConnector {
     /**
      * Saves a reviewer's Buggi tag selection for a task, shared across all of the task's target
      * fausts
-     * @param taskId id of the BUGGI task (globally unique, not scoped to a case)
+     * @param taskId id of the BUGGI task
      * @param tags the selected tags
      * @return the persisted selection
      * @throws PromatServiceConnectorException on unexpected failure for the operation
