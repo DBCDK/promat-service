@@ -879,7 +879,7 @@ public class Cases {
             if(task.getApproved() == null) {
                 // TODO: Consider if setting task to complete should be done automatically or if
                 // it should be done deliberately - a PUT here may just be a draft, and filling
-                // in the full selection may take time.
+                // in the full selection may take time/may be done across several sessions.
                 LOGGER.info("Updated approve date on task {}", task.getId());
                 task.setApproved(LocalDate.now());
             }
