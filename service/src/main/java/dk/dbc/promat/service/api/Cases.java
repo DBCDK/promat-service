@@ -814,9 +814,11 @@ public class Cases {
             }
 
             // Check that we do not add any targetfausts that is in use
-            if(dto.getTargetFausts() != null) {
-                if(!Faustnumbers.checkNoOpenCaseWithFaust(entityManager, promatCase.getId(), dto.getTargetFausts().toArray(String[]::new))) {
-                    LOGGER.info("Case contains a task with one or more targetFaust {} used by other active cases", dto.getTargetFausts());
+            List<String> targetFausts = dto.getTargetFausts() == null ? null :
+                    dto.getTargetFausts().stream().distinct().toList();
+            if(targetFausts != null) {
+                if(!Faustnumbers.checkNoOpenCaseWithFaust(entityManager, promatCase.getId(), targetFausts.toArray(String[]::new))) {
+                    LOGGER.info("Case contains a task with one or more targetFaust {} used by other active cases", targetFausts);
                     return ServiceErrorDto.FaustInUse("One or more targetFausts is used by other active cases");
                 }
             }
@@ -828,7 +830,7 @@ public class Cases {
                     .withData(dto.getData())  // null is allowed here since it is the default value anyway
                     .withCreated(LocalDate.now())
                     .withPayCategory(Repository.getPayCategoryForTaskFieldTypeOfTaskType(dto.getTaskType(), dto.getTaskFieldType()))
-                    .withTargetFausts(dto.getTargetFausts());
+                    .withTargetFausts(targetFausts);
 
             if(dto.getTaskFieldType().onceOnlyPerCase) {
                 PromatTask existingTask = promatCase.getTasks().stream()
@@ -1019,7 +1021,8 @@ public class Cases {
                         .withPayCategory(
                                 Repository.getPayCategoryForTaskFieldTypeOfTaskType(task.getTaskType(), task.getTaskFieldType()))
                         .withCreated(LocalDate.now())
-                        .withTargetFausts(task.getTargetFausts() == null ? null : task.getTargetFausts()));
+                        .withTargetFausts(task.getTargetFausts() == null ? null :
+                                task.getTargetFausts().stream().distinct().toList()));
             }
         }
 

@@ -7,17 +7,36 @@ https://praxis.dbc.dk/andre-formater/px-aut0012.html/#pxx09kfe
 
 
 ## Fetching records
-For existing old-world-setup (dm2) the approach is to use a complete dump of all 190004 records, using
+Every pod consumes a Kafka topic (`TAXONOMY_KAFKA_BOOTSTRAP_SERVERS`/`TAXONOMY_KAFKA_TOPIC`,
+containing only metakompas taxonomy-relevant 190004 records) independently, straight into its
+own in-memory tree - see `ScheduledTaxonomyKafkaSync`. Each pod uses its own Kafka consumer
+group id, generated fresh on every restart (`<hostname>-<random UUID>`), so a fresh pod always
+gets a full topic replay on its first sync, then only incremental (new/changed/tombstoned)
+records on every subsequent hourly run for the rest of that pod's lifetime.
 
-```shell 
-curl -H 'Content-type: application/json' -d '{"agencies":[190004],"outputFormat":"JSON"}' http://rawrepo-record-service.cisterne.svc.cloud.dbc.dk/api/v1/dump
-```
-As this is not that snappy, this takes place once every 15 minutes.
+There is no database or shared state involved - if a pod restarts while Kafka is unreachable, it
+serves an empty taxonomy until it successfully syncs again. See
+[architecture/decisions](../../../../../../../../docs/architecture/decisions) (0002 through
+0004) for how this evolved from an original HTTP-dump-based approach (`curl .../api/v1/dump`,
+run every 15 minutes) through a DB-snapshot design and finally to this fully per-pod Kafka
+design.
 
-### Future dm3
-For future dm3 setup the kafka subject used for prokat-search will be the basis for kafka-js worker to create a new
-kafka topic, containing ONLY metakompas taxonomy relevant records. The initial first build will be slow, but thereafter
-only incremental .
+## Testing
+
+`ScheduledTaxonomyKafkaSync` (the Kafka-consuming path itself - `syncTopic()`, tombstone
+handling, the cumulative subject map) has no automated test coverage. There's no Kafka test
+infrastructure anywhere in this repo (no `testcontainers-kafka` or similar), and
+`ContainerTest`/`IntegrationTestIT` never configure `TAXONOMY_KAFKA_BOOTSTRAP_SERVERS`/
+`TAXONOMY_KAFKA_TOPIC`, so this class never actually runs in the IT suite either - it just
+early-returns on every scheduled `run()`. The one piece of this made genuinely, easily testable
+by the refactor is `TaxonomyPopulator` (pure function, no external dependencies) - see
+`TaxonomyPopulatorTest`.
+
+As a side effect, the `/taxonomy/tree`, `/taxonomy/structure` and `/taxonomy/subtree*` REST
+endpoints also currently have no IT coverage against real populated data - the IT that used to
+exercise them (`TaxonomyTreeIT`) was removed along with the old HTTP-dump/`DM2Builder` path it
+depended on (commit `86042526`, "remove dm2 builder, remove subtree search endpoint, simplify
+gauge").
 
 ## Taxonomy tree
 In current Metakompas solution the reviewer navigates menu structure like this:
