@@ -86,8 +86,8 @@ public class FbiApiMocks {
                   "data" : {
                     "manifestation" : {
                       "pid" : "870970-basis:%s",
-                      "creators" : [ { "display" : "Roger Crowley" } ],
-                      "classifications" : [ { "dk5Heading" : "Det Byzantinske Riges historie", "entryType" : "MAIN_ENTRY" } ],
+                      "shelfCreator" : { "display" : "Crowley, Roger" },
+                      "classifications" : [ { "display" : "Det Byzantinske Riges historie", "dk5Heading" : "Det Byzantinske Riges historie" } ],
                       "edition" : { "edition" : "1. udgave" },
                       "identifiers" : [ { "type" : "ISBN", "value" : "9788771281118" } ],
                       "materialTypes" : [ {
@@ -98,7 +98,7 @@ public class FbiApiMocks {
                       "publisher" : [ "Rosenkilde & Bahnhof" ],
                       "catalogueCodes" : { "nationalBibliography" : [ "DBF201339" ], "otherCatalogues" : [ "BKM201339", "ACC201333" ] },
                       "titles" : { "main" : [ "Konstantinopels fald" ] },
-                      "materialSelection" : { "selectionGroup" : [ { "display" : "Voksenafdelinger" } ] },
+                      "materialSelection" : { "selectionGroup" : [ { "type" : "ADULT", "display" : "Voksenafdelinger" } ] },
                       "subjects" : { "dbcVerified" : [ { "type" : "TOPIC", "display" : "historie", "local" : false } ] }
                     }
                   }
