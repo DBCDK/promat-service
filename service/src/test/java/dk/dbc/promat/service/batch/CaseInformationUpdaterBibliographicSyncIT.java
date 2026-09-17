@@ -188,7 +188,9 @@ public class CaseInformationUpdaterBibliographicSyncIT extends CaseInformationUp
 
         assertThat("title is updated", created.getTitle().equals("Præsidentjagt"));
         assertThat("weekcode is updated", created.getWeekCode().equals("BKM202111"));
-        assertThat("author is updated", created.getAuthor().equals("Gerry Duggan, Brian Posehn, Tony Moore"));
+        // 38600052 has three creators; see FbiApiHandler.creators() - author is cleared, not
+        // set to an arbitrary "first of several" name.
+        assertThat("author is cleared", created.getAuthor().equals(""));
 
         // Delete the case so that we don't mess up payments and dataio-export tests
         deleteTestCase(created.getId());

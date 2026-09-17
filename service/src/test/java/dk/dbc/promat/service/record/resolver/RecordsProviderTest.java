@@ -176,8 +176,8 @@ class RecordsProviderTest {
         when(faustResolver.resolve(faust)).thenReturn(Set.of(faust));
 
         ObjectNode manifestation = MAPPER.createObjectNode();
-        manifestation.putArray("creators").addObject().put("display", "Roger Crowley");
-        manifestation.putArray("classifications").addObject().put("dk5Heading", "99.4").put("entryType", "MAIN_ENTRY");
+        manifestation.putObject("shelfCreator").put("display", "Crowley, Roger");
+        manifestation.putArray("classifications").addObject().put("display", "99.4").put("dk5Heading", "Historie");
         manifestation.putObject("edition").put("edition", "1. udgave");
         manifestation.putArray("identifiers").addObject().put("type", "ISBN").put("value", "9788771281118");
         ObjectNode materialType = manifestation.putArray("materialTypes").addObject();
@@ -187,7 +187,8 @@ class RecordsProviderTest {
         manifestation.putArray("publisher").add("Rosenkilde & Bahnhof");
         manifestation.putObject("catalogueCodes").putArray("otherCatalogues").add("BKM201339");
         manifestation.putObject("titles").putArray("main").add("Konstantinopels fald");
-        manifestation.putObject("materialSelection").putArray("selectionGroup").addObject().put("display", "Voksenafdelinger");
+        manifestation.putObject("materialSelection").putArray("selectionGroup").addObject()
+                .put("type", "ADULT").put("display", "Voksenafdelinger");
         manifestation.putArray("series").addObject().put("title", "En Serie").put("numberInSeries", "3");
 
         ObjectNode root = MAPPER.createObjectNode();
@@ -198,14 +199,16 @@ class RecordsProviderTest {
         RecordsListDto recordsListDto = provider.getRecords(faust);
         var record = recordsListDto.getRecords().getFirst();
         assertThat("Title", record.getTitle(), is("Konstantinopels fald"));
-        assertThat("Creator", record.getCreator(), is("Roger Crowley"));
+        assertThat("Creator", record.getCreator(), is("Crowley, Roger"));
         assertThat("Publisher", record.getPublisher(), is("Rosenkilde & Bahnhof"));
         assertThat("Extent", record.getExtent(), is("298 sider, ill."));
         assertThat("Edition", record.getEdition(), is("1. udgave"));
         assertThat("Isbn", record.getIsbn(), is(List.of("9788771281118")));
         assertThat("Dk5", record.getDk5(), is(List.of("99.4")));
+        assertThat("Dk5Heading", record.getDk5Heading(), is(List.of("Historie")));
         assertThat("Series", record.getSeries(), is(List.of("En Serie, 3")));
-        assertThat("TargetGroup", record.getTargetGroup(), is(List.of("Voksenafdelinger")));
+        assertThat("TargetGroup", record.getTargetGroup(), is(List.of("ADULT")));
+        assertThat("TargetGroupDisplay", record.getTargetGroupDisplay(), is(List.of("Voksenafdelinger")));
         assertThat("CatalogCodes", record.getCatalogCodes(), is(List.of("BKM201339")));
         assertThat("Material type", record.getTypes().getFirst().getMaterialType().toString(), is("BOOK"));
         assertThat("Material specific type", record.getTypes().getFirst().getSpecificType(), is("bog"));
@@ -226,7 +229,7 @@ class RecordsProviderTest {
         String faust = "48951147";
 
         ObjectNode manifestation = MAPPER.createObjectNode();
-        manifestation.putArray("creators").addObject().put("display", "Roger Crowley");
+        manifestation.putObject("shelfCreator").put("display", "Crowley, Roger");
         manifestation.putObject("titles").putArray("main").add("Konstantinopels fald");
         ObjectNode materialType = manifestation.putArray("materialTypes").addObject();
         materialType.putObject("materialTypeGeneral").put("code", "BOOKS");
@@ -274,14 +277,14 @@ class RecordsProviderTest {
         ObjectNode manifestation1 = MAPPER.createObjectNode();
         manifestation1.put("pid", "870970-basis:11111111");
         manifestation1.putObject("titles").putArray("main").add("Bogen om noget");
-        manifestation1.putArray("creators").addObject().put("display", "Forfatter Et");
+        manifestation1.putObject("shelfCreator").put("display", "Forfatter Et");
         manifestation1.putArray("materialTypes").addObject()
                 .putObject("materialTypeGeneral").put("code", "BOOKS");
 
         ObjectNode manifestation2 = MAPPER.createObjectNode();
         manifestation2.put("pid", "870970-basis:22222222");
         manifestation2.putObject("titles").putArray("main").add("En anden bog");
-        manifestation2.putArray("creators").addObject().put("display", "Forfatter Et");
+        manifestation2.putObject("shelfCreator").put("display", "Forfatter Et");
 
         ObjectNode work1 = MAPPER.createObjectNode();
         work1.putObject("manifestations").putArray("bestRepresentations").add(manifestation1);
@@ -348,5 +351,102 @@ class RecordsProviderTest {
         RecordsListDto recordsListDto = provider.getRecords(faust);
         assertThat("One record is present", recordsListDto.getNumFound(), is(1));
         assertThat("Title is absent", recordsListDto.getRecords().getFirst().getTitle(), is(nullValue()));
+    }
+
+    @Test
+    void creatorComesFromShelfCreator() throws FaustResolverException, RecordServiceConnectorException, FbiApiConnectorException {
+        String faust = "22677780";
+        when(faustResolver.resolve(faust)).thenReturn(Set.of(faust));
+
+        ObjectNode manifestation = MAPPER.createObjectNode();
+        manifestation.putObject("shelfCreator").put("display", "Rowling, Joanne K.");
+        ObjectNode root = MAPPER.createObjectNode();
+        root.set("manifestation", manifestation);
+        when(fbiApiConnector.execute(anyString(), anyMap(), any()))
+                .thenAnswer(invocation -> MAPPER.treeToValue(root, invocation.getArgument(2, Class.class)));
+
+        RecordsListDto recordsListDto = provider.getRecords(faust);
+        assertThat("Creator passes through as fbi-api formats it", recordsListDto.getRecords().getFirst().getCreator(), is("Rowling, Joanne K."));
+    }
+
+    @Test
+    void noShelfCreator_creatorIsAbsent() throws FaustResolverException, RecordServiceConnectorException, FbiApiConnectorException {
+        // See FbiApiHandler.creators(): fbi-api's shelfCreator is null whenever a manifestation
+        // has no single creator it can be shelved under (field 100), e.g. a comic with a writer
+        // and an artist, neither the sole main entry.
+        String faust = "38600052";
+        when(faustResolver.resolve(faust)).thenReturn(Set.of(faust));
+
+        ObjectNode manifestation = MAPPER.createObjectNode();
+        manifestation.putNull("shelfCreator");
+        ObjectNode root = MAPPER.createObjectNode();
+        root.set("manifestation", manifestation);
+        when(fbiApiConnector.execute(anyString(), anyMap(), any()))
+                .thenAnswer(invocation -> MAPPER.treeToValue(root, invocation.getArgument(2, Class.class)));
+
+        RecordsListDto recordsListDto = provider.getRecords(faust);
+        assertThat("Creator is absent", recordsListDto.getRecords().getFirst().getCreator(), is(nullValue()));
+    }
+
+    @Test
+    void publisherPlaceAndYearAreSeparateFields() throws FaustResolverException, RecordServiceConnectorException, FbiApiConnectorException {
+        String faust = "22677780";
+        when(faustResolver.resolve(faust)).thenReturn(Set.of(faust));
+
+        ObjectNode manifestation = MAPPER.createObjectNode();
+        manifestation.putArray("publisher").add("Gyldendal");
+        manifestation.putArray("placeOfPublication").add("Kbh.");
+        manifestation.putObject("edition").putObject("publicationYear").put("year", 2018);
+        ObjectNode root = MAPPER.createObjectNode();
+        root.set("manifestation", manifestation);
+        when(fbiApiConnector.execute(anyString(), anyMap(), any()))
+                .thenAnswer(invocation -> MAPPER.treeToValue(root, invocation.getArgument(2, Class.class)));
+
+        RecordsListDto recordsListDto = provider.getRecords(faust);
+        var record = recordsListDto.getRecords().getFirst();
+        assertThat("Publisher is just the bare name", record.getPublisher(), is("Gyldendal"));
+        assertThat("Place of publication is separate", record.getPlaceOfPublication(), is("Kbh."));
+        assertThat("Publication year is separate", record.getPublicationYear(), is("2018"));
+    }
+
+    @Test
+    void publisherWithoutPlaceOrYear_leavesThemNull() throws FaustResolverException, RecordServiceConnectorException, FbiApiConnectorException {
+        String faust = "22677780";
+        when(faustResolver.resolve(faust)).thenReturn(Set.of(faust));
+
+        ObjectNode manifestation = MAPPER.createObjectNode();
+        manifestation.putArray("publisher").add("Gyldendal");
+        ObjectNode root = MAPPER.createObjectNode();
+        root.set("manifestation", manifestation);
+        when(fbiApiConnector.execute(anyString(), anyMap(), any()))
+                .thenAnswer(invocation -> MAPPER.treeToValue(root, invocation.getArgument(2, Class.class)));
+
+        RecordsListDto recordsListDto = provider.getRecords(faust);
+        var record = recordsListDto.getRecords().getFirst();
+        assertThat("Publisher is just the bare name", record.getPublisher(), is("Gyldendal"));
+        assertThat("Place of publication is absent", record.getPlaceOfPublication(), is(nullValue()));
+        assertThat("Publication year is absent", record.getPublicationYear(), is(nullValue()));
+    }
+
+    @Test
+    void targetGroupIsTheRawType_notMappedByBackend() throws FaustResolverException, RecordServiceConnectorException, FbiApiConnectorException {
+        String faust = "22677780";
+        when(faustResolver.resolve(faust)).thenReturn(Set.of(faust));
+
+        ObjectNode manifestation = MAPPER.createObjectNode();
+        ArrayNode selectionGroup = manifestation.putObject("materialSelection").putArray("selectionGroup");
+        selectionGroup.addObject().put("type", "CHILDREN").put("display", "Børnebiblioteker");
+        selectionGroup.addObject().put("type", "SCHOOL").put("display", "Skolebiblioteker");
+        ObjectNode root = MAPPER.createObjectNode();
+        root.set("manifestation", manifestation);
+        when(fbiApiConnector.execute(anyString(), anyMap(), any()))
+                .thenAnswer(invocation -> MAPPER.treeToValue(root, invocation.getArgument(2, Class.class)));
+
+        RecordsListDto recordsListDto = provider.getRecords(faust);
+        var record = recordsListDto.getRecords().getFirst();
+        assertThat("Target group is the raw fbi-api type, left for the caller to map",
+                record.getTargetGroup(), is(List.of("CHILDREN", "SCHOOL")));
+        assertThat("Target group display is available as a separate field",
+                record.getTargetGroupDisplay(), is(List.of("Børnebiblioteker", "Skolebiblioteker")));
     }
 }

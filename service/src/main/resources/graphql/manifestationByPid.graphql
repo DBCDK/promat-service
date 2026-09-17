@@ -1,19 +1,20 @@
 query ManifestationByPid($pid: String!) {
     manifestation(pid: $pid) {
         pid
-        creators { display }
-        classifications { dk5Heading entryType }
-        edition { edition }
+        shelfCreator { display }
+        classifications { display dk5Heading }
+        edition { edition publicationYear { year } }
         identifiers { type value }
         materialTypes {
             materialTypeGeneral { code display }
             materialTypeSpecific { code display } }
         physicalDescription { summaryFull }
         publisher
+        placeOfPublication
         catalogueCodes { nationalBibliography otherCatalogues }
         titles { main }
         materialSelection {
-            selectionGroup { display }
+            selectionGroup { type display }
         }
         subjects {
             dbcVerified { type display local }

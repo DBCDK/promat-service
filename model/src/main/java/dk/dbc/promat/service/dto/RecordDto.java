@@ -12,12 +12,16 @@ public class RecordDto implements Dto {
     private String title;
     private String creator;
     private String publisher;
+    private String placeOfPublication;
+    private String publicationYear;
     private String extent;
     private String edition;
     private List<String> isbn = new ArrayList<>();
     private List<String> dk5 = new ArrayList<>();
+    private List<String> dk5Heading = new ArrayList<>();
     private List<String> series = new ArrayList<>();
     private List<String> targetGroup = new ArrayList<>();
+    private List<String> targetGroupDisplay = new ArrayList<>();
     private List<String> catalogCodes = new ArrayList<>();
 
     public String getFaust() {
@@ -52,6 +56,22 @@ public class RecordDto implements Dto {
         this.publisher = publisher;
     }
 
+    public String getPlaceOfPublication() {
+        return placeOfPublication;
+    }
+
+    public void setPlaceOfPublication(String placeOfPublication) {
+        this.placeOfPublication = placeOfPublication;
+    }
+
+    public String getPublicationYear() {
+        return publicationYear;
+    }
+
+    public void setPublicationYear(String publicationYear) {
+        this.publicationYear = publicationYear;
+    }
+
     public String getExtent() {
         return extent;
     }
@@ -84,6 +104,14 @@ public class RecordDto implements Dto {
         this.dk5 = dk5;
     }
 
+    public List<String> getDk5Heading() {
+        return dk5Heading;
+    }
+
+    public void setDk5Heading(List<String> dk5Heading) {
+        this.dk5Heading = dk5Heading;
+    }
+
     public List<String> getSeries() {
         return series;
     }
@@ -98,6 +126,14 @@ public class RecordDto implements Dto {
 
     public void setTargetGroup(List<String> targetGroup) {
         this.targetGroup = targetGroup;
+    }
+
+    public List<String> getTargetGroupDisplay() {
+        return targetGroupDisplay;
+    }
+
+    public void setTargetGroupDisplay(List<String> targetGroupDisplay) {
+        this.targetGroupDisplay = targetGroupDisplay;
     }
 
     public List<String> getCatalogCodes() {
@@ -154,6 +190,16 @@ public class RecordDto implements Dto {
         return this;
     }
 
+    public RecordDto withPlaceOfPublication(String placeOfPublication) {
+        this.placeOfPublication = placeOfPublication;
+        return this;
+    }
+
+    public RecordDto withPublicationYear(String publicationYear) {
+        this.publicationYear = publicationYear;
+        return this;
+    }
+
     public RecordDto withExtent(String extent) {
         this.extent = extent;
         return this;
@@ -174,6 +220,11 @@ public class RecordDto implements Dto {
         return this;
     }
 
+    public RecordDto withDk5Heading(List<String> dk5Heading) {
+        this.dk5Heading = dk5Heading;
+        return this;
+    }
+
     public RecordDto withSeries(List<String> series) {
         this.series = series;
         return this;
@@ -181,6 +232,11 @@ public class RecordDto implements Dto {
 
     public RecordDto withTargetGroup(List<String> targetGroup) {
         this.targetGroup = targetGroup;
+        return this;
+    }
+
+    public RecordDto withTargetGroupDisplay(List<String> targetGroupDisplay) {
+        this.targetGroupDisplay = targetGroupDisplay;
         return this;
     }
 
@@ -200,18 +256,22 @@ public class RecordDto implements Dto {
                 Objects.equals(title, recordDto.title) &&
                 Objects.equals(creator, recordDto.creator) &&
                 Objects.equals(publisher, recordDto.publisher) &&
+                Objects.equals(placeOfPublication, recordDto.placeOfPublication) &&
+                Objects.equals(publicationYear, recordDto.publicationYear) &&
                 Objects.equals(extent, recordDto.extent) &&
                 Objects.equals(edition, recordDto.edition) &&
                 Objects.equals(isbn, recordDto.isbn) &&
                 Objects.equals(dk5, recordDto.dk5) &&
+                Objects.equals(dk5Heading, recordDto.dk5Heading) &&
                 Objects.equals(series, recordDto.series) &&
                 Objects.equals(targetGroup, recordDto.targetGroup) &&
+                Objects.equals(targetGroupDisplay, recordDto.targetGroupDisplay) &&
                 Objects.equals(catalogCodes, recordDto.catalogCodes);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(faust, isPrimary, types, title, creator, publisher, extent, edition, isbn, dk5, series, targetGroup, catalogCodes);
+        return Objects.hash(faust, isPrimary, types, title, creator, publisher, placeOfPublication, publicationYear, extent, edition, isbn, dk5, dk5Heading, series, targetGroup, targetGroupDisplay, catalogCodes);
     }
 
     @Override
@@ -223,12 +283,16 @@ public class RecordDto implements Dto {
                 ", title='" + title + '\'' +
                 ", creator='" + creator + '\'' +
                 ", publisher='" + publisher + '\'' +
+                ", placeOfPublication='" + placeOfPublication + '\'' +
+                ", publicationYear='" + publicationYear + '\'' +
                 ", extent='" + extent + '\'' +
                 ", edition='" + edition + '\'' +
                 ", isbn=" + isbn +
                 ", dk5=" + dk5 +
+                ", dk5Heading=" + dk5Heading +
                 ", series=" + series +
                 ", targetGroup=" + targetGroup +
+                ", targetGroupDisplay=" + targetGroupDisplay +
                 ", catalogCodes=" + catalogCodes +
                 '}';
     }

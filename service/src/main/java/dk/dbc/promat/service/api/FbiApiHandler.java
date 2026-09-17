@@ -16,6 +16,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @ApplicationScoped
 public class FbiApiHandler {
@@ -96,12 +98,16 @@ public class FbiApiHandler {
             String title,
             String creator,
             String publisher,
+            String placeOfPublication,
+            String publicationYear,
             String extent,
             String edition,
             List<String> isbn,
             List<String> dk5,
+            List<String> dk5Heading,
             List<String> series,
             List<String> targetgroup,
+            List<String> targetGroupDisplay,
             List<String> catalogcodes,
             List<MaterialTypePair> materialTypes) {}
 
@@ -196,18 +202,21 @@ public class FbiApiHandler {
     // type always comes from the same manifestation fetch.
     private RecordInfo toRecordInfo(String faust, Manifestation manifestation) {
         final List<String> creators = creators(manifestation);
-        final List<String> publishers = publisher(manifestation);
         return new RecordInfo(
                 faust,
                 title(manifestation).stream().findFirst().orElse(null),
                 creators.isEmpty() ? null : String.join(", ", creators),
-                publishers.isEmpty() ? null : String.join(", ", publishers),
+                publisherName(manifestation),
+                placeOfPublication(manifestation),
+                publicationYear(manifestation),
                 extent(manifestation).stream().findFirst().orElse(null),
                 edition(manifestation).stream().findFirst().orElse(null),
                 isbn(manifestation),
                 dk5(manifestation),
+                dk5Heading(manifestation),
                 series(manifestation),
                 targetgroup(manifestation),
+                targetGroupDisplay(manifestation),
                 catalogcodes(manifestation),
                 materialTypePairs(manifestation));
     }
@@ -280,22 +289,36 @@ public class FbiApiHandler {
                 metakompassubject(m));
     }
 
+    // fbi-api's own shelfCreator is null whenever a manifestation has no single
+    // creator it can be shelved/alphabetized under (e.g. a comic with a writer
+    // and an artist, neither the sole "main entry") - exactly field 100's
+    // rule, and already formatted "Efternavn, Fornavn", which the frontend's
+    // plain string sort on this value depends on to land on surname.
     private List<String> creators(Manifestation m) {
-        if (m.creators() == null) {
+        if (m.shelfCreator() == null || m.shelfCreator().display() == null) {
             return List.of();
         }
-        return m.creators().stream()
-                .map(Creator::display)
-                .filter(Objects::nonNull)
-                .toList();
+        return List.of(m.shelfCreator().display());
     }
 
+    // display is the actual DK5 code (e.g. "sk"); dk5Heading is a human-readable
+    // heading for it (e.g. "Skønlitteratur"), not the code, despite the
+    // plausible-sounding name.
     private List<String> dk5(Manifestation m) {
         if (m.classifications() == null) {
             return List.of();
         }
         return m.classifications().stream()
-                .filter(c -> "MAIN_ENTRY".equals(c.entryType()))
+                .map(Classification::display)
+                .filter(Objects::nonNull)
+                .toList();
+    }
+
+    private List<String> dk5Heading(Manifestation m) {
+        if (m.classifications() == null) {
+            return List.of();
+        }
+        return m.classifications().stream()
                 .map(Classification::dk5Heading)
                 .filter(Objects::nonNull)
                 .toList();
@@ -339,8 +362,33 @@ public class FbiApiHandler {
         return List.of(m.physicalDescription().summaryFull());
     }
 
+    // "Place, publisher, year" (e.g. "Kbh., Gyldendal, 2018") - only used for the
+    // persisted, single-string BibliographicInformation/PromatCase.publisher.
+    // RecordDto (toRecordInfo) gets the three pieces separately instead, so API
+    // consumers can format them however they want.
     private List<String> publisher(Manifestation m) {
-        return m.publisher() != null ? m.publisher() : List.of();
+        String combined = Stream.of(placeOfPublication(m), publisherName(m), publicationYear(m))
+                .filter(s -> s != null && !s.isBlank())
+                .collect(Collectors.joining(", "));
+        return combined.isEmpty() ? List.of() : List.of(combined);
+    }
+
+    private static String publisherName(Manifestation m) {
+        return firstOrNull(m.publisher());
+    }
+
+    private static String placeOfPublication(Manifestation m) {
+        return firstOrNull(m.placeOfPublication());
+    }
+
+    private static String publicationYear(Manifestation m) {
+        return m.edition() != null && m.edition().publicationYear() != null && m.edition().publicationYear().year() != null
+                ? String.valueOf(m.edition().publicationYear().year())
+                : null;
+    }
+
+    private static String firstOrNull(List<String> list) {
+        return list != null && !list.isEmpty() ? list.get(0) : null;
     }
 
     private List<String> edition(Manifestation m) {
@@ -384,7 +432,20 @@ public class FbiApiHandler {
         return m.titles().main();
     }
 
+    // Raw type (CHILDREN/ADULT/SCHOOL) - left for API consumers to map to
+    // whatever display/sort convention they want (e.g. promat's b/v/s codes).
     private List<String> targetgroup(Manifestation m) {
+        if (m.materialSelection() == null || m.materialSelection().selectionGroup() == null) {
+            return List.of();
+        }
+        return m.materialSelection().selectionGroup().stream()
+                .map(SelectionGroup::type)
+                .filter(Objects::nonNull)
+                .distinct()
+                .toList();
+    }
+
+    private List<String> targetGroupDisplay(Manifestation m) {
         if (m.materialSelection() == null || m.materialSelection().selectionGroup() == null) {
             return List.of();
         }
@@ -429,24 +490,27 @@ public class FbiApiHandler {
 
     private record Manifestation(
             String pid,
-            List<Creator> creators,
+            ShelfCreator shelfCreator,
             List<Classification> classifications,
             Edition edition,
             List<Identifier> identifiers,
             List<MaterialType> materialTypes,
             PhysicalDescription physicalDescription,
             List<String> publisher,
+            List<String> placeOfPublication,
             CatalogueCodes catalogueCodes,
             Titles titles,
             MaterialSelection materialSelection,
             Subjects subjects,
             List<Series> series) {}
 
-    private record Creator(String display) {}
+    private record ShelfCreator(String display) {}
 
-    private record Classification(String dk5Heading, String entryType) {}
+    private record Classification(String display, String dk5Heading) {}
 
-    private record Edition(String edition) {}
+    private record Edition(String edition, PublicationYear publicationYear) {}
+
+    private record PublicationYear(Integer year) {}
 
     private record Identifier(String type, String value) {}
 
@@ -462,7 +526,7 @@ public class FbiApiHandler {
 
     private record MaterialSelection(List<SelectionGroup> selectionGroup) {}
 
-    private record SelectionGroup(String display) {}
+    private record SelectionGroup(String type, String display) {}
 
     private record Subjects(List<DbcVerifiedSubject> dbcVerified) {}
 
