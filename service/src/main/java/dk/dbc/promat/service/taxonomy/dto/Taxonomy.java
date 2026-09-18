@@ -19,6 +19,15 @@ public class Taxonomy  implements Serializable {
     private static final JSONBContext JSONB_CONTEXT =  new JSONBContext();
     private Map<String, Object> root = new LinkedHashMap<>();
 
+    // Reverse index built alongside root by put(...). Subject id comes from MARC subfield
+    // x09$q - a dedicated, curator-assigned id ("ID of subject", explicitly NOT the faust/001
+    // id - see the deleted SubjectBuilder.java, git 86042526^) meant to be globally unique across
+    // the whole taxonomy, not just within one category. Confirmed empirically too: it's also the
+    // taxonomy Kafka topic's message key, and a live dump had zero duplicates across ~11.5k
+    // subjects. TaxonomyPopulator enforces this at build time (see its duplicate-id check), so a
+    // subject can be resolved here without knowing its path.
+    private final Map<Integer, Subject> byId = new LinkedHashMap<>();
+
     // The category tree's structure is hardcoded here, by hand - it has always been fixed
     // (confirmed against the taxonomy Kafka topic: every subject's path resolves into one of
     // these branches, none introduce a new one), so TaxonomyPopulator only ever adds SUBJECTS
@@ -86,6 +95,20 @@ public class Taxonomy  implements Serializable {
 
     public void put(Subject subject, List<String> path) {
         getList(path).add(subject.toHashMap());
+        byId.put(subject.getId(), subject);
+    }
+
+    // subject.getPath() is populated on the returned instance (set from Kafka at parse time),
+    // unlike a Subject reconstituted via getList(path)/get(path), whose path is never known.
+    public Subject getById(int id) {
+        return byId.get(id);
+    }
+
+    // True for a freshly-constructed instance (TaxonomyCache's initial default) or one that
+    // never received a successful sync - lets a caller distinguish "not populated yet" from "id
+    // genuinely doesn't exist".
+    public boolean isEmpty() {
+        return byId.isEmpty();
     }
 
     public Subject get(String... path) {

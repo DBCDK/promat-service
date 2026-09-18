@@ -50,6 +50,19 @@ public class TaxonomyPopulatorTest {
     }
 
     @Test
+    public void skipsASubjectWithADuplicateIdButStillPlacesTheRest() {
+        Taxonomy taxonomy = new Taxonomy();
+        Subject first = new Subject().withId(456).withTitle("krimi").withPath(List.of("ramme", "genre"));
+        Subject duplicate = new Subject().withId(456).withTitle("krimi (duplicate)").withPath(List.of("stemning", "dramatisk"));
+
+        TaxonomyPopulator.populate(taxonomy, List.of(first, duplicate));
+
+        assertThat(taxonomy.getList("ramme", "genre"), contains(new Subject().withId(456).withTitle("krimi")));
+        assertThat(taxonomy.getList("stemning", "dramatisk"), empty());
+        assertThat(taxonomy.getById(456).getTitle(), is("krimi"));
+    }
+
+    @Test
     public void emptyInputProducesAnEmptyTaxonomyWithoutThrowing() {
         Taxonomy taxonomy = new Taxonomy();
 
