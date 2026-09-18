@@ -4,9 +4,12 @@ import dk.dbc.commons.useragent.UserAgent;
 import dk.dbc.httpclient.FailSafeHttpClient;
 import dk.dbc.httpclient.HttpGet;
 import dk.dbc.httpclient.HttpPost;
+import dk.dbc.httpclient.HttpPut;
 import dk.dbc.promat.service.dto.CaseRequest;
 import dk.dbc.promat.service.dto.CaseSummaryList;
 import dk.dbc.promat.service.dto.ListCasesParams;
+import dk.dbc.promat.service.dto.MetakompasSelectionRequest;
+import dk.dbc.promat.service.dto.MetakompasSelectionResult;
 import dk.dbc.promat.service.dto.ServiceErrorDto;
 import dk.dbc.promat.service.dto.TagList;
 import dk.dbc.promat.service.persistence.PromatCase;
@@ -19,6 +22,7 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -190,6 +194,45 @@ public class PromatServiceConnector {
         Response response = httpPost.execute();
         assertResponseStatus(response, Response.Status.OK, Response.Status.NOT_MODIFIED);
         return readResponseEntity(response, PromatCase.class);
+    }
+
+    /**
+     * Saves a reviewer's Metakompas subject selection for a task, shared across all of the
+     * task's target fausts
+     * @param taskId id of the METAKOMPAS task
+     * @param requests one entry per taxonomy path visited: the ids selected there (globally
+     *                 unique, so path is not needed to resolve them) and an optional free-text
+     *                 suggestion for a word not (yet) in the taxonomy under that path
+     * @return the persisted selection and suggestions
+     * @throws PromatServiceConnectorException on unexpected failure for the operation
+     */
+    public MetakompasSelectionResult putMetakompasSelection(int taskId, List<MetakompasSelectionRequest> requests)
+            throws PromatServiceConnectorException {
+        final HttpPut httpPut = new HttpPut(failSafeHttpClient)
+                .withBaseUrl(baseUrl)
+                .withPathElements("tasks", String.valueOf(taskId), "metakompas")
+                .withJsonData(requests);
+        final Response response = httpPut.execute();
+        assertResponseStatus(response, Response.Status.OK);
+        return readResponseEntity(response, MetakompasSelectionResult.class);
+    }
+
+    /**
+     * Saves a reviewer's Buggi tag selection for a task, shared across all of the task's target
+     * fausts
+     * @param taskId id of the BUGGI task
+     * @param tags the selected tags
+     * @return the persisted selection
+     * @throws PromatServiceConnectorException on unexpected failure for the operation
+     */
+    public TagList putBuggiSelection(int taskId, TagList tags) throws PromatServiceConnectorException {
+        final HttpPut httpPut = new HttpPut(failSafeHttpClient)
+                .withBaseUrl(baseUrl)
+                .withPathElements("tasks", String.valueOf(taskId), "buggi")
+                .withJsonData(tags);
+        final Response response = httpPut.execute();
+        assertResponseStatus(response, Response.Status.OK);
+        return readResponseEntity(response, TagList.class);
     }
 
     private void assertResponseStatus(Response response, Response.Status... expectedStatus)
