@@ -116,6 +116,8 @@ public class Tasks {
         }
     }
 
+    // Dedicated selection endpoints let JAX-RS map each task type to its concrete DTO,
+    // instead of accepting stringified JSON through the generic task endpoint.
     @PUT
     @Path("tasks/{taskId}/metakompas")
     @Consumes(MediaType.APPLICATION_JSON)
@@ -135,6 +137,8 @@ public class Tasks {
         }
     }
 
+    // Dedicated selection endpoints let JAX-RS map each task type to its concrete DTO,
+    // instead of accepting stringified JSON through the generic task endpoint.
     @PUT
     @Path("tasks/{taskId}/buggi")
     @Consumes(MediaType.APPLICATION_JSON)
