@@ -5,6 +5,8 @@ import dk.dbc.httpclient.FailSafeHttpClient;
 import dk.dbc.httpclient.HttpGet;
 import dk.dbc.httpclient.HttpPost;
 import dk.dbc.httpclient.HttpPut;
+import dk.dbc.promat.service.dto.BuggiSelectionEntry;
+import dk.dbc.promat.service.dto.BuggiSelectionRequest;
 import dk.dbc.promat.service.dto.CaseRequest;
 import dk.dbc.promat.service.dto.CaseSummaryList;
 import dk.dbc.promat.service.dto.ListCasesParams;
@@ -18,6 +20,7 @@ import net.jodah.failsafe.RetryPolicy;
 
 import jakarta.ws.rs.ProcessingException;
 import jakarta.ws.rs.client.Client;
+import jakarta.ws.rs.core.GenericType;
 import jakarta.ws.rs.core.Response;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
@@ -222,18 +225,18 @@ public class PromatServiceConnector {
      * Saves a reviewer's Buggi tag selection for a task, shared across all of the task's target
      * fausts
      * @param taskId id of the BUGGI task
-     * @param tags the selected tags
+     * @param requests the selected Buggi option ids and values
      * @return the persisted selection
      * @throws PromatServiceConnectorException on unexpected failure for the operation
      */
-    public List<Tag> putBuggiSelection(int taskId, List<Tag> tags) throws PromatServiceConnectorException {
+    public List<BuggiSelectionEntry> putBuggiSelection(int taskId, List<BuggiSelectionRequest> requests) throws PromatServiceConnectorException {
         final HttpPut httpPut = new HttpPut(failSafeHttpClient)
                 .withBaseUrl(baseUrl)
                 .withPathElements("tasks", String.valueOf(taskId), "buggi")
-                .withJsonData(tags);
+                .withJsonData(requests);
         final Response response = httpPut.execute();
         assertResponseStatus(response, Response.Status.OK);
-        return Arrays.asList(readResponseEntity(response, Tag[].class));
+        return response.readEntity(new GenericType<List<BuggiSelectionEntry>>() {});
     }
 
     private void assertResponseStatus(Response response, Response.Status... expectedStatus)

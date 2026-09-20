@@ -2,6 +2,8 @@ package dk.dbc.promat.service.api;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import dk.dbc.promat.service.dto.BuggiSelectionEntry;
+import dk.dbc.promat.service.dto.BuggiSelectionRequest;
 import dk.dbc.promat.service.dto.MetakompasSelectionData;
 import dk.dbc.promat.service.dto.MetakompasSelectionEntry;
 import dk.dbc.promat.service.dto.MetakompasSelectionRequest;
@@ -97,16 +99,20 @@ public class TaskSelections {
         return tags;
     }
 
-    public List<Tag> writeBuggiSelection(PromatTask task, List<Tag> tags) throws ServiceErrorException {
+    public List<BuggiSelectionEntry> writeBuggiSelection(PromatTask task, List<BuggiSelectionRequest> requests) throws ServiceErrorException {
+        List<BuggiSelectionEntry> entries = new ArrayList<>();
+        for(BuggiSelectionRequest request : requests == null ? List.<BuggiSelectionRequest>of() : requests) {
+            entries.add(BuggiVocabulary.resolve(request));
+        }
         try {
-            task.setData(OBJECT_MAPPER.writeValueAsString(tags));
+            task.setData(OBJECT_MAPPER.writeValueAsString(entries));
         } catch(JsonProcessingException e) {
             throw new ServiceErrorException("Failed to serialize buggi selection")
                     .withHttpStatus(500)
                     .withCode(ServiceErrorCode.FAILED)
                     .withDetails(e.getMessage());
         }
-        return tags;
+        return entries;
     }
 
 

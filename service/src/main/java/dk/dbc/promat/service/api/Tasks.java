@@ -1,11 +1,12 @@
 package dk.dbc.promat.service.api;
 
 import dk.dbc.promat.service.Repository;
+import dk.dbc.promat.service.dto.BuggiSelectionEntry;
+import dk.dbc.promat.service.dto.BuggiSelectionRequest;
 import dk.dbc.promat.service.dto.MetakompasSelectionRequest;
 import dk.dbc.promat.service.dto.MetakompasSelectionResult;
 import dk.dbc.promat.service.dto.ServiceErrorCode;
 import dk.dbc.promat.service.dto.ServiceErrorDto;
-import dk.dbc.promat.service.dto.Tag;
 import dk.dbc.promat.service.dto.TaskDto;
 import dk.dbc.promat.service.persistence.PromatCase;
 import dk.dbc.promat.service.persistence.PromatEntityManager;
@@ -143,11 +144,11 @@ public class Tasks {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Response putBuggiSelection(@PathParam("taskId") final Integer taskId,
-                                      List<Tag> tags) {
+                                      List<BuggiSelectionRequest> requests) {
         LOGGER.info("tasks/{}/buggi (PUT)", taskId);
         try {
             PromatTask task = taskSelections.resolveTaskForSelection(taskId, TaskFieldType.BUGGI);
-            List<Tag> saved = taskSelections.writeBuggiSelection(task, tags == null ? List.of() : tags);
+            List<BuggiSelectionEntry> saved = taskSelections.writeBuggiSelection(task, requests);
             return Response.ok(saved).build();
         } catch(ServiceErrorException serviceErrorException) {
             return Response.status(serviceErrorException.getHttpStatus()).entity(serviceErrorException.getServiceErrorDto()).build();
