@@ -19,12 +19,12 @@ The request is still grouped by path:
   {
     "path": ["handling", "handler om"],
     "ids": [42, 57],
-    "suggestion": "newly suggested term"
+    "suggestions": ["newly suggested term"]
   }
 ]
 ```
 
-The path is needed for `suggestion`, because new/free-text suggestions do not have taxonomy ids yet.
+The path is needed for `suggestions`, because new/free-text suggestions do not have taxonomy ids yet.
 Invalid paths are rejected before the selection is saved.
 
 ## Rationale

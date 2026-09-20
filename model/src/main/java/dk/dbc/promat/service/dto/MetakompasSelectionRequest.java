@@ -5,12 +5,12 @@ import java.util.Objects;
 
 // One taxonomy path visited while tagging: the ids selected there (ids are globally unique, so
 // path is not needed to resolve them - it travels along only because it's needed for the
-// optional free-text suggestion, which has no id at all) and an optional suggestion for a word
+// optional free-text suggestions, which have no id at all) and optional suggestions for words
 // not (yet) in the taxonomy under that same path.
 public class MetakompasSelectionRequest {
     private List<String> path;
     private List<Integer> ids;
-    private String suggestion;
+    private List<String> suggestions;
 
     public List<String> getPath() {
         return path;
@@ -28,12 +28,12 @@ public class MetakompasSelectionRequest {
         this.ids = ids;
     }
 
-    public String getSuggestion() {
-        return suggestion;
+    public List<String> getSuggestions() {
+        return suggestions;
     }
 
-    public void setSuggestion(String suggestion) {
-        this.suggestion = suggestion;
+    public void setSuggestions(List<String> suggestions) {
+        this.suggestions = suggestions;
     }
 
     public MetakompasSelectionRequest withPath(List<String> path) {
@@ -46,8 +46,8 @@ public class MetakompasSelectionRequest {
         return this;
     }
 
-    public MetakompasSelectionRequest withSuggestion(String suggestion) {
-        this.suggestion = suggestion;
+    public MetakompasSelectionRequest withSuggestions(List<String> suggestions) {
+        this.suggestions = suggestions;
         return this;
     }
 
@@ -55,12 +55,12 @@ public class MetakompasSelectionRequest {
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass()) return false;
         MetakompasSelectionRequest that = (MetakompasSelectionRequest) o;
-        return Objects.equals(path, that.path) && Objects.equals(ids, that.ids) && Objects.equals(suggestion, that.suggestion);
+        return Objects.equals(path, that.path) && Objects.equals(ids, that.ids) && Objects.equals(suggestions, that.suggestions);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(path, ids, suggestion);
+        return Objects.hash(path, ids, suggestions);
     }
 
     @Override
@@ -68,7 +68,7 @@ public class MetakompasSelectionRequest {
         return "MetakompasSelectionRequest{" +
                 "path=" + path +
                 ", ids=" + ids +
-                ", suggestion='" + suggestion + '\'' +
+                ", suggestions=" + suggestions +
                 '}';
     }
 }

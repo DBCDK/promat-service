@@ -5,8 +5,7 @@ import java.util.Objects;
 
 // A reviewer-typed suggestion for a word not (yet) in the Metakompas taxonomy, tied to the
 // category path it was suggested under - never resolved against the taxonomy tree and never
-// assigned an id. Multiple suggestions for the same path are one semicolon-separated string,
-// matching how Metakompasset (the reference implementation) handles this.
+// assigned an id.
 public class MetakompasSuggestion {
 
     private List<String> path;

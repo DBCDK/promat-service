@@ -9,6 +9,7 @@ import dk.dbc.promat.service.dto.MetakompasSelectionResult;
 import dk.dbc.promat.service.dto.MetakompasSelectionView;
 import dk.dbc.promat.service.dto.MetakompasSuggestion;
 import dk.dbc.promat.service.dto.ServiceErrorCode;
+import dk.dbc.promat.service.dto.Tag;
 import dk.dbc.promat.service.dto.TagList;
 import dk.dbc.promat.service.persistence.JsonMapperProvider;
 import dk.dbc.promat.service.persistence.PromatEntityManager;
@@ -96,6 +97,18 @@ public class TaskSelections {
         return tags;
     }
 
+    public List<Tag> writeBuggiSelection(PromatTask task, List<Tag> tags) throws ServiceErrorException {
+        try {
+            task.setData(OBJECT_MAPPER.writeValueAsString(tags));
+        } catch(JsonProcessingException e) {
+            throw new ServiceErrorException("Failed to serialize buggi selection")
+                    .withHttpStatus(500)
+                    .withCode(ServiceErrorCode.FAILED)
+                    .withDetails(e.getMessage());
+        }
+        return tags;
+    }
+
 
     public MetakompasSelectionResult writeMetakompasSelection(PromatTask task, List<MetakompasSelectionRequest> requests) throws ServiceErrorException {
         List<MetakompasSelectionEntry> entries = new ArrayList<>();
@@ -121,10 +134,12 @@ public class TaskSelections {
                 entries.add(entry);
                 views.add(MetakompasSelectionView.from(entry));
             }
-            if(request.getSuggestion() != null && !request.getSuggestion().isEmpty()) {
-                suggestions.add(new MetakompasSuggestion()
-                        .withPath(request.getPath())
-                        .withText(request.getSuggestion()));
+            for(String suggestion : request.getSuggestions() == null ? List.<String>of() : request.getSuggestions()) {
+                if(suggestion != null && !suggestion.isEmpty()) {
+                    suggestions.add(new MetakompasSuggestion()
+                            .withPath(request.getPath())
+                            .withText(suggestion));
+                }
             }
         }
         try {
