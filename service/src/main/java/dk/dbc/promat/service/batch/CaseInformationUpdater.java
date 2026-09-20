@@ -7,6 +7,9 @@ import dk.dbc.promat.service.api.BibliographicInformation;
 import dk.dbc.promat.service.persistence.CaseStatus;
 import dk.dbc.promat.service.persistence.MaterialType;
 import dk.dbc.promat.service.persistence.PromatCase;
+import dk.dbc.promat.service.persistence.PromatTask;
+import dk.dbc.promat.service.persistence.TaskFieldType;
+import dk.dbc.promat.service.util.PromatTaskUtils;
 import dk.dbc.promat.service.Repository;
 
 import java.time.LocalDate;
@@ -34,6 +37,7 @@ import java.util.stream.Collectors;
 @Stateless
 public class CaseInformationUpdater {
     private static final Logger LOGGER = LoggerFactory.getLogger(CaseInformationUpdater.class);
+    protected static final String METAKOMPASDATA_PRESENT = "true";
     protected static Locale dkLocale = new Locale("da", "DK");
 
     @Inject
@@ -130,6 +134,9 @@ public class CaseInformationUpdater {
                         .collect(Collectors.toList()));
             }
 
+            // Check and update case with Metakompasdata
+            checkAndUpdateCaseWithMetakompasdata(promatCase);
+
             //
             // Status is 'PENDING_EXTERNAL'. Now do last check of metakompas data before setting
             // final state: APPROVED.
@@ -161,6 +168,34 @@ public class CaseInformationUpdater {
         } catch (Exception e) {
             LOGGER.error("Unable to update case with id {}: {}",promatCase.getId(), e.getMessage());
             metricRegistry.counter(caseUpdateFailureCounterMetadata).inc();
+        }
+    }
+
+    private void checkAndUpdateCaseWithMetakompasdata(PromatCase promatCase) {
+
+        // All metakompas tasks
+        for (PromatTask task : PromatTaskUtils.getTasksOfType(promatCase, TaskFieldType.METAKOMPAS)) {
+
+            // In theory targetFaust can be empty, signifying that the primary faust from the case is to be used.
+            List<String> fausts = task.getTargetFausts() != null ? task.getTargetFausts() : List.of(promatCase.getPrimaryFaust());
+
+            boolean allIsPresent = fausts
+                    .stream().allMatch(faust -> {
+                        try {
+                            String metakompassubject = fbiApiHandler.format(faust).getMetakompassubject();
+                            String present = metakompassubject != null ? metakompassubject.strip() : null;
+                            return METAKOMPASDATA_PRESENT.equals(present);
+                        } catch (FbiApiConnectorException e) {
+                            LOGGER.error("Unable to look up faust {}", faust, e);
+                        }
+                        return false;
+                    });
+            if (allIsPresent) {
+                LOGGER.info("Updating metakompas for fausts: '{}' ==> '{}' of case with id {}. Taskid is '{}'",
+                        fausts, METAKOMPASDATA_PRESENT, promatCase.getId(), task.getId());
+                task.setData(METAKOMPASDATA_PRESENT);
+                task.setApproved(dates.getCurrentDate());
+            }
         }
     }
 
