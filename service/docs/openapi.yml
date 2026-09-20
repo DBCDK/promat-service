@@ -834,7 +834,7 @@ paths:
             schema:
               type: array
               items:
-                $ref: '#/components/schemas/Tag'
+                $ref: '#/components/schemas/BuggiSelectionRequest'
       responses:
         '200':
           description: successful operation
@@ -843,7 +843,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Tag'
+                  $ref: '#/components/schemas/BuggiSelectionEntry'
         '400':
           description: Task is not a BUGGI task
           content:
@@ -2052,8 +2052,9 @@ components:
           type: string
           description: >-
             The task data. For a METAKOMPAS task, this holds a MetakompasSelectionData (entries
-            plus any free-text suggestions); for a BUGGI task, a list of Tag objects - write it
-            via the typed tasks/{taskId}/metakompas|buggi PUT endpoint, which validates it.
+            plus any free-text suggestions); for a BUGGI task, this holds resolved
+            BuggiSelectionEntry values - write it via the typed
+            tasks/{taskId}/metakompas|buggi PUT endpoint, which validates it.
           nullable: true
       required:
         - typeOfTask
@@ -2309,12 +2310,59 @@ components:
         options:
           type: array
           items:
-            type: string
+            $ref: '#/components/schemas/BuggiOption'
       required:
         - name
         - subfieldCode
         - requiresNonzeroValue
         - options
+
+    BuggiOption:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+      required:
+        - id
+        - name
+
+    BuggiSelectionRequest:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Stable id from /buggi/options
+        value:
+          type: integer
+          minimum: 0
+          maximum: 5
+      required:
+        - id
+        - value
+
+    BuggiSelectionEntry:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        subfieldCode:
+          type: string
+        requiresNonzeroValue:
+          type: boolean
+        value:
+          type: integer
+          minimum: 0
+          maximum: 5
+      required:
+        - id
+        - name
+        - subfieldCode
+        - requiresNonzeroValue
+        - value
 
     Tag:
       type: object
