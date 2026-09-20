@@ -32,11 +32,9 @@ public class TaxonomyPopulator {
                 continue;
             }
 
-            // id (MARC x09$q, curator-assigned, deliberately not the faust/001 id) is expected
-            // to be globally unique across the whole taxonomy - the deleted DM2Builder/
-            // SubjectBuilder pipeline used to hard-fail the whole build on a collision. This
-            // pipeline is tolerant instead: keep the first-seen subject for a given id, skip and
-            // log the rest, so one bad/duplicate record can't take down a sync.
+            // id (MARC x09$q, curator-assigned) is expected to be globally unique across the
+            // whole taxonomy. Keep the first-seen subject for a given id, skip and log the rest,
+            // so one bad/duplicate record can't take down a sync.
             if (taxonomy.getById(item.getId()) != null) {
                 LOGGER.warn("Skipping subject with duplicate taxonomy id {} ('{}') - id is expected to be globally unique",
                         item.getId(), item.getTitle());
