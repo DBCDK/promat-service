@@ -11,7 +11,7 @@ def teamSlackNotice = 'de-notifications'
 def teamSlackWarning = 'de-notifications'
 def featureNamespace = 'promat-features'
 def kubeconfigCredentialsId = 'kubecert-team-x'
-def postgresImage = 'docker-dbc.artifacts.dbccloud.dk/dbc-postgres-17:latest'
+def postgresImage = 'docker-dbc.artifacts.dbccloud.dk/dbc-postgres-16:latest'
 
 pipeline {
 	agent {label workerNode}
