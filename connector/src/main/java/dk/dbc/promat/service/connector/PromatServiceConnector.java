@@ -11,6 +11,7 @@ import dk.dbc.promat.service.dto.ListCasesParams;
 import dk.dbc.promat.service.dto.MetakompasSelectionRequest;
 import dk.dbc.promat.service.dto.MetakompasSelectionResult;
 import dk.dbc.promat.service.dto.ServiceErrorDto;
+import dk.dbc.promat.service.dto.Tag;
 import dk.dbc.promat.service.dto.TagList;
 import dk.dbc.promat.service.persistence.PromatCase;
 import net.jodah.failsafe.RetryPolicy;
@@ -201,8 +202,8 @@ public class PromatServiceConnector {
      * task's target fausts
      * @param taskId id of the METAKOMPAS task
      * @param requests one entry per taxonomy path visited: the ids selected there (globally
-     *                 unique, so path is not needed to resolve them) and an optional free-text
-     *                 suggestion for a word not (yet) in the taxonomy under that path
+     *                 unique, so path is not needed to resolve them) and optional free-text
+     *                 suggestions for words not (yet) in the taxonomy under that path
      * @return the persisted selection and suggestions
      * @throws PromatServiceConnectorException on unexpected failure for the operation
      */
@@ -225,14 +226,14 @@ public class PromatServiceConnector {
      * @return the persisted selection
      * @throws PromatServiceConnectorException on unexpected failure for the operation
      */
-    public TagList putBuggiSelection(int taskId, TagList tags) throws PromatServiceConnectorException {
+    public List<Tag> putBuggiSelection(int taskId, List<Tag> tags) throws PromatServiceConnectorException {
         final HttpPut httpPut = new HttpPut(failSafeHttpClient)
                 .withBaseUrl(baseUrl)
                 .withPathElements("tasks", String.valueOf(taskId), "buggi")
                 .withJsonData(tags);
         final Response response = httpPut.execute();
         assertResponseStatus(response, Response.Status.OK);
-        return readResponseEntity(response, TagList.class);
+        return Arrays.asList(readResponseEntity(response, Tag[].class));
     }
 
     private void assertResponseStatus(Response response, Response.Status... expectedStatus)

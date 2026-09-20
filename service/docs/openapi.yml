@@ -832,14 +832,18 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/TagList'
+              type: array
+              items:
+                $ref: '#/components/schemas/Tag'
       responses:
         '200':
           description: successful operation
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TagList'
+                type: array
+                items:
+                  $ref: '#/components/schemas/Tag'
         '400':
           description: Task is not a BUGGI task
           content:
@@ -2048,8 +2052,8 @@ components:
           type: string
           description: >-
             The task data. For a METAKOMPAS task, this holds a MetakompasSelectionData (entries
-            plus any free-text suggestions); for a BUGGI task, a TagList - write it via the
-            typed tasks/{taskId}/metakompas|buggi PUT endpoint, which validates it.
+            plus any free-text suggestions); for a BUGGI task, a list of Tag objects - write it
+            via the typed tasks/{taskId}/metakompas|buggi PUT endpoint, which validates it.
           nullable: true
       required:
         - typeOfTask
@@ -2406,9 +2410,8 @@ components:
       type: object
       description: >-
         A reviewer-typed suggestion for a word not (yet) in the Metakompas taxonomy, tied to the
-        category path it was suggested under. Never resolved/validated against the taxonomy,
-        never assigned an id - multiple suggestions for the same path are one
-        semicolon-separated string.
+        category path it was suggested under. Never resolved/validated against the taxonomy and
+        never assigned an id.
       properties:
         path:
           type: array
@@ -2425,8 +2428,8 @@ components:
       type: object
       description: >-
         One taxonomy path visited while tagging: the ids selected there (globally unique, so
-        path is not needed to resolve them - it travels along only for the optional suggestion,
-        which has no id) and an optional free-text suggestion for a word not in the taxonomy.
+        path is not needed to resolve them - it travels along only for the optional suggestions,
+        which have no id) and optional free-text suggestions for words not in the taxonomy.
       properties:
         path:
           type: array
@@ -2438,11 +2441,12 @@ components:
           items:
             type: integer
           description: Ids of the subjects selected at this path
-        suggestion:
-          type: string
+        suggestions:
+          type: array
+          items:
+            type: string
           description: >-
-            Optional free-text suggestion for a word not (yet) in the taxonomy under this path.
-            Multiple suggestions are separated by semicolons.
+            Optional free-text suggestions for words not (yet) in the taxonomy under this path.
       required:
         - path
 

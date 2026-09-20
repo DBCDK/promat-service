@@ -26,7 +26,7 @@ public class TaskSelectionsTest {
                 taskSelections.writeMetakompasSelection(new PromatTask(), List.of(
                         new MetakompasSelectionRequest()
                                 .withPath(List.of("handling", "not a real category"))
-                                .withSuggestion("new word"))));
+                                .withSuggestions(List.of("new word")))));
 
         assertThat(exception.getHttpStatus(), is(400));
         assertThat(exception.getServiceErrorDto().getCode(), is(ServiceErrorCode.INVALID_REQUEST));
@@ -42,20 +42,22 @@ public class TaskSelectionsTest {
                         .withPath(List.of("stemning", "dramatisk"))
                         .withIds(List.of(42))));
 
-        assertThat(result.getEntries().get(0).getPath(), contains("ramme", "genre"));
+        assertThat(result.getEntries().getFirst().getPath(), contains("ramme", "genre"));
     }
 
     @Test
-    public void acceptsSuggestionWhenPathExists() throws ServiceErrorException {
+    public void acceptsSuggestionsWhenPathExists() throws ServiceErrorException {
         TaskSelections taskSelections = taskSelectionsWithTaxonomy();
 
         MetakompasSelectionResult result = taskSelections.writeMetakompasSelection(new PromatTask(), List.of(
                 new MetakompasSelectionRequest()
                         .withPath(List.of("handling", "handler om"))
-                        .withSuggestion("new word")));
+                        .withSuggestions(List.of("new word", "another word"))));
 
-        assertThat(result.getSuggestions().get(0).getPath(), contains("handling", "handler om"));
-        assertThat(result.getSuggestions().get(0).getText(), is("new word"));
+        assertThat(result.getSuggestions().getFirst().getPath(), contains("handling", "handler om"));
+        assertThat(result.getSuggestions().getFirst().getText(), is("new word"));
+        assertThat(result.getSuggestions().get(1).getPath(), contains("handling", "handler om"));
+        assertThat(result.getSuggestions().get(1).getText(), is("another word"));
     }
 
     private TaskSelections taskSelectionsWithTaxonomy() {
