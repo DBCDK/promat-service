@@ -19,13 +19,10 @@ public class Taxonomy  implements Serializable {
     private static final JSONBContext JSONB_CONTEXT =  new JSONBContext();
     private Map<String, Object> root = new LinkedHashMap<>();
 
-    // Reverse index built alongside root by put(...). Subject id comes from MARC subfield
-    // x09$q - a dedicated, curator-assigned id ("ID of subject", explicitly NOT the faust/001
-    // id - see the deleted SubjectBuilder.java, git 86042526^) meant to be globally unique across
-    // the whole taxonomy, not just within one category. Confirmed empirically too: it's also the
-    // taxonomy Kafka topic's message key, and a live dump had zero duplicates across ~11.5k
-    // subjects. TaxonomyPopulator enforces this at build time (see its duplicate-id check), so a
-    // subject can be resolved here without knowing its path.
+    // Reverse index built alongside root by put(...). Subject id comes from MARC subfield x09$q:
+    // a curator-assigned id meant to be globally unique across the whole taxonomy, not just
+    // within one category. TaxonomyPopulator enforces this at build time (see its duplicate-id
+    // check), so a subject can be resolved here without knowing its path.
     private final Map<Integer, Subject> byId = new LinkedHashMap<>();
 
     // The category tree's structure is hardcoded here, by hand - it has always been fixed
