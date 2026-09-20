@@ -15,7 +15,6 @@ import dk.dbc.promat.service.dto.CriteriaOperator;
 import dk.dbc.promat.service.dto.ListCasesParams;
 import dk.dbc.promat.service.dto.ServiceErrorCode;
 import dk.dbc.promat.service.dto.ServiceErrorDto;
-import dk.dbc.promat.service.dto.Tag;
 import dk.dbc.promat.service.dto.TagList;
 import dk.dbc.promat.service.dto.TaskDto;
 import dk.dbc.promat.service.persistence.CaseStatus;
@@ -93,6 +92,9 @@ public class Cases {
 
     @Inject
     ContentLookUp contentLookUp;
+
+    @Inject
+    TaskSelections taskSelections;
 
     @EJB
     Repository repository;
@@ -548,7 +550,6 @@ public class Cases {
             LOGGER.warn("Pid {} was not found for request Buggi task approval", pid);
             return Response.status(NO_CONTENT).type(MediaType.APPLICATION_JSON_TYPE).entity(mapper.writeValueAsString(new ServiceErrorDto().withCode(ServiceErrorCode.FAILED))).build();
         }
-        // Todo: We lack a proper way to "store" the presence of BUGGI data, if the BUGGI task has more than one faust.
         return promatCase.getTasks().stream()
                 .filter(t -> t.getTaskFieldType() == TaskFieldType.BUGGI && t.getTargetFausts().contains(faust))
                 .map(t -> setApproveBuggiTask(t, tagList))
@@ -862,6 +863,8 @@ public class Cases {
         }
     }
 
+
+
     @DELETE
     @Path("cases/{ids}")
     public Response deleteCase(@PathParam("ids") final String ids) {
@@ -1038,6 +1041,13 @@ public class Cases {
                     .withCode(ServiceErrorCode.INVALID_REQUEST)
                     .withHttpStatus(400);
         }
+        if(dto.getData() != null && !taskSelections.isDirectDataWriteAllowed(dto.getTaskFieldType(), dto.getData())) {
+            throw new ServiceErrorException(String.format("Task data cannot be set directly on a %s task", dto.getTaskFieldType()))
+                    .withCause("Invalid field for task type")
+                    .withDetails("Use the dedicated tasks/{taskId}/metakompas or tasks/{taskId}/buggi endpoint instead")
+                    .withCode(ServiceErrorCode.INVALID_REQUEST)
+                    .withHttpStatus(400);
+        }
         checkForNullFausts(dto.getTargetFausts(), dto);
     }
 
@@ -1077,8 +1087,12 @@ public class Cases {
             LOGGER.info("Updated approve date on task {}", t.getId());
             t.setApproved(LocalDate.now());
         }
-        String tagString = tags.getTags().stream().map(Tag::toString).collect(Collectors.joining("\n"));
-        t.setData(tagString);
+        try {
+            taskSelections.writeBuggiSelection(t, tags);
+        } catch (ServiceErrorException e) {
+            // Only thrown on serialization failure of a plain TagList - not expected in practice.
+            throw new RuntimeException(e);
+        }
         return t;
     }
 

@@ -1,12 +1,17 @@
 package dk.dbc.promat.service.api;
 
 import dk.dbc.promat.service.Repository;
+import dk.dbc.promat.service.dto.BuggiSelectionEntry;
+import dk.dbc.promat.service.dto.BuggiSelectionRequest;
+import dk.dbc.promat.service.dto.MetakompasSelectionRequest;
+import dk.dbc.promat.service.dto.MetakompasSelectionResult;
 import dk.dbc.promat.service.dto.ServiceErrorCode;
 import dk.dbc.promat.service.dto.ServiceErrorDto;
 import dk.dbc.promat.service.dto.TaskDto;
 import dk.dbc.promat.service.persistence.PromatCase;
 import dk.dbc.promat.service.persistence.PromatEntityManager;
 import dk.dbc.promat.service.persistence.PromatTask;
+import dk.dbc.promat.service.persistence.TaskFieldType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,10 +38,12 @@ import static dk.dbc.promat.service.api.Faustnumbers.checkForNullFausts;
 @Path("")
 public class Tasks {
     private static final Logger LOGGER = LoggerFactory.getLogger(Tasks.class);
-
     @Inject
     @PromatEntityManager
     EntityManager entityManager;
+
+    @Inject
+    TaskSelections taskSelections;
 
     @EJB
     Repository repository;
@@ -87,6 +94,11 @@ public class Tasks {
 
             // Update fields
             if(dto.getData() != null) {
+                if(!taskSelections.isDirectDataWriteAllowed(existing.getTaskFieldType(), dto.getData())) {
+                    return ServiceErrorDto.InvalidRequest("Invalid field for task type",
+                            String.format("Task data cannot be set directly on a %s task - use the dedicated " +
+                                    "tasks/{taskId}/metakompas or tasks/{taskId}/buggi endpoint instead", existing.getTaskFieldType()));
+                }
                 existing.setData(dto.getData()); // It is allowed to update with an empty value
             }
             if(dto.getTaskType() != null) {
@@ -100,6 +112,48 @@ public class Tasks {
             return Response.status(serviceErrorException.getHttpStatus()).entity(serviceErrorException.getServiceErrorDto()).build();
         } catch(Exception exception) {
             LOGGER.error("Caught exception in updateTask: {}", exception.getMessage());
+            return ServiceErrorDto.Failed(exception.getMessage());
+        }
+    }
+
+    // Dedicated selection endpoints let JAX-RS map each task type to its concrete DTO,
+    // instead of accepting stringified JSON through the generic task endpoint.
+    @PUT
+    @Path("tasks/{taskId}/metakompas")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response putMetakompasSelection(@PathParam("taskId") final Integer taskId,
+                                           List<MetakompasSelectionRequest> requests) {
+        LOGGER.info("tasks/{}/metakompas (PUT)", taskId);
+        try {
+            PromatTask task = taskSelections.resolveTaskForSelection(taskId, TaskFieldType.METAKOMPAS);
+            MetakompasSelectionResult saved = taskSelections.writeMetakompasSelection(task, requests);
+            return Response.ok(saved).build();
+        } catch(ServiceErrorException serviceErrorException) {
+            return Response.status(serviceErrorException.getHttpStatus()).entity(serviceErrorException.getServiceErrorDto()).build();
+        } catch(Exception exception) {
+            LOGGER.error("Caught exception:", exception);
+            return ServiceErrorDto.Failed(exception.getMessage());
+        }
+    }
+
+    // Dedicated selection endpoints let JAX-RS map each task type to its concrete DTO,
+    // instead of accepting stringified JSON through the generic task endpoint.
+    @PUT
+    @Path("tasks/{taskId}/buggi")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response putBuggiSelection(@PathParam("taskId") final Integer taskId,
+                                      List<BuggiSelectionRequest> requests) {
+        LOGGER.info("tasks/{}/buggi (PUT)", taskId);
+        try {
+            PromatTask task = taskSelections.resolveTaskForSelection(taskId, TaskFieldType.BUGGI);
+            List<BuggiSelectionEntry> saved = taskSelections.writeBuggiSelection(task, requests);
+            return Response.ok(saved).build();
+        } catch(ServiceErrorException serviceErrorException) {
+            return Response.status(serviceErrorException.getHttpStatus()).entity(serviceErrorException.getServiceErrorDto()).build();
+        } catch(Exception exception) {
+            LOGGER.error("Caught exception:", exception);
             return ServiceErrorDto.Failed(exception.getMessage());
         }
     }
