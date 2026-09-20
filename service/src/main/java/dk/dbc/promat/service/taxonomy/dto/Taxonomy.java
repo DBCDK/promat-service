@@ -104,6 +104,18 @@ public class Taxonomy  implements Serializable {
         return byId.get(id);
     }
 
+    public boolean hasPath(List<String> path) {
+        if(path == null || path.isEmpty()) {
+            return false;
+        }
+        try {
+            getList(path);
+            return true;
+        } catch(IllegalArgumentException e) {
+            return false;
+        }
+    }
+
     // True for a freshly-constructed instance (TaxonomyCache's initial default) or one that
     // never received a successful sync - lets a caller distinguish "not populated yet" from "id
     // genuinely doesn't exist".

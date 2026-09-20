@@ -102,6 +102,13 @@ public class TaskSelections {
         List<MetakompasSelectionView> views = new ArrayList<>();
         List<MetakompasSuggestion> suggestions = new ArrayList<>();
         for(MetakompasSelectionRequest request : requests == null ? List.<MetakompasSelectionRequest>of() : requests) {
+            if(request == null) {
+                throw new ServiceErrorException("Metakompas selection request entry must not be null")
+                        .withHttpStatus(400)
+                        .withCode(ServiceErrorCode.INVALID_REQUEST)
+                        .withCause("Invalid metakompas path");
+            }
+            validateMetakompasPath(request.getPath());
             for(Integer id : request.getIds() == null ? List.<Integer>of() : request.getIds()) {
                 Subject subject = resolveMetakompasSubject(id);
                 MetakompasSelectionEntry entry = new MetakompasSelectionEntry()
@@ -133,6 +140,15 @@ public class TaskSelections {
         return new MetakompasSelectionResult()
                 .withEntries(views)
                 .withSuggestions(suggestions);
+    }
+
+    private void validateMetakompasPath(List<String> path) throws ServiceErrorException {
+        if(!taxonomyCache.get().hasPath(path)) {
+            throw new ServiceErrorException(String.format("Metakompas path %s does not exist in the taxonomy", path))
+                    .withHttpStatus(400)
+                    .withCode(ServiceErrorCode.INVALID_REQUEST)
+                    .withCause("Invalid metakompas path");
+        }
     }
 
 }
