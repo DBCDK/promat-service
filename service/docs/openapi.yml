@@ -771,6 +771,92 @@ paths:
               schema:
                 $ref: '#/components/schemas/ServiceError'
 
+  /tasks/{taskId}/metakompas:
+    put:
+      tags:
+        - tasks
+      summary: Save a reviewer's Metakompas subject selection for a task
+      operationId: putMetakompasSelection
+      parameters:
+        - in: path
+          name: taskId
+          required: true
+          schema:
+            type: integer
+            description: Id of the METAKOMPAS task
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/MetakompasSelectionRequest'
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MetakompasSelectionResult'
+        '400':
+          description: >-
+            Task is not a METAKOMPAS task, or a selected id does not resolve in the current
+            taxonomy tree
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '404':
+          description: No such task
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+
+  /tasks/{taskId}/buggi:
+    put:
+      tags:
+        - tasks
+      summary: Save a reviewer's Buggi tag selection for a task
+      operationId: putBuggiSelection
+      parameters:
+        - in: path
+          name: taskId
+          required: true
+          schema:
+            type: integer
+            description: Id of the BUGGI task
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/BuggiSelectionRequest'
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BuggiSelectionEntry'
+        '400':
+          description: Task is not a BUGGI task
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '404':
+          description: No such task
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+
   /cases/{id}/messages:
     get:
       tags:
@@ -1964,7 +2050,11 @@ components:
           description: If data produced by this task only relates to some of the cases related faustnumbers. These numbers must be listed here
         data:
           type: string
-          description: The task data
+          description: >-
+            The task data. For a METAKOMPAS task, this holds a MetakompasSelectionData (entries
+            plus any free-text suggestions); for a BUGGI task, this holds resolved
+            BuggiSelectionEntry values - write it via the typed
+            tasks/{taskId}/metakompas|buggi PUT endpoint, which validates it.
           nullable: true
       required:
         - typeOfTask
@@ -2220,9 +2310,205 @@ components:
         options:
           type: array
           items:
-            type: string
+            $ref: '#/components/schemas/BuggiOption'
       required:
         - name
         - subfieldCode
         - requiresNonzeroValue
         - options
+
+    BuggiOption:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+      required:
+        - id
+        - name
+
+    BuggiSelectionRequest:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Stable id from /buggi/options
+        value:
+          type: integer
+          minimum: 0
+          maximum: 5
+      required:
+        - id
+        - value
+
+    BuggiSelectionEntry:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        subfieldCode:
+          type: string
+        requiresNonzeroValue:
+          type: boolean
+        value:
+          type: integer
+          minimum: 0
+          maximum: 5
+      required:
+        - id
+        - name
+        - subfieldCode
+        - requiresNonzeroValue
+        - value
+
+    Tag:
+      type: object
+      properties:
+        name:
+          type: string
+        value:
+          type: integer
+      required:
+        - name
+        - value
+
+    TagList:
+      type: object
+      properties:
+        tags:
+          type: array
+          items:
+            $ref: '#/components/schemas/Tag'
+      required:
+        - tags
+
+    MetakompasSelectionEntry:
+      type: object
+      description: >-
+        One Metakompas subject a reviewer picked, with its tree path attached - stored as-is
+        rather than resolved live, so a selection stays valid even if the taxonomy tree is later
+        restructured.
+      properties:
+        path:
+          type: array
+          items:
+            type: string
+          description: Category path in the Metakompas taxonomy tree, e.g. ["handling", "handler om"]
+        id:
+          type: integer
+        title:
+          type: string
+        note:
+          type: array
+          items:
+            type: string
+        oftenUsed:
+          type: boolean
+        ref:
+          type: string
+      required:
+        - path
+        - id
+        - title
+
+    MetakompasSelectionData:
+      type: object
+      description: >-
+        The full shape persisted into a METAKOMPAS task's data field: resolved entries (with
+        oftenUsed/ref, needed internally) plus any free-text suggestions. See
+        MetakompasSelectionResult for what is actually returned to the client.
+      properties:
+        entries:
+          type: array
+          items:
+            $ref: '#/components/schemas/MetakompasSelectionEntry'
+        suggestions:
+          type: array
+          items:
+            $ref: '#/components/schemas/MetakompasSuggestion'
+
+    MetakompasSelectionView:
+      type: object
+      description: >-
+        A saved Metakompas subject selection, as returned to the client - a client-facing view
+        of MetakompasSelectionEntry that drops oftenUsed/ref, which are only needed internally.
+      properties:
+        path:
+          type: array
+          items:
+            type: string
+          description: Category path in the Metakompas taxonomy tree, e.g. ["handling", "handler om"]
+        id:
+          type: integer
+        title:
+          type: string
+        note:
+          type: array
+          items:
+            type: string
+      required:
+        - path
+        - id
+        - title
+
+    MetakompasSuggestion:
+      type: object
+      description: >-
+        A reviewer-typed suggestion for a word not (yet) in the Metakompas taxonomy, tied to the
+        category path it was suggested under. Never resolved/validated against the taxonomy and
+        never assigned an id.
+      properties:
+        path:
+          type: array
+          items:
+            type: string
+          description: Category path the suggestion was made under, e.g. ["handling", "handler om"]
+        text:
+          type: string
+      required:
+        - path
+        - text
+
+    MetakompasSelectionRequest:
+      type: object
+      description: >-
+        One taxonomy path visited while tagging: the ids selected there (globally unique, so
+        path is not needed to resolve them - it travels along only for the optional suggestions,
+        which have no id) and optional free-text suggestions for words not in the taxonomy.
+      properties:
+        path:
+          type: array
+          items:
+            type: string
+          description: Category path in the Metakompas taxonomy tree, e.g. ["handling", "handler om"]
+        ids:
+          type: array
+          items:
+            type: integer
+          description: Ids of the subjects selected at this path
+        suggestions:
+          type: array
+          items:
+            type: string
+          description: >-
+            Optional free-text suggestions for words not (yet) in the taxonomy under this path.
+      required:
+        - path
+
+    MetakompasSelectionResult:
+      type: object
+      description: >-
+        What tasks/{taskId}/metakompas actually returns: the persisted selection (as
+        MetakompasSelectionView) plus any free-text suggestions.
+      properties:
+        entries:
+          type: array
+          items:
+            $ref: '#/components/schemas/MetakompasSelectionView'
+        suggestions:
+          type: array
+          items:
+            $ref: '#/components/schemas/MetakompasSuggestion'
