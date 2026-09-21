@@ -1,14 +1,19 @@
 package dk.dbc.promat.service.api;
 
+import dk.dbc.promat.service.dto.BuggiOption;
+import dk.dbc.promat.service.dto.BuggiOptionGroup;
 import dk.dbc.promat.service.dto.BuggiSelectionEntry;
 import dk.dbc.promat.service.dto.BuggiSelectionRequest;
 import dk.dbc.promat.service.dto.ServiceErrorCode;
 
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
 public class BuggiVocabulary {
+    // IDs are part of the API contract used by PUT /tasks/{taskId}/buggi.
+    // Keep existing IDs stable; add new options with new IDs instead of renumbering.
     private static final List<Option> OPTIONS = List.of(
             new Option(1, "Læsbarhed", "s", false, "let/svær"),
             new Option(2, "Læsbarhed", "s", false, "tekst/tegninger"),
@@ -41,23 +46,12 @@ public class BuggiVocabulary {
     private BuggiVocabulary() {
     }
 
-    public static List<Map<String, Object>> groups() {
-        Map<String, Map<String, Object>> groups = new LinkedHashMap<>();
+    public static List<BuggiOptionGroup> groups() {
+        Map<String, BuggiOptionGroup> groups = new LinkedHashMap<>();
         for(Option option : OPTIONS) {
-            Map<String, Object> group = groups.computeIfAbsent(option.group(), groupName -> {
-                Map<String, Object> entry = new LinkedHashMap<>();
-                entry.put("name", groupName);
-                entry.put("subfieldCode", option.subfieldCode());
-                entry.put("requiresNonzeroValue", option.requiresNonzeroValue());
-                entry.put("options", new java.util.ArrayList<Map<String, Object>>());
-                return entry;
-            });
-            @SuppressWarnings("unchecked")
-            List<Map<String, Object>> options = (List<Map<String, Object>>) group.get("options");
-            Map<String, Object> optionEntry = new LinkedHashMap<>();
-            optionEntry.put("id", option.id());
-            optionEntry.put("name", option.name());
-            options.add(optionEntry);
+            BuggiOptionGroup group = groups.computeIfAbsent(option.group(), groupName ->
+                    new BuggiOptionGroup(groupName, option.subfieldCode(), option.requiresNonzeroValue(), new ArrayList<>()));
+            group.getOptions().add(new BuggiOption(option.id(), option.name()));
         }
         return List.copyOf(groups.values());
     }
