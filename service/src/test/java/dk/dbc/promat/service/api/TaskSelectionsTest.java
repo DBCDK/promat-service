@@ -1,5 +1,10 @@
 package dk.dbc.promat.service.api;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import dk.dbc.promat.service.dto.BuggiSelectionEntry;
+import dk.dbc.promat.service.dto.BuggiSelectionRequest;
+import dk.dbc.promat.service.dto.MetakompasSelectionData;
 import dk.dbc.promat.service.dto.MetakompasSelectionRequest;
 import dk.dbc.promat.service.dto.MetakompasSelectionResult;
 import dk.dbc.promat.service.dto.ServiceErrorCode;
@@ -17,6 +22,7 @@ import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class TaskSelectionsTest {
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     @Test
     public void rejectsMetakompasSelectionWithInvalidPath() {
@@ -58,6 +64,41 @@ public class TaskSelectionsTest {
         assertThat(result.getSuggestions().getFirst().getText(), is("new word"));
         assertThat(result.getSuggestions().get(1).getPath(), contains("handling", "handler om"));
         assertThat(result.getSuggestions().get(1).getText(), is("another word"));
+    }
+
+    @Test
+    public void storesMetakompasSelectionDataAsParseableJson() throws Exception {
+        TaskSelections taskSelections = taskSelectionsWithTaxonomy();
+        PromatTask task = new PromatTask();
+
+        taskSelections.writeMetakompasSelection(task, List.of(
+                new MetakompasSelectionRequest()
+                        .withPath(List.of("handling", "handler om"))
+                        .withIds(List.of(42))
+                        .withSuggestions(List.of("new word"))));
+
+        MetakompasSelectionData data = OBJECT_MAPPER.readValue(task.getData(), MetakompasSelectionData.class);
+
+        assertThat(data.getEntries().getFirst().getId(), is(42));
+        assertThat(data.getEntries().getFirst().getTitle(), is("krimi"));
+        assertThat(data.getSuggestions().getFirst().getPath(), contains("handling", "handler om"));
+        assertThat(data.getSuggestions().getFirst().getText(), is("new word"));
+    }
+
+    @Test
+    public void storesBuggiSelectionDataAsParseableJson() throws Exception {
+        TaskSelections taskSelections = taskSelectionsWithTaxonomy();
+        PromatTask task = new PromatTask();
+
+        taskSelections.writeBuggiSelection(task, List.of(new BuggiSelectionRequest(8, 2)));
+
+        List<BuggiSelectionEntry> data = OBJECT_MAPPER.readValue(task.getData(), new TypeReference<>() {});
+
+        assertThat(data.getFirst().getId(), is(8));
+        assertThat(data.getFirst().getName(), is("spændende"));
+        assertThat(data.getFirst().getSubfieldCode(), is("n"));
+        assertThat(data.getFirst().getRequiresNonzeroValue(), is(true));
+        assertThat(data.getFirst().getValue(), is(2));
     }
 
     private TaskSelections taskSelectionsWithTaxonomy() {

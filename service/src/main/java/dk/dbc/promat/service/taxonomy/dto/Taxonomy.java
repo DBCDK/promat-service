@@ -19,10 +19,9 @@ public class Taxonomy  implements Serializable {
     private static final JSONBContext JSONB_CONTEXT =  new JSONBContext();
     private Map<String, Object> root = new LinkedHashMap<>();
 
-    // Reverse index built alongside root by put(...). Subject id comes from MARC subfield x09$q:
-    // a curator-assigned id meant to be globally unique across the whole taxonomy, not just
-    // within one category. TaxonomyPopulator enforces this at build time (see its duplicate-id
-    // check), so a subject can be resolved here without knowing its path.
+    // Reverse index used when saving Metakompas selections: the client sends ids, and
+    // TaskSelections resolves the full subject from here. The id comes from MARC x09$q and is
+    // expected to be globally unique; TaxonomyPopulator skips duplicate ids while building this map.
     private final Map<Integer, Subject> byId = new LinkedHashMap<>();
 
     // The category tree's structure is hardcoded here, by hand - it has always been fixed
