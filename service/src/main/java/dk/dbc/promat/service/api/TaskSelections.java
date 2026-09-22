@@ -2,14 +2,8 @@ package dk.dbc.promat.service.api;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import dk.dbc.promat.service.dto.BuggiSelectionEntry;
 import dk.dbc.promat.service.dto.BuggiSelectionRequest;
-import dk.dbc.promat.service.dto.MetakompasSelectionData;
-import dk.dbc.promat.service.dto.MetakompasSelectionEntry;
 import dk.dbc.promat.service.dto.MetakompasSelectionRequest;
-import dk.dbc.promat.service.dto.MetakompasSelectionResult;
-import dk.dbc.promat.service.dto.MetakompasSelectionView;
-import dk.dbc.promat.service.dto.MetakompasSuggestion;
 import dk.dbc.promat.service.dto.ServiceErrorCode;
 import dk.dbc.promat.service.dto.Tag;
 import dk.dbc.promat.service.dto.TagList;
@@ -17,6 +11,10 @@ import dk.dbc.promat.service.persistence.JsonMapperProvider;
 import dk.dbc.promat.service.persistence.PromatEntityManager;
 import dk.dbc.promat.service.persistence.PromatTask;
 import dk.dbc.promat.service.persistence.TaskFieldType;
+import dk.dbc.promat.service.taskdata.BuggiSelectionEntry;
+import dk.dbc.promat.service.taskdata.MetakompasSelectionEntry;
+import dk.dbc.promat.service.taskdata.MetakompasSuggestion;
+import dk.dbc.promat.service.taskdata.MetakompasTaskData;
 import dk.dbc.promat.service.taxonomy.TaxonomyCache;
 import dk.dbc.promat.service.taxonomy.dto.Subject;
 import jakarta.ejb.Stateless;
@@ -116,9 +114,8 @@ public class TaskSelections {
     }
 
 
-    public MetakompasSelectionResult writeMetakompasSelection(PromatTask task, List<MetakompasSelectionRequest> requests) throws ServiceErrorException {
+    public MetakompasTaskData writeMetakompasSelection(PromatTask task, List<MetakompasSelectionRequest> requests) throws ServiceErrorException {
         List<MetakompasSelectionEntry> entries = new ArrayList<>();
-        List<MetakompasSelectionView> views = new ArrayList<>();
         List<MetakompasSuggestion> suggestions = new ArrayList<>();
         for(MetakompasSelectionRequest request : requests == null ? List.<MetakompasSelectionRequest>of() : requests) {
             if(request == null) {
@@ -130,15 +127,13 @@ public class TaskSelections {
             validateMetakompasPath(request.getPath());
             for(Integer id : request.getIds() == null ? List.<Integer>of() : request.getIds()) {
                 Subject subject = resolveMetakompasSubject(id);
-                MetakompasSelectionEntry entry = new MetakompasSelectionEntry()
+                entries.add(new MetakompasSelectionEntry()
                         .withPath(subject.getPath())
                         .withId(subject.getId())
                         .withTitle(subject.getTitle())
                         .withNote(subject.getNote())
                         .withOftenUsed(subject.isOftenUsed())
-                        .withRef(subject.getRef());
-                entries.add(entry);
-                views.add(MetakompasSelectionView.from(entry));
+                        .withRef(subject.getRef()));
             }
             for(String suggestion : request.getSuggestions() == null ? List.<String>of() : request.getSuggestions()) {
                 if(suggestion != null && !suggestion.isEmpty()) {
@@ -148,19 +143,21 @@ public class TaskSelections {
                 }
             }
         }
+        // Same object is both what gets persisted and what is returned to the client - see
+        // MetakompasSelectionEntry/MetakompasSuggestion for why the two roles don't need
+        // separate shapes here.
+        MetakompasTaskData taskData = new MetakompasTaskData()
+                .withEntries(entries)
+                .withSuggestions(suggestions);
         try {
-            task.setData(OBJECT_MAPPER.writeValueAsString(new MetakompasSelectionData()
-                    .withEntries(entries)
-                    .withSuggestions(suggestions)));
+            task.setData(OBJECT_MAPPER.writeValueAsString(taskData));
         } catch(JsonProcessingException e) {
             throw new ServiceErrorException("Failed to serialize metakompas selection")
                     .withHttpStatus(500)
                     .withCode(ServiceErrorCode.FAILED)
                     .withDetails(e.getMessage());
         }
-        return new MetakompasSelectionResult()
-                .withEntries(views)
-                .withSuggestions(suggestions);
+        return taskData;
     }
 
     private void validateMetakompasPath(List<String> path) throws ServiceErrorException {

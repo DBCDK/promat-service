@@ -798,7 +798,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/MetakompasSelectionResult'
+                $ref: '#/components/schemas/MetakompasTaskData'
         '400':
           description: >-
             Task is not a METAKOMPAS task, or a selected id does not resolve in the current
@@ -2051,7 +2051,7 @@ components:
         data:
           type: string
           description: >-
-            The task data. For a METAKOMPAS task, this holds a MetakompasSelectionData (entries
+            The task data. For a METAKOMPAS task, this holds a MetakompasTaskData (entries
             plus any free-text suggestions); for a BUGGI task, this holds resolved
             BuggiSelectionEntry values - write it via the typed
             tasks/{taskId}/metakompas|buggi PUT endpoint, which validates it.
@@ -2344,12 +2344,17 @@ components:
 
     BuggiSelectionEntry:
       type: object
+      description: >-
+        Resolved Buggi selection stored in PromatTask.data and returned from
+        PUT /tasks/{taskId}/buggi. marcSubfieldCode is MARC registration metadata, not needed by
+        the client, but harmless to expose alongside requiresNonzeroValue (which is needed to
+        render the tag's input control) - one shape serves both roles.
       properties:
         id:
           type: integer
         name:
           type: string
-        subfieldCode:
+        marcSubfieldCode:
           type: string
         requiresNonzeroValue:
           type: boolean
@@ -2360,7 +2365,7 @@ components:
       required:
         - id
         - name
-        - subfieldCode
+        - marcSubfieldCode
         - requiresNonzeroValue
         - value
 
@@ -2390,7 +2395,9 @@ components:
       description: >-
         One Metakompas subject a reviewer picked, with its tree path attached - stored as-is
         rather than resolved live, so a selection stays valid even if the taxonomy tree is later
-        restructured.
+        restructured. Used unchanged both as what's persisted in PromatTask.data and as what
+        PUT /tasks/{taskId}/metakompas returns - oftenUsed/ref are already public via
+        GET /taxonomy/tree, so there's nothing to hide from the client here.
       properties:
         path:
           type: array
@@ -2409,46 +2416,6 @@ components:
           type: boolean
         ref:
           type: string
-      required:
-        - path
-        - id
-        - title
-
-    MetakompasSelectionData:
-      type: object
-      description: >-
-        The full shape persisted into a METAKOMPAS task's data field: resolved entries (with
-        oftenUsed/ref, needed internally) plus any free-text suggestions. See
-        MetakompasSelectionResult for what is actually returned to the client.
-      properties:
-        entries:
-          type: array
-          items:
-            $ref: '#/components/schemas/MetakompasSelectionEntry'
-        suggestions:
-          type: array
-          items:
-            $ref: '#/components/schemas/MetakompasSuggestion'
-
-    MetakompasSelectionView:
-      type: object
-      description: >-
-        A saved Metakompas subject selection, as returned to the client - a client-facing view
-        of MetakompasSelectionEntry that drops oftenUsed/ref, which are only needed internally.
-      properties:
-        path:
-          type: array
-          items:
-            type: string
-          description: Category path in the Metakompas taxonomy tree, e.g. ["handling", "handler om"]
-        id:
-          type: integer
-        title:
-          type: string
-        note:
-          type: array
-          items:
-            type: string
       required:
         - path
         - id
@@ -2498,16 +2465,17 @@ components:
       required:
         - path
 
-    MetakompasSelectionResult:
+    MetakompasTaskData:
       type: object
       description: >-
-        What tasks/{taskId}/metakompas actually returns: the persisted selection (as
-        MetakompasSelectionView) plus any free-text suggestions.
+        The full shape of a METAKOMPAS task's selection: resolved entries plus any free-text
+        suggestions. Used unchanged both as what's persisted into a task's data field and as
+        what tasks/{taskId}/metakompas actually returns.
       properties:
         entries:
           type: array
           items:
-            $ref: '#/components/schemas/MetakompasSelectionView'
+            $ref: '#/components/schemas/MetakompasSelectionEntry'
         suggestions:
           type: array
           items:

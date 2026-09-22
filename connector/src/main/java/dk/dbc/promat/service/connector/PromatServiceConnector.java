@@ -5,17 +5,17 @@ import dk.dbc.httpclient.FailSafeHttpClient;
 import dk.dbc.httpclient.HttpGet;
 import dk.dbc.httpclient.HttpPost;
 import dk.dbc.httpclient.HttpPut;
-import dk.dbc.promat.service.dto.BuggiSelectionEntry;
 import dk.dbc.promat.service.dto.BuggiSelectionRequest;
 import dk.dbc.promat.service.dto.CaseRequest;
 import dk.dbc.promat.service.dto.CaseSummaryList;
 import dk.dbc.promat.service.dto.ListCasesParams;
 import dk.dbc.promat.service.dto.MetakompasSelectionRequest;
-import dk.dbc.promat.service.dto.MetakompasSelectionResult;
 import dk.dbc.promat.service.dto.ServiceErrorDto;
 import dk.dbc.promat.service.dto.Tag;
 import dk.dbc.promat.service.dto.TagList;
 import dk.dbc.promat.service.persistence.PromatCase;
+import dk.dbc.promat.service.taskdata.BuggiSelectionEntry;
+import dk.dbc.promat.service.taskdata.MetakompasTaskData;
 import net.jodah.failsafe.RetryPolicy;
 
 import jakarta.ws.rs.ProcessingException;
@@ -210,7 +210,7 @@ public class PromatServiceConnector {
      * @return the persisted selection and suggestions
      * @throws PromatServiceConnectorException on unexpected failure for the operation
      */
-    public MetakompasSelectionResult putMetakompasSelection(int taskId, List<MetakompasSelectionRequest> requests)
+    public MetakompasTaskData putMetakompasSelection(int taskId, List<MetakompasSelectionRequest> requests)
             throws PromatServiceConnectorException {
         final HttpPut httpPut = new HttpPut(failSafeHttpClient)
                 .withBaseUrl(baseUrl)
@@ -218,7 +218,7 @@ public class PromatServiceConnector {
                 .withJsonData(requests);
         final Response response = httpPut.execute();
         assertResponseStatus(response, Response.Status.OK);
-        return readResponseEntity(response, MetakompasSelectionResult.class);
+        return readResponseEntity(response, MetakompasTaskData.class);
     }
 
     /**

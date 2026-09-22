@@ -1,4 +1,6 @@
-package dk.dbc.promat.service.dto;
+package dk.dbc.promat.service.taskdata;
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import java.util.List;
 import java.util.Objects;
@@ -6,6 +8,13 @@ import java.util.Objects;
 // One Metakompas subject picked by a reviewer, with its tree path attached - deliberately not
 // a reference into Taxonomy's category tree, so renaming/restructuring it never requires
 // migrating old selections.
+//
+// Persisted as part of MetakompasTaskData in PromatTask.data, and returned as-is in the
+// PUT /tasks/{taskId}/metakompas response - nothing here needs hiding from the client (oftenUsed/
+// ref are already public via GET /taxonomy/tree), so one class serves both roles. ignoreUnknown
+// guards against future drift between those two roles, the way Tag needed it once
+// BuggiSelectionEntry grew fields Tag didn't expect.
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class MetakompasSelectionEntry {
 
     private List<String> path;
