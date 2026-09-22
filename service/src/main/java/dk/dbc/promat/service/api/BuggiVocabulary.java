@@ -70,6 +70,8 @@ public class BuggiVocabulary {
                     .withCode(ServiceErrorCode.INVALID_REQUEST)
                     .withCause("Invalid buggi value");
         }
+        // Fragile due to name and subfieldCode both being String: the record's positional
+        // constructor gives the compiler no way to catch the two being swapped here.
         return new BuggiSelectionEntry(option.id(), option.name(), option.subfieldCode(), option.requiresNonzeroValue(), request.getValue());
     }
 

@@ -43,7 +43,7 @@ public class Tasks {
     EntityManager entityManager;
 
     @Inject
-    TaskSelections taskSelections;
+    MetakompasAndBuggiTaskSelections taskSelections;
 
     @EJB
     Repository repository;
@@ -123,11 +123,11 @@ public class Tasks {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Response putMetakompasSelection(@PathParam("taskId") final Integer taskId,
-                                           List<MetakompasSelectionRequest> requests) {
+                                           MetakompasSelectionRequest request) {
         LOGGER.info("tasks/{}/metakompas (PUT)", taskId);
         try {
             PromatTask task = taskSelections.resolveTaskForSelection(taskId, TaskFieldType.METAKOMPAS);
-            MetakompasTaskData saved = taskSelections.writeMetakompasSelection(task, requests);
+            MetakompasTaskData saved = taskSelections.writeMetakompasSelection(task, request);
             return Response.ok(saved).build();
         } catch(ServiceErrorException serviceErrorException) {
             return Response.status(serviceErrorException.getHttpStatus()).entity(serviceErrorException.getServiceErrorDto()).build();

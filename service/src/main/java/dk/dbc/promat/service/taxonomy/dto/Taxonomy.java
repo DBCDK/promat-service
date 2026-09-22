@@ -20,7 +20,7 @@ public class Taxonomy  implements Serializable {
     private Map<String, Object> root = new LinkedHashMap<>();
 
     // Reverse index used when saving Metakompas selections: the client sends ids, and
-    // TaskSelections resolves the full subject from here. The id comes from MARC x09$q and is
+    // MetakompasAndBuggiTaskSelections resolves the full subject from here. The id comes from MARC x09$q and is
     // expected to be globally unique; TaxonomyPopulator skips duplicate ids while building this map.
     private final Map<Integer, Subject> byId = new LinkedHashMap<>();
 

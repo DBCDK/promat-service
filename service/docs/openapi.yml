@@ -789,9 +789,7 @@ paths:
         content:
           application/json:
             schema:
-              type: array
-              items:
-                $ref: '#/components/schemas/MetakompasSelectionRequest'
+              $ref: '#/components/schemas/MetakompasSelectionRequest'
       responses:
         '200':
           description: successful operation
@@ -2442,28 +2440,20 @@ components:
     MetakompasSelectionRequest:
       type: object
       description: >-
-        One taxonomy path visited while tagging: the ids selected there (globally unique, so
-        path is not needed to resolve them - it travels along only for the optional suggestions,
-        which have no id) and optional free-text suggestions for words not in the taxonomy.
+        A reviewer's full Metakompas selection for a task: the ids of existing taxonomy words
+        picked (globally unique, so no path is needed to resolve them) and any free-text
+        suggestions for words not (yet) in the taxonomy - each suggestion carries its own path.
       properties:
-        path:
-          type: array
-          items:
-            type: string
-          description: Category path in the Metakompas taxonomy tree, e.g. ["handling", "handler om"]
         ids:
           type: array
           items:
             type: integer
-          description: Ids of the subjects selected at this path
+          description: Ids of the selected taxonomy subjects
         suggestions:
           type: array
           items:
-            type: string
-          description: >-
-            Optional free-text suggestions for words not (yet) in the taxonomy under this path.
-      required:
-        - path
+            $ref: '#/components/schemas/MetakompasSuggestion'
+          description: Free-text suggestions for words not (yet) in the taxonomy
 
     MetakompasTaskData:
       type: object

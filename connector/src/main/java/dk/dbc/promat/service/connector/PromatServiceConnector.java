@@ -204,18 +204,18 @@ public class PromatServiceConnector {
      * Saves a reviewer's Metakompas subject selection for a task, shared across all of the
      * task's target fausts
      * @param taskId id of the METAKOMPAS task
-     * @param requests one entry per taxonomy path visited: the ids selected there (globally
-     *                 unique, so path is not needed to resolve them) and optional free-text
-     *                 suggestions for words not (yet) in the taxonomy under that path
+     * @param request the ids of existing taxonomy words selected (globally unique, so no path is
+     *                needed to resolve them) and any free-text suggestions for words not (yet) in
+     *                the taxonomy, each carrying its own path
      * @return the persisted selection and suggestions
      * @throws PromatServiceConnectorException on unexpected failure for the operation
      */
-    public MetakompasTaskData putMetakompasSelection(int taskId, List<MetakompasSelectionRequest> requests)
+    public MetakompasTaskData putMetakompasSelection(int taskId, MetakompasSelectionRequest request)
             throws PromatServiceConnectorException {
         final HttpPut httpPut = new HttpPut(failSafeHttpClient)
                 .withBaseUrl(baseUrl)
                 .withPathElements("tasks", String.valueOf(taskId), "metakompas")
-                .withJsonData(requests);
+                .withJsonData(request);
         final Response response = httpPut.execute();
         assertResponseStatus(response, Response.Status.OK);
         return readResponseEntity(response, MetakompasTaskData.class);
