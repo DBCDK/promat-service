@@ -7,8 +7,6 @@ import dk.dbc.promat.service.dto.MetakompasSelectionRequest;
 import dk.dbc.promat.service.dto.ServiceErrorCode;
 import dk.dbc.promat.service.persistence.PromatTask;
 import dk.dbc.promat.service.taskdata.BuggiSelectionEntry;
-import dk.dbc.promat.service.taskdata.MetakompasSelectionEntry;
-import dk.dbc.promat.service.taskdata.MetakompasSuggestion;
 import dk.dbc.promat.service.taskdata.MetakompasTaskData;
 import dk.dbc.promat.service.taxonomy.TaxonomyCache;
 import dk.dbc.promat.service.taxonomy.dto.Subject;
@@ -32,7 +30,7 @@ public class MetakompasAndBuggiTaskSelectionsTest {
         ServiceErrorException exception = assertThrows(ServiceErrorException.class, () ->
                 taskSelections.writeMetakompasSelection(new PromatTask(),
                         new MetakompasSelectionRequest()
-                                .withSuggestions(List.of(new MetakompasSuggestion(
+                                .withSuggestions(List.of(new MetakompasTaskData.Suggestion(
                                         List.of("handling", "not a real category"), "new word")))));
 
         assertThat(exception.getHttpStatus(), is(400));
@@ -50,7 +48,7 @@ public class MetakompasAndBuggiTaskSelectionsTest {
         // Every field asserted with a value distinct from every other field's - path/note (both
         // List<String>) and title/ref (both String) are positional constructor args a swap
         // wouldn't fail to compile, so this is what actually catches that regression.
-        MetakompasSelectionEntry entry = result.getEntries().getFirst();
+        MetakompasTaskData.Entry entry = result.getEntries().getFirst();
         assertThat(entry.id(), is(42));
         assertThat(entry.title(), is("krimi"));
         assertThat(entry.path(), contains("ramme", "genre"));
@@ -66,8 +64,8 @@ public class MetakompasAndBuggiTaskSelectionsTest {
         MetakompasTaskData result = taskSelections.writeMetakompasSelection(new PromatTask(),
                 new MetakompasSelectionRequest()
                         .withSuggestions(List.of(
-                                new MetakompasSuggestion(List.of("handling", "handler om"), "new word"),
-                                new MetakompasSuggestion(List.of("handling", "handler om"), "another word"))));
+                                new MetakompasTaskData.Suggestion(List.of("handling", "handler om"), "new word"),
+                                new MetakompasTaskData.Suggestion(List.of("handling", "handler om"), "another word"))));
 
         assertThat(result.getSuggestions().getFirst().path(), contains("handling", "handler om"));
         assertThat(result.getSuggestions().getFirst().text(), is("new word"));
@@ -83,7 +81,7 @@ public class MetakompasAndBuggiTaskSelectionsTest {
         taskSelections.writeMetakompasSelection(task,
                 new MetakompasSelectionRequest()
                         .withIds(List.of(42))
-                        .withSuggestions(List.of(new MetakompasSuggestion(List.of("handling", "handler om"), "new word"))));
+                        .withSuggestions(List.of(new MetakompasTaskData.Suggestion(List.of("handling", "handler om"), "new word"))));
 
         MetakompasTaskData data = OBJECT_MAPPER.readValue(task.getData(), MetakompasTaskData.class);
 

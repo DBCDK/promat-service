@@ -1,6 +1,6 @@
 package dk.dbc.promat.service.dto;
 
-import dk.dbc.promat.service.taskdata.MetakompasSuggestion;
+import dk.dbc.promat.service.taskdata.MetakompasTaskData;
 
 import java.util.List;
 import java.util.Objects;
@@ -11,7 +11,7 @@ import java.util.Objects;
 // place a path is actually needed.
 public class MetakompasSelectionRequest {
     private List<Integer> ids;
-    private List<MetakompasSuggestion> suggestions;
+    private List<MetakompasTaskData.Suggestion> suggestions;
 
     public List<Integer> getIds() {
         return ids;
@@ -21,11 +21,11 @@ public class MetakompasSelectionRequest {
         this.ids = ids;
     }
 
-    public List<MetakompasSuggestion> getSuggestions() {
+    public List<MetakompasTaskData.Suggestion> getSuggestions() {
         return suggestions;
     }
 
-    public void setSuggestions(List<MetakompasSuggestion> suggestions) {
+    public void setSuggestions(List<MetakompasTaskData.Suggestion> suggestions) {
         this.suggestions = suggestions;
     }
 
@@ -34,7 +34,7 @@ public class MetakompasSelectionRequest {
         return this;
     }
 
-    public MetakompasSelectionRequest withSuggestions(List<MetakompasSuggestion> suggestions) {
+    public MetakompasSelectionRequest withSuggestions(List<MetakompasTaskData.Suggestion> suggestions) {
         this.suggestions = suggestions;
         return this;
     }
