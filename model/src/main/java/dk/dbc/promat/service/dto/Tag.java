@@ -1,5 +1,11 @@
 package dk.dbc.promat.service.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
+// Persisted BUGGI task data is a list of BuggiSelectionEntry (name/value plus id/marcSubfieldCode/
+// requiresNonzeroValue used only when saving); registration only needs name/value, so unknown
+// fields must be ignored here rather than rejected.
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class Tag {
     private String name;
     private Integer value;

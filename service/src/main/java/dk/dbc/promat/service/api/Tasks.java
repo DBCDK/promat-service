@@ -158,6 +158,25 @@ public class Tasks {
         }
     }
 
+    // Reading-experience approval is separate from save: save persists the reviewer's
+    // selection, while approval registers it in update-service and, on success, marks
+    // the task approved.
+    @PUT
+    @Path("tasks/{taskId}/reading-experience/approve")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response approveReadingExperience(@PathParam("taskId") final Integer taskId) {
+        LOGGER.info("tasks/{}/reading-experience/approve (PUT)", taskId);
+        try {
+            taskSelections.approveReadingExperience(taskId);
+            return Response.ok().build();
+        } catch(ServiceErrorException serviceErrorException) {
+            return Response.status(serviceErrorException.getHttpStatus()).entity(serviceErrorException.getServiceErrorDto()).build();
+        } catch(Exception exception) {
+            LOGGER.error("Caught exception:", exception);
+            return ServiceErrorDto.Failed(exception.getMessage());
+        }
+    }
+
     @DELETE
     @Path("tasks/{id}")
     @Produces(MediaType.APPLICATION_JSON)
