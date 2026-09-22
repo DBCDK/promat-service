@@ -2303,7 +2303,7 @@ components:
       properties:
         name:
           type: string
-        subfieldCode:
+        marcSubfieldCode:
           type: string
         requiresNonzeroValue:
           type: boolean
@@ -2313,7 +2313,7 @@ components:
             $ref: '#/components/schemas/BuggiOption'
       required:
         - name
-        - subfieldCode
+        - marcSubfieldCode
         - requiresNonzeroValue
         - options
 

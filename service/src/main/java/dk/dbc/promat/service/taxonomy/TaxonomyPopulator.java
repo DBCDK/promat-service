@@ -33,8 +33,8 @@ public class TaxonomyPopulator {
             }
 
             // id (MARC x09$q, curator-assigned) is expected to be globally unique across the
-            // whole taxonomy. Keep the first-seen subject for a given id, skip and log the rest,
-            // so one bad/duplicate record can't take down a sync.
+            // whole taxonomy. Keep the first-seen subject for a given id and log later
+            // duplicates, so duplicate handling is deterministic and visible in the summary.
             if (taxonomy.getById(item.getId()) != null) {
                 LOGGER.warn("Skipping subject with duplicate taxonomy id {} ('{}') - id is expected to be globally unique",
                         item.getId(), item.getTitle());
