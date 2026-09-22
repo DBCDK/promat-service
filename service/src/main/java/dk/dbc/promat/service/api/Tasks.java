@@ -1,10 +1,8 @@
 package dk.dbc.promat.service.api;
 
 import dk.dbc.promat.service.Repository;
-import dk.dbc.promat.service.dto.BuggiSelectionEntry;
 import dk.dbc.promat.service.dto.BuggiSelectionRequest;
 import dk.dbc.promat.service.dto.MetakompasSelectionRequest;
-import dk.dbc.promat.service.dto.MetakompasSelectionResult;
 import dk.dbc.promat.service.dto.ServiceErrorCode;
 import dk.dbc.promat.service.dto.ServiceErrorDto;
 import dk.dbc.promat.service.dto.TaskDto;
@@ -12,6 +10,8 @@ import dk.dbc.promat.service.persistence.PromatCase;
 import dk.dbc.promat.service.persistence.PromatEntityManager;
 import dk.dbc.promat.service.persistence.PromatTask;
 import dk.dbc.promat.service.persistence.TaskFieldType;
+import dk.dbc.promat.service.taskdata.BuggiSelectionEntry;
+import dk.dbc.promat.service.taskdata.MetakompasTaskData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -127,7 +127,7 @@ public class Tasks {
         LOGGER.info("tasks/{}/metakompas (PUT)", taskId);
         try {
             PromatTask task = taskSelections.resolveTaskForSelection(taskId, TaskFieldType.METAKOMPAS);
-            MetakompasSelectionResult saved = taskSelections.writeMetakompasSelection(task, requests);
+            MetakompasTaskData saved = taskSelections.writeMetakompasSelection(task, requests);
             return Response.ok(saved).build();
         } catch(ServiceErrorException serviceErrorException) {
             return Response.status(serviceErrorException.getHttpStatus()).entity(serviceErrorException.getServiceErrorDto()).build();

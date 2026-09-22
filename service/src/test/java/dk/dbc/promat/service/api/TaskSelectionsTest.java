@@ -2,13 +2,12 @@ package dk.dbc.promat.service.api;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import dk.dbc.promat.service.dto.BuggiSelectionEntry;
 import dk.dbc.promat.service.dto.BuggiSelectionRequest;
-import dk.dbc.promat.service.dto.MetakompasSelectionData;
 import dk.dbc.promat.service.dto.MetakompasSelectionRequest;
-import dk.dbc.promat.service.dto.MetakompasSelectionResult;
 import dk.dbc.promat.service.dto.ServiceErrorCode;
 import dk.dbc.promat.service.persistence.PromatTask;
+import dk.dbc.promat.service.taskdata.BuggiSelectionEntry;
+import dk.dbc.promat.service.taskdata.MetakompasTaskData;
 import dk.dbc.promat.service.taxonomy.TaxonomyCache;
 import dk.dbc.promat.service.taxonomy.dto.Subject;
 import dk.dbc.promat.service.taxonomy.dto.Taxonomy;
@@ -43,7 +42,7 @@ public class TaskSelectionsTest {
     public void resolvesSelectedIdsByIdEvenWhenRequestPathIsDifferentButValid() throws ServiceErrorException {
         TaskSelections taskSelections = taskSelectionsWithTaxonomy();
 
-        MetakompasSelectionResult result = taskSelections.writeMetakompasSelection(new PromatTask(), List.of(
+        MetakompasTaskData result = taskSelections.writeMetakompasSelection(new PromatTask(), List.of(
                 new MetakompasSelectionRequest()
                         .withPath(List.of("stemning", "dramatisk"))
                         .withIds(List.of(42))));
@@ -55,7 +54,7 @@ public class TaskSelectionsTest {
     public void acceptsSuggestionsWhenPathExists() throws ServiceErrorException {
         TaskSelections taskSelections = taskSelectionsWithTaxonomy();
 
-        MetakompasSelectionResult result = taskSelections.writeMetakompasSelection(new PromatTask(), List.of(
+        MetakompasTaskData result = taskSelections.writeMetakompasSelection(new PromatTask(), List.of(
                 new MetakompasSelectionRequest()
                         .withPath(List.of("handling", "handler om"))
                         .withSuggestions(List.of("new word", "another word"))));
@@ -77,7 +76,7 @@ public class TaskSelectionsTest {
                         .withIds(List.of(42))
                         .withSuggestions(List.of("new word"))));
 
-        MetakompasSelectionData data = OBJECT_MAPPER.readValue(task.getData(), MetakompasSelectionData.class);
+        MetakompasTaskData data = OBJECT_MAPPER.readValue(task.getData(), MetakompasTaskData.class);
 
         assertThat(data.getEntries().getFirst().getId(), is(42));
         assertThat(data.getEntries().getFirst().getTitle(), is("krimi"));
@@ -96,7 +95,7 @@ public class TaskSelectionsTest {
 
         assertThat(data.getFirst().getId(), is(8));
         assertThat(data.getFirst().getName(), is("spændende"));
-        assertThat(data.getFirst().getSubfieldCode(), is("n"));
+        assertThat(data.getFirst().getMarcSubfieldCode(), is("n"));
         assertThat(data.getFirst().getRequiresNonzeroValue(), is(true));
         assertThat(data.getFirst().getValue(), is(2));
     }

@@ -1,21 +1,27 @@
-package dk.dbc.promat.service.dto;
+package dk.dbc.promat.service.taskdata;
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 // Resolved Buggi selection stored in PromatTask.data and returned from PUT /tasks/{taskId}/buggi.
-// Keeps the stable option id together with the metadata needed for later cataloging registration.
+// Keeps the stable option id and MARC registration metadata together with requiresNonzeroValue,
+// which the frontend needs to render the tag's input control; marcSubfieldCode isn't needed by
+// the client but is harmless to expose, so one class serves both roles instead of two.
+// ignoreUnknown guards against future drift between those two roles.
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class BuggiSelectionEntry {
     private Integer id;
     private String name;
-    private String subfieldCode;
+    private String marcSubfieldCode;
     private Boolean requiresNonzeroValue;
     private Integer value;
 
     public BuggiSelectionEntry() {
     }
 
-    public BuggiSelectionEntry(Integer id, String name, String subfieldCode, Boolean requiresNonzeroValue, Integer value) {
+    public BuggiSelectionEntry(Integer id, String name, String marcSubfieldCode, Boolean requiresNonzeroValue, Integer value) {
         this.id = id;
         this.name = name;
-        this.subfieldCode = subfieldCode;
+        this.marcSubfieldCode = marcSubfieldCode;
         this.requiresNonzeroValue = requiresNonzeroValue;
         this.value = value;
     }
@@ -36,12 +42,12 @@ public class BuggiSelectionEntry {
         this.name = name;
     }
 
-    public String getSubfieldCode() {
-        return subfieldCode;
+    public String getMarcSubfieldCode() {
+        return marcSubfieldCode;
     }
 
-    public void setSubfieldCode(String subfieldCode) {
-        this.subfieldCode = subfieldCode;
+    public void setMarcSubfieldCode(String marcSubfieldCode) {
+        this.marcSubfieldCode = marcSubfieldCode;
     }
 
     public Boolean getRequiresNonzeroValue() {

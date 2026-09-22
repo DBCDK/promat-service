@@ -5,16 +5,16 @@ import java.util.List;
 // Group of Buggi options exposed by GET /buggi/options.
 public class BuggiOptionGroup {
     private String name;
-    private String subfieldCode;
+    private String marcSubfieldCode;
     private Boolean requiresNonzeroValue;
     private List<BuggiOption> options;
 
     public BuggiOptionGroup() {
     }
 
-    public BuggiOptionGroup(String name, String subfieldCode, Boolean requiresNonzeroValue, List<BuggiOption> options) {
+    public BuggiOptionGroup(String name, String marcSubfieldCode, Boolean requiresNonzeroValue, List<BuggiOption> options) {
         this.name = name;
-        this.subfieldCode = subfieldCode;
+        this.marcSubfieldCode = marcSubfieldCode;
         this.requiresNonzeroValue = requiresNonzeroValue;
         this.options = options;
     }
@@ -27,12 +27,12 @@ public class BuggiOptionGroup {
         this.name = name;
     }
 
-    public String getSubfieldCode() {
-        return subfieldCode;
+    public String getMarcSubfieldCode() {
+        return marcSubfieldCode;
     }
 
-    public void setSubfieldCode(String subfieldCode) {
-        this.subfieldCode = subfieldCode;
+    public void setMarcSubfieldCode(String marcSubfieldCode) {
+        this.marcSubfieldCode = marcSubfieldCode;
     }
 
     public Boolean getRequiresNonzeroValue() {

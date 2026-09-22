@@ -1,23 +1,24 @@
-package dk.dbc.promat.service.dto;
+package dk.dbc.promat.service.taskdata;
 
 import java.util.List;
 import java.util.Objects;
 
-// The client-facing counterpart of MetakompasSelectionData: the same shape, but with each
-// entry trimmed to MetakompasSelectionView (no oftenUsed/ref) - what tasks/{taskId}/metakompas
-// actually returns.
-public class MetakompasSelectionResult {
-    private List<MetakompasSelectionView> entries;
+// The full shape of a METAKOMPAS task's selection: resolved entries plus any free-text
+// suggestions for words not (yet) in the taxonomy. Used unchanged both as what's persisted in
+// PromatTask.data and as what PUT /tasks/{taskId}/metakompas returns - see
+// MetakompasSelectionEntry/MetakompasSuggestion for why the two roles don't need separate shapes.
+public class MetakompasTaskData {
+    private List<MetakompasSelectionEntry> entries;
     private List<MetakompasSuggestion> suggestions;
 
-    public MetakompasSelectionResult() {
+    public MetakompasTaskData() {
     }
 
-    public List<MetakompasSelectionView> getEntries() {
+    public List<MetakompasSelectionEntry> getEntries() {
         return entries;
     }
 
-    public void setEntries(List<MetakompasSelectionView> entries) {
+    public void setEntries(List<MetakompasSelectionEntry> entries) {
         this.entries = entries;
     }
 
@@ -29,12 +30,12 @@ public class MetakompasSelectionResult {
         this.suggestions = suggestions;
     }
 
-    public MetakompasSelectionResult withEntries(List<MetakompasSelectionView> entries) {
+    public MetakompasTaskData withEntries(List<MetakompasSelectionEntry> entries) {
         this.entries = entries;
         return this;
     }
 
-    public MetakompasSelectionResult withSuggestions(List<MetakompasSuggestion> suggestions) {
+    public MetakompasTaskData withSuggestions(List<MetakompasSuggestion> suggestions) {
         this.suggestions = suggestions;
         return this;
     }
@@ -42,7 +43,7 @@ public class MetakompasSelectionResult {
     @Override
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass()) return false;
-        MetakompasSelectionResult that = (MetakompasSelectionResult) o;
+        MetakompasTaskData that = (MetakompasTaskData) o;
         return Objects.equals(entries, that.entries) && Objects.equals(suggestions, that.suggestions);
     }
 
@@ -53,7 +54,7 @@ public class MetakompasSelectionResult {
 
     @Override
     public String toString() {
-        return "MetakompasSelectionResult{" +
+        return "MetakompasTaskData{" +
                 "entries=" + entries +
                 ", suggestions=" + suggestions +
                 '}';

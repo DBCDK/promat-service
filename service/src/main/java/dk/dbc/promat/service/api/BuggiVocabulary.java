@@ -2,9 +2,9 @@ package dk.dbc.promat.service.api;
 
 import dk.dbc.promat.service.dto.BuggiOption;
 import dk.dbc.promat.service.dto.BuggiOptionGroup;
-import dk.dbc.promat.service.dto.BuggiSelectionEntry;
 import dk.dbc.promat.service.dto.BuggiSelectionRequest;
 import dk.dbc.promat.service.dto.ServiceErrorCode;
+import dk.dbc.promat.service.taskdata.BuggiSelectionEntry;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
