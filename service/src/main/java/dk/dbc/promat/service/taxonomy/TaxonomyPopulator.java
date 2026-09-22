@@ -19,6 +19,7 @@ public class TaxonomyPopulator {
     public static void populate(Taxonomy taxonomy, Collection<Subject> subjects) {
         int placed = 0;
         int skippedMissingPath = 0;
+        int skippedDuplicateId = 0;
         // One line per distinct unresolvable path, not per subject - a single category can
         // cover thousands of subjects.
         Set<String> unimplementedCategories = new LinkedHashSet<>();
@@ -28,6 +29,16 @@ public class TaxonomyPopulator {
             // instead of raising the IllegalArgumentException the catch below expects.
             if (item.getPath() == null || item.getPath().isEmpty()) {
                 skippedMissingPath++;
+                continue;
+            }
+
+            // id (MARC x09$q, curator-assigned) is expected to be globally unique across the
+            // whole taxonomy. Keep the first-seen subject for a given id and log later
+            // duplicates, so duplicate handling is deterministic and visible in the summary.
+            if (taxonomy.getById(item.getId()) != null) {
+                LOGGER.warn("Skipping subject with duplicate taxonomy id {} ('{}') - id is expected to be globally unique",
+                        item.getId(), item.getTitle());
+                skippedDuplicateId++;
                 continue;
             }
 
@@ -43,9 +54,9 @@ public class TaxonomyPopulator {
 
         unimplementedCategories.forEach(path -> LOGGER.warn("Found new category not implemented: {}", path));
 
-        int skippedUnimplementedCategory = subjects.size() - placed - skippedMissingPath;
-        LOGGER.info("Built taxonomy: {} subjects placed, {} skipped (missing path), " +
+        int skippedUnimplementedCategory = subjects.size() - placed - skippedMissingPath - skippedDuplicateId;
+        LOGGER.info("Built taxonomy: {} subjects placed, {} skipped (missing path), {} skipped (duplicate id), " +
                         "{} skipped (unimplemented category, across {} distinct paths)",
-                placed, skippedMissingPath, skippedUnimplementedCategory, unimplementedCategories.size());
+                placed, skippedMissingPath, skippedDuplicateId, skippedUnimplementedCategory, unimplementedCategories.size());
     }
 }

@@ -19,6 +19,11 @@ public class Taxonomy  implements Serializable {
     private static final JSONBContext JSONB_CONTEXT =  new JSONBContext();
     private Map<String, Object> root = new LinkedHashMap<>();
 
+    // Reverse index used when saving Metakompas selections: the client sends ids, and
+    // MetakompasAndBuggiTaskSelections resolves the full subject from here. The id comes from MARC x09$q and is
+    // expected to be globally unique; TaxonomyPopulator skips duplicate ids while building this map.
+    private final Map<Integer, Subject> byId = new LinkedHashMap<>();
+
     // The category tree's structure is hardcoded here, by hand - it has always been fixed
     // (confirmed against the taxonomy Kafka topic: every subject's path resolves into one of
     // these branches, none introduce a new one), so TaxonomyPopulator only ever adds SUBJECTS
@@ -86,6 +91,32 @@ public class Taxonomy  implements Serializable {
 
     public void put(Subject subject, List<String> path) {
         getList(path).add(subject.toHashMap());
+        byId.put(subject.getId(), subject);
+    }
+
+    // subject.getPath() is populated on the returned instance (set from Kafka at parse time),
+    // unlike a Subject reconstituted via getList(path)/get(path), whose path is never known.
+    public Subject getById(int id) {
+        return byId.get(id);
+    }
+
+    public boolean hasPath(List<String> path) {
+        if(path == null || path.isEmpty()) {
+            return false;
+        }
+        try {
+            getList(path);
+            return true;
+        } catch(IllegalArgumentException e) {
+            return false;
+        }
+    }
+
+    // True for a freshly-constructed instance (TaxonomyCache's initial default) or one that
+    // never received a successful sync - lets a caller distinguish "not populated yet" from "id
+    // genuinely doesn't exist".
+    public boolean isEmpty() {
+        return byId.isEmpty();
     }
 
     public Subject get(String... path) {
