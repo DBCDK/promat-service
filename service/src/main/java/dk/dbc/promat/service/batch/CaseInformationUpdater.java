@@ -45,8 +45,9 @@ public class CaseInformationUpdater {
     protected static final String METAKOMPASDATA_PRESENT = "true";
     protected static Locale dkLocale = new Locale("da", "DK");
     private static final String METAKOMPAS_FIELD = "665";
+    // 665 subfields holding Metakompas subjects - same subfields as OpenFormat's has_subjectLaesekompas (see ADR 0006)
+    // A faust counts as registered if any 665 has a non-blank value in just one of them
     private static final String METAKOMPAS_SUBJECT_SUBFIELDS = "iqpmguehjklfsrtnav";
-    // MARC_JSON: MarcBinding can't read the XML some backends default to (see RecordsProvider.CONTENT_PARAMS)
     private static final RecordServiceConnector.Params RECORD_CONTENT_PARAMS = new RecordServiceConnector.Params()
             .withMode(RecordServiceConnector.Params.Mode.MERGED)
             .withOutputFormat(RecordServiceConnector.Params.OutputFormat.MARC_JSON);
@@ -205,7 +206,7 @@ public class CaseInformationUpdater {
                 LOGGER.info("Updating metakompas for fausts: '{}' ==> '{}' of case with id {}. Taskid is '{}'",
                         fausts, METAKOMPASDATA_PRESENT, promatCase.getId(), task.getId());
                 task.setData(METAKOMPASDATA_PRESENT);
-                // Keep the date of a manual approval
+                // Only approve if not already approved, so an existing approval date isn't overwritten
                 if (task.getApproved() == null) {
                     task.setApproved(dates.getCurrentDate());
                 }
@@ -218,7 +219,7 @@ public class CaseInformationUpdater {
         try {
             return recordServiceConnector.getRecordContentCollection(RecordsProvider.DBC_AGENCY, faust, RECORD_CONTENT_PARAMS)
                     .stream()
-                    // The collection may also hold parent (head/section) records - only look at the record itself
+                    // The collection also holds related records (head/section, authority) - only look at the record itself
                     .filter(marcBinding -> faust.equals(marcBinding.getSubFieldValue("001", 'a')))
                     .anyMatch(CaseInformationUpdater::hasMetakompasRegistration);
         } catch (RecordServiceConnectorException | ProcessingException e) {
