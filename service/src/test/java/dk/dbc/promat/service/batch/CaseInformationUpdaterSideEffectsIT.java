@@ -1,7 +1,11 @@
 package dk.dbc.promat.service.batch;
 
+import dk.dbc.marc.binding.DataField;
+import dk.dbc.marc.binding.MarcBinding;
+import dk.dbc.marc.binding.SubField;
 import dk.dbc.promat.service.api.BibliographicInformation;
 import dk.dbc.promat.service.api.FbiApiHandler;
+import dk.dbc.promat.service.api.RecordsProvider;
 import dk.dbc.promat.service.connectors.FbiApiConnectorException;
 import dk.dbc.promat.service.dto.CaseRequest;
 import dk.dbc.promat.service.dto.TaskDto;
@@ -12,6 +16,7 @@ import dk.dbc.promat.service.persistence.PromatTask;
 import dk.dbc.promat.service.persistence.TaskFieldType;
 import dk.dbc.promat.service.persistence.TaskType;
 import dk.dbc.promat.service.util.PromatTaskUtils;
+import dk.dbc.rawrepo.record.RecordServiceConnector;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.TypedQuery;
@@ -20,18 +25,26 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import static org.hamcrest.CoreMatchers.anyOf;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /**
@@ -70,9 +83,9 @@ public class CaseInformationUpdaterSideEffectsIT extends CaseInformationUpdaterT
 
         Map<String, BibliographicInformation> fbiApiHandlerResponse =
                 Map.of(
-                        "48959939", getFbiApiResponseFromResource("48959939").withMetakompassubject(null),
-                        "48959912", getFbiApiResponseFromResource("48959912").withMetakompassubject("false"),
-                        "48959955", getFbiApiResponseFromResource("48959955").withMetakompassubject(null)
+                        "48959939", getFbiApiResponseFromResource("48959939"),
+                        "48959912", getFbiApiResponseFromResource("48959912"),
+                        "48959955", getFbiApiResponseFromResource("48959955")
                 );
 
         PromatCase promatCase = getCaseWithId(created.getId());
@@ -81,6 +94,25 @@ public class CaseInformationUpdaterSideEffectsIT extends CaseInformationUpdaterT
         upd.caseInformationUpdater.fbiApiHandler = fbiApiHandler;
         when(fbiApiHandler.format(anyString()))
                 .thenAnswer(invocationOnMock -> fbiApiHandlerResponse.get(invocationOnMock.getArgument(0)));
+
+        // Fausts whose record carries a Metakompas registration (a subject in 665). Every record
+        // has a regular cataloguing subject (666) as well, which must not count as a registration.
+        Set<String> registeredFausts = new HashSet<>();
+        RecordServiceConnector recordServiceConnector = mock(RecordServiceConnector.class);
+        upd.caseInformationUpdater.recordServiceConnector = recordServiceConnector;
+        when(recordServiceConnector.getRecordContentCollection(anyInt(), anyString(), any(RecordServiceConnector.Params.class)))
+                .thenAnswer(invocationOnMock -> {
+                    String faust = invocationOnMock.getArgument(1);
+                    MarcBinding marcBinding = new MarcBinding()
+                            .addField(new DataField("001", "00").addSubField(new SubField('a', faust)))
+                            .addField(new DataField("666", "00").addSubField(new SubField('s', "Danmark")));
+                    if (registeredFausts.contains(faust)) {
+                        marcBinding.addField(new DataField("665", "00")
+                                .addSubField(new SubField('&', "lektor"))
+                                .addSubField(new SubField('n', "hyggelig")));
+                    }
+                    return List.of(marcBinding);
+                });
 
         //
         // First round: Lets say that none are ready yet.
@@ -96,7 +128,7 @@ public class CaseInformationUpdaterSideEffectsIT extends CaseInformationUpdaterT
         //
         // Second round: lets say metakompasdata for primary faust now has been done.
         //
-        fbiApiHandlerResponse.get("48959939").setMetakompassubject(CaseInformationUpdater.METAKOMPASDATA_PRESENT);
+        registeredFausts.add("48959939");
         persistenceContext.run(() -> upd.caseInformationUpdater.updateCaseInformation(promatCase));
         created = getCaseWithId(promatCase.getId());
         List<PromatTask> tasks = getTasksWhereMetakompasIsPresent(created);
@@ -107,7 +139,7 @@ public class CaseInformationUpdaterSideEffectsIT extends CaseInformationUpdaterT
         // Third round: Metadata for one of the related faust has been done. There is still only one in
         // the list of done Metakompas tasks.
         //
-        fbiApiHandlerResponse.get("48959955").setMetakompassubject(CaseInformationUpdater.METAKOMPASDATA_PRESENT);
+        registeredFausts.add("48959955");
         persistenceContext.run(() -> upd.caseInformationUpdater.updateCaseInformation(promatCase));
         created = getCaseWithId(promatCase.getId());
         tasks = getTasksWhereMetakompasIsPresent(created);
@@ -120,7 +152,7 @@ public class CaseInformationUpdaterSideEffectsIT extends CaseInformationUpdaterT
         //
         promatCase.setStatus(CaseStatus.PENDING_EXTERNAL);
         entityManager.persist(promatCase);
-        fbiApiHandlerResponse.get("48959912").setMetakompassubject(CaseInformationUpdater.METAKOMPASDATA_PRESENT);
+        registeredFausts.add("48959912");
         persistenceContext.run(() -> upd.caseInformationUpdater.updateCaseInformation(promatCase));
         created = getCaseWithId(promatCase.getId());
 
@@ -129,6 +161,12 @@ public class CaseInformationUpdaterSideEffectsIT extends CaseInformationUpdaterT
 
         created = getCaseWithId(promatCase.getId());
         assertThat("case closed", created.getStatus(), is(CaseStatus.APPROVED));
+
+        // The primary faust was looked up in rounds one and two only - once found registered, its
+        // task is skipped. Every lookup is of the merged 870970 record as MARC JSON.
+        verify(recordServiceConnector, times(2)).getRecordContentCollection(eq(RecordsProvider.DBC_AGENCY), eq("48959939"),
+                argThat(params -> params.getMode().equals(Optional.of(RecordServiceConnector.Params.Mode.MERGED))
+                        && params.getOutputFormat().equals(Optional.of(RecordServiceConnector.Params.OutputFormat.MARC_JSON))));
 
         // Delete the case so that we dont mess up payments and dataio-export tests
         deleteTestCase(created.getId());
