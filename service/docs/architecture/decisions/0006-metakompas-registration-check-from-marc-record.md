@@ -34,10 +34,6 @@ approved. JED also drops subfield `&`, so fbi-api can't express the Metakompas o
 - Use OpenFormat's rule unchanged: registered = a field 665 with a non-blank value in one of the
   subfields `i q p m g u e h j k l f s r t n a v`. This restores the behaviour from before the
   fbi-api switch.
-- Not chosen: requiring `665 *& lektor`, the marker Metakompasset adds to every 665 it submits
-  (metakompasset `DanMARC2Converter.toDanMARC2`, since 2018; also relied on by updateservice's
-  `MetakompasHandler`). It is stricter than the old rule, and records whose 665 lacks the marker
-  (e.g. older registrations) would leave their case in `PENDING_EXTERNAL` until promoted by hand.
 - Skip tasks already marked registered (`data = "true"`) instead of looking them up again every
   run. Skip on `data`, not `approved`: a task can be approved by hand (case promoted from
   `PENDING_EXTERNAL`) before the registration exists, and should still end up marked registered.

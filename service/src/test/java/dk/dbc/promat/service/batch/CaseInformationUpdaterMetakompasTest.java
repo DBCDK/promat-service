@@ -47,7 +47,7 @@ class CaseInformationUpdaterMetakompasTest {
 
     @Test
     void metakompassetFieldIsARegistration() {
-        // As written by Metakompasset: category and lektor marker in *&, the subject in *n
+        // As written by Metakompasset
         MarcBinding marcBinding = record()
                 .addField(new DataField("665", "00")
                         .addSubField(new SubField('&', "positiv"))
