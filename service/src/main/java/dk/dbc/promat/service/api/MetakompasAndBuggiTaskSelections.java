@@ -2,6 +2,7 @@ package dk.dbc.promat.service.api;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import dk.dbc.promat.service.MetakompasRegistration;
 import dk.dbc.promat.service.dto.BuggiSelectionRequest;
 import dk.dbc.promat.service.dto.MetakompasSelectionRequest;
 import dk.dbc.promat.service.dto.ServiceErrorCode;
@@ -31,6 +32,9 @@ public class MetakompasAndBuggiTaskSelections {
     @Inject
     @PromatEntityManager
     EntityManager entityManager;
+
+    @Inject
+    MetakompasRegistration metakompasRegistration;
     // Resolved against the current taxonomy tree at write time only - a saved selection may
     // later reference an id that no longer resolves; that's expected, not an error.
     public Subject resolveMetakompasSubject(Integer id) throws ServiceErrorException {
@@ -79,6 +83,19 @@ public class MetakompasAndBuggiTaskSelections {
                     .withHttpStatus(400)
                     .withCode(ServiceErrorCode.INVALID_REQUEST)
                     .withCause("Wrong task type");
+        }
+        if(!metakompasRegistration.isPromat()) {
+            throw new ServiceErrorException("Metakompas and Buggi selections are registered in Metakompasset")
+                    .withHttpStatus(409)
+                    .withCode(ServiceErrorCode.INVALID_STATE)
+                    .withCause("Registration happens in Metakompasset");
+        }
+        // Covers every task finished before the switch, whatever its data holds ("true", a TagList, ...)
+        if(task.getApproved() != null) {
+            throw new ServiceErrorException(String.format("Task %d is already registered", taskId))
+                    .withHttpStatus(409)
+                    .withCode(ServiceErrorCode.INVALID_STATE)
+                    .withCause("Task already registered");
         }
         return task;
     }

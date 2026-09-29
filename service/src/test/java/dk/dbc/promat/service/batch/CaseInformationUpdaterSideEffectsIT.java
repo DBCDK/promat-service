@@ -3,6 +3,7 @@ package dk.dbc.promat.service.batch;
 import dk.dbc.marc.binding.DataField;
 import dk.dbc.marc.binding.MarcBinding;
 import dk.dbc.marc.binding.SubField;
+import dk.dbc.promat.service.MetakompasRegistration;
 import dk.dbc.promat.service.api.BibliographicInformation;
 import dk.dbc.promat.service.api.FbiApiHandler;
 import dk.dbc.promat.service.api.RecordsProvider;
@@ -43,6 +44,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -169,6 +171,48 @@ public class CaseInformationUpdaterSideEffectsIT extends CaseInformationUpdaterT
                         && params.getOutputFormat().equals(Optional.of(RecordServiceConnector.Params.OutputFormat.MARC_JSON))));
 
         // Delete the case so that we dont mess up payments and dataio-export tests
+        deleteTestCase(created.getId());
+    }
+
+    @Test
+    public void testMetakompasSelectionIsLeftAloneWhenRegisteredInPromat() throws Exception {
+        CaseRequest dto = new CaseRequest()
+                .withPrimaryFaust("48959939")
+                .withTitle("Title for 48959939")
+                .withDetails("Details for 48959939")
+                .withMaterialType(MaterialType.BOOK)
+                .withTasks(List.of(new TaskDto()
+                        .withTaskType(TaskType.GROUP_2_100_UPTO_199_PAGES)
+                        .withTaskFieldType(TaskFieldType.METAKOMPAS)
+                        .withTargetFausts(List.of("48959939"))))
+                .withDeadline("2024-08-07")
+                .withCreator(10)
+                .withEditor(10)
+                .withReviewer(1);
+        PromatCase created = postAndAssert("v1/api/cases", dto, PromatCase.class, Response.Status.CREATED);
+        PromatCase promatCase = getCaseWithId(created.getId());
+
+        // A selection saved through tasks/{taskId}/metakompas, on a record that already has a 665
+        String selection = "{\"entries\":[],\"suggestions\":[{\"path\":[\"stemning\",\"positiv\"],\"text\":\"hyggelig\"}]}";
+        PromatTask task = PromatTaskUtils.getTasksOfType(promatCase, TaskFieldType.METAKOMPAS).get(0);
+        task.setData(selection);
+
+        ScheduledCaseInformationUpdater upd = configure();
+        upd.caseInformationUpdater.metakompasRegistration = new MetakompasRegistration(MetakompasRegistration.Mode.PROMAT);
+        upd.caseInformationUpdater.fbiApiHandler = mockFbiApiHandler(getFbiApiResponseFromResource("48959939"));
+        RecordServiceConnector recordServiceConnector = mock(RecordServiceConnector.class);
+        upd.caseInformationUpdater.recordServiceConnector = recordServiceConnector;
+        when(recordServiceConnector.getRecordContentCollection(anyInt(), anyString(), any(RecordServiceConnector.Params.class)))
+                .thenReturn(List.of(new MarcBinding()
+                        .addField(new DataField("001", "00").addSubField(new SubField('a', "48959939")))
+                        .addField(new DataField("665", "00").addSubField(new SubField('n', "hyggelig")))));
+
+        persistenceContext.run(() -> upd.caseInformationUpdater.updateCaseInformation(promatCase));
+
+        assertThat("selection kept", task.getData(), is(selection));
+        assertThat("not approved by the updater", task.getApproved(), is(nullValue()));
+        verify(recordServiceConnector, never()).getRecordContentCollection(anyInt(), anyString(), any(RecordServiceConnector.Params.class));
+
         deleteTestCase(created.getId());
     }
 

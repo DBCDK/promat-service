@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonView;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dk.dbc.promat.service.connectors.FbiApiConnectorException;
+import dk.dbc.promat.service.MetakompasRegistration;
 import dk.dbc.promat.service.Repository;
 import dk.dbc.promat.service.batch.CaseInformationUpdater;
 import dk.dbc.promat.service.batch.ContentLookUp;
@@ -78,6 +79,7 @@ import java.util.stream.Stream;
 
 import static dk.dbc.promat.service.api.Faustnumbers.checkForNullFausts;
 import static jakarta.ws.rs.core.Response.Status.BAD_REQUEST;
+import static jakarta.ws.rs.core.Response.Status.CONFLICT;
 import static jakarta.ws.rs.core.Response.Status.NO_CONTENT;
 
 @Stateless
@@ -95,6 +97,9 @@ public class Cases {
 
     @Inject
     MetakompasAndBuggiTaskSelections taskSelections;
+
+    @Inject
+    MetakompasRegistration metakompasRegistration;
 
     @EJB
     Repository repository;
@@ -537,6 +542,12 @@ public class Cases {
     public Response approveBuggiTask(@PathParam("pid") String pid, TagList tagList) throws JsonProcessingException {
         String faust;
         ObjectMapper mapper = new ObjectMapper();
+        // Called by Metakompasset - once registration happens in Promat, it must not overwrite the saved selection
+        if(metakompasRegistration.isPromat()) {
+            ServiceErrorDto error = new ServiceErrorDto().withCode(ServiceErrorCode.INVALID_STATE)
+                    .withCause("Buggi selections are registered in Promat");
+            return Response.status(CONFLICT).type(MediaType.APPLICATION_JSON_TYPE).entity(mapper.writeValueAsString(error)).build();
+        }
         Matcher matcher = PID_PATTERN.matcher(pid);
         if(matcher.matches()) {
             faust = matcher.group("faust");
