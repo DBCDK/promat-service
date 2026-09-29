@@ -101,7 +101,12 @@ With `.env.local` created and filled in (see Configuration above):
 
 `./scripts/dev-start` loads `.env.local`, falls back to defaults from
 `scripts/common`, builds the `:devel` image if it doesn't exist yet, starts
-a local PostgreSQL container, and then starts Promat.
+a local PostgreSQL container, starts Promat, and then loads sample data
+from `scripts/feature-preview/seed.sql` once Flyway has migrated the schema
+(runs `psql` in a throwaway container, so no local client is needed). The sample data is invented demo data
+(reviewers, editors, subjects, cases, tasks) — not for structured testing.
+Skip it with `./scripts/dev-start --no-seed`, or set `DEV_SEED=false` in
+`.env.local`.
 
 **Alternative start path**
 
@@ -111,6 +116,9 @@ a local PostgreSQL container, and then starts Promat.
 ```
 
 Use this when you want to manage the database and app server separately.
+To add the sample data on this path, run after the server has started:
+`./scripts/feature-preview/seed --host 127.0.0.1 --port 5432 --dbname "$USER" --dbuser "$USER" --dbpassword "$USER"`
+(needs a local `psql`; if a native PostgreSQL also listens on port 5432, this may hit that one instead).
 `start-server` forwards any extra arguments straight into `docker run`, so
 you can override any env var for a single run without editing tracked
 scripts, e.g. `./scripts/start-server -e FAUST_RESOLVER_URL=http://my-override`.
@@ -147,7 +155,8 @@ container, which you don't need here:
 * `start-database` - starts a local Postgres container
 * `start-server` - starts the app server against the `:devel` Docker image, using `.env.local` plus defaults from `scripts/common`
 * `start` - runs `start-database` then `start-server`
-* `dev-start` - canonical local startup wrapper (builds the `:devel` image if it doesn't exist yet, then starts both containers)
+* `dev-start [--no-seed]` - canonical local startup wrapper (builds the `:devel` image if it doesn't exist yet, starts both containers, then seeds sample data)
+* `feature-preview/seed` - loads sample data into a local or `promat-features` preview database (refuses any other host)
 * `dev-rebuild` - rebuilds the Docker image and restarts the local environment
 * `stop` - stops both containers
 

@@ -5,6 +5,17 @@ set -e
 cd "$(dirname "$0")/.."
 source "$(realpath "$(dirname "${0}")/..")/scripts/common"
 
+# Seed the local database with sample data after migrations (default on).
+# Disable with --no-seed or DEV_SEED=false (e.g. in .env.local).
+DEV_SEED=${DEV_SEED:-true}
+DB_IMAGE="docker.dbc.dk/dbc-postgres-13:latest"
+for arg in "$@"; do
+    case "$arg" in
+        --no-seed) DEV_SEED=false ;;
+        *) echo "Unknown argument: $arg"; echo "Usage: $0 [--no-seed]"; exit 1 ;;
+    esac
+done
+
 echo "Starting Promat Service Development Environment"
 echo ""
 
@@ -49,7 +60,7 @@ docker run -d --rm --name promat-service-database \
     -e "POSTGRES_PASSWORD=${USER}" \
     -e "LOG_FORMAT=${LOG_FORMAT}" \
     -p "${DB_PORT}:5432" \
-    docker.dbc.dk/dbc-postgres-13:latest > /dev/null
+    "${DB_IMAGE}" > /dev/null
 
 # Wait for database to be ready
 echo "Waiting for database to be ready..."
@@ -59,11 +70,36 @@ sleep 5
 echo "Starting Payara application server..."
 ./scripts/start-server -d > /dev/null
 
+# Wait until the app actually serves requests. /v1/api/subjects is unauthenticated and needs both
+# a successful deployment and a migrated database (Flyway runs at startup, before the app serves).
 echo "Waiting for application to start..."
-sleep 10
+APP_READY=false
+for _ in $(seq 1 120); do
+    if ! docker ps -q -f name=^promat-service-8080$ | grep -q .; then
+        break
+    fi
+    if curl -sf -o /dev/null --max-time 5 "http://localhost:${PORT}/v1/api/subjects"; then
+        APP_READY=true
+        break
+    fi
+    sleep 2
+done
 
-# Check if app is running
-if docker ps -q -f name=^promat-service-8080$ | grep -q .; then
+if [ "$APP_READY" = "true" ] && [ "$DEV_SEED" = "true" ]; then
+    # Runs inside the database container's network namespace, so "localhost" is always
+    # that container - never a native Postgres that may also listen on the host's 5432.
+    echo "Seeding sample data..."
+    docker run --rm --network container:promat-service-database \
+        -v "$(pwd)/scripts/feature-preview:/seed:ro" \
+        -e PATH="/usr/lib/postgresql/13/bin:/usr/bin:/bin" \
+        --entrypoint /seed/seed \
+        "${DB_IMAGE}" \
+        --host localhost --port 5432 \
+        --dbname "${USER}" --dbuser "${USER}" --dbpassword "${USER}" > /dev/null \
+        || echo "Seeding failed - continuing without sample data"
+fi
+
+if [ "$APP_READY" = "true" ]; then
     echo ""
     echo "Promat Service is running!"
     echo ""
