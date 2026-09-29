@@ -2,8 +2,6 @@ package dk.dbc.promat.service.cataloging;
 
 import dk.dbc.promat.service.persistence.TaskFieldType;
 import dk.dbc.promat.service.taskdata.BuggiSelectionEntry;
-import dk.dbc.promat.service.taskdata.MetakompasSelectionEntry;
-import dk.dbc.promat.service.taskdata.MetakompasSuggestion;
 import dk.dbc.promat.service.taskdata.MetakompasTaskData;
 
 import java.util.ArrayList;
@@ -63,12 +61,12 @@ public class CatalogingMarcMapper {
 
         // Mirrored from metakompasset: selected taxonomy subjects and free-text
         // suggestions for the same category path are merged into the same MARC field.
-        for(MetakompasSelectionEntry entry : selection.getEntries() == null ? List.<MetakompasSelectionEntry>of() : selection.getEntries()) {
-            addMetakompasValue(valuesByPath, entry.getPath(), entry.getTitle());
+        for(MetakompasTaskData.Entry entry : selection.getEntries() == null ? List.<MetakompasTaskData.Entry>of() : selection.getEntries()) {
+            addMetakompasValue(valuesByPath, entry.path(), entry.title());
         }
-        for(MetakompasSuggestion suggestion : selection.getSuggestions() == null ? List.<MetakompasSuggestion>of() : selection.getSuggestions()) {
-            for(String text : splitSuggestion(suggestion.getText())) {
-                addMetakompasValue(valuesByPath, suggestion.getPath(), text);
+        for(MetakompasTaskData.Suggestion suggestion : selection.getSuggestions() == null ? List.<MetakompasTaskData.Suggestion>of() : selection.getSuggestions()) {
+            for(String text : splitSuggestion(suggestion.text())) {
+                addMetakompasValue(valuesByPath, suggestion.path(), text);
             }
         }
 
@@ -86,18 +84,18 @@ public class CatalogingMarcMapper {
     public String buggiToMarc(String libraryId, String localIdentifier, List<BuggiSelectionEntry> entries) {
         MarcXchangeBuilder builder = baseRecord(libraryId, localIdentifier);
         for(BuggiSelectionEntry entry : entries == null ? List.<BuggiSelectionEntry>of() : entries) {
-            String subfield = entry.getMarcSubfieldCode();
+            String subfield = entry.marcSubfieldCode();
             if(subfield == null) {
-                throw new IllegalArgumentException("No MARC subfield code for Buggi tag: " + entry.getName());
+                throw new IllegalArgumentException("No MARC subfield code for Buggi tag: " + entry.name());
             }
-            int value = entry.getValue() == null ? 0 : entry.getValue();
+            int value = entry.value() == null ? 0 : entry.value();
             // Mirrored from metakompasset: Stemning/Tema tags with value 0 are not
             // registered, while the scale tags are still written with their value.
-            if(Boolean.TRUE.equals(entry.getRequiresNonzeroValue()) && value == 0) {
+            if(Boolean.TRUE.equals(entry.requiresNonzeroValue()) && value == 0) {
                 continue;
             }
             builder.addField("664", List.of(
-                    subfield(subfield, entry.getName()),
+                    subfield(subfield, entry.name()),
                     subfield("y", String.valueOf(value))
             ));
         }

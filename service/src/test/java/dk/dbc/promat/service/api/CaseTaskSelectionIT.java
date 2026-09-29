@@ -47,18 +47,18 @@ public class CaseTaskSelectionIT extends ContainerTest {
         int taskId = ContainerTest.findTaskByFieldType(aCase, TaskFieldType.BUGGI).getId();
 
         List<BuggiSelectionEntry> saved = promatServiceConnector.putBuggiSelection(taskId, List.of(new BuggiSelectionRequest(1, 1)));
-        assertThat(saved.get(0).getId(), is(1));
-        assertThat(saved.get(0).getName(), is("let/svær"));
+        assertThat(saved.get(0).id(), is(1));
+        assertThat(saved.get(0).name(), is("let/svær"));
 
         // A later write overwrites the one shared value - not independent per faust.
         List<BuggiSelectionEntry> savedAfterOverwrite = promatServiceConnector.putBuggiSelection(taskId, List.of(new BuggiSelectionRequest(8, 2)));
-        assertThat(savedAfterOverwrite.get(0).getId(), is(8));
-        assertThat(savedAfterOverwrite.get(0).getName(), is("spændende"));
+        assertThat(savedAfterOverwrite.get(0).id(), is(8));
+        assertThat(savedAfterOverwrite.get(0).name(), is("spændende"));
 
         // Also confirm it comes back inline on the full case view (task.data)
         PromatCase fullCase = promatServiceConnector.getCase(aCase.getId());
         PromatTask task = ContainerTest.findTaskByFieldType(fullCase, TaskFieldType.BUGGI);
-        assertThat(mapper.readValue(task.getData(), new TypeReference<List<BuggiSelectionEntry>>() {}).get(0).getName(), is("spændende"));
+        assertThat(mapper.readValue(task.getData(), new TypeReference<List<BuggiSelectionEntry>>() {}).get(0).name(), is("spændende"));
 
         deleteResponse("v1/api/cases/" + aCase.getId());
     }

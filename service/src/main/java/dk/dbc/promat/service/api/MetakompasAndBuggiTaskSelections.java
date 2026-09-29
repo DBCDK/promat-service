@@ -16,8 +16,6 @@ import dk.dbc.promat.service.persistence.PromatEntityManager;
 import dk.dbc.promat.service.persistence.PromatTask;
 import dk.dbc.promat.service.persistence.TaskFieldType;
 import dk.dbc.promat.service.taskdata.BuggiSelectionEntry;
-import dk.dbc.promat.service.taskdata.MetakompasSelectionEntry;
-import dk.dbc.promat.service.taskdata.MetakompasSuggestion;
 import dk.dbc.promat.service.taskdata.MetakompasTaskData;
 import dk.dbc.promat.service.taxonomy.TaxonomyCache;
 import dk.dbc.promat.service.taxonomy.dto.Subject;
@@ -32,7 +30,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Stateless
-public class TaskSelections {
+public class MetakompasAndBuggiTaskSelections {
     private static final ObjectMapper OBJECT_MAPPER = new JsonMapperProvider().getObjectMapper();
     private final CatalogingMarcMapper marcMapper = new CatalogingMarcMapper();
 
@@ -130,38 +128,26 @@ public class TaskSelections {
     }
 
 
-    public MetakompasTaskData writeMetakompasSelection(PromatTask task, List<MetakompasSelectionRequest> requests) throws ServiceErrorException {
-        List<MetakompasSelectionEntry> entries = new ArrayList<>();
-        List<MetakompasSuggestion> suggestions = new ArrayList<>();
-        for(MetakompasSelectionRequest request : requests == null ? List.<MetakompasSelectionRequest>of() : requests) {
-            if(request == null) {
-                throw new ServiceErrorException("Metakompas selection request entry must not be null")
-                        .withHttpStatus(400)
-                        .withCode(ServiceErrorCode.INVALID_REQUEST)
-                        .withCause("Invalid metakompas path");
-            }
-            validateMetakompasPath(request.getPath());
+    public MetakompasTaskData writeMetakompasSelection(PromatTask task, MetakompasSelectionRequest request) throws ServiceErrorException {
+        List<MetakompasTaskData.Entry> entries = new ArrayList<>();
+        List<MetakompasTaskData.Suggestion> suggestions = new ArrayList<>();
+        if(request != null) {
             for(Integer id : request.getIds() == null ? List.<Integer>of() : request.getIds()) {
                 Subject subject = resolveMetakompasSubject(id);
-                entries.add(new MetakompasSelectionEntry()
-                        .withPath(subject.getPath())
-                        .withId(subject.getId())
-                        .withTitle(subject.getTitle())
-                        .withNote(subject.getNote())
-                        .withOftenUsed(subject.isOftenUsed())
-                        .withRef(subject.getRef()));
+                // Fragile due to path and note both being List<String>: the record's positional
+                // constructor gives the compiler no way to catch the two being swapped here.
+                entries.add(new MetakompasTaskData.Entry(subject.getPath(), subject.getId(), subject.getTitle(),
+                        subject.getNote(), subject.isOftenUsed(), subject.getRef()));
             }
-            for(String suggestion : request.getSuggestions() == null ? List.<String>of() : request.getSuggestions()) {
-                if(suggestion != null && !suggestion.isEmpty()) {
-                    suggestions.add(new MetakompasSuggestion()
-                            .withPath(request.getPath())
-                            .withText(suggestion));
+            for(MetakompasTaskData.Suggestion suggestion : request.getSuggestions() == null ? List.<MetakompasTaskData.Suggestion>of() : request.getSuggestions()) {
+                if(suggestion != null && suggestion.text() != null && !suggestion.text().isEmpty()) {
+                    validateMetakompasPath(suggestion.path());
+                    suggestions.add(suggestion);
                 }
             }
         }
         // Same object is both what gets persisted and what is returned to the client - see
-        // MetakompasSelectionEntry/MetakompasSuggestion for why the two roles don't need
-        // separate shapes here.
+        // MetakompasTaskData.Entry/Suggestion for why the two roles don't need separate shapes.
         MetakompasTaskData taskData = new MetakompasTaskData()
                 .withEntries(entries)
                 .withSuggestions(suggestions);

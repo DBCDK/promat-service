@@ -1,8 +1,6 @@
 package dk.dbc.promat.service.cataloging;
 
 import dk.dbc.promat.service.taskdata.BuggiSelectionEntry;
-import dk.dbc.promat.service.taskdata.MetakompasSelectionEntry;
-import dk.dbc.promat.service.taskdata.MetakompasSuggestion;
 import dk.dbc.promat.service.taskdata.MetakompasTaskData;
 import org.junit.jupiter.api.Test;
 
@@ -18,12 +16,10 @@ public class CatalogingMarcMapperTest {
     @Test
     public void mapsMetakompasEntriesAndSuggestionsToMarc665() throws Exception {
         MetakompasTaskData selection = new MetakompasTaskData()
-                .withEntries(List.of(new MetakompasSelectionEntry()
-                        .withPath(List.of("ramme", "genre"))
-                        .withTitle("krimi")))
-                .withSuggestions(List.of(new MetakompasSuggestion()
-                        .withPath(List.of("ramme", "genre"))
-                        .withText("cozy crime; nordic noir")));
+                .withEntries(List.of(new MetakompasTaskData.Entry(
+                        List.of("ramme", "genre"), 1, "krimi", null, null, null)))
+                .withSuggestions(List.of(new MetakompasTaskData.Suggestion(
+                        List.of("ramme", "genre"), "cozy crime; nordic noir")));
 
         String marc = mapper.metakompasToMarc("870970", "12345678", selection);
 

@@ -94,7 +94,7 @@ public class Cases {
     ContentLookUp contentLookUp;
 
     @Inject
-    TaskSelections taskSelections;
+    MetakompasAndBuggiTaskSelections taskSelections;
 
     @EJB
     Repository repository;
