@@ -5,6 +5,7 @@ import dk.dbc.promat.service.api.FbiApiHandler;
 import dk.dbc.promat.service.api.RecordsProvider;
 import dk.dbc.promat.service.connectors.FbiApiConnectorException;
 import dk.dbc.promat.service.Dates;
+import dk.dbc.promat.service.MetakompasRegistration;
 import dk.dbc.promat.service.api.BibliographicInformation;
 import dk.dbc.promat.service.persistence.CaseStatus;
 import dk.dbc.promat.service.persistence.MaterialType;
@@ -69,6 +70,9 @@ public class CaseInformationUpdater {
 
     @Inject
     Dates dates;
+
+    @Inject
+    MetakompasRegistration metakompasRegistration;
 
     static final Metadata openformatTimerMetadata = Metadata.builder()
             .withName("promat_service_caseinformationupdater_openformat_timer")
@@ -149,8 +153,11 @@ public class CaseInformationUpdater {
                         .collect(Collectors.toList()));
             }
 
-            // Check and update case with Metakompasdata
-            checkAndUpdateCaseWithMetakompasdata(promatCase);
+            // Check and update case with Metakompasdata - only while registration happens in Metakompasset.
+            // Otherwise the selection saved through tasks/{taskId}/metakompas would be overwritten
+            if (metakompasRegistration.isMetakompasset()) {
+                checkAndUpdateCaseWithMetakompasdata(promatCase);
+            }
 
             //
             // Status is 'PENDING_EXTERNAL'. Now do last check of metakompas data before setting

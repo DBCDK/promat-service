@@ -7,6 +7,7 @@ import dk.dbc.opennumberroll.OpennumberRollConnectorException;
 import dk.dbc.promat.service.AuthMocks;
 import dk.dbc.promat.service.ContainerTest;
 import dk.dbc.promat.service.Dates;
+import dk.dbc.promat.service.MetakompasRegistration;
 import dk.dbc.promat.service.FbiApiMocks;
 import dk.dbc.promat.service.Repository;
 import dk.dbc.promat.service.api.BibliographicInformation;
@@ -133,6 +134,8 @@ public abstract class CaseInformationUpdaterTestBase extends ContainerTest {
         } catch (Exception e) {
             throw new IllegalStateException(e);
         }
+
+        upd.caseInformationUpdater.metakompasRegistration = new MetakompasRegistration(MetakompasRegistration.Mode.METAKOMPASSET);
 
         Dates mockedDates = mock(Dates.class);
         upd.caseInformationUpdater.dates = mockedDates;

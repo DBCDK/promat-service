@@ -1,11 +1,11 @@
 package dk.dbc.promat.service.api;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import dk.dbc.promat.service.ContainerTest;
 import dk.dbc.promat.service.connector.PromatServiceConnectorException;
 import dk.dbc.promat.service.connector.PromatServiceConnectorUnexpectedStatusCodeException;
 import dk.dbc.promat.service.dto.BuggiSelectionRequest;
 import dk.dbc.promat.service.dto.CaseRequest;
+import dk.dbc.promat.service.dto.MetakompasSelectionRequest;
 import dk.dbc.promat.service.dto.Tag;
 import dk.dbc.promat.service.dto.TagList;
 import dk.dbc.promat.service.dto.TaskDto;
@@ -14,7 +14,6 @@ import dk.dbc.promat.service.persistence.PromatCase;
 import dk.dbc.promat.service.persistence.PromatTask;
 import dk.dbc.promat.service.persistence.TaskFieldType;
 import dk.dbc.promat.service.persistence.TaskType;
-import dk.dbc.promat.service.taskdata.BuggiSelectionEntry;
 import jakarta.ws.rs.core.Response;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -27,38 +26,31 @@ import java.util.List;
 import java.util.concurrent.Callable;
 
 import static jakarta.ws.rs.core.Response.Status.BAD_REQUEST;
+import static jakarta.ws.rs.core.Response.Status.CONFLICT;
 import static jakarta.ws.rs.core.Response.Status.CREATED;
 import static jakarta.ws.rs.core.Response.Status.NOT_FOUND;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
-// Covers the PUT tasks/{taskId}/metakompas|buggi endpoints: one selection per task, shared
-// across its target fausts, verified via the full case view (task.data). Separate from CasesIT,
-// which covers the legacy POST cases/{pid}/buggi endpoint.
+// Covers the PUT tasks/{taskId}/metakompas|buggi endpoints and the legacy POST cases/{pid}/buggi
+// endpoint's selection sharing across target fausts. CasesIT covers the rest of the legacy endpoint.
 public class CaseTaskSelectionIT extends ContainerTest {
 
+    // The IT container doesn't set METAKOMPAS_REGISTRATION, so it runs the default METAKOMPASSET, as prod
+    // does until the switch - saving selections in Promat is rejected then. What the endpoints do in
+    // PROMAT mode is covered by MetakompasAndBuggiTaskSelectionsTest.
     @Test
-    void testBuggiSelectionSharedAcrossTargetFausts() throws PromatServiceConnectorException, IOException {
-        String firstFaust = "94001111";
-        String secondFaust = "94001112";
+    void testSelectionsRejectedWhileRegistrationHappensInMetakompasset() throws PromatServiceConnectorException {
+        String faust = "94001111";
         PromatCase aCase = postAndAssert("v1/api/cases",
-                makeRequestWithTargetFausts(firstFaust, TaskFieldType.BUGGI, firstFaust, secondFaust),
-                PromatCase.class, CREATED);
-        int taskId = ContainerTest.findTaskByFieldType(aCase, TaskFieldType.BUGGI).getId();
+                makeRequest(faust, TaskFieldType.METAKOMPAS, TaskFieldType.BUGGI), PromatCase.class, CREATED);
+        int metakompasTaskId = ContainerTest.findTaskByFieldType(aCase, TaskFieldType.METAKOMPAS).getId();
+        int buggiTaskId = ContainerTest.findTaskByFieldType(aCase, TaskFieldType.BUGGI).getId();
 
-        List<BuggiSelectionEntry> saved = promatServiceConnector.putBuggiSelection(taskId, List.of(new BuggiSelectionRequest(1, 1)));
-        assertThat(saved.get(0).id(), is(1));
-        assertThat(saved.get(0).name(), is("let/svær"));
-
-        // A later write overwrites the one shared value - not independent per faust.
-        List<BuggiSelectionEntry> savedAfterOverwrite = promatServiceConnector.putBuggiSelection(taskId, List.of(new BuggiSelectionRequest(8, 2)));
-        assertThat(savedAfterOverwrite.get(0).id(), is(8));
-        assertThat(savedAfterOverwrite.get(0).name(), is("spændende"));
-
-        // Also confirm it comes back inline on the full case view (task.data)
-        PromatCase fullCase = promatServiceConnector.getCase(aCase.getId());
-        PromatTask task = ContainerTest.findTaskByFieldType(fullCase, TaskFieldType.BUGGI);
-        assertThat(mapper.readValue(task.getData(), new TypeReference<List<BuggiSelectionEntry>>() {}).get(0).name(), is("spændende"));
+        assertPromatThrows(CONFLICT, () -> promatServiceConnector.putMetakompasSelection(metakompasTaskId,
+                new MetakompasSelectionRequest().withIds(List.of())));
+        assertPromatThrows(CONFLICT, () -> promatServiceConnector.putBuggiSelection(buggiTaskId,
+                List.of(new BuggiSelectionRequest(1, 1))));
 
         deleteResponse("v1/api/cases/" + aCase.getId());
     }
