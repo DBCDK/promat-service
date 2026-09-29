@@ -20,29 +20,34 @@ public class CatalogingUpdateConnectorProducer {
 
     protected CatalogingUpdateConnectorProducer() {}
 
-    // CDI producer that keeps update-service configuration and client construction
-    // out of the scheduled sender. This follows the existing connector producer
-    // pattern used elsewhere in promat-service.
+    // CDI producer that keeps update-service configuration and client construction out of the
+    // selection logic, following the connector producer pattern used elsewhere in promat-service.
     @Produces
     public static CatalogingUpdateConnector produce(
-            @ConfigProperty(name = "UPDATE_SERVICE_URL", defaultValue = "") String baseUrl,
-            @ConfigProperty(name = "UPDATE_SCHEMA_NAME", defaultValue = "") String schemaName,
-            @ConfigProperty(name = "UPDATE_NETPUNKT_GROUP", defaultValue = "") String netpunktGroup,
-            @ConfigProperty(name = "UPDATE_NETPUNKT_USER", defaultValue = "") String netpunktUser,
-            @ConfigProperty(name = "UPDATE_NETPUNKT_PASSWORD", defaultValue = "") String netpunktPassword) {
-        return produce(baseUrl, schemaName, netpunktGroup, netpunktUser, netpunktPassword, UserAgent.forInternalRequests());
+            @ConfigProperty(name = "UPDATE_SERVICE_URL") String baseUrl,
+            @ConfigProperty(name = "METAKOMPAS_NETPUNKT_GROUP") String metakompasGroup,
+            @ConfigProperty(name = "METAKOMPAS_NETPUNKT_USER") String metakompasUser,
+            @ConfigProperty(name = "METAKOMPAS_NETPUNKT_PASSWORD") String metakompasPassword,
+            @ConfigProperty(name = "BUGGI_NETPUNKT_GROUP") String buggiGroup,
+            @ConfigProperty(name = "BUGGI_NETPUNKT_USER") String buggiUser,
+            @ConfigProperty(name = "BUGGI_NETPUNKT_PASSWORD") String buggiPassword) {
+        return produce(baseUrl,
+                new CatalogingUpdateConnector.NetpunktCredentials(metakompasGroup, metakompasUser, metakompasPassword),
+                new CatalogingUpdateConnector.NetpunktCredentials(buggiGroup, buggiUser, buggiPassword),
+                UserAgent.forInternalRequests());
     }
 
-    public static CatalogingUpdateConnector produce(String baseUrl, String schemaName, String netpunktGroup,
-                                                    String netpunktUser, String netpunktPassword, UserAgent userAgent) {
+    public static CatalogingUpdateConnector produce(String baseUrl,
+                                                    CatalogingUpdateConnector.NetpunktCredentials metakompasCredentials,
+                                                    CatalogingUpdateConnector.NetpunktCredentials buggiCredentials,
+                                                    UserAgent userAgent) {
         FailSafeHttpClient failSafeHttpClient = FailSafeHttpClient.create(
                 HttpClient.newClient(new ClientConfig()
                         .register(new JacksonFeature())
                         .property(ClientProperties.CONNECT_TIMEOUT, 5000)
                         .property(ClientProperties.READ_TIMEOUT, 30000)),
                 userAgent, RETRY_POLICY);
-        return new CatalogingUpdateConnector(failSafeHttpClient, baseUrl, schemaName, netpunktGroup, netpunktUser,
-                netpunktPassword);
+        return new CatalogingUpdateConnector(failSafeHttpClient, baseUrl, metakompasCredentials, buggiCredentials);
     }
 
     static void dispose(@Disposes CatalogingUpdateConnector connector) {

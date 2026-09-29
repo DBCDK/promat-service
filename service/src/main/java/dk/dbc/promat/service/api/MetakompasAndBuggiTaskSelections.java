@@ -184,7 +184,7 @@ public class MetakompasAndBuggiTaskSelections {
                 // Metakompasset also sends compact MarcXchange update records to
                 // update-service; the mapper builds that same kind of registration payload.
                 String marcRecord = toMarc(task, faust);
-                catalogingUpdateConnector.updateRecord(updateRecordLibraryId + ":" + faust, marcRecord);
+                catalogingUpdateConnector.updateRecord(task.getTaskFieldType(), updateRecordLibraryId + ":" + faust, marcRecord);
             }
         } catch(CatalogingUpdateConnectorException e) {
             throw new ServiceErrorException("Failed to register reading-experience selection in update-service")

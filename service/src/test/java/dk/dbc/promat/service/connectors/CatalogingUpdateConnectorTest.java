@@ -2,6 +2,7 @@ package dk.dbc.promat.service.connectors;
 
 import com.github.tomakehurst.wiremock.WireMockServer;
 import dk.dbc.commons.useragent.UserAgent;
+import dk.dbc.promat.service.persistence.TaskFieldType;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -29,8 +30,10 @@ class CatalogingUpdateConnectorTest {
     void setUp() {
         wireMockServer = new WireMockServer(options().dynamicPort());
         wireMockServer.start();
-        connector = CatalogingUpdateConnectorProducer.produce(wireMockServer.baseUrl(), "metakompas",
-                "010100", "promat", "secret", new UserAgent("cataloging-update-connector-test"));
+        connector = CatalogingUpdateConnectorProducer.produce(wireMockServer.baseUrl(),
+                new CatalogingUpdateConnector.NetpunktCredentials("150077", "metakompas-user", "metakompas-secret"),
+                new CatalogingUpdateConnector.NetpunktCredentials("150084", "buggi-user", "buggi-secret"),
+                new UserAgent("cataloging-update-connector-test"));
     }
 
     @AfterEach
@@ -43,13 +46,14 @@ class CatalogingUpdateConnectorTest {
     void sendsUpdateRequest() throws Exception {
         wireMockServer.stubFor(post(urlPathEqualTo(PATH)).willReturn(okJson("{\"updateStatusEnumDTO\":\"OK\"}")));
 
-        connector.updateRecord("870970:12345678", MARC);
+        connector.updateRecord(TaskFieldType.METAKOMPAS, "870970:12345678", MARC);
 
         wireMockServer.verify(postRequestedFor(urlPathEqualTo(PATH))
                 .withHeader("Accept", equalTo("application/json"))
                 .withRequestBody(matchingJsonPath("$.schemaName", equalTo("metakompas")))
-                .withRequestBody(matchingJsonPath("$.authenticationDTO.groupId", equalTo("010100")))
-                .withRequestBody(matchingJsonPath("$.authenticationDTO.userId", equalTo("promat")))
+                .withRequestBody(matchingJsonPath("$.authenticationDTO.groupId", equalTo("150077")))
+                .withRequestBody(matchingJsonPath("$.authenticationDTO.userId", equalTo("metakompas-user")))
+                .withRequestBody(matchingJsonPath("$.authenticationDTO.password", equalTo("metakompas-secret")))
                 .withRequestBody(matchingJsonPath("$.bibliographicRecordDTO.recordSchema", equalTo("info:lc/xmlns/marcxchange-v1")))
                 .withRequestBody(matchingJsonPath("$.bibliographicRecordDTO.recordPacking", equalTo("xml")))
                 .withRequestBody(matchingJsonPath("$.bibliographicRecordDTO.recordDataDTO.content[0]", equalTo(MARC)))
@@ -57,16 +61,34 @@ class CatalogingUpdateConnectorTest {
     }
 
     @Test
+    void sendsBuggiRegistrationWithBuggiCredentials() throws Exception {
+        wireMockServer.stubFor(post(urlPathEqualTo(PATH)).willReturn(okJson("{\"updateStatusEnumDTO\":\"OK\"}")));
+
+        connector.updateRecord(TaskFieldType.BUGGI, "870970:12345678", MARC);
+
+        wireMockServer.verify(postRequestedFor(urlPathEqualTo(PATH))
+                .withRequestBody(matchingJsonPath("$.schemaName", equalTo("metakompas")))
+                .withRequestBody(matchingJsonPath("$.authenticationDTO.groupId", equalTo("150084")))
+                .withRequestBody(matchingJsonPath("$.authenticationDTO.userId", equalTo("buggi-user")))
+                .withRequestBody(matchingJsonPath("$.authenticationDTO.password", equalTo("buggi-secret"))));
+    }
+
+    @Test
+    void rejectsTaskTypesWithoutRegistration() {
+        assertThrows(IllegalArgumentException.class, () -> connector.updateRecord(TaskFieldType.BKM, "870970:12345678", MARC));
+    }
+
+    @Test
     void failsOnNonOkUpdateStatus() {
         wireMockServer.stubFor(post(urlPathEqualTo(PATH)).willReturn(okJson("{\"updateStatusEnumDTO\":\"FAILED\"}")));
 
-        assertThrows(CatalogingUpdateConnectorException.class, () -> connector.updateRecord("870970:12345678", MARC));
+        assertThrows(CatalogingUpdateConnectorException.class, () -> connector.updateRecord(TaskFieldType.METAKOMPAS, "870970:12345678", MARC));
     }
 
     @Test
     void failsOnUnexpectedHttpStatus() {
         wireMockServer.stubFor(post(urlPathEqualTo(PATH)).willReturn(aResponse().withStatus(500)));
 
-        assertThrows(CatalogingUpdateConnectorException.class, () -> connector.updateRecord("870970:12345678", MARC));
+        assertThrows(CatalogingUpdateConnectorException.class, () -> connector.updateRecord(TaskFieldType.METAKOMPAS, "870970:12345678", MARC));
     }
 }

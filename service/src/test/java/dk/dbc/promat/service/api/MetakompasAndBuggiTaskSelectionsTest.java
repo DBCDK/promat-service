@@ -146,7 +146,7 @@ public class MetakompasAndBuggiTaskSelectionsTest {
 
         taskSelections.approveReadingExperience(123);
 
-        verify(taskSelections.catalogingUpdateConnector).updateRecord(eq("870970:12345678"), anyString());
+        verify(taskSelections.catalogingUpdateConnector).updateRecord(eq(TaskFieldType.BUGGI), eq("870970:12345678"), anyString());
         assertThat(task.getApproved(), is(notNullValue()));
     }
 
@@ -159,7 +159,7 @@ public class MetakompasAndBuggiTaskSelectionsTest {
         MetakompasAndBuggiTaskSelections taskSelections = taskSelectionsWithEntityManager(task);
         taskSelections.writeBuggiSelection(task, List.of(new BuggiSelectionRequest(8, 2)));
         doThrow(new CatalogingUpdateConnectorException("update-service is down"))
-                .when(taskSelections.catalogingUpdateConnector).updateRecord(anyString(), anyString());
+                .when(taskSelections.catalogingUpdateConnector).updateRecord(any(TaskFieldType.class), anyString(), anyString());
 
         ServiceErrorException exception = assertThrows(ServiceErrorException.class, () ->
                 taskSelections.approveReadingExperience(123));

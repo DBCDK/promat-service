@@ -3,6 +3,7 @@ package dk.dbc.promat.service.connectors;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dk.dbc.httpclient.FailSafeHttpClient;
 import dk.dbc.httpclient.HttpPost;
+import dk.dbc.promat.service.persistence.TaskFieldType;
 import dk.dbc.updateservice.dto.AuthenticationDTO;
 import dk.dbc.updateservice.dto.BibliographicRecordDTO;
 import dk.dbc.updateservice.dto.RecordDataDTO;
@@ -24,29 +25,42 @@ public class CatalogingUpdateConnector {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     // update-service expects MarcXchange XML inside the REST DTO
     private static final String MARCXCHANGE_SCHEMA = "info:lc/xmlns/marcxchange-v1";
+    // Makes update-service merge the 665/664 fields into the existing record, instead of treating the
+    // sent record as the whole record. The same schema for Metakompas and Buggi, as in Metakompasset
+    private static final String SCHEMA_NAME = "metakompas";
+
+    // Metakompasset registers Metakompas and Buggi with a netpunkt login of their own each
+    public record NetpunktCredentials(String group, String user, String password) {
+        public NetpunktCredentials {
+            Objects.requireNonNull(group, "group must not be null");
+            Objects.requireNonNull(user, "user must not be null");
+            Objects.requireNonNull(password, "password must not be null");
+        }
+    }
 
     private final FailSafeHttpClient failSafeHttpClient;
     private final String baseUrl;
-    private final String schemaName;
-    private final String netpunktGroup;
-    private final String netpunktUser;
-    private final String netpunktPassword;
+    private final NetpunktCredentials metakompasCredentials;
+    private final NetpunktCredentials buggiCredentials;
 
-    public CatalogingUpdateConnector(FailSafeHttpClient failSafeHttpClient, String baseUrl, String schemaName,
-                                     String netpunktGroup, String netpunktUser, String netpunktPassword) {
+    public CatalogingUpdateConnector(FailSafeHttpClient failSafeHttpClient, String baseUrl,
+                                     NetpunktCredentials metakompasCredentials, NetpunktCredentials buggiCredentials) {
         this.failSafeHttpClient = Objects.requireNonNull(failSafeHttpClient, "failSafeHttpClient must not be null");
         this.baseUrl = Objects.requireNonNull(baseUrl, "baseUrl must not be null");
-        this.schemaName = Objects.requireNonNull(schemaName, "schemaName must not be null");
-        this.netpunktGroup = Objects.requireNonNull(netpunktGroup, "netpunktGroup must not be null");
-        this.netpunktUser = Objects.requireNonNull(netpunktUser, "netpunktUser must not be null");
-        this.netpunktPassword = Objects.requireNonNull(netpunktPassword, "netpunktPassword must not be null");
+        this.metakompasCredentials = Objects.requireNonNull(metakompasCredentials, "metakompasCredentials must not be null");
+        this.buggiCredentials = Objects.requireNonNull(buggiCredentials, "buggiCredentials must not be null");
     }
 
-    public void updateRecord(String pid, String marcRecord) throws CatalogingUpdateConnectorException {
+    public void updateRecord(TaskFieldType taskFieldType, String pid, String marcRecord) throws CatalogingUpdateConnectorException {
+        NetpunktCredentials credentials = switch(taskFieldType) {
+            case METAKOMPAS -> metakompasCredentials;
+            case BUGGI -> buggiCredentials;
+            default -> throw new IllegalArgumentException("No update-service registration for task type " + taskFieldType);
+        };
         String trackingId = "DBC_PROMAT_" + pid + "_" + Instant.now();
-        LOGGER.info("Calling update-service REST endpoint for pid {}", pid);
+        LOGGER.info("Calling update-service REST endpoint for {} registration of pid {}", taskFieldType, pid);
         try {
-            UpdateRecordResponseDTO response = post(createUpdateRequest(marcRecord, trackingId));
+            UpdateRecordResponseDTO response = post(createUpdateRequest(marcRecord, trackingId, credentials));
             if(response.getUpdateStatusEnumDTO() != UpdateStatusEnumDTO.OK) {
                 throw new CatalogingUpdateConnectorException("update-service returned non-ok response: " + response);
             }
@@ -76,13 +90,13 @@ public class CatalogingUpdateConnector {
         }
     }
 
-    private UpdateServiceRequestDTO createUpdateRequest(String marcRecord, String trackingId) {
+    private UpdateServiceRequestDTO createUpdateRequest(String marcRecord, String trackingId, NetpunktCredentials credentials) {
         // Authentication/schema/trackingId mirror the fields sent by metakompasset,
         // but are passed through update-service's typed REST DTOs here.
         AuthenticationDTO authentication = new AuthenticationDTO();
-        authentication.setGroupId(netpunktGroup);
-        authentication.setUserId(netpunktUser);
-        authentication.setPassword(netpunktPassword);
+        authentication.setGroupId(credentials.group());
+        authentication.setUserId(credentials.user());
+        authentication.setPassword(credentials.password());
 
         RecordDataDTO recordData = new RecordDataDTO();
         recordData.setContent(List.of(marcRecord));
@@ -94,7 +108,7 @@ public class CatalogingUpdateConnector {
 
         UpdateServiceRequestDTO request = new UpdateServiceRequestDTO();
         request.setAuthenticationDTO(authentication);
-        request.setSchemaName(schemaName);
+        request.setSchemaName(SCHEMA_NAME);
         request.setBibliographicRecordDTO(bibliographicRecord);
         request.setTrackingId(trackingId);
         return request;
