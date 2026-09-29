@@ -814,7 +814,7 @@ paths:
         '409':
           description: >-
             Registration happens in Metakompasset (METAKOMPAS_REGISTRATION=METAKOMPASSET), or the
-            task is already registered
+            task was registered in Metakompasset
           content:
             application/json:
               schema:
@@ -865,7 +865,7 @@ paths:
         '409':
           description: >-
             Registration happens in Metakompasset (METAKOMPAS_REGISTRATION=METAKOMPASSET), or the
-            task is already registered
+            task was registered in Metakompasset
           content:
             application/json:
               schema:

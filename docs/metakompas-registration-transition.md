@@ -32,14 +32,19 @@ flow - only an environment switched to Promat needs it (`METAKOMPAS_REGISTRATION
 | | `METAKOMPASSET` | `PROMAT` |
 |---|---|---|
 | Metakompas polling in `CaseInformationUpdater` | runs | skipped (the rest of the updater runs as usual) |
-| `PUT tasks/{taskId}/metakompas\|buggi` | 409, `INVALID_STATE` | allowed, unless the task is already approved (409) |
-| `PUT tasks/{taskId}/reading-experience/approve` | 409 (to be added with the approve flow) | allowed, unless the task is already approved (409) |
+| `PUT tasks/{taskId}/metakompas\|buggi` | 409, `INVALID_STATE` | allowed, unless the task was registered in Metakompasset (409) |
+| `PUT tasks/{taskId}/reading-experience/approve` | 409 (to be added with the approve flow) | allowed, unless the task was registered in Metakompasset (409) |
 | `POST cases/{pid}/buggi` (Metakompasset) | allowed | 409, `INVALID_STATE` |
 
-"Already approved means closed" covers every task finished before the switch, whatever its `data`
-holds: `"true"` (registered via Metakompasset), a `TagList` (Buggi via Metakompasset), or anything on
-a task approved by hand when its case was promoted from `PENDING_EXTERNAL`. No task is converted
-between data formats.
+A task counts as registered in Metakompasset when it's approved but its `data` isn't a selection
+saved in Promat: `"true"` (Metakompas via Metakompasset), a `TagList` (Buggi via Metakompasset), or
+nothing (approved by hand when its case was promoted from `PENDING_EXTERNAL`). Such tasks are closed:
+there's no selection to edit, and no task is converted between data formats. Tasks registered in
+Promat can be changed and registered again, which relies on update-service replacing the existing
+665/664 (verify on staging before prod).
+
+Later, we may want to support populating the old tasks with real task data (e.g. built from the
+record's 665/664, for the reviewer to check and save) - but that is a later feature.
 
 The frontend mode (metakompas.dk link vs. Promat's selection UI) is switched by hand at the same time.
 
@@ -47,8 +52,8 @@ The frontend mode (metakompas.dk link vs. Promat's selection UI) is switched by 
 
 Prerequisites:
 
-- The approve flow is merged, including the mode check and the "already approved" check (same as
-  in `MetakompasAndBuggiTaskSelections.resolveTaskForSelection`).
+- The approve flow is merged, including the mode check and the "registered in Metakompasset" check
+  (same as in `MetakompasAndBuggiTaskSelections.resolveTaskForSelection`).
 - `UPDATE_SERVICE_URL` (including `/UpdateService/rest`), `METAKOMPAS_NETPUNKT_GROUP/USER/PASSWORD`
   and `BUGGI_NETPUNKT_GROUP/USER/PASSWORD` are set - in every environment, since the service
   doesn't start without them. The netpunkt values are the ones Metakompasset uses (separate
@@ -98,8 +103,8 @@ promat-service:
       `PENDING_EXTERNAL` → `APPROVED` block - the new flow relies on it unless the approve endpoint
       moves the case itself.
 - [ ] `MetakompasAndBuggiTaskSelections.resolveTaskForSelection`: delete the mode check. **Keep** the
-      "already approved" check - it still stops a registered task from being registered twice.
-      Same in the approve flow.
+      "registered in Metakompasset" check as long as tasks with old data exist - it stops them from
+      entering approve with data it can't read. Same in the approve flow.
 - [ ] `Cases`: delete `approveBuggiTask` (`POST cases/{pid}/buggi`), `findBuggiCase`,
       `setApproveBuggiTask`, `INVALID_BUGGI_APPROVAL_STATES`, `PID_PATTERN` (only used there) and the
       `CONFLICT` import if unused.
@@ -111,7 +116,7 @@ promat-service:
       `CaseInformationUpdaterSideEffectsIT` (`testWaitForMetakompasData`,
       `testMetakompasSelectionIsLeftAloneWhenRegisteredInPromat`) and `getTasksWhereMetakompasIsPresent`,
       the record-service mock in `CaseInformationUpdaterTestBase` and the mode set there, the mode tests
-      in `MetakompasAndBuggiTaskSelectionsTest` (the "already registered" test stays),
+      in `MetakompasAndBuggiTaskSelectionsTest` (the "registered in Metakompasset" tests stay),
       `CaseTaskSelectionIT.testSelectionsRejectedWhileRegistrationHappensInMetakompasset` and
       `testLegacyBuggiEndpointSharesSelectionAcrossTargetFausts`, `CasesIT.testBuggiApproval` and
       `testCaseApprovalWithMoreThanOneBuggiTask`. Bring back PUT ITs that save selections
