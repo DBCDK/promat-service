@@ -49,8 +49,11 @@ Prerequisites:
 
 - The approve flow is merged, including the mode check and the "already approved" check (same as
   in `MetakompasAndBuggiTaskSelections.resolveTaskForSelection`).
-- `UPDATE_SERVICE_URL`, `UPDATE_SCHEMA_NAME`, `UPDATE_NETPUNKT_GROUP/USER/PASSWORD` are set.
-- Promat's netpunkt group has `AUTH_METACOMPASS` in VIP. Without it, update-service rejects any
+- `UPDATE_SERVICE_URL` (including `/UpdateService/rest`), `METAKOMPAS_NETPUNKT_GROUP/USER/PASSWORD`
+  and `BUGGI_NETPUNKT_GROUP/USER/PASSWORD` are set - in every environment, since the service
+  doesn't start without them. The netpunkt values are the ones Metakompasset uses (separate
+  logins for Metakompas and Buggi).
+- Both netpunkt groups have `AUTH_METACOMPASS` in VIP. Without it, update-service rejects any
   change to 664/665 ("missing.auth.meta.compass").
 
 Prod:
