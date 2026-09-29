@@ -22,7 +22,7 @@ sleep 2
 
 # Rebuild
 echo "Building application..."
-mvn clean package -DskipTests
+mvn clean verify -DskipTests
 
 echo ""
 echo "Build complete! Starting services..."

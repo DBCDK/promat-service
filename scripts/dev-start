@@ -39,7 +39,7 @@ echo ""
 # Check if Docker image exists
 if ! docker image inspect docker-metascrum.artifacts.dbccloud.dk/promat-service:devel &> /dev/null; then
     echo "Docker image not found. Building..."
-    mvn clean package -DskipTests
+    mvn clean verify -DskipTests
     echo ""
 fi
 
@@ -110,7 +110,7 @@ if [ "$APP_READY" = "true" ]; then
     echo "Useful commands:"
     echo "   View logs:    docker logs -f promat-service-8080"
     echo "   Stop all:     ./scripts/stop"
-    echo "   Rebuild:      mvn clean package -DskipTests && ./scripts/dev-start"
+    echo "   Rebuild:      ./scripts/dev-rebuild"
     echo ""
 else
     echo ""
