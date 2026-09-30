@@ -71,7 +71,7 @@ public class MetakompasTaskData {
     }
 
     // A reviewer-typed suggestion for a word not (yet) in the taxonomy - never resolved or
-    // assigned an id. "title" like a selected subject's.
+    // assigned an id.
     @JsonIgnoreProperties(ignoreUnknown = true)
     public record Suggestion(List<String> path, String title) {
     }
