@@ -75,9 +75,9 @@ public class MetakompasAndBuggiTaskSelectionsTest {
                                 new MetakompasTaskData.Suggestion(List.of("handling", "handler om"), "another word"))));
 
         assertThat(result.getSuggestions().getFirst().path(), contains("handling", "handler om"));
-        assertThat(result.getSuggestions().getFirst().text(), is("new word"));
+        assertThat(result.getSuggestions().getFirst().title(), is("new word"));
         assertThat(result.getSuggestions().get(1).path(), contains("handling", "handler om"));
-        assertThat(result.getSuggestions().get(1).text(), is("another word"));
+        assertThat(result.getSuggestions().get(1).title(), is("another word"));
     }
 
     @Test
@@ -95,7 +95,7 @@ public class MetakompasAndBuggiTaskSelectionsTest {
         assertThat(data.getEntries().getFirst().id(), is(42));
         assertThat(data.getEntries().getFirst().title(), is("krimi"));
         assertThat(data.getSuggestions().getFirst().path(), contains("handling", "handler om"));
-        assertThat(data.getSuggestions().getFirst().text(), is("new word"));
+        assertThat(data.getSuggestions().getFirst().title(), is("new word"));
     }
 
     @Test
@@ -112,6 +112,60 @@ public class MetakompasAndBuggiTaskSelectionsTest {
         assertThat(data.getFirst().marcSubfieldCode(), is("n"));
         assertThat(data.getFirst().requiresNonzeroValue(), is(true));
         assertThat(data.getFirst().value(), is(2));
+    }
+
+    @Test
+    public void removesDuplicateBuggiOptionsKeepingTheLastValue() throws Exception {
+        List<BuggiSelectionEntry> saved = taskSelectionsWithTaxonomy().writeBuggiSelection(new PromatTask(), List.of(
+                new BuggiSelectionRequest(8, 2),
+                new BuggiSelectionRequest(1, 3),
+                new BuggiSelectionRequest(8, 4)));
+
+        assertThat(saved.stream().map(BuggiSelectionEntry::id).toList(), contains(8, 1));
+        assertThat(saved.getFirst().value(), is(4));
+    }
+
+    @Test
+    public void removesDuplicateMetakompasSubjectsAndSuggestions() throws Exception {
+        MetakompasTaskData saved = taskSelectionsWithTaxonomy().writeMetakompasSelection(new PromatTask(),
+                new MetakompasSelectionRequest()
+                        .withIds(List.of(42, 42))
+                        .withSuggestions(List.of(
+                                new MetakompasTaskData.Suggestion(List.of("handling", "handler om"), "new word"),
+                                new MetakompasTaskData.Suggestion(List.of("handling", "handler om"), "new word"))));
+
+        assertThat(saved.getEntries().size(), is(1));
+        assertThat(saved.getSuggestions().size(), is(1));
+    }
+
+    @Test
+    public void dropsSuggestionRepeatingASelectedSubjectInTheSameCategory() throws Exception {
+        // Subject 42 is "krimi" under ramme -> genre
+        MetakompasTaskData saved = taskSelectionsWithTaxonomy().writeMetakompasSelection(new PromatTask(),
+                new MetakompasSelectionRequest()
+                        .withIds(List.of(42))
+                        .withSuggestions(List.of(
+                                new MetakompasTaskData.Suggestion(List.of("ramme", "genre"), "krimi"),
+                                // Different capitalisation may be a different word (proper noun), so it's kept
+                                new MetakompasTaskData.Suggestion(List.of("ramme", "genre"), "Krimi"),
+                                // Same word, other category - kept
+                                new MetakompasTaskData.Suggestion(List.of("handling", "handler om"), "krimi"))));
+
+        assertThat(saved.getEntries().size(), is(1));
+        assertThat(saved.getSuggestions().stream().map(MetakompasTaskData.Suggestion::title).toList(), contains("Krimi", "krimi"));
+        assertThat(saved.getSuggestions().get(1).path(), contains("handling", "handler om"));
+    }
+
+    @Test
+    public void suggestionIsWrittenAsTitleAndOldTextIsStillRead() throws Exception {
+        // Suggestions saved before the rename hold "text"
+        MetakompasTaskData old = OBJECT_MAPPER.readValue(
+                "{\"entries\":[],\"suggestions\":[{\"path\":[\"handling\",\"handler om\"],\"text\":\"new word\"}]}",
+                MetakompasTaskData.class);
+        assertThat(old.getSuggestions().getFirst().title(), is("new word"));
+
+        String written = OBJECT_MAPPER.writeValueAsString(old.getSuggestions().getFirst());
+        assertThat(written, is("{\"path\":[\"handling\",\"handler om\"],\"title\":\"new word\"}"));
     }
 
     @Test

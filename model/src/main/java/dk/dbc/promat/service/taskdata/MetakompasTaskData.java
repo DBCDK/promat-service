@@ -1,5 +1,6 @@
 package dk.dbc.promat.service.taskdata;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import java.util.List;
@@ -71,8 +72,9 @@ public class MetakompasTaskData {
     }
 
     // A reviewer-typed suggestion for a word not (yet) in the taxonomy - never resolved or
-    // assigned an id.
+    // assigned an id. "title" like a selected subject's; "text" is still read, as suggestions
+    // saved before the rename (and older clients) use it.
     @JsonIgnoreProperties(ignoreUnknown = true)
-    public record Suggestion(List<String> path, String text) {
+    public record Suggestion(List<String> path, @JsonAlias("text") String title) {
     }
 }

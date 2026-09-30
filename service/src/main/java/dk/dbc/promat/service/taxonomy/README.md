@@ -53,12 +53,7 @@ In current Metakompas solution the reviewer navigates menu structure like this:
   },
   "handling": {
     "handler om": [],
-    "navngivet hovedperson": [],
-    "hovedperson(er) - beskrivelse": {
-      "om hovedpersonen": [],
-      "hovedpersonens karaktertræk": [],
-      "hovedpersonens konflikt": []
-    }
+    "navngivet hovedperson": []
   },
   "fortælleteknik": {
     "skrivestil og struktur": [],

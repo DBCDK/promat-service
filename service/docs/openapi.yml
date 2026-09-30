@@ -2319,8 +2319,15 @@ components:
           type: string
         marcSubfieldCode:
           type: string
-        requiresNonzeroValue:
-          type: boolean
+        minValue:
+          type: integer
+          description: >-
+            Lowest allowed value for the group's options. 1 for the scales (Læsbarhed,
+            Fantasi/virkelighed), which are always set; 0 for Stemning and Tema, where 0 means
+            "not chosen" and the tag isn't registered
+        maxValue:
+          type: integer
+          description: Highest allowed value for the group's options
         options:
           type: array
           items:
@@ -2328,7 +2335,8 @@ components:
       required:
         - name
         - marcSubfieldCode
-        - requiresNonzeroValue
+        - minValue
+        - maxValue
         - options
 
     BuggiOption:
@@ -2360,9 +2368,10 @@ components:
       type: object
       description: >-
         Resolved Buggi selection stored in PromatTask.data and returned from
-        PUT /tasks/{taskId}/buggi. marcSubfieldCode is MARC registration metadata, not needed by
-        the client, but harmless to expose alongside requiresNonzeroValue (which is needed to
-        render the tag's input control) - one shape serves both roles.
+        PUT /tasks/{taskId}/buggi. marcSubfieldCode and requiresNonzeroValue are registration
+        metadata (requiresNonzeroValue: the tag is only registered if its value isn't 0), not
+        needed by the client - use the group's minValue/maxValue from GET /buggi/options to render
+        the tag's input control.
       properties:
         id:
           type: integer
@@ -2447,11 +2456,14 @@ components:
           items:
             type: string
           description: Category path the suggestion was made under, e.g. ["handling", "handler om"]
-        text:
+        title:
           type: string
+          description: >-
+            The suggested word, named like a subject's title. "text" is still accepted on input
+            for suggestions saved before the rename
       required:
         - path
-        - text
+        - title
 
     MetakompasSelectionRequest:
       type: object
