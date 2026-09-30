@@ -42,9 +42,16 @@ class BuggiVocabularyTest {
     }
 
     @Test
-    void scaleValueMustBeSet() {
-        // let/svær
-        assertThrows(ServiceErrorException.class, () -> BuggiVocabulary.resolve(new BuggiSelectionRequest(1, 0)));
+    void scaleMayBeSavedWithoutValue() throws ServiceErrorException {
+        // let/svær, 0 = not filled in yet - allowed in a draft, must be set before registration
+        BuggiSelectionEntry entry = BuggiVocabulary.resolve(new BuggiSelectionRequest(1, 0));
+
+        assertThat(entry.value(), is(0));
+    }
+
+    @Test
+    void negativeValueIsRejected() {
+        assertThrows(ServiceErrorException.class, () -> BuggiVocabulary.resolve(new BuggiSelectionRequest(1, -1)));
     }
 
     @Test

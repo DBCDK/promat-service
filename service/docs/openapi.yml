@@ -2322,9 +2322,10 @@ components:
         minValue:
           type: integer
           description: >-
-            Lowest allowed value for the group's options. 1 for the scales (Læsbarhed,
-            Fantasi/virkelighed), which are always set; 0 for Stemning and Tema, where 0 means
-            "not chosen" and the tag isn't registered
+            Lowest value a reviewer can choose for the group's options: 1 for the scales
+            (Læsbarhed, Fantasi/virkelighed), 0 for Stemning and Tema. Saving accepts 0 for every
+            option, meaning "no value" (not chosen / not filled in yet), so a draft can be saved;
+            0 is never registered, and the scales must be set (from minValue) before registration
         maxValue:
           type: integer
           description: Highest allowed value for the group's options
@@ -2370,8 +2371,8 @@ components:
         Resolved Buggi selection stored in PromatTask.data and returned from
         PUT /tasks/{taskId}/buggi. marcSubfieldCode is registration metadata, not needed by the
         client - use the group's minValue/maxValue from GET /buggi/options to render the tag's
-        input control. A value of 0 means "not chosen" (only allowed where the group's minValue
-        is 0) and isn't registered.
+        input control. A value of 0 means "no value" (not chosen, or not filled in yet) and
+        isn't registered.
       properties:
         id:
           type: integer

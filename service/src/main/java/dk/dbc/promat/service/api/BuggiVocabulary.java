@@ -12,8 +12,10 @@ import java.util.List;
 import java.util.Map;
 
 public class BuggiVocabulary {
-    // The value range per group, as in metakompasset: the scales (Læsbarhed, Fantasi/virkelighed) are
-    // always set, 1-5. For moods and themes 0 means "not chosen", and such a tag isn't registered.
+    // The value range a reviewer can choose from per group, as in metakompasset: the scales (Læsbarhed,
+    // Fantasi/virkelighed) 1-5, moods and themes 0-5. On save, 0 is allowed for every option and means
+    // "no value": not chosen for moods and themes, not filled in yet for the scales - so a draft can be
+    // saved. 0 is never registered; the scales must have a value from minValue before registration.
     private static final Group READABILITY = new Group("Læsbarhed", "s", 1, 5);
     private static final Group FANTASY_REALITY = new Group("Fantasi/virkelighed", "u", 1, 5);
     private static final Group MOOD = new Group("Stemning", "n", 0, 5);
@@ -73,9 +75,10 @@ public class BuggiVocabulary {
                     .withCause("Invalid buggi option");
         }
         Group group = option.group();
-        if(request.getValue() == null || request.getValue() < group.minValue() || request.getValue() > group.maxValue()) {
-            throw new ServiceErrorException(String.format("Buggi option %s has invalid value %s - must be %d-%d",
-                    request.getId(), request.getValue(), group.minValue(), group.maxValue()))
+        // 0 = no value, allowed on save for every group (see the ranges above)
+        if(request.getValue() == null || request.getValue() < 0 || request.getValue() > group.maxValue()) {
+            throw new ServiceErrorException(String.format("Buggi option %s has invalid value %s - must be 0-%d",
+                    request.getId(), request.getValue(), group.maxValue()))
                     .withHttpStatus(400)
                     .withCode(ServiceErrorCode.INVALID_REQUEST)
                     .withCause("Invalid buggi value");
