@@ -1,4 +1,4 @@
-# 6. Synchronous cataloging update-service registration for Metakompas and Buggi
+# 7. Synchronous cataloging update-service registration for Metakompas and Buggi
 
 Date: 2026-09-21
 

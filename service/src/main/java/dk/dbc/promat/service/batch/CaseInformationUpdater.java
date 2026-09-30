@@ -1,8 +1,11 @@
 package dk.dbc.promat.service.batch;
 
+import dk.dbc.marc.binding.MarcBinding;
 import dk.dbc.promat.service.api.FbiApiHandler;
+import dk.dbc.promat.service.api.RecordsProvider;
 import dk.dbc.promat.service.connectors.FbiApiConnectorException;
 import dk.dbc.promat.service.Dates;
+import dk.dbc.promat.service.MetakompasRegistration;
 import dk.dbc.promat.service.api.BibliographicInformation;
 import dk.dbc.promat.service.persistence.CaseStatus;
 import dk.dbc.promat.service.persistence.MaterialType;
@@ -11,6 +14,8 @@ import dk.dbc.promat.service.persistence.PromatTask;
 import dk.dbc.promat.service.persistence.TaskFieldType;
 import dk.dbc.promat.service.util.PromatTaskUtils;
 import dk.dbc.promat.service.Repository;
+import dk.dbc.rawrepo.record.RecordServiceConnector;
+import dk.dbc.rawrepo.record.RecordServiceConnectorException;
 
 import java.time.LocalDate;
 import java.time.Month;
@@ -25,6 +30,7 @@ import jakarta.ejb.Stateless;
 import jakarta.ejb.TransactionAttribute;
 import jakarta.ejb.TransactionAttributeType;
 import jakarta.inject.Inject;
+import jakarta.ws.rs.ProcessingException;
 import java.time.Duration;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
@@ -39,12 +45,22 @@ public class CaseInformationUpdater {
     private static final Logger LOGGER = LoggerFactory.getLogger(CaseInformationUpdater.class);
     protected static final String METAKOMPASDATA_PRESENT = "true";
     protected static Locale dkLocale = new Locale("da", "DK");
+    private static final String METAKOMPAS_FIELD = "665";
+    // 665 subfields holding Metakompas subjects - same subfields as OpenFormat's has_subjectLaesekompas (see ADR 0006)
+    // A faust counts as registered if any 665 has a non-blank value in just one of them
+    private static final String METAKOMPAS_SUBJECT_SUBFIELDS = "iqpmguehjklfsrtnav";
+    private static final RecordServiceConnector.Params RECORD_CONTENT_PARAMS = new RecordServiceConnector.Params()
+            .withMode(RecordServiceConnector.Params.Mode.MERGED)
+            .withOutputFormat(RecordServiceConnector.Params.OutputFormat.MARC_JSON);
 
     @Inject
     MetricRegistry metricRegistry;
 
     @Inject
     FbiApiHandler fbiApiHandler;
+
+    @Inject
+    RecordServiceConnector recordServiceConnector;
 
     @EJB
     Repository repository;
@@ -54,6 +70,9 @@ public class CaseInformationUpdater {
 
     @Inject
     Dates dates;
+
+    @Inject
+    MetakompasRegistration metakompasRegistration;
 
     static final Metadata openformatTimerMetadata = Metadata.builder()
             .withName("promat_service_caseinformationupdater_openformat_timer")
@@ -134,8 +153,11 @@ public class CaseInformationUpdater {
                         .collect(Collectors.toList()));
             }
 
-            // Check and update case with Metakompasdata
-            checkAndUpdateCaseWithMetakompasdata(promatCase);
+            // Check and update case with Metakompasdata - only while registration happens in Metakompasset.
+            // Otherwise the selection saved through tasks/{taskId}/metakompas would be overwritten
+            if (metakompasRegistration.isMetakompasset()) {
+                checkAndUpdateCaseWithMetakompasdata(promatCase);
+            }
 
             //
             // Status is 'PENDING_EXTERNAL'. Now do last check of metakompas data before setting
@@ -176,27 +198,48 @@ public class CaseInformationUpdater {
         // All metakompas tasks
         for (PromatTask task : PromatTaskUtils.getTasksOfType(promatCase, TaskFieldType.METAKOMPAS)) {
 
-            // In theory targetFaust can be empty, signifying that the primary faust from the case is to be used.
-            List<String> fausts = task.getTargetFausts() != null ? task.getTargetFausts() : List.of(promatCase.getPrimaryFaust());
+            // Already registered. Checked on data, not approved: a task can be approved by hand before it's registered
+            if (METAKOMPASDATA_PRESENT.equals(task.getData())) {
+                continue;
+            }
 
-            boolean allIsPresent = fausts
-                    .stream().allMatch(faust -> {
-                        try {
-                            String metakompassubject = fbiApiHandler.format(faust).getMetakompassubject();
-                            String present = metakompassubject != null ? metakompassubject.strip() : null;
-                            return METAKOMPASDATA_PRESENT.equals(present);
-                        } catch (FbiApiConnectorException e) {
-                            LOGGER.error("Unable to look up faust {}", faust, e);
-                        }
-                        return false;
-                    });
+            // In theory targetFaust can be empty, signifying that the primary faust from the case is to be used.
+            List<String> fausts = task.getTargetFausts() != null && !task.getTargetFausts().isEmpty()
+                    ? task.getTargetFausts()
+                    : List.of(promatCase.getPrimaryFaust());
+
+            boolean allIsPresent = fausts.stream().allMatch(this::isMetakompasRegistered);
             if (allIsPresent) {
                 LOGGER.info("Updating metakompas for fausts: '{}' ==> '{}' of case with id {}. Taskid is '{}'",
                         fausts, METAKOMPASDATA_PRESENT, promatCase.getId(), task.getId());
                 task.setData(METAKOMPASDATA_PRESENT);
-                task.setApproved(dates.getCurrentDate());
+                // Only approve if not already approved, so an existing approval date isn't overwritten
+                if (task.getApproved() == null) {
+                    task.setApproved(dates.getCurrentDate());
+                }
             }
         }
+    }
+
+    // Registered = the record has a Metakompas subject in field 665. See ADR 0006 for why not fbi-api.
+    private boolean isMetakompasRegistered(String faust) {
+        try {
+            return recordServiceConnector.getRecordContentCollection(RecordsProvider.DBC_AGENCY, faust, RECORD_CONTENT_PARAMS)
+                    .stream()
+                    // The collection also holds related records (head/section, authority) - only look at the record itself
+                    .filter(marcBinding -> faust.equals(marcBinding.getSubFieldValue("001", 'a')))
+                    .anyMatch(CaseInformationUpdater::hasMetakompasRegistration);
+        } catch (RecordServiceConnectorException | ProcessingException e) {
+            LOGGER.error("Unable to look up metakompas registration for faust {}", faust, e);
+            return false;
+        }
+    }
+
+    static boolean hasMetakompasRegistration(MarcBinding marcBinding) {
+        return marcBinding.getDataFields(METAKOMPAS_FIELD).stream()
+                .anyMatch(field -> field.hasSubField(subField ->
+                        METAKOMPAS_SUBJECT_SUBFIELDS.indexOf(subField.getCode()) >= 0
+                                && subField.getData() != null && !subField.getData().isBlank()));
     }
 
     public boolean useSameOrUpdateValue(String currentValue, String newValue, boolean allowNullAsNewValue) {

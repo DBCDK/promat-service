@@ -2,6 +2,7 @@ package dk.dbc.promat.service.api;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import dk.dbc.promat.service.MetakompasRegistration;
 import dk.dbc.promat.service.connectors.CatalogingUpdateConnector;
 import dk.dbc.promat.service.connectors.CatalogingUpdateConnectorException;
 import dk.dbc.promat.service.dto.BuggiSelectionRequest;
@@ -18,6 +19,8 @@ import dk.dbc.promat.service.taxonomy.dto.Taxonomy;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.TypedQuery;
 import org.junit.jupiter.api.Test;
+
+import java.time.LocalDate;
 
 import java.util.List;
 
@@ -166,6 +169,81 @@ public class MetakompasAndBuggiTaskSelectionsTest {
 
         assertThat(exception.getHttpStatus(), is(502));
         assertThat(task.getApproved(), is((Object) null));
+    }
+
+    @Test
+    public void rejectsSelectionWhileRegistrationHappensInMetakompasset() {
+        MetakompasAndBuggiTaskSelections taskSelections = taskSelectionsWithTask(
+                MetakompasRegistration.Mode.METAKOMPASSET, new PromatTask().withId(123).withTaskFieldType(TaskFieldType.BUGGI));
+
+        ServiceErrorException exception = assertThrows(ServiceErrorException.class, () ->
+                taskSelections.resolveTaskForSelection(123, TaskFieldType.BUGGI));
+
+        assertThat(exception.getHttpStatus(), is(409));
+        assertThat(exception.getServiceErrorDto().getCode(), is(ServiceErrorCode.INVALID_STATE));
+    }
+
+    @Test
+    public void rejectsSelectionOnMetakompasTaskRegisteredInMetakompasset() {
+        // Registered in Metakompasset before the switch: approved, data "true"
+        MetakompasAndBuggiTaskSelections taskSelections = taskSelectionsWithTask(MetakompasRegistration.Mode.PROMAT,
+                new PromatTask().withId(123).withTaskFieldType(TaskFieldType.METAKOMPAS).withData("true").withApproved(LocalDate.now()));
+
+        ServiceErrorException exception = assertThrows(ServiceErrorException.class, () ->
+                taskSelections.resolveTaskForSelection(123, TaskFieldType.METAKOMPAS));
+
+        assertThat(exception.getHttpStatus(), is(409));
+        assertThat(exception.getServiceErrorDto().getCode(), is(ServiceErrorCode.INVALID_STATE));
+    }
+
+    @Test
+    public void rejectsSelectionOnBuggiTaskRegisteredInMetakompasset() {
+        // Approved through Metakompasset's cases/{pid}/buggi: data is a TagList
+        MetakompasAndBuggiTaskSelections taskSelections = taskSelectionsWithTask(MetakompasRegistration.Mode.PROMAT,
+                new PromatTask().withId(123).withTaskFieldType(TaskFieldType.BUGGI)
+                        .withData("{\"tags\":[{\"name\":\"rar\",\"value\":3}]}").withApproved(LocalDate.now()));
+
+        ServiceErrorException exception = assertThrows(ServiceErrorException.class, () ->
+                taskSelections.resolveTaskForSelection(123, TaskFieldType.BUGGI));
+
+        assertThat(exception.getHttpStatus(), is(409));
+    }
+
+    @Test
+    public void resolvesMetakompasTaskRegisteredInPromat() throws ServiceErrorException {
+        PromatTask task = new PromatTask().withId(123).withTaskFieldType(TaskFieldType.METAKOMPAS)
+                .withData("{\"entries\":[],\"suggestions\":[]}").withApproved(LocalDate.now());
+        MetakompasAndBuggiTaskSelections taskSelections = taskSelectionsWithTask(MetakompasRegistration.Mode.PROMAT, task);
+
+        assertThat(taskSelections.resolveTaskForSelection(123, TaskFieldType.METAKOMPAS), is(task));
+    }
+
+    @Test
+    public void resolvesBuggiTaskRegisteredInPromat() throws ServiceErrorException {
+        PromatTask task = new PromatTask().withId(123).withTaskFieldType(TaskFieldType.BUGGI)
+                .withData("[{\"id\":1,\"name\":\"let/svær\",\"marcSubfieldCode\":\"s\",\"requiresNonzeroValue\":false,\"value\":2}]")
+                .withApproved(LocalDate.now());
+        MetakompasAndBuggiTaskSelections taskSelections = taskSelectionsWithTask(MetakompasRegistration.Mode.PROMAT, task);
+
+        assertThat(taskSelections.resolveTaskForSelection(123, TaskFieldType.BUGGI), is(task));
+    }
+
+    @Test
+    public void resolvesUnregisteredTaskWhenRegistrationHappensInPromat() throws ServiceErrorException {
+        PromatTask task = new PromatTask().withId(123).withTaskFieldType(TaskFieldType.METAKOMPAS);
+        MetakompasAndBuggiTaskSelections taskSelections = taskSelectionsWithTask(MetakompasRegistration.Mode.PROMAT, task);
+
+        assertThat(taskSelections.resolveTaskForSelection(123, TaskFieldType.METAKOMPAS), is(task));
+    }
+
+    private MetakompasAndBuggiTaskSelections taskSelectionsWithTask(MetakompasRegistration.Mode mode, PromatTask task) {
+        EntityManager entityManager = mock(EntityManager.class);
+        when(entityManager.find(PromatTask.class, task.getId())).thenReturn(task);
+
+        MetakompasAndBuggiTaskSelections taskSelections = new MetakompasAndBuggiTaskSelections();
+        taskSelections.entityManager = entityManager;
+        taskSelections.metakompasRegistration = new MetakompasRegistration(mode);
+        return taskSelections;
     }
 
     private MetakompasAndBuggiTaskSelections taskSelectionsWithTaxonomy() {

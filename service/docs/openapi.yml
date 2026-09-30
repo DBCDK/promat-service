@@ -811,6 +811,14 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ServiceError'
+        '409':
+          description: >-
+            Registration happens in Metakompasset (METAKOMPAS_REGISTRATION=METAKOMPASSET), or the
+            task was registered in Metakompasset
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
 
   /tasks/{taskId}/buggi:
     put:
@@ -850,6 +858,14 @@ paths:
                 $ref: '#/components/schemas/ServiceError'
         '404':
           description: No such task
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '409':
+          description: >-
+            Registration happens in Metakompasset (METAKOMPAS_REGISTRATION=METAKOMPASSET), or the
+            task was registered in Metakompasset
           content:
             application/json:
               schema:

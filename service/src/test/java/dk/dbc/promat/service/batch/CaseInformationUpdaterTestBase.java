@@ -7,6 +7,7 @@ import dk.dbc.opennumberroll.OpennumberRollConnectorException;
 import dk.dbc.promat.service.AuthMocks;
 import dk.dbc.promat.service.ContainerTest;
 import dk.dbc.promat.service.Dates;
+import dk.dbc.promat.service.MetakompasRegistration;
 import dk.dbc.promat.service.FbiApiMocks;
 import dk.dbc.promat.service.Repository;
 import dk.dbc.promat.service.api.BibliographicInformation;
@@ -15,6 +16,7 @@ import dk.dbc.promat.service.cluster.ServerRole;
 import dk.dbc.promat.service.connectors.FbiApiConnectorException;
 import dk.dbc.promat.service.connectors.FbiApiConnectorProducer;
 import dk.dbc.promat.service.persistence.PromatCase;
+import dk.dbc.rawrepo.record.RecordServiceConnector;
 import org.eclipse.microprofile.metrics.Counter;
 import org.eclipse.microprofile.metrics.Metadata;
 import org.eclipse.microprofile.metrics.MetricRegistry;
@@ -26,6 +28,7 @@ import org.junit.jupiter.api.BeforeEach;
 import jakarta.ws.rs.core.Response;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 
@@ -34,6 +37,7 @@ import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
@@ -120,6 +124,18 @@ public abstract class CaseInformationUpdaterTestBase extends ContainerTest {
         ContentLookUp contentLookUpMock = mock(ContentLookUp.class);
         upd.caseInformationUpdater.contentLookUp = contentLookUpMock;
         when(contentLookUpMock.lookUpContent(anyString())).thenReturn(Optional.empty());
+
+        // No Metakompas registration by default - tests that need one override this mock
+        RecordServiceConnector recordServiceConnectorMock = mock(RecordServiceConnector.class);
+        upd.caseInformationUpdater.recordServiceConnector = recordServiceConnectorMock;
+        try {
+            when(recordServiceConnectorMock.getRecordContentCollection(anyInt(), anyString(), any(RecordServiceConnector.Params.class)))
+                    .thenReturn(List.of());
+        } catch (Exception e) {
+            throw new IllegalStateException(e);
+        }
+
+        upd.caseInformationUpdater.metakompasRegistration = new MetakompasRegistration(MetakompasRegistration.Mode.METAKOMPASSET);
 
         Dates mockedDates = mock(Dates.class);
         upd.caseInformationUpdater.dates = mockedDates;

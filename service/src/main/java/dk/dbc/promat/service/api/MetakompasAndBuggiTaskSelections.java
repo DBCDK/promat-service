@@ -3,6 +3,7 @@ package dk.dbc.promat.service.api;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import dk.dbc.promat.service.MetakompasRegistration;
 import dk.dbc.promat.service.cataloging.CatalogingMarcMapper;
 import dk.dbc.promat.service.connectors.CatalogingUpdateConnector;
 import dk.dbc.promat.service.connectors.CatalogingUpdateConnectorException;
@@ -40,6 +41,9 @@ public class MetakompasAndBuggiTaskSelections {
     @Inject
     @PromatEntityManager
     EntityManager entityManager;
+
+    @Inject
+    MetakompasRegistration metakompasRegistration;
 
     @Inject
     CatalogingUpdateConnector catalogingUpdateConnector;
@@ -96,7 +100,40 @@ public class MetakompasAndBuggiTaskSelections {
                     .withCode(ServiceErrorCode.INVALID_REQUEST)
                     .withCause("Wrong task type");
         }
+        if(!metakompasRegistration.isPromat()) {
+            throw new ServiceErrorException("Metakompas and Buggi selections are registered in Metakompasset")
+                    .withHttpStatus(409)
+                    .withCode(ServiceErrorCode.INVALID_STATE)
+                    .withCause("Registration happens in Metakompasset");
+        }
+        // A task finished in Metakompasset (or approved by hand) holds no selection in Promat's format -
+        // "true", a TagList or nothing - so there is nothing to edit or register again. Tasks registered
+        // in Promat can be changed and registered again.
+        // Later, we may want to support populating such tasks with real task data (e.g. built from the
+        // record's 665/664) - but that is a later feature.
+        if(task.getApproved() != null && !holdsSelectionSavedInPromat(task)) {
+            throw new ServiceErrorException(String.format("Task %d was registered in Metakompasset", taskId))
+                    .withHttpStatus(409)
+                    .withCode(ServiceErrorCode.INVALID_STATE)
+                    .withCause("Task registered in Metakompasset");
+        }
         return task;
+    }
+
+    private boolean holdsSelectionSavedInPromat(PromatTask task) {
+        if(task.getData() == null || task.getData().isBlank()) {
+            return false;
+        }
+        try {
+            if(task.getTaskFieldType() == TaskFieldType.METAKOMPAS) {
+                OBJECT_MAPPER.readValue(task.getData(), MetakompasTaskData.class);
+            } else {
+                OBJECT_MAPPER.readValue(task.getData(), new TypeReference<List<BuggiSelectionEntry>>() {});
+            }
+            return true;
+        } catch(JsonProcessingException e) {
+            return false;
+        }
     }
 
     public TagList writeBuggiSelection(PromatTask task, TagList tags) throws ServiceErrorException {
