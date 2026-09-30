@@ -48,22 +48,20 @@ class BuggiVocabularyTest {
     }
 
     @Test
-    void scaleValueIsResolvedAndAlwaysRegistered() throws ServiceErrorException {
+    void scaleValueIsResolved() throws ServiceErrorException {
         BuggiSelectionEntry entry = BuggiVocabulary.resolve(new BuggiSelectionRequest(1, 1));
 
         assertThat(entry.name(), is("let/svær"));
         assertThat(entry.marcSubfieldCode(), is("s"));
-        assertThat(entry.requiresNonzeroValue(), is(false));
         assertThat(entry.value(), is(1));
     }
 
     @Test
     void moodMayBeNotChosen() throws ServiceErrorException {
-        // spændende, value 0 = not chosen, so not registered
+        // spændende, value 0 = not chosen
         BuggiSelectionEntry entry = BuggiVocabulary.resolve(new BuggiSelectionRequest(8, 0));
 
         assertThat(entry.marcSubfieldCode(), is("n"));
-        assertThat(entry.requiresNonzeroValue(), is(true));
         assertThat(entry.value(), is(0));
     }
 

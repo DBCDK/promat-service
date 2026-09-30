@@ -110,7 +110,6 @@ public class MetakompasAndBuggiTaskSelectionsTest {
         assertThat(data.getFirst().id(), is(8));
         assertThat(data.getFirst().name(), is("spændende"));
         assertThat(data.getFirst().marcSubfieldCode(), is("n"));
-        assertThat(data.getFirst().requiresNonzeroValue(), is(true));
         assertThat(data.getFirst().value(), is(2));
     }
 

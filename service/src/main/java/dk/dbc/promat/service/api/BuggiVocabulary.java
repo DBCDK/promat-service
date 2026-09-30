@@ -82,8 +82,7 @@ public class BuggiVocabulary {
         }
         // Fragile due to name and subfieldCode both being String: the record's positional
         // constructor gives the compiler no way to catch the two being swapped here.
-        // requiresNonzeroValue: registered only if nonzero, i.e. a group where 0 means "not chosen"
-        return new BuggiSelectionEntry(option.id(), option.name(), group.subfieldCode(), group.minValue() == 0, request.getValue());
+        return new BuggiSelectionEntry(option.id(), option.name(), group.subfieldCode(), request.getValue());
     }
 
     private record Group(String name, String subfieldCode, int minValue, int maxValue) {

@@ -2368,10 +2368,10 @@ components:
       type: object
       description: >-
         Resolved Buggi selection stored in PromatTask.data and returned from
-        PUT /tasks/{taskId}/buggi. marcSubfieldCode and requiresNonzeroValue are registration
-        metadata (requiresNonzeroValue: the tag is only registered if its value isn't 0), not
-        needed by the client - use the group's minValue/maxValue from GET /buggi/options to render
-        the tag's input control.
+        PUT /tasks/{taskId}/buggi. marcSubfieldCode is registration metadata, not needed by the
+        client - use the group's minValue/maxValue from GET /buggi/options to render the tag's
+        input control. A value of 0 means "not chosen" (only allowed where the group's minValue
+        is 0) and isn't registered.
       properties:
         id:
           type: integer
@@ -2379,8 +2379,6 @@ components:
           type: string
         marcSubfieldCode:
           type: string
-        requiresNonzeroValue:
-          type: boolean
         value:
           type: integer
           minimum: 0
@@ -2389,7 +2387,6 @@ components:
         - id
         - name
         - marcSubfieldCode
-        - requiresNonzeroValue
         - value
 
     Tag:
