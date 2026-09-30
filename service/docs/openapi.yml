@@ -2456,9 +2456,7 @@ components:
           description: Category path the suggestion was made under, e.g. ["handling", "handler om"]
         title:
           type: string
-          description: >-
-            The suggested word, named like a subject's title. "text" is still accepted on input
-            for suggestions saved before the rename
+          description: The suggested word, named like a subject's title
       required:
         - path
         - title

@@ -156,18 +156,6 @@ public class MetakompasAndBuggiTaskSelectionsTest {
     }
 
     @Test
-    public void suggestionIsWrittenAsTitleAndOldTextIsStillRead() throws Exception {
-        // Suggestions saved before the rename hold "text"
-        MetakompasTaskData old = OBJECT_MAPPER.readValue(
-                "{\"entries\":[],\"suggestions\":[{\"path\":[\"handling\",\"handler om\"],\"text\":\"new word\"}]}",
-                MetakompasTaskData.class);
-        assertThat(old.getSuggestions().getFirst().title(), is("new word"));
-
-        String written = OBJECT_MAPPER.writeValueAsString(old.getSuggestions().getFirst());
-        assertThat(written, is("{\"path\":[\"handling\",\"handler om\"],\"title\":\"new word\"}"));
-    }
-
-    @Test
     public void rejectsSelectionWhileRegistrationHappensInMetakompasset() {
         MetakompasAndBuggiTaskSelections taskSelections = taskSelectionsWithTask(
                 MetakompasRegistration.Mode.METAKOMPASSET, new PromatTask().withId(123).withTaskFieldType(TaskFieldType.BUGGI));
