@@ -2325,7 +2325,8 @@ components:
             Lowest value a reviewer can choose for the group's options: 1 for the scales
             (Læsbarhed, Fantasi/virkelighed), 0 for Stemning and Tema. Saving accepts 0 for every
             option, meaning "no value" (not chosen / not filled in yet), so a draft can be saved;
-            0 is never registered, and the scales must be set (from minValue) before registration
+            0 is never registered, and the scales must have a value of at least minValue before the
+            selection is registered
         maxValue:
           type: integer
           description: Highest allowed value for the group's options

@@ -15,7 +15,8 @@ public class BuggiVocabulary {
     // The value range a reviewer can choose from per group, as in metakompasset: the scales (Læsbarhed,
     // Fantasi/virkelighed) 1-5, moods and themes 0-5. On save, 0 is allowed for every option and means
     // "no value": not chosen for moods and themes, not filled in yet for the scales - so a draft can be
-    // saved. 0 is never registered; the scales must have a value from minValue before registration.
+    // saved. 0 is never registered; the scales must have a value of at least minValue before the
+    // selection is registered.
     private static final Group READABILITY = new Group("Læsbarhed", "s", 1, 5);
     private static final Group FANTASY_REALITY = new Group("Fantasi/virkelighed", "u", 1, 5);
     private static final Group MOOD = new Group("Stemning", "n", 0, 5);
