@@ -62,8 +62,10 @@ public class ScheduledUserUpdaterIT extends ContainerTest {
         ScheduledUserUpdater upd = new ScheduledUserUpdater();
         upd.userUpdater = new UserUpdater();
         upd.userUpdater.metricRegistry = metricRegistry;
+        upd.userUpdater.entityManager = entityManager;
         upd.entityManager = entityManager;
         upd.serverRole = ServerRole.PRIMARY;
+        upd.batchJobMonitor = new BatchJobMonitor();
 
         // Fetch all users as they where before the test..
         final List<Editor> allEditorsBeforeUpdate = getAllEditors();
@@ -104,8 +106,8 @@ public class ScheduledUserUpdaterIT extends ContainerTest {
         // Check that the getInactiveXxx() functions returns the correct number of users
         // Note: getInactiveReviewers will return 1+1 since user 15 is currently inactive, but will
         //       be updated before running the test, to be inactive for slightly less than 5 years
-        assertThat("0 editors to deactivate", upd.getInactiveEditors().size(), is(0));
-        assertThat("2 reviewers to deactivate", upd.getInactiveReviewers().size(), is(2));
+        assertThat("0 editors to deactivate", upd.getInactiveEditorIds().size(), is(0));
+        assertThat("2 reviewers to deactivate", upd.getInactiveReviewerIds().size(), is(2));
 
         persistenceContext.run(() -> {
 
@@ -156,6 +158,9 @@ public class ScheduledUserUpdaterIT extends ContainerTest {
         assertThat("deactivated has been set", updated.getDeactivated(), is(notNullValue()));
         assertThat("deactivated is now", updated.getDeactivated().after(
                 Date.from(ZonedDateTime.now().minusMinutes(1).toInstant())), is(true));
+
+        // Already deactivated users are not picked up again by the next run
+        assertThat("deactivated reviewer is skipped", upd.getInactiveReviewerIds().contains(9), is(false));
     }
 
     public List<Reviewer> getAllReviewers() {

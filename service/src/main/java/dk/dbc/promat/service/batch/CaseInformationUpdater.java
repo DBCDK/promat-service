@@ -10,6 +10,7 @@ import dk.dbc.promat.service.api.BibliographicInformation;
 import dk.dbc.promat.service.persistence.CaseStatus;
 import dk.dbc.promat.service.persistence.MaterialType;
 import dk.dbc.promat.service.persistence.PromatCase;
+import dk.dbc.promat.service.persistence.PromatEntityManager;
 import dk.dbc.promat.service.persistence.PromatTask;
 import dk.dbc.promat.service.persistence.TaskFieldType;
 import dk.dbc.promat.service.util.PromatTaskUtils;
@@ -30,6 +31,7 @@ import jakarta.ejb.Stateless;
 import jakarta.ejb.TransactionAttribute;
 import jakarta.ejb.TransactionAttributeType;
 import jakarta.inject.Inject;
+import jakarta.persistence.EntityManager;
 import jakarta.ws.rs.ProcessingException;
 import java.time.Duration;
 import java.time.format.DateTimeFormatter;
@@ -52,6 +54,10 @@ public class CaseInformationUpdater {
     private static final RecordServiceConnector.Params RECORD_CONTENT_PARAMS = new RecordServiceConnector.Params()
             .withMode(RecordServiceConnector.Params.Mode.MERGED)
             .withOutputFormat(RecordServiceConnector.Params.OutputFormat.MARC_JSON);
+
+    @Inject
+    @PromatEntityManager
+    EntityManager entityManager;
 
     @Inject
     MetricRegistry metricRegistry;
@@ -86,7 +92,19 @@ public class CaseInformationUpdater {
             .withUnit("failures")
             .build();
 
+    // Used by the batch job. Loads the case in its own transaction, so each case is committed on its own
+    // instead of the whole pass being merged into the shared cache in one large commit (see ADR 0007).
     @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
+    public void updateCaseInformation(int caseId) {
+        PromatCase promatCase = entityManager.find(PromatCase.class, caseId);
+        if (promatCase == null) {
+            LOGGER.info("Case with id {} no longer exists, skipping update", caseId);
+            return;
+        }
+        updateCaseInformation(promatCase);
+    }
+
+    // Updates a case that is managed by the caller's transaction
     public void updateCaseInformation(PromatCase promatCase) {
 
         try {
@@ -303,12 +321,15 @@ public class CaseInformationUpdater {
     }
 
     @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-    public void clearEditor(PromatCase promatCase) {
+    public void clearEditor(int caseId) {
 
         try {
-            promatCase.setEditor(null);
+            PromatCase promatCase = entityManager.find(PromatCase.class, caseId);
+            if (promatCase != null) {
+                promatCase.setEditor(null);
+            }
         } catch (Exception e) {
-            LOGGER.error("Unable to clear editor on case with id {}: {}",promatCase.getId(), e.getMessage());
+            LOGGER.error("Unable to clear editor on case with id {}: {}", caseId, e.getMessage());
             metricRegistry.counter(caseUpdateFailureCounterMetadata).inc();
         }
     }

@@ -116,8 +116,10 @@ public abstract class CaseInformationUpdaterTestBase extends ContainerTest {
         ScheduledCaseInformationUpdater upd = new ScheduledCaseInformationUpdater();
         upd.caseInformationUpdater = new CaseInformationUpdater();
         upd.caseInformationUpdater.metricRegistry = metricRegistry;
+        upd.caseInformationUpdater.entityManager = entityManager;
         upd.entityManager = entityManager;
         upd.serverRole = ServerRole.PRIMARY;
+        upd.batchJobMonitor = new BatchJobMonitor();
         upd.caseInformationUpdater.fbiApiHandler = new FbiApiHandler()
                 .withConnector(FbiApiConnectorProducer.produce(wiremockHost, wiremockHost, "123456789",
                         "abcdef", new UserAgent("PROMAT_IT")));

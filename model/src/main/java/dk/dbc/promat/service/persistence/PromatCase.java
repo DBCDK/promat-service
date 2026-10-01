@@ -40,11 +40,14 @@ import java.util.Objects;
                 name = PromatCase.GET_PAYED_CASES_NAME,
                 query = PromatCase.GET_PAYED_CASES_QUERY),
         @NamedQuery(
-                name = PromatCase.GET_CASES_FOR_UPDATE_NAME,
-                query = PromatCase.GET_CASES_FOR_UPDATE_QUERY),
+                name = PromatCase.GET_CASE_IDS_FOR_UPDATE_NAME,
+                query = PromatCase.GET_CASE_IDS_FOR_UPDATE_QUERY),
         @NamedQuery(
                 name = PromatCase.GET_CASES_WITH_INACTIVE_EDITOR_NAME,
                 query = PromatCase.GET_CASES_WITH_INACTIVE_EDITOR_QUERY),
+        @NamedQuery(
+                name = PromatCase.GET_CASE_IDS_WITH_INACTIVE_EDITOR_NAME,
+                query = PromatCase.GET_CASE_IDS_WITH_INACTIVE_EDITOR_QUERY),
         @NamedQuery(
                 name = PromatCase.GET_CASE_BY_FAUST_NAME,
                 query = PromatCase.GET_CASE_BY_FAUST_QUERY),
@@ -93,9 +96,11 @@ public class PromatCase {
             "                                            where t.payed = :stamp" +
             "                                            order by c.id";
 
-    public static final String GET_CASES_FOR_UPDATE_NAME =
-            "PromatCase.get.cases.for.update";
-    public static final String GET_CASES_FOR_UPDATE_QUERY = "select c" +
+    // Batch queries select ids only: building entities would go through the shared cache,
+    // where the batch jobs have hung on orphaned cache locks (see ADR 0007).
+    public static final String GET_CASE_IDS_FOR_UPDATE_NAME =
+            "PromatCase.get.case.ids.for.update";
+    public static final String GET_CASE_IDS_FOR_UPDATE_QUERY = "select c.id" +
             "                                                  from PromatCase c" +
             "                                                 where c.status not in (dk.dbc.promat.service.persistence.CaseStatus.EXPORTED," +
             "                                                                    dk.dbc.promat.service.persistence.CaseStatus.PENDING_REVERT," +
@@ -108,6 +113,14 @@ public class PromatCase {
     public static final String GET_CASES_WITH_INACTIVE_EDITOR_NAME =
             "PromatCase.get.cases.with.inactive.editor";
     public static final String GET_CASES_WITH_INACTIVE_EDITOR_QUERY = "select c" +
+            "                                                  from PromatCase c" +
+            "                                                 where c.status = dk.dbc.promat.service.persistence.CaseStatus.PENDING_APPROVAL" +
+            "                                                   and c.keepEditor = false" +
+            "                                                 order by c.id";
+
+    public static final String GET_CASE_IDS_WITH_INACTIVE_EDITOR_NAME =
+            "PromatCase.get.case.ids.with.inactive.editor";
+    public static final String GET_CASE_IDS_WITH_INACTIVE_EDITOR_QUERY = "select c.id" +
             "                                                  from PromatCase c" +
             "                                                 where c.status = dk.dbc.promat.service.persistence.CaseStatus.PENDING_APPROVAL" +
             "                                                   and c.keepEditor = false" +

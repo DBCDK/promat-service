@@ -1,29 +1,35 @@
 package dk.dbc.promat.service.batch;
 
 import dk.dbc.promat.service.cluster.ServerRole;
-import dk.dbc.promat.service.persistence.Editor;
 import dk.dbc.promat.service.persistence.PromatEntityManager;
-import dk.dbc.promat.service.persistence.Reviewer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import jakarta.ejb.ConcurrencyManagement;
+import jakarta.ejb.ConcurrencyManagementType;
 import jakarta.ejb.EJB;
 import jakarta.ejb.Schedule;
 import jakarta.ejb.Singleton;
 import jakarta.ejb.Startup;
+import jakarta.ejb.TransactionAttribute;
+import jakarta.ejb.TransactionAttributeType;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
-import java.sql.Date;
+import jakarta.persistence.TemporalType;
 import java.time.ZonedDateTime;
+import java.util.Date;
 import java.util.List;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
-import java.util.stream.Collectors;
 
+// Bean-managed concurrency: updateLock already prevents overlapping runs (see ADR 0007)
 @Startup
 @Singleton
+@ConcurrencyManagement(ConcurrencyManagementType.BEAN)
 public class ScheduledUserUpdater {
     private static final Logger LOGGER = LoggerFactory.getLogger(ScheduledUserUpdater.class);
+
+    static final String USER_UPDATE_JOB = "user-update";
 
     @Inject
     ServerRole serverRole;
@@ -35,11 +41,18 @@ public class ScheduledUserUpdater {
     @EJB
     UserUpdater userUpdater;
 
+    @Inject
+    BatchJobMonitor batchJobMonitor;
+
     private static Lock updateLock = new ReentrantLock();
 
     // Users must be deactivated after 5 years having active=f, so no need to run
-    // this more than one time each day
+    // this more than one time each day.
+    // Keep this apart from ScheduledCaseInformationUpdater.updateCaseAssignedEditor (01:45),
+    // since concurrent reads/writes of the same editors and reviewers can deadlock the shared JPA cache.
+    // No outer transaction: each user is updated and committed in its own transaction (see ADR 0007)
     @Schedule(minute = "15", hour = "01", persistent = false)
+    @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
     public void updateUsers() {
 
         try {
@@ -52,29 +65,32 @@ public class ScheduledUserUpdater {
                     return;
                 }
 
+                batchJobMonitor.started(USER_UPDATE_JOB);
                 try {
-                    List<Editor> inactiveEditors = getInactiveEditors();
-                    List<Reviewer> inactiveReviewers = getInactiveReviewers();
-
-                    if (inactiveEditors != null && inactiveEditors.size() > 0) {
-                        for (Editor editor : inactiveEditors) {
-                            LOGGER.info("Updating inactive editor with id {}", editor.getId());
-                            userUpdater.deactivateEditor(editor);
+                    for (Integer editorId : getInactiveEditorIds()) {
+                        LOGGER.info("Updating inactive editor with id {}", editorId);
+                        try {
+                            userUpdater.deactivateEditor(editorId);
+                        } catch (Exception e) {
+                            LOGGER.error("Caught exception when trying to deactivate editor with id {}: {}", editorId, e.getMessage(), e);
                         }
+                        batchJobMonitor.progressed(USER_UPDATE_JOB);
                     }
 
-                    if (inactiveReviewers != null && inactiveReviewers.size() > 0) {
-                        for (Reviewer reviewer : inactiveReviewers) {
-                            LOGGER.info("Updating inactive reviewer with id {}", reviewer.getId());
-                            userUpdater.deactivateReviewer(reviewer);
+                    for (Integer reviewerId : getInactiveReviewerIds()) {
+                        LOGGER.info("Updating inactive reviewer with id {}", reviewerId);
+                        try {
+                            userUpdater.deactivateReviewer(reviewerId);
+                        } catch (Exception e) {
+                            LOGGER.error("Caught exception when trying to deactivate reviewer with id {}: {}", reviewerId, e.getMessage(), e);
                         }
+                        batchJobMonitor.progressed(USER_UPDATE_JOB);
                     }
-
-                    entityManager.flush();
                 } catch(Exception e) {
                     LOGGER.error("Caught exception {}:{} when trying to update users", e.getCause(), e.getMessage());
                     LOGGER.info("Exception: {}", e);
                 } finally {
+                    batchJobMonitor.finished(USER_UPDATE_JOB);
                     updateLock.unlock();
                 }
             }
@@ -83,23 +99,23 @@ public class ScheduledUserUpdater {
         }
     }
 
-    public List<Reviewer> getInactiveReviewers() {
+    // Users inactive for more than 5 years that have not been deactivated yet.
+    // Already deactivated users are skipped, so they are not rewritten every night.
+    public List<Integer> getInactiveReviewerIds() {
         return entityManager
-                .createQuery("SELECT r FROM Reviewer r", Reviewer.class)
-                .getResultList()
-                .stream()
-                .filter(r -> !r.isActive() && r.getActiveChanged()
-                        .before(Date.from(ZonedDateTime.now().minusYears(5).toInstant())))
-                .collect(Collectors.toList());
+                .createQuery("SELECT r.id FROM Reviewer r WHERE r.active = false AND r.activeChanged < :cutoff AND r.deactivated IS NULL ORDER BY r.id", Integer.class)
+                .setParameter("cutoff", fiveYearsAgo(), TemporalType.TIMESTAMP)
+                .getResultList();
     }
 
-    public List<Editor> getInactiveEditors() {
+    public List<Integer> getInactiveEditorIds() {
         return entityManager
-                .createQuery("SELECT e FROM Editor e", Editor.class)
-                .getResultList()
-                .stream()
-                .filter(e -> !e.isActive() && e.getActiveChanged()
-                        .before(Date.from(ZonedDateTime.now().minusYears(5).toInstant())))
-                .collect(Collectors.toList());
+                .createQuery("SELECT e.id FROM Editor e WHERE e.active = false AND e.activeChanged < :cutoff AND e.deactivated IS NULL ORDER BY e.id", Integer.class)
+                .setParameter("cutoff", fiveYearsAgo(), TemporalType.TIMESTAMP)
+                .getResultList();
+    }
+
+    private static Date fiveYearsAgo() {
+        return Date.from(ZonedDateTime.now().minusYears(5).toInstant());
     }
 }

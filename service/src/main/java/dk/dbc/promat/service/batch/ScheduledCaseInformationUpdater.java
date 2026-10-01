@@ -6,19 +6,25 @@ import dk.dbc.promat.service.persistence.PromatEntityManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import jakarta.ejb.ConcurrencyManagement;
+import jakarta.ejb.ConcurrencyManagementType;
 import jakarta.ejb.EJB;
 import jakarta.ejb.Schedule;
 import jakarta.ejb.Singleton;
 import jakarta.ejb.Startup;
+import jakarta.ejb.TransactionAttribute;
+import jakarta.ejb.TransactionAttributeType;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
-import jakarta.persistence.TypedQuery;
 import java.util.List;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+// Bean-managed concurrency: updateLock already prevents overlapping runs. With the default
+// container write lock, one hung timer callback would silently block all later runs.
 @Startup
 @Singleton
+@ConcurrencyManagement(ConcurrencyManagementType.BEAN)
 public class ScheduledCaseInformationUpdater {
     private static final Logger LOGGER = LoggerFactory.getLogger(ScheduledCaseInformationUpdater.class);
 
@@ -32,13 +38,21 @@ public class ScheduledCaseInformationUpdater {
     @EJB
     CaseInformationUpdater caseInformationUpdater;
 
+    @Inject
+    BatchJobMonitor batchJobMonitor;
+
+    static final String CASE_UPDATE_JOB = "case-information-update";
+    static final String EDITOR_RESET_JOB = "case-editor-reset";
+
     private static Lock updateLock = new ReentrantLock();
 
     // Since every update traverses all active cases, we should not run too often.
     // Run once every 10 minutes on digit 0 to match dataio which is running every
     // 10 minutes on digit 5.
     // Only run during working days and normal working hours
+    // No outer transaction: each case is updated and committed in its own transaction (see ADR 0007)
     @Schedule(second = "0", minute = "*/10", hour = "6-18", dayOfWeek = "Mon-Fri", persistent = false)
+    @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
     public void updateCaseInformation() {
 
         try {
@@ -51,20 +65,23 @@ public class ScheduledCaseInformationUpdater {
                     return;
                 }
 
+                batchJobMonitor.started(CASE_UPDATE_JOB);
                 try {
-                    List<PromatCase> casesForUpdate = getCasesForUpdate();
-                    if (casesForUpdate != null && casesForUpdate.size() > 0) {
-                        for (PromatCase promatCase : casesForUpdate) {
-                            LOGGER.info("Updating case with id {}", promatCase.getId());
-                            caseInformationUpdater.updateCaseInformation(promatCase);
+                    for (Integer caseId : getCaseIdsForUpdate()) {
+                        LOGGER.info("Updating case with id {}", caseId);
+                        try {
+                            caseInformationUpdater.updateCaseInformation(caseId);
+                        } catch (Exception e) {
+                            // Only this case is rolled back, the rest of the pass continues
+                            LOGGER.error("Caught exception when trying to update case with id {}: {}", caseId, e.getMessage(), e);
                         }
+                        batchJobMonitor.progressed(CASE_UPDATE_JOB);
                     }
-
-                    entityManager.flush();
                 } catch(Exception e) {
                     LOGGER.error("Caught exception {}:{} when trying to update cases", e.getCause(), e.getMessage());
                     LOGGER.info("Exception: ", e);
                 } finally {
+                    batchJobMonitor.finished(CASE_UPDATE_JOB);
                     updateLock.unlock();
                 }
             }
@@ -73,12 +90,15 @@ public class ScheduledCaseInformationUpdater {
         }
     }
 
-    public List<PromatCase> getCasesForUpdate() {
-        TypedQuery<PromatCase> query = entityManager.createNamedQuery(PromatCase.GET_CASES_FOR_UPDATE_NAME, PromatCase.class);
-        return query.getResultList();
+    public List<Integer> getCaseIdsForUpdate() {
+        return entityManager.createNamedQuery(PromatCase.GET_CASE_IDS_FOR_UPDATE_NAME, Integer.class)
+                .getResultList();
     }
 
-    @Schedule(second = "0", minute = "15", hour = "01", dayOfWeek = "Mon-Fri", persistent = false)
+    // Must not run at the same time as ScheduledUserUpdater (01:15), since concurrent
+    // reads/writes of the same editors and reviewers can deadlock the shared JPA cache.
+    @Schedule(second = "0", minute = "45", hour = "01", dayOfWeek = "Mon-Fri", persistent = false)
+    @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
     public void updateCaseAssignedEditor() {
 
         try {
@@ -90,17 +110,19 @@ public class ScheduledCaseInformationUpdater {
                     return;
                 }
 
+                batchJobMonitor.started(EDITOR_RESET_JOB);
                 try {
-                    List<PromatCase> casesForUpdate = getCasesWithInactiveEditor();
-                    if(casesForUpdate != null && casesForUpdate.size() > 0) {
-                        for(PromatCase promatCase : casesForUpdate) {
-                            LOGGER.info("Clearing editor on case with id {}", promatCase.getId());
-                            caseInformationUpdater.clearEditor(promatCase);
+                    for (Integer caseId : getCaseIdsWithInactiveEditor()) {
+                        LOGGER.info("Clearing editor on case with id {}", caseId);
+                        try {
+                            caseInformationUpdater.clearEditor(caseId);
+                        } catch (Exception e) {
+                            LOGGER.error("Caught exception when trying to clear editor on case with id {}: {}", caseId, e.getMessage(), e);
                         }
+                        batchJobMonitor.progressed(EDITOR_RESET_JOB);
                     }
-
-                    entityManager.flush();
                 } finally {
+                    batchJobMonitor.finished(EDITOR_RESET_JOB);
                     updateLock.unlock();
                 }
             }
@@ -109,8 +131,8 @@ public class ScheduledCaseInformationUpdater {
         }
     }
 
-    public List<PromatCase> getCasesWithInactiveEditor() {
-        TypedQuery<PromatCase> query = entityManager.createNamedQuery(PromatCase.GET_CASES_WITH_INACTIVE_EDITOR_NAME, PromatCase.class);
-        return query.getResultList();
+    public List<Integer> getCaseIdsWithInactiveEditor() {
+        return entityManager.createNamedQuery(PromatCase.GET_CASE_IDS_WITH_INACTIVE_EDITOR_NAME, Integer.class)
+                .getResultList();
     }
 }

@@ -42,23 +42,32 @@ public class UserUpdater {
     @Inject
     NotificationFactory notificationFactory;
 
+    // Loads the user in its own transaction, so each user is committed on its own (see ADR 0007)
     @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-    public void deactivateEditor(Editor editor) {
+    public void deactivateEditor(int editorId) {
 
         try {
+            Editor editor = entityManager.find(Editor.class, editorId);
+            if (editor == null) {
+                return;
+            }
             editor.setEmail("");
             editor.setPhone("");
             editor.setDeactivated(Date.from(ZonedDateTime.now().toInstant()));
         } catch (Exception e) {
-            LOGGER.error("Unable to update editor with id {}: {}", editor.getId(), e.getMessage());
+            LOGGER.error("Unable to update editor with id {}: {}", editorId, e.getMessage());
             metricRegistry.counter(userUpdateFailureCounterMetadata).inc();
         }
     }
 
     @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-    public void deactivateReviewer(Reviewer reviewer) {
+    public void deactivateReviewer(int reviewerId) {
 
         try {
+            Reviewer reviewer = entityManager.find(Reviewer.class, reviewerId);
+            if (reviewer == null) {
+                return;
+            }
             reviewer.setEmail("");
             reviewer.setPhone("");
             reviewer.setPrivateEmail("");
@@ -67,7 +76,7 @@ public class UserUpdater {
             reviewer.setPrivateAddress(new Address());
             reviewer.setDeactivated(Date.from(ZonedDateTime.now().toInstant()));
         } catch (Exception e) {
-            LOGGER.error("Unable to update reviewer with id {}: {}", reviewer.getId(), e.getMessage());
+            LOGGER.error("Unable to update reviewer with id {}: {}", reviewerId, e.getMessage());
             metricRegistry.counter(userUpdateFailureCounterMetadata).inc();
         }
     }
