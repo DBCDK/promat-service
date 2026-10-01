@@ -2354,8 +2354,16 @@ components:
           type: string
         marcSubfieldCode:
           type: string
-        requiresNonzeroValue:
-          type: boolean
+        minValue:
+          type: integer
+          description: >-
+            Lowest value a reviewer can choose for the group's options: 1 for the scales
+            (Læsbarhed, Fantasi/virkelighed), 0 for Stemning and Tema. Saving accepts 0 for every
+            option, meaning "no value" (not chosen / not filled in yet), so a draft can be saved;
+            0 is never registered, and the scales must be set (from minValue) before registration
+        maxValue:
+          type: integer
+          description: Highest allowed value for the group's options
         options:
           type: array
           items:
@@ -2363,7 +2371,8 @@ components:
       required:
         - name
         - marcSubfieldCode
-        - requiresNonzeroValue
+        - minValue
+        - maxValue
         - options
 
     BuggiOption:
@@ -2395,9 +2404,10 @@ components:
       type: object
       description: >-
         Resolved Buggi selection stored in PromatTask.data and returned from
-        PUT /tasks/{taskId}/buggi. marcSubfieldCode is MARC registration metadata, not needed by
-        the client, but harmless to expose alongside requiresNonzeroValue (which is needed to
-        render the tag's input control) - one shape serves both roles.
+        PUT /tasks/{taskId}/buggi. marcSubfieldCode is registration metadata, not needed by the
+        client - use the group's minValue/maxValue from GET /buggi/options to render the tag's
+        input control. A value of 0 means "no value" (not chosen, or not filled in yet) and
+        isn't registered.
       properties:
         id:
           type: integer
@@ -2405,8 +2415,6 @@ components:
           type: string
         marcSubfieldCode:
           type: string
-        requiresNonzeroValue:
-          type: boolean
         value:
           type: integer
           minimum: 0
@@ -2415,7 +2423,6 @@ components:
         - id
         - name
         - marcSubfieldCode
-        - requiresNonzeroValue
         - value
 
     Tag:
@@ -2482,11 +2489,12 @@ components:
           items:
             type: string
           description: Category path the suggestion was made under, e.g. ["handling", "handler om"]
-        text:
+        title:
           type: string
+          description: The suggested word, named like a subject's title
       required:
         - path
-        - text
+        - title
 
     MetakompasSelectionRequest:
       type: object

@@ -3,10 +3,9 @@ package dk.dbc.promat.service.taskdata;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 // Resolved Buggi selection stored in PromatTask.data and returned from PUT /tasks/{taskId}/buggi.
-// Keeps the stable option id and MARC registration metadata together with requiresNonzeroValue,
-// which the frontend needs to render the tag's input control; marcSubfieldCode isn't needed by
-// the client but is harmless to expose, so one class serves both roles instead of two.
-// ignoreUnknown guards against future drift between those two roles.
+// Keeps the stable option id together with the MARC subfield code used when registering it. A value
+// of 0 means "no value" (not chosen, or not filled in yet) and isn't registered. ignoreUnknown also
+// lets selections saved with the former requiresNonzeroValue field be read.
 @JsonIgnoreProperties(ignoreUnknown = true)
-public record BuggiSelectionEntry(Integer id, String name, String marcSubfieldCode, Boolean requiresNonzeroValue, Integer value) {
+public record BuggiSelectionEntry(Integer id, String name, String marcSubfieldCode, Integer value) {
 }

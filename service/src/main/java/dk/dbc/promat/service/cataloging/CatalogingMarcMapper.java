@@ -65,7 +65,7 @@ public class CatalogingMarcMapper {
             addMetakompasValue(valuesByPath, entry.path(), entry.title());
         }
         for(MetakompasTaskData.Suggestion suggestion : selection.getSuggestions() == null ? List.<MetakompasTaskData.Suggestion>of() : selection.getSuggestions()) {
-            for(String text : splitSuggestion(suggestion.text())) {
+            for(String text : splitSuggestion(suggestion.title())) {
                 addMetakompasValue(valuesByPath, suggestion.path(), text);
             }
         }
@@ -89,9 +89,8 @@ public class CatalogingMarcMapper {
                 throw new IllegalArgumentException("No MARC subfield code for Buggi tag: " + entry.name());
             }
             int value = entry.value() == null ? 0 : entry.value();
-            // Mirrored from metakompasset: Stemning/Tema tags with value 0 are not
-            // registered, while the scale tags are still written with their value.
-            if(Boolean.TRUE.equals(entry.requiresNonzeroValue()) && value == 0) {
+            // 0 = no value, never registered
+            if(value == 0) {
                 continue;
             }
             builder.addField("664", List.of(

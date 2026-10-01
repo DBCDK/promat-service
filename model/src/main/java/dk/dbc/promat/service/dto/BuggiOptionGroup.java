@@ -2,20 +2,23 @@ package dk.dbc.promat.service.dto;
 
 import java.util.List;
 
-// Group of Buggi options exposed by GET /buggi/options.
+// Group of Buggi options exposed by GET /buggi/options. minValue/maxValue is the value range for the
+// group's options; 0 (where allowed) means "not chosen".
 public class BuggiOptionGroup {
     private String name;
     private String marcSubfieldCode;
-    private Boolean requiresNonzeroValue;
+    private Integer minValue;
+    private Integer maxValue;
     private List<BuggiOption> options;
 
     public BuggiOptionGroup() {
     }
 
-    public BuggiOptionGroup(String name, String marcSubfieldCode, Boolean requiresNonzeroValue, List<BuggiOption> options) {
+    public BuggiOptionGroup(String name, String marcSubfieldCode, Integer minValue, Integer maxValue, List<BuggiOption> options) {
         this.name = name;
         this.marcSubfieldCode = marcSubfieldCode;
-        this.requiresNonzeroValue = requiresNonzeroValue;
+        this.minValue = minValue;
+        this.maxValue = maxValue;
         this.options = options;
     }
 
@@ -35,12 +38,20 @@ public class BuggiOptionGroup {
         this.marcSubfieldCode = marcSubfieldCode;
     }
 
-    public Boolean getRequiresNonzeroValue() {
-        return requiresNonzeroValue;
+    public Integer getMinValue() {
+        return minValue;
     }
 
-    public void setRequiresNonzeroValue(Boolean requiresNonzeroValue) {
-        this.requiresNonzeroValue = requiresNonzeroValue;
+    public void setMinValue(Integer minValue) {
+        this.minValue = minValue;
+    }
+
+    public Integer getMaxValue() {
+        return maxValue;
+    }
+
+    public void setMaxValue(Integer maxValue) {
+        this.maxValue = maxValue;
     }
 
     public List<BuggiOption> getOptions() {

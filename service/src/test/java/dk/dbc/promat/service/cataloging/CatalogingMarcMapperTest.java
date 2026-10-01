@@ -32,14 +32,15 @@ public class CatalogingMarcMapperTest {
     }
 
     @Test
-    public void mapsBuggiTagsToMarc664AndSkipsZeroValuedMoodAndThemeTags() throws Exception {
+    public void mapsBuggiTagsToMarc664AndSkipsZeroValues() throws Exception {
         String marc = mapper.buggiToMarc("870970", "12345678", List.of(
-                new BuggiSelectionEntry(1, "let/svær", "s", false, 0),
-                new BuggiSelectionEntry(5, "rar", "n", true, 0),
-                new BuggiSelectionEntry(19, "fantasy", "e", true, 4)));
+                new BuggiSelectionEntry(1, "let/svær", "s", 3),
+                new BuggiSelectionEntry(5, "rar", "n", 0),
+                new BuggiSelectionEntry(19, "fantasy", "e", 4)));
 
         assertThat(marc, containsString("<marcx:subfield code=\"s\">let/svær</marcx:subfield>"));
         assertThat(marc, containsString("<marcx:subfield code=\"e\">fantasy</marcx:subfield>"));
+        assertThat(marc, containsString("<marcx:subfield code=\"y\">3</marcx:subfield>"));
         assertThat(marc, containsString("<marcx:subfield code=\"y\">4</marcx:subfield>"));
         assertThat(marc, not(containsString(">rar<")));
     }
