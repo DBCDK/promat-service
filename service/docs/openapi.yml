@@ -2246,9 +2246,6 @@ components:
         - `u`: ramme > univers
         - `e`: handling > handler om
         - `v`: handling > navngivet hovedperson
-        - `h`: handling > hovedperson(er) - beskrivelse > om hovedpersonen
-        - `k`: handling > hovedperson(er) - beskrivelse > hovedpersonens karaktertræk
-        - `l`: handling > hovedperson(er) - beskrivelse > hovedpersonens konflikt
         - `s`: fortælleteknik > skrivestil og struktur
         - `r`: fortælleteknik > fortællerstemme
         - `t`: fortælleteknik > tempo
