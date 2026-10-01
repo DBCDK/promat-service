@@ -193,7 +193,7 @@ public class CaseInformationUpdaterSideEffectsIT extends CaseInformationUpdaterT
         PromatCase promatCase = getCaseWithId(created.getId());
 
         // A selection saved through tasks/{taskId}/metakompas, on a record that already has a 665
-        String selection = "{\"entries\":[],\"suggestions\":[{\"path\":[\"stemning\",\"positiv\"],\"text\":\"hyggelig\"}]}";
+        String selection = "{\"entries\":[],\"suggestions\":[{\"path\":[\"stemning\",\"positiv\"],\"title\":\"hyggelig\"}]}";
         PromatTask task = PromatTaskUtils.getTasksOfType(promatCase, TaskFieldType.METAKOMPAS).get(0);
         task.setData(selection);
 

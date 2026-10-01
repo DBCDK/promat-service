@@ -45,13 +45,6 @@ public class Taxonomy  implements Serializable {
         action.put("handler om", new ArrayList<Map<String, Object>>());
         action.put("navngivet hovedperson", new ArrayList<Map<String, Object>>());
 
-        Map<String, Object> mainCharacterDescription = new LinkedHashMap<>();
-        mainCharacterDescription.put("om hovedpersonen", new ArrayList<>());
-        mainCharacterDescription.put("hovedpersonens karaktertræk", new ArrayList<>());
-        mainCharacterDescription.put("hovedpersonens konflikt", new ArrayList<>());
-
-        action.put("hovedperson(er) - beskrivelse", mainCharacterDescription);
-
         // Narrative technique (Fortælleteknik)
         Map<String, Object> narrative = new LinkedHashMap<>();
         narrative.put("skrivestil og struktur", new ArrayList<>());

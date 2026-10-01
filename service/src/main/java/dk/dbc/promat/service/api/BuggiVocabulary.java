@@ -12,32 +12,42 @@ import java.util.List;
 import java.util.Map;
 
 public class BuggiVocabulary {
+    // The value range a reviewer can choose from per group, as in metakompasset: the scales (Læsbarhed,
+    // Fantasi/virkelighed) 1-5, moods and themes 0-5. On save, 0 is allowed for every option and means
+    // "no value": not chosen for moods and themes, not filled in yet for the scales - so a draft can be
+    // saved. 0 is never registered; the scales must have a value of at least minValue before the
+    // selection is registered.
+    private static final Group READABILITY = new Group("Læsbarhed", "s", 1, 5);
+    private static final Group FANTASY_REALITY = new Group("Fantasi/virkelighed", "u", 1, 5);
+    private static final Group MOOD = new Group("Stemning", "n", 0, 5);
+    private static final Group THEME = new Group("Tema", "e", 0, 5);
+
     // IDs are part of the API contract used by PUT /tasks/{taskId}/buggi.
     // Keep existing IDs stable; add new options with new IDs instead of renumbering.
     private static final List<Option> OPTIONS = List.of(
-            new Option(1, "Læsbarhed", "s", false, "let/svær"),
-            new Option(2, "Læsbarhed", "s", false, "tekst/tegninger"),
-            new Option(3, "Læsbarhed", "s", false, "kort/lang"),
-            new Option(4, "Fantasi/virkelighed", "u", false, "virkelig/fantasi"),
-            new Option(5, "Stemning", "n", true, "rar"),
-            new Option(6, "Stemning", "n", true, "sjov"),
-            new Option(7, "Stemning", "n", true, "romantisk"),
-            new Option(8, "Stemning", "n", true, "spændende"),
-            new Option(9, "Stemning", "n", true, "trist"),
-            new Option(10, "Stemning", "n", true, "uhyggelig"),
-            new Option(11, "Stemning", "n", true, "tankevækkende"),
-            new Option(12, "Tema", "e", true, "dyr"),
-            new Option(13, "Tema", "e", true, "sport"),
-            new Option(14, "Tema", "e", true, "venskaber"),
-            new Option(15, "Tema", "e", true, "mit liv"),
-            new Option(16, "Tema", "e", true, "ud i fremtiden"),
-            new Option(17, "Tema", "e", true, "skæve karakterer"),
-            new Option(18, "Tema", "e", true, "den store verden"),
-            new Option(19, "Tema", "e", true, "fantasy"),
-            new Option(20, "Tema", "e", true, "gys"),
-            new Option(21, "Tema", "e", true, "eventyrlig"),
-            new Option(22, "Tema", "e", true, "action"),
-            new Option(23, "Tema", "e", true, "gaming")
+            new Option(1, READABILITY, "let/svær"),
+            new Option(2, READABILITY, "tekst/tegninger"),
+            new Option(3, READABILITY, "kort/lang"),
+            new Option(4, FANTASY_REALITY, "virkelig/fantasi"),
+            new Option(5, MOOD, "rar"),
+            new Option(6, MOOD, "sjov"),
+            new Option(7, MOOD, "romantisk"),
+            new Option(8, MOOD, "spændende"),
+            new Option(9, MOOD, "trist"),
+            new Option(10, MOOD, "uhyggelig"),
+            new Option(11, MOOD, "tankevækkende"),
+            new Option(12, THEME, "dyr"),
+            new Option(13, THEME, "sport"),
+            new Option(14, THEME, "venskaber"),
+            new Option(15, THEME, "mit liv"),
+            new Option(16, THEME, "ud i fremtiden"),
+            new Option(17, THEME, "skæve karakterer"),
+            new Option(18, THEME, "den store verden"),
+            new Option(19, THEME, "fantasy"),
+            new Option(20, THEME, "gys"),
+            new Option(21, THEME, "eventyrlig"),
+            new Option(22, THEME, "action"),
+            new Option(23, THEME, "gaming")
     );
 
     private static final Map<Integer, Option> OPTIONS_BY_ID = OPTIONS.stream()
@@ -47,13 +57,15 @@ public class BuggiVocabulary {
     }
 
     public static List<BuggiOptionGroup> groups() {
-        Map<String, BuggiOptionGroup> groups = new LinkedHashMap<>();
+        Map<Group, List<BuggiOption>> optionsByGroup = new LinkedHashMap<>();
         for(Option option : OPTIONS) {
-            BuggiOptionGroup group = groups.computeIfAbsent(option.group(), groupName ->
-                    new BuggiOptionGroup(groupName, option.subfieldCode(), option.requiresNonzeroValue(), new ArrayList<>()));
-            group.getOptions().add(new BuggiOption(option.id(), option.name()));
+            optionsByGroup.computeIfAbsent(option.group(), group -> new ArrayList<>())
+                    .add(new BuggiOption(option.id(), option.name()));
         }
-        return List.copyOf(groups.values());
+        return optionsByGroup.entrySet().stream()
+                .map(entry -> new BuggiOptionGroup(entry.getKey().name(), entry.getKey().subfieldCode(),
+                        entry.getKey().minValue(), entry.getKey().maxValue(), List.copyOf(entry.getValue())))
+                .toList();
     }
 
     public static BuggiSelectionEntry resolve(BuggiSelectionRequest request) throws ServiceErrorException {
@@ -64,17 +76,23 @@ public class BuggiVocabulary {
                     .withCode(ServiceErrorCode.INVALID_REQUEST)
                     .withCause("Invalid buggi option");
         }
-        if(request.getValue() == null || request.getValue() < 0 || request.getValue() > 5) {
-            throw new ServiceErrorException(String.format("Buggi option %s has invalid value %s", request.getId(), request.getValue()))
+        Group group = option.group();
+        // 0 = no value, allowed on save for every group (see the ranges above)
+        if(request.getValue() == null || request.getValue() < 0 || request.getValue() > group.maxValue()) {
+            throw new ServiceErrorException(String.format("Buggi option %s has invalid value %s - must be 0-%d",
+                    request.getId(), request.getValue(), group.maxValue()))
                     .withHttpStatus(400)
                     .withCode(ServiceErrorCode.INVALID_REQUEST)
                     .withCause("Invalid buggi value");
         }
         // Fragile due to name and subfieldCode both being String: the record's positional
         // constructor gives the compiler no way to catch the two being swapped here.
-        return new BuggiSelectionEntry(option.id(), option.name(), option.subfieldCode(), option.requiresNonzeroValue(), request.getValue());
+        return new BuggiSelectionEntry(option.id(), option.name(), group.subfieldCode(), request.getValue());
     }
 
-    private record Option(int id, String group, String subfieldCode, boolean requiresNonzeroValue, String name) {
+    private record Group(String name, String subfieldCode, int minValue, int maxValue) {
+    }
+
+    private record Option(int id, Group group, String name) {
     }
 }

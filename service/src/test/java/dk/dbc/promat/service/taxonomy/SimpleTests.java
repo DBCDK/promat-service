@@ -6,7 +6,7 @@ import dk.dbc.commons.jsonb.JSONBException;
 import dk.dbc.promat.service.TestUtils;
 import dk.dbc.promat.service.taxonomy.dto.Subject;
 import dk.dbc.promat.service.taxonomy.dto.Taxonomy;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.util.List;
@@ -55,16 +55,16 @@ public class SimpleTests extends TestUtils {
                 .withTitle("Some title 2");
 
         actual.put(s1, "ramme", "genre");
-        actual.put(s2, "handling", "hovedperson(er) - beskrivelse", "hovedpersonens karaktertræk");
+        actual.put(s2, "fortælleteknik", "tempo");
 
         Taxonomy expected = Taxonomy.of(getResource("/taxonomy/simpletree.json"));
         assertThat(expected.get("ramme", "genre", "Some title 1"), is(s1));
-        assertThat(expected.get("handling", "hovedperson(er) - beskrivelse", "hovedpersonens karaktertræk", "Some title 2"), is(s2));
+        assertThat(expected.get("fortælleteknik", "tempo", "Some title 2"), is(s2));
 
         assertThat(actual, is(expected));
 
         assertThat(actual.get("ramme", "genre", "Some title 1"), is(s1));
-        assertThat(actual.get("handling", "hovedperson(er) - beskrivelse", "hovedpersonens karaktertræk", "Some title 2"), is(s2));
+        assertThat(actual.get("fortælleteknik", "tempo", "Some title 2"), is(s2));
 
         Subject pathSubject = new Subject()
                 .withPath(List.of("handling", "navngivet hovedperson"));

@@ -22,7 +22,12 @@ import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
 
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 @Stateless
 public class MetakompasAndBuggiTaskSelections {
@@ -134,10 +139,13 @@ public class MetakompasAndBuggiTaskSelections {
     }
 
     public List<BuggiSelectionEntry> writeBuggiSelection(PromatTask task, List<BuggiSelectionRequest> requests) throws ServiceErrorException {
-        List<BuggiSelectionEntry> entries = new ArrayList<>();
+        // Duplicate options are removed silently: the last value for an option wins, at the option's first position
+        Map<Integer, BuggiSelectionEntry> entriesById = new LinkedHashMap<>();
         for(BuggiSelectionRequest request : requests == null ? List.<BuggiSelectionRequest>of() : requests) {
-            entries.add(BuggiVocabulary.resolve(request));
+            BuggiSelectionEntry entry = BuggiVocabulary.resolve(request);
+            entriesById.put(entry.id(), entry);
         }
+        List<BuggiSelectionEntry> entries = new ArrayList<>(entriesById.values());
         try {
             task.setData(OBJECT_MAPPER.writeValueAsString(entries));
         } catch(JsonProcessingException e) {
@@ -152,19 +160,28 @@ public class MetakompasAndBuggiTaskSelections {
 
     public MetakompasTaskData writeMetakompasSelection(PromatTask task, MetakompasSelectionRequest request) throws ServiceErrorException {
         List<MetakompasTaskData.Entry> entries = new ArrayList<>();
-        List<MetakompasTaskData.Suggestion> suggestions = new ArrayList<>();
+        // Duplicate subjects and suggestions are removed silently, keeping the first occurrence
+        Set<MetakompasTaskData.Suggestion> suggestions = new LinkedHashSet<>();
         if(request != null) {
-            for(Integer id : request.getIds() == null ? List.<Integer>of() : request.getIds()) {
+            for(Integer id : request.getIds() == null ? Set.<Integer>of() : new LinkedHashSet<>(request.getIds())) {
                 Subject subject = resolveMetakompasSubject(id);
                 // Fragile due to path and note both being List<String>: the record's positional
                 // constructor gives the compiler no way to catch the two being swapped here.
                 entries.add(new MetakompasTaskData.Entry(subject.getPath(), subject.getId(), subject.getTitle(),
                         subject.getNote(), subject.isOftenUsed(), subject.getRef()));
             }
+            // A suggestion that repeats a selected subject in the same category is dropped too. Compared
+            // exactly - capitalisation can matter, e.g. a proper noun and a common noun
+            Set<MetakompasTaskData.Suggestion> selectedAsSuggestions = new HashSet<>();
+            for(MetakompasTaskData.Entry entry : entries) {
+                selectedAsSuggestions.add(new MetakompasTaskData.Suggestion(entry.path(), entry.title()));
+            }
             for(MetakompasTaskData.Suggestion suggestion : request.getSuggestions() == null ? List.<MetakompasTaskData.Suggestion>of() : request.getSuggestions()) {
-                if(suggestion != null && suggestion.text() != null && !suggestion.text().isEmpty()) {
+                if(suggestion != null && suggestion.title() != null && !suggestion.title().isEmpty()) {
                     validateMetakompasPath(suggestion.path());
-                    suggestions.add(suggestion);
+                    if(!selectedAsSuggestions.contains(suggestion)) {
+                        suggestions.add(suggestion);
+                    }
                 }
             }
         }
@@ -172,7 +189,7 @@ public class MetakompasAndBuggiTaskSelections {
         // MetakompasTaskData.Entry/Suggestion for why the two roles don't need separate shapes.
         MetakompasTaskData taskData = new MetakompasTaskData()
                 .withEntries(entries)
-                .withSuggestions(suggestions);
+                .withSuggestions(new ArrayList<>(suggestions));
         try {
             task.setData(OBJECT_MAPPER.writeValueAsString(taskData));
         } catch(JsonProcessingException e) {

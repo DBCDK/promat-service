@@ -187,7 +187,7 @@ public class ScheduledTaxonomyKafkaSync {
             taxonomyCache.set(newTaxonomy);
             lastSuccessfulSyncAt = LocalDateTime.now();
 
-            LOGGER.info("Taxonomy Kafka sync completed for topic '{}': {} records processed this run ({} new/updated, {} tombstoned, {} parse errors), {} subjects tracked in total",
+            LOGGER.debug("Taxonomy Kafka sync completed for topic '{}': {} records processed this run ({} new/updated, {} tombstoned, {} parse errors), {} subjects tracked in total",
                     topic, stats.processed(), appliedUpdateCount.get(), stats.tombstones(), stats.parseErrors(), subjects.size());
         } catch (InterruptedException e) {
             LOGGER.warn("Taxonomy Kafka sync interrupted for topic '{}'", topic, e);

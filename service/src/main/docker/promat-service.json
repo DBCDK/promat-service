@@ -14,6 +14,9 @@
       "from": "${MAIL_FROM}",
       "user": "${MAIL_USER}"
     }
+  },
+  "logger": {
+    "org.apache.kafka": { "level": "WARN" },
+    "dk.dbc.commons.kafka.consumer": { "level": "WARN" }
   }
-
 }

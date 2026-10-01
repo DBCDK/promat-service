@@ -15,22 +15,17 @@
   },
   "handling" : {
     "handler om" : [ ],
-    "navngivet hovedperson" : [ ],
-    "hovedperson(er) - beskrivelse" : {
-      "om hovedpersonen" : [ ],
-      "hovedpersonens karaktertræk" : [ {
-        "title" : "Some title 2",
-        "note" : [ "Note 2" ],
-        "oftenUsed" : false,
-        "id" : 11
-      } ],
-      "hovedpersonens konflikt" : [ ]
-    }
+    "navngivet hovedperson" : [ ]
   },
   "fortælleteknik" : {
     "skrivestil og struktur" : [ ],
     "fortællerstemme" : [ ],
-    "tempo" : [ ]
+    "tempo" : [ {
+      "title" : "Some title 2",
+      "note" : [ "Note 2" ],
+      "oftenUsed" : false,
+      "id" : 11
+    } ]
   },
   "stemning" : {
     "positiv" : [ ],

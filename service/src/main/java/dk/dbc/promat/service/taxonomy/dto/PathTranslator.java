@@ -19,8 +19,7 @@ import java.util.List;
  * Categories include:
  * - Setting elements: time expressions (numeric (I1) and textual (I0)), geographic locations,
  *   fictional places, environment, genre, and universe
- * - Plot elements: subject matter, named protagonists, protagonist descriptions
- *   including characteristics and conflicts
+ * - Plot elements: subject matter and named protagonists
  * - Narrative technique: writing style and structure, narrator voice, and pacing
  * - Mood: various atmospheric qualities ranging from positive to thought-provoking,
  *   including humorous, romantic, erotic, dramatic, sad, spooky, imaginative, and
@@ -40,9 +39,6 @@ public enum PathTranslator {
     u("ramme", "univers"),
     e("handling", "handler om"),
     v("handling", "navngivet hovedperson"),
-    h("handling", "hovedperson(er) - beskrivelse", "om hovedpersonen"),
-    k("handling", "hovedperson(er) - beskrivelse", "hovedpersonens karaktertræk"),
-    l("handling", "hovedperson(er) - beskrivelse", "hovedpersonens konflikt"),
     s("fortælleteknik", "skrivestil og struktur"),
     r("fortælleteknik", "fortællerstemme"),
     t("fortælleteknik", "tempo"),
