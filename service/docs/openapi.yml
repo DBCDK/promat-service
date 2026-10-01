@@ -2118,6 +2118,8 @@ components:
         - 'BKM'
         - 'AGE'
         - 'MATLEVEL'
+        - 'READING_EXPERIENCE_ADULT'
+        - 'READING_EXPERIENCE_CHILD'
       description: |
         Enum describing the type of task field
         * NONE = No task field type (For fields without data: METAKOMPAS, BUGGI)
@@ -2130,6 +2132,8 @@ components:
         * BKM = BKM assessment
         * AGE = Age assessment
         * MATLEVEL = Targetgroup / level
+        * READING_EXPERIENCE_ADULT = Metakompas, registered in Promat
+        * READING_EXPERIENCE_CHILD = Buggi, registered in Promat
 
     ReviewerAccepts:
       type: string
