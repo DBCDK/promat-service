@@ -57,14 +57,15 @@ public class BuggiVocabulary {
     }
 
     public static List<BuggiOptionGroup> groups() {
-        Map<String, BuggiOptionGroup> groups = new LinkedHashMap<>();
+        Map<Group, List<BuggiOption>> optionsByGroup = new LinkedHashMap<>();
         for(Option option : OPTIONS) {
-            Group definition = option.group();
-            BuggiOptionGroup group = groups.computeIfAbsent(definition.name(), groupName -> new BuggiOptionGroup(groupName,
-                    definition.subfieldCode(), definition.minValue(), definition.maxValue(), new ArrayList<>()));
-            group.getOptions().add(new BuggiOption(option.id(), option.name()));
+            optionsByGroup.computeIfAbsent(option.group(), group -> new ArrayList<>())
+                    .add(new BuggiOption(option.id(), option.name()));
         }
-        return List.copyOf(groups.values());
+        return optionsByGroup.entrySet().stream()
+                .map(entry -> new BuggiOptionGroup(entry.getKey().name(), entry.getKey().subfieldCode(),
+                        entry.getKey().minValue(), entry.getKey().maxValue(), List.copyOf(entry.getValue())))
+                .toList();
     }
 
     public static BuggiSelectionEntry resolve(BuggiSelectionRequest request) throws ServiceErrorException {
