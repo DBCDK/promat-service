@@ -22,7 +22,7 @@ public class BuggiVocabulary {
     private static final Group MOOD = new Group("Stemning", "n", 0, 5);
     private static final Group THEME = new Group("Tema", "e", 0, 5);
 
-    // IDs are part of the API contract used by PUT /tasks/{taskId}/buggi.
+    // IDs are part of the API contract used by PUT /tasks/{taskId}/reading-experience/child.
     // Keep existing IDs stable; add new options with new IDs instead of renumbering.
     private static final List<Option> OPTIONS = List.of(
             new Option(1, READABILITY, "let/svær"),

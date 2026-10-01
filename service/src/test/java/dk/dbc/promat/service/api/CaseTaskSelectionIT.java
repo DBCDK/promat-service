@@ -26,30 +26,43 @@ import java.util.List;
 import java.util.concurrent.Callable;
 
 import static jakarta.ws.rs.core.Response.Status.BAD_REQUEST;
-import static jakarta.ws.rs.core.Response.Status.CONFLICT;
 import static jakarta.ws.rs.core.Response.Status.CREATED;
 import static jakarta.ws.rs.core.Response.Status.NOT_FOUND;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
-// Covers the PUT tasks/{taskId}/metakompas|buggi endpoints and the legacy POST cases/{pid}/buggi
+// Covers the PUT tasks/{taskId}/reading-experience/adult|child endpoints and the legacy POST cases/{pid}/buggi
 // endpoint's selection sharing across target fausts. CasesIT covers the rest of the legacy endpoint.
 public class CaseTaskSelectionIT extends ContainerTest {
 
-    // The IT container doesn't set METAKOMPAS_REGISTRATION, so it runs the default METAKOMPASSET, as prod
-    // does until the switch - saving selections in Promat is rejected then. What the endpoints do in
-    // PROMAT mode is covered by MetakompasAndBuggiTaskSelectionsTest.
     @Test
-    void testSelectionsRejectedWhileRegistrationHappensInMetakompasset() throws PromatServiceConnectorException {
+    void testSelectionsAreSavedOnReadingExperienceTasks() throws PromatServiceConnectorException {
+        String faust = "94001120";
+        PromatCase aCase = postAndAssert("v1/api/cases",
+                makeRequest(faust, TaskFieldType.READING_EXPERIENCE_ADULT, TaskFieldType.READING_EXPERIENCE_CHILD), PromatCase.class, CREATED);
+        int metakompasTaskId = ContainerTest.findTaskByFieldType(aCase, TaskFieldType.READING_EXPERIENCE_ADULT).getId();
+        int buggiTaskId = ContainerTest.findTaskByFieldType(aCase, TaskFieldType.READING_EXPERIENCE_CHILD).getId();
+
+        // The IT container has no taxonomy, so the Metakompas selection is saved empty
+        assertThat(promatServiceConnector.putMetakompasSelection(metakompasTaskId, new MetakompasSelectionRequest())
+                .getEntries().size(), is(0));
+        assertThat(promatServiceConnector.putBuggiSelection(buggiTaskId, List.of(new BuggiSelectionRequest(1, 1)))
+                .getFirst().value(), is(1));
+
+        deleteResponse("v1/api/cases/" + aCase.getId());
+    }
+
+    @Test
+    void testSelectionsRejectedOnTasksRegisteredInMetakompasset() {
         String faust = "94001111";
         PromatCase aCase = postAndAssert("v1/api/cases",
                 makeRequest(faust, TaskFieldType.METAKOMPAS, TaskFieldType.BUGGI), PromatCase.class, CREATED);
         int metakompasTaskId = ContainerTest.findTaskByFieldType(aCase, TaskFieldType.METAKOMPAS).getId();
         int buggiTaskId = ContainerTest.findTaskByFieldType(aCase, TaskFieldType.BUGGI).getId();
 
-        assertPromatThrows(CONFLICT, () -> promatServiceConnector.putMetakompasSelection(metakompasTaskId,
+        assertPromatThrows(BAD_REQUEST, () -> promatServiceConnector.putMetakompasSelection(metakompasTaskId,
                 new MetakompasSelectionRequest().withIds(List.of())));
-        assertPromatThrows(CONFLICT, () -> promatServiceConnector.putBuggiSelection(buggiTaskId,
+        assertPromatThrows(BAD_REQUEST, () -> promatServiceConnector.putBuggiSelection(buggiTaskId,
                 List.of(new BuggiSelectionRequest(1, 1))));
 
         deleteResponse("v1/api/cases/" + aCase.getId());
@@ -80,7 +93,7 @@ public class CaseTaskSelectionIT extends ContainerTest {
     @Test
     void testBuggiSelectionValidation() throws PromatServiceConnectorException {
         String faust = "94001116";
-        // A BKM task, not BUGGI - the endpoint should reject writing to it
+        // A BKM task, not READING_EXPERIENCE_CHILD - the endpoint should reject writing to it
         PromatCase aCase = postAndAssert("v1/api/cases", makeRequest(faust, TaskFieldType.BKM), PromatCase.class, CREATED);
         int taskId = ContainerTest.findTaskByFieldType(aCase, TaskFieldType.BKM).getId();
 
