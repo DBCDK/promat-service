@@ -46,10 +46,10 @@ public class CatalogingMarcMapper {
 
     public String toMarc(TaskFieldType taskFieldType, String libraryId, String localIdentifier,
                          MetakompasTaskData metakompasSelectionData, List<BuggiSelectionEntry> buggiEntries) {
-        if(taskFieldType == TaskFieldType.METAKOMPAS) {
+        if(taskFieldType == TaskFieldType.READING_EXPERIENCE_ADULT) {
             return metakompasToMarc(libraryId, localIdentifier, metakompasSelectionData);
         }
-        if(taskFieldType == TaskFieldType.BUGGI) {
+        if(taskFieldType == TaskFieldType.READING_EXPERIENCE_CHILD) {
             return buggiToMarc(libraryId, localIdentifier, buggiEntries);
         }
         throw new IllegalArgumentException("Unsupported task type: " + taskFieldType);

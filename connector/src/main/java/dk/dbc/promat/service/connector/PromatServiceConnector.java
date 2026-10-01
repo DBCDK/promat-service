@@ -202,7 +202,7 @@ public class PromatServiceConnector {
     /**
      * Saves a reviewer's Metakompas subject selection for a task, shared across all of the
      * task's target fausts
-     * @param taskId id of the METAKOMPAS task
+     * @param taskId id of the READING_EXPERIENCE_ADULT task
      * @param request the ids of existing taxonomy words selected (globally unique, so no path is
      *                needed to resolve them) and any free-text suggestions for words not (yet) in
      *                the taxonomy, each carrying its own path
@@ -213,7 +213,7 @@ public class PromatServiceConnector {
             throws PromatServiceConnectorException {
         final HttpPut httpPut = new HttpPut(failSafeHttpClient)
                 .withBaseUrl(baseUrl)
-                .withPathElements("tasks", String.valueOf(taskId), "metakompas")
+                .withPathElements("tasks", String.valueOf(taskId), "reading-experience", "adult")
                 .withJsonData(request);
         final Response response = httpPut.execute();
         assertResponseStatus(response, Response.Status.OK);
@@ -223,7 +223,7 @@ public class PromatServiceConnector {
     /**
      * Saves a reviewer's Buggi tag selection for a task, shared across all of the task's target
      * fausts
-     * @param taskId id of the BUGGI task
+     * @param taskId id of the READING_EXPERIENCE_CHILD task
      * @param requests the selected Buggi option ids and values
      * @return the persisted selection
      * @throws PromatServiceConnectorException on unexpected failure for the operation
@@ -231,7 +231,7 @@ public class PromatServiceConnector {
     public List<BuggiSelectionEntry> putBuggiSelection(int taskId, List<BuggiSelectionRequest> requests) throws PromatServiceConnectorException {
         final HttpPut httpPut = new HttpPut(failSafeHttpClient)
                 .withBaseUrl(baseUrl)
-                .withPathElements("tasks", String.valueOf(taskId), "buggi")
+                .withPathElements("tasks", String.valueOf(taskId), "reading-experience", "child")
                 .withJsonData(requests);
         final Response response = httpPut.execute();
         assertResponseStatus(response, Response.Status.OK);

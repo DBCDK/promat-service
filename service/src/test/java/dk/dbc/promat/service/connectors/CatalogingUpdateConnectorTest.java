@@ -46,7 +46,7 @@ class CatalogingUpdateConnectorTest {
     void sendsUpdateRequest() throws Exception {
         wireMockServer.stubFor(post(urlPathEqualTo(PATH)).willReturn(okJson("{\"updateStatusEnumDTO\":\"OK\"}")));
 
-        connector.updateRecord(TaskFieldType.METAKOMPAS, "870970:12345678", MARC);
+        connector.updateRecord(TaskFieldType.READING_EXPERIENCE_ADULT, "870970:12345678", MARC);
 
         wireMockServer.verify(postRequestedFor(urlPathEqualTo(PATH))
                 .withHeader("Accept", equalTo("application/json"))
@@ -64,7 +64,7 @@ class CatalogingUpdateConnectorTest {
     void sendsBuggiRegistrationWithBuggiCredentials() throws Exception {
         wireMockServer.stubFor(post(urlPathEqualTo(PATH)).willReturn(okJson("{\"updateStatusEnumDTO\":\"OK\"}")));
 
-        connector.updateRecord(TaskFieldType.BUGGI, "870970:12345678", MARC);
+        connector.updateRecord(TaskFieldType.READING_EXPERIENCE_CHILD, "870970:12345678", MARC);
 
         wireMockServer.verify(postRequestedFor(urlPathEqualTo(PATH))
                 .withRequestBody(matchingJsonPath("$.schemaName", equalTo("metakompas")))
@@ -82,13 +82,13 @@ class CatalogingUpdateConnectorTest {
     void failsOnNonOkUpdateStatus() {
         wireMockServer.stubFor(post(urlPathEqualTo(PATH)).willReturn(okJson("{\"updateStatusEnumDTO\":\"FAILED\"}")));
 
-        assertThrows(CatalogingUpdateConnectorException.class, () -> connector.updateRecord(TaskFieldType.METAKOMPAS, "870970:12345678", MARC));
+        assertThrows(CatalogingUpdateConnectorException.class, () -> connector.updateRecord(TaskFieldType.READING_EXPERIENCE_ADULT, "870970:12345678", MARC));
     }
 
     @Test
     void failsOnUnexpectedHttpStatus() {
         wireMockServer.stubFor(post(urlPathEqualTo(PATH)).willReturn(aResponse().withStatus(500)));
 
-        assertThrows(CatalogingUpdateConnectorException.class, () -> connector.updateRecord(TaskFieldType.METAKOMPAS, "870970:12345678", MARC));
+        assertThrows(CatalogingUpdateConnectorException.class, () -> connector.updateRecord(TaskFieldType.READING_EXPERIENCE_ADULT, "870970:12345678", MARC));
     }
 }

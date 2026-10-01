@@ -21,7 +21,7 @@ class BuggiVocabularyTest {
     @Test
     void groupsHaveTheValueRangesUsedInMetakompasset() {
         Map<String, BuggiOptionGroup> groups = BuggiVocabulary.groups().stream()
-                .collect(Collectors.toMap(BuggiOptionGroup::getName, group -> group));
+                .collect(Collectors.toMap(BuggiOptionGroup::name, group -> group));
 
         assertThat(groups.keySet().size(), is(4));
         assertRange(groups.get("Læsbarhed"), 1, 5);
@@ -32,10 +32,10 @@ class BuggiVocabularyTest {
 
     @Test
     void optionIdsAreUnchanged() {
-        // The ids are part of the API contract used by PUT /tasks/{taskId}/buggi
+        // The ids are part of the API contract used by PUT /tasks/{taskId}/reading-experience/child
         List<Integer> ids = BuggiVocabulary.groups().stream()
-                .flatMap(group -> group.getOptions().stream())
-                .map(BuggiOption::getId)
+                .flatMap(group -> group.options().stream())
+                .map(BuggiOption::id)
                 .toList();
 
         assertThat(ids, contains(IntStream.rangeClosed(1, 23).boxed().toArray(Integer[]::new)));
@@ -83,7 +83,7 @@ class BuggiVocabularyTest {
     }
 
     private static void assertRange(BuggiOptionGroup group, int minValue, int maxValue) {
-        assertThat(group.getName() + " minValue", group.getMinValue(), is(minValue));
-        assertThat(group.getName() + " maxValue", group.getMaxValue(), is(maxValue));
+        assertThat(group.name() + " minValue", group.minValue(), is(minValue));
+        assertThat(group.name() + " maxValue", group.maxValue(), is(maxValue));
     }
 }

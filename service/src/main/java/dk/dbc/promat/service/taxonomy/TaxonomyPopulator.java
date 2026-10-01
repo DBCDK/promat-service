@@ -55,8 +55,11 @@ public class TaxonomyPopulator {
         unimplementedCategories.forEach(path -> LOGGER.warn("Found new category not implemented: {}", path));
 
         int skippedUnimplementedCategory = subjects.size() - placed - skippedMissingPath - skippedDuplicateId;
-        LOGGER.info("Built taxonomy: {} subjects placed, {} skipped (missing path), {} skipped (duplicate id), " +
-                        "{} skipped (unimplemented category, across {} distinct paths)",
-                placed, skippedMissingPath, skippedDuplicateId, skippedUnimplementedCategory, unimplementedCategories.size());
+        // Only logged when something was skipped - a clean build runs every hour and isn't worth a line
+        if (placed < subjects.size()) {
+            LOGGER.info("Built taxonomy: {} subjects placed, {} skipped (missing path), {} skipped (duplicate id), " +
+                            "{} skipped (unimplemented category, across {} distinct paths)",
+                    placed, skippedMissingPath, skippedDuplicateId, skippedUnimplementedCategory, unimplementedCategories.size());
+        }
     }
 }

@@ -1,7 +1,7 @@
 # Metakompas/Buggi: switching registration from Metakompasset to Promat
 
-Status: transition in progress. Remove the flag and the old path using the checklist below once
-the switch is done.
+Status: transition in progress. Remove the old task types' handling using the checklist below once
+no task of those types is waiting for Metakompasset.
 
 Related: ADR 0006 (checking Metakompas registration in the MARC record) and ADR 0007 (registering
 in update-service).
@@ -16,44 +16,30 @@ external app that calls update-service itself. Promat only found out afterwards:
 - BUGGI tasks: Metakompasset calls `POST cases/{pid}/buggi`, which stores the tags as `TagList`
   JSON in `task.data` and approves the task.
 
-The new flow lets reviewers register in Promat: `PUT tasks/{taskId}/metakompas|buggi` saves the
-selection as JSON in `task.data`, and `PUT tasks/{taskId}/reading-experience/approve` registers it
-in update-service and approves the task on success.
+Registration in Promat uses its own task types, so the two flows run side by side - per task,
+not per environment:
 
-The two flows can't run at once. The polling would overwrite a saved selection with `"true"` (Promat's
-own registration also writes 665), and a late call from Metakompasset would overwrite a saved Buggi
-selection with a `TagList`.
-
-## The flag
-
-`METAKOMPAS_REGISTRATION` (read by `MetakompasRegistration`). Unset means `METAKOMPASSET`, the current
-flow - only an environment switched to Promat needs it (`METAKOMPAS_REGISTRATION=PROMAT`):
-
-| | `METAKOMPASSET` | `PROMAT` |
+| | `METAKOMPAS` / `BUGGI` | `READING_EXPERIENCE_ADULT` / `READING_EXPERIENCE_CHILD` |
 |---|---|---|
-| Metakompas polling in `CaseInformationUpdater` | runs | skipped (the rest of the updater runs as usual) |
-| `PUT tasks/{taskId}/metakompas\|buggi` | 409, `INVALID_STATE` | allowed, unless the task was registered in Metakompasset (409) |
-| `PUT tasks/{taskId}/reading-experience/approve` | 409 (to be added with the approve flow) | allowed, unless the task was registered in Metakompasset (409) |
-| `POST cases/{pid}/buggi` (Metakompasset) | allowed | 409, `INVALID_STATE` |
+| Registered in | Metakompasset | Promat |
+| Selection saved through | - | `PUT tasks/{taskId}/reading-experience/adult\|child` |
+| Polling, `POST cases/{pid}/buggi` | as before | not touched |
+| Approved | by the polling / `POST cases/{pid}/buggi`; case waits in `PENDING_EXTERNAL` | not with the case - own endpoint and `PENDING_READING_EXPERIENCE` come with the registration branch |
+| Added to an `APPROVED` case | case goes to `PENDING_EXTERNAL` | no status change yet (see above) |
+| Payment | `PayCategory.METAKOMPAS` / `BUGGI` | the same |
 
-A task counts as registered in Metakompasset when it's approved but its `data` isn't a selection
-saved in Promat: `"true"` (Metakompas via Metakompasset), a `TagList` (Buggi via Metakompasset), or
-nothing (approved by hand when its case was promoted from `PENDING_EXTERNAL`). Such tasks are closed:
-there's no selection to edit, and no task is converted between data formats. Tasks registered in
-Promat can be changed and registered again, which relies on update-service replacing the existing
-665/664 (verify on staging before prod).
+A case may have tasks of both sets, e.g. so an editor can try both flows during the transition. Then
+the polling for its METAKOMPAS task also takes a 665 Promat registers for a READING_EXPERIENCE_ADULT
+task on the same faust as the METAKOMPAS task's registration, and approves it.
 
-Later, we may want to support populating the old tasks with real task data (e.g. built from the
-record's 665/664, for the reviewer to check and save) - but that is a later feature.
+Tasks registered in Promat can be changed and registered again, which relies on update-service
+replacing the existing 665/664 (verify on staging before prod).
 
-The frontend mode (metakompas.dk link vs. Promat's selection UI) is switched by hand at the same time.
-
-## Switching an environment to PROMAT
+## Rolling out
 
 Prerequisites:
 
-- The approve flow is merged, including the mode check and the "registered in Metakompasset" check
-  (same as in `MetakompasAndBuggiTaskSelections.resolveTaskForSelection`).
+- Approving and registering the new tasks in update-service (registration branch) is merged.
 - `UPDATE_SERVICE_URL` (including `/UpdateService/rest`), `METAKOMPAS_NETPUNKT_GROUP/USER/PASSWORD`
   and `BUGGI_NETPUNKT_GROUP/USER/PASSWORD` are set - in every environment, since the service
   doesn't start without them. The netpunkt values are the ones Metakompasset uses (separate
@@ -63,19 +49,19 @@ Prerequisites:
 
 Prod:
 
-1. Announce: "Metakompasset closes in 3 days". Prod stays on `METAKOMPASSET`.
-2. Day 3: Metakompasset closes. Let `ScheduledCaseInformationUpdater` run once more (every 10
-   minutes, 06-18 weekdays) to pick up the last registrations.
-3. Set `METAKOMPAS_REGISTRATION=PROMAT` in gitops and switch the frontend mode.
-4. Check for leftovers: METAKOMPAS tasks registered in Metakompasset but not picked up keep their
-   case in `PENDING_EXTERNAL`. Promote those cases by hand (moving a case from `PENDING_EXTERNAL`
-   to `APPROVED` approves all its tasks).
+1. Deploy promat-service, and the model/connector jars. Nothing creates the new task types yet.
+2. Rebuild and deploy every consumer of the connector: `TaskFieldType` is deserialized with a
+   default `ObjectMapper`, which fails on unknown enum values. Known consumer: dmat-service
+   (`getCase()` in `StatusHandler` and `ExportedPromatReviewsUpdater`).
+3. Deploy the frontend that creates the new types on new cases. Old cases keep their tasks, done
+   in Metakompasset as before.
+4. Metakompasset stays open until no old task is waiting for it (see below). To close it sooner,
+   change the remaining old tasks to the new types (they hold no data yet) and move their cases from `PENDING_EXTERNAL` to `PENDING_ISSUES`, so the reviewer can
+   fill them in.
 
-Unfinished tasks need nothing: after the switch they're simply done in Promat.
+## When it's safe to remove the old task types
 
-## When it's safe to remove the flag
-
-- Every environment runs `PROMAT`, and prod has done so without problems for a while.
+- Metakompasset is closed.
 - No case is waiting for a registration made in Metakompasset:
 
 ```sql
@@ -86,28 +72,22 @@ join casetasks ct on ct.case_id = c.id
 join promattask t on t.id = ct.task_id
 where t.taskfieldtype in ('METAKOMPAS', 'BUGGI')
   and t.approved is null
-  and c.status = 'PENDING_EXTERNAL'
-  and (t.data is null or t.data = '' or t.data = 'true');
+  and c.status not in ('CLOSED', 'DELETED', 'REVERTED');
 ```
 
 ## Removal checklist
 
 promat-service:
 
-- [ ] Delete `MetakompasRegistration` and every injection/usage of it (`CaseInformationUpdater`,
-      `MetakompasAndBuggiTaskSelections`, `Cases`, and the approve flow).
-- [ ] `CaseInformationUpdater`: delete the `if (metakompasRegistration.isMetakompasset())` block,
-      `checkAndUpdateCaseWithMetakompasdata`, `isMetakompasRegistered`, `hasMetakompasRegistration`,
-      `METAKOMPAS_FIELD`, `METAKOMPAS_SUBJECT_SUBFIELDS`, `RECORD_CONTENT_PARAMS`, the
-      `RecordServiceConnector` injection and `METAKOMPASDATA_PRESENT`. **Keep** the
-      `PENDING_EXTERNAL` → `APPROVED` block - the new flow relies on it unless the approve endpoint
-      moves the case itself.
-- [ ] `MetakompasAndBuggiTaskSelections.resolveTaskForSelection`: delete the mode check. **Keep** the
-      "registered in Metakompasset" check as long as tasks with old data exist - it stops them from
-      entering approve with data it can't read. Same in the approve flow.
+- [ ] `CaseInformationUpdater`: delete `checkAndUpdateCaseWithMetakompasdata`,
+      `isMetakompasRegistered`, `hasMetakompasRegistration`, `METAKOMPAS_FIELD`,
+      `METAKOMPAS_SUBJECT_SUBFIELDS`, `RECORD_CONTENT_PARAMS`, the `RecordServiceConnector` injection,
+      `METAKOMPASDATA_PRESENT` and the `PENDING_EXTERNAL` → `APPROVED` block.
 - [ ] `Cases`: delete `approveBuggiTask` (`POST cases/{pid}/buggi`), `findBuggiCase`,
-      `setApproveBuggiTask`, `INVALID_BUGGI_APPROVAL_STATES`, `PID_PATTERN` (only used there) and the
-      `CONFLICT` import if unused.
+      `setApproveBuggiTask`, `INVALID_BUGGI_APPROVAL_STATES`, `PID_PATTERN` (only used there), the
+      and the METAKOMPAS/BUGGI handling in `calculateStatus` and `addTask`.
+- [ ] `TaskFieldType`: mark `METAKOMPAS` and `BUGGI` `@Deprecated` - old tasks keep them for payment
+      history, as with `BIBLIOGRAPHIC` and `GENRE`.
 - [ ] `MetakompasAndBuggiTaskSelections.writeBuggiSelection(PromatTask, TagList)` (only used by
       `setApproveBuggiTask`).
 - [ ] Connector module: `PromatServiceConnector.approveBuggiTask`. Then `Tag`/`TagList` in the model
@@ -115,14 +95,11 @@ promat-service:
 - [ ] Tests: `CaseInformationUpdaterMetakompasTest`, the Metakompas tests in
       `CaseInformationUpdaterSideEffectsIT` (`testWaitForMetakompasData`,
       `testMetakompasSelectionIsLeftAloneWhenRegisteredInPromat`) and `getTasksWhereMetakompasIsPresent`,
-      the record-service mock in `CaseInformationUpdaterTestBase` and the mode set there, the mode tests
-      in `MetakompasAndBuggiTaskSelectionsTest` (the "registered in Metakompasset" tests stay),
-      `CaseTaskSelectionIT.testSelectionsRejectedWhileRegistrationHappensInMetakompasset` and
+      the record-service mock in `CaseInformationUpdaterTestBase`,
+      `CaseTaskSelectionIT.testSelectionsRejectedOnTasksRegisteredInMetakompasset` and
       `testLegacyBuggiEndpointSharesSelectionAcrossTargetFausts`, `CasesIT.testBuggiApproval` and
-      `testCaseApprovalWithMoreThanOneBuggiTask`. Bring back PUT ITs that save selections
-      (the container no longer runs `METAKOMPASSET`).
-- [ ] Config: `METAKOMPAS_REGISTRATION` in `scripts/common` and `scripts/start-server`.
-- [ ] `service/docs/openapi.yml`: drop the mode part of the 409 descriptions on the PUT endpoints.
+      `testCaseApprovalWithMoreThanOneBuggiTask`.
+- [ ] `service/docs/openapi.yml`: `POST cases/{pid}/buggi`.
 - [ ] If not done already: apply the fbi-api cleanup (remove `subjects.dbcVerified` from the
       GraphQL queries, `FbiApiHandler.metakompassubject`, `BibliographicInformation.metakompassubject`
       and the WireMock fixtures) - nothing has read it since ADR 0006.
@@ -132,15 +109,15 @@ Keep `rawrepo-record-service-connector`: `RecordsProvider` uses it too.
 
 promat-frontend:
 
-- [ ] Remove the manual mode switch and the metakompas.dk link (`TaskTable.js`,
-      `enums.js` messages "…via https://metakompas.dk").
+- [ ] Remove the metakompas.dk link (`TaskTable.js`, `enums.js` messages "…via https://metakompas.dk")
+      and the creation of METAKOMPAS/BUGGI tasks.
 - [ ] `TaskTable.js`: base the "Er registreret" status on `task.approved` instead of
       `task.data === "true"`, and drop `renderTags`' legacy `TagList`/line parsing once no old tasks
       are shown.
 
 gitops:
 
-- [ ] Remove `METAKOMPAS_REGISTRATION` from every environment.
+- [ ] Remove `METAKOMPAS_REGISTRATION` from any environment that sets it - it's no longer read.
 
 ## Things learned along the way
 

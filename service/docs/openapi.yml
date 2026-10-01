@@ -771,7 +771,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ServiceError'
 
-  /tasks/{taskId}/metakompas:
+  /tasks/{taskId}/reading-experience/adult:
     put:
       tags:
         - tasks
@@ -783,7 +783,7 @@ paths:
           required: true
           schema:
             type: integer
-            description: Id of the METAKOMPAS task
+            description: Id of the READING_EXPERIENCE_ADULT task
       requestBody:
         required: true
         content:
@@ -799,7 +799,7 @@ paths:
                 $ref: '#/components/schemas/MetakompasTaskData'
         '400':
           description: >-
-            Task is not a METAKOMPAS task, or a selected id does not resolve in the current
+            Task is not a READING_EXPERIENCE_ADULT task, or a selected id does not resolve in the current
             taxonomy tree
           content:
             application/json:
@@ -811,16 +811,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ServiceError'
-        '409':
-          description: >-
-            Registration happens in Metakompasset (METAKOMPAS_REGISTRATION=METAKOMPASSET), or the
-            task was registered in Metakompasset
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ServiceError'
 
-  /tasks/{taskId}/buggi:
+  /tasks/{taskId}/reading-experience/child:
     put:
       tags:
         - tasks
@@ -832,7 +824,7 @@ paths:
           required: true
           schema:
             type: integer
-            description: Id of the BUGGI task
+            description: Id of the READING_EXPERIENCE_CHILD task
       requestBody:
         required: true
         content:
@@ -851,21 +843,13 @@ paths:
                 items:
                   $ref: '#/components/schemas/BuggiSelectionEntry'
         '400':
-          description: Task is not a BUGGI task
+          description: Task is not a READING_EXPERIENCE_CHILD task
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ServiceError'
         '404':
           description: No such task
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ServiceError'
-        '409':
-          description: >-
-            Registration happens in Metakompasset (METAKOMPAS_REGISTRATION=METAKOMPASSET), or the
-            task was registered in Metakompasset
           content:
             application/json:
               schema:
@@ -2100,10 +2084,10 @@ components:
         data:
           type: string
           description: >-
-            The task data. For a METAKOMPAS task, this holds a MetakompasTaskData (entries
-            plus any free-text suggestions); for a BUGGI task, this holds resolved
+            The task data. For a READING_EXPERIENCE_ADULT task, this holds a MetakompasTaskData (entries
+            plus any free-text suggestions); for a READING_EXPERIENCE_CHILD task, this holds resolved
             BuggiSelectionEntry values - write it via the typed
-            tasks/{taskId}/metakompas|buggi PUT endpoint, which validates it.
+            tasks/{taskId}/reading-experience/adult|child PUT endpoint, which validates it.
           nullable: true
       required:
         - typeOfTask
@@ -2153,6 +2137,8 @@ components:
         - 'BKM'
         - 'AGE'
         - 'MATLEVEL'
+        - 'READING_EXPERIENCE_ADULT'
+        - 'READING_EXPERIENCE_CHILD'
       description: |
         Enum describing the type of task field
         * NONE = No task field type (For fields without data: METAKOMPAS, BUGGI)
@@ -2165,6 +2151,8 @@ components:
         * BKM = BKM assessment
         * AGE = Age assessment
         * MATLEVEL = Targetgroup / level
+        * READING_EXPERIENCE_ADULT = Metakompas, registered in Promat
+        * READING_EXPERIENCE_CHILD = Buggi, registered in Promat
 
     ReviewerAccepts:
       type: string
@@ -2281,9 +2269,6 @@ components:
         - `u`: ramme > univers
         - `e`: handling > handler om
         - `v`: handling > navngivet hovedperson
-        - `h`: handling > hovedperson(er) - beskrivelse > om hovedpersonen
-        - `k`: handling > hovedperson(er) - beskrivelse > hovedpersonens karaktertræk
-        - `l`: handling > hovedperson(er) - beskrivelse > hovedpersonens konflikt
         - `s`: fortælleteknik > skrivestil og struktur
         - `r`: fortælleteknik > fortællerstemme
         - `t`: fortælleteknik > tempo
@@ -2360,7 +2345,8 @@ components:
             Lowest value a reviewer can choose for the group's options: 1 for the scales
             (Læsbarhed, Fantasi/virkelighed), 0 for Stemning and Tema. Saving accepts 0 for every
             option, meaning "no value" (not chosen / not filled in yet), so a draft can be saved;
-            0 is never registered, and the scales must be set (from minValue) before registration
+            0 is never registered, and the scales must have a value of at least minValue before the
+            selection is registered
         maxValue:
           type: integer
           description: Highest allowed value for the group's options
@@ -2404,7 +2390,7 @@ components:
       type: object
       description: >-
         Resolved Buggi selection stored in PromatTask.data and returned from
-        PUT /tasks/{taskId}/buggi. marcSubfieldCode is registration metadata, not needed by the
+        PUT /tasks/{taskId}/reading-experience/child. marcSubfieldCode is registration metadata, not needed by the
         client - use the group's minValue/maxValue from GET /buggi/options to render the tag's
         input control. A value of 0 means "no value" (not chosen, or not filled in yet) and
         isn't registered.
@@ -2452,7 +2438,7 @@ components:
         One Metakompas subject a reviewer picked, with its tree path attached - stored as-is
         rather than resolved live, so a selection stays valid even if the taxonomy tree is later
         restructured. Used unchanged both as what's persisted in PromatTask.data and as what
-        PUT /tasks/{taskId}/metakompas returns - oftenUsed/ref are already public via
+        PUT /tasks/{taskId}/reading-experience/adult returns - oftenUsed/ref are already public via
         GET /taxonomy/tree, so there's nothing to hide from the client here.
       properties:
         path:
@@ -2517,9 +2503,9 @@ components:
     MetakompasTaskData:
       type: object
       description: >-
-        The full shape of a METAKOMPAS task's selection: resolved entries plus any free-text
+        The full shape of a READING_EXPERIENCE_ADULT task's selection: resolved entries plus any free-text
         suggestions. Used unchanged both as what's persisted into a task's data field and as
-        what tasks/{taskId}/metakompas actually returns.
+        what tasks/{taskId}/reading-experience/adult actually returns.
       properties:
         entries:
           type: array

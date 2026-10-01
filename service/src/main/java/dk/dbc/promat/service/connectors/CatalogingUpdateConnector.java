@@ -53,8 +53,8 @@ public class CatalogingUpdateConnector {
 
     public void updateRecord(TaskFieldType taskFieldType, String pid, String marcRecord) throws CatalogingUpdateConnectorException {
         NetpunktCredentials credentials = switch(taskFieldType) {
-            case METAKOMPAS -> metakompasCredentials;
-            case BUGGI -> buggiCredentials;
+            case READING_EXPERIENCE_ADULT -> metakompasCredentials;
+            case READING_EXPERIENCE_CHILD -> buggiCredentials;
             default -> throw new IllegalArgumentException("No update-service registration for task type " + taskFieldType);
         };
         String trackingId = "DBC_PROMAT_" + pid + "_" + Instant.now();
