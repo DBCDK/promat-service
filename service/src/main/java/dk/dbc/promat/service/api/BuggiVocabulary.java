@@ -22,7 +22,7 @@ public class BuggiVocabulary {
     private static final Group MOOD = new Group("Stemning", "n", 0, 5);
     private static final Group THEME = new Group("Tema", "e", 0, 5);
 
-    // IDs are part of the API contract used by PUT /tasks/{taskId}/buggi.
+    // IDs are part of the API contract used by PUT /tasks/{taskId}/reading-experience/child.
     // Keep existing IDs stable; add new options with new IDs instead of renumbering.
     private static final List<Option> OPTIONS = List.of(
             new Option(1, READABILITY, "let/svær"),
@@ -69,25 +69,25 @@ public class BuggiVocabulary {
     }
 
     public static BuggiSelectionEntry resolve(BuggiSelectionRequest request) throws ServiceErrorException {
-        Option option = request == null ? null : OPTIONS_BY_ID.get(request.getId());
+        Option option = request == null ? null : OPTIONS_BY_ID.get(request.id());
         if(option == null) {
-            throw new ServiceErrorException(String.format("Buggi option id %s does not exist", request == null ? null : request.getId()))
+            throw new ServiceErrorException(String.format("Buggi option id %s does not exist", request == null ? null : request.id()))
                     .withHttpStatus(400)
                     .withCode(ServiceErrorCode.INVALID_REQUEST)
                     .withCause("Invalid buggi option");
         }
         Group group = option.group();
         // 0 = no value, allowed on save for every group (see the ranges above)
-        if(request.getValue() == null || request.getValue() < 0 || request.getValue() > group.maxValue()) {
+        if(request.value() == null || request.value() < 0 || request.value() > group.maxValue()) {
             throw new ServiceErrorException(String.format("Buggi option %s has invalid value %s - must be 0-%d",
-                    request.getId(), request.getValue(), group.maxValue()))
+                    request.id(), request.value(), group.maxValue()))
                     .withHttpStatus(400)
                     .withCode(ServiceErrorCode.INVALID_REQUEST)
                     .withCause("Invalid buggi value");
         }
         // Fragile due to name and subfieldCode both being String: the record's positional
         // constructor gives the compiler no way to catch the two being swapped here.
-        return new BuggiSelectionEntry(option.id(), option.name(), group.subfieldCode(), request.getValue());
+        return new BuggiSelectionEntry(option.id(), option.name(), group.subfieldCode(), request.value());
     }
 
     private record Group(String name, String subfieldCode, int minValue, int maxValue) {
