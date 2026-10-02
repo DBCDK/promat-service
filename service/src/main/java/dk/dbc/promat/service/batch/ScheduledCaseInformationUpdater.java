@@ -6,6 +6,8 @@ import dk.dbc.promat.service.persistence.PromatEntityManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import jakarta.ejb.ConcurrencyManagement;
+import jakarta.ejb.ConcurrencyManagementType;
 import jakarta.ejb.EJB;
 import jakarta.ejb.Schedule;
 import jakarta.ejb.Singleton;
@@ -17,8 +19,11 @@ import java.util.List;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+// Bean-managed concurrency: updateLock already prevents overlapping runs. With the default
+// container write lock, one hung timer callback would silently block all later runs (see ADR 0007).
 @Startup
 @Singleton
+@ConcurrencyManagement(ConcurrencyManagementType.BEAN)
 public class ScheduledCaseInformationUpdater {
     private static final Logger LOGGER = LoggerFactory.getLogger(ScheduledCaseInformationUpdater.class);
 

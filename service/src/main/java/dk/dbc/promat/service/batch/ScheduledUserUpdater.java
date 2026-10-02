@@ -7,6 +7,8 @@ import dk.dbc.promat.service.persistence.Reviewer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import jakarta.ejb.ConcurrencyManagement;
+import jakarta.ejb.ConcurrencyManagementType;
 import jakarta.ejb.EJB;
 import jakarta.ejb.Schedule;
 import jakarta.ejb.Singleton;
@@ -20,8 +22,11 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 
+// Bean-managed concurrency: updateLock already prevents overlapping runs. With the default
+// container write lock, one hung timer callback would silently block all later runs (see ADR 0007).
 @Startup
 @Singleton
+@ConcurrencyManagement(ConcurrencyManagementType.BEAN)
 public class ScheduledUserUpdater {
     private static final Logger LOGGER = LoggerFactory.getLogger(ScheduledUserUpdater.class);
 
