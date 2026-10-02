@@ -5,6 +5,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dk.dbc.promat.service.connectors.FbiApiConnectorException;
 import dk.dbc.promat.service.Repository;
+import dk.dbc.promat.service.util.PromatTaskUtils;
 import dk.dbc.promat.service.batch.CaseInformationUpdater;
 import dk.dbc.promat.service.batch.ContentLookUp;
 import dk.dbc.promat.service.batch.Reminders;
@@ -125,12 +126,13 @@ public class Cases {
 
     // Set of allowed states when approving tasks
     private static final Set<CaseStatus> APPROVE_TASKS_ALLOWED_STATES =
-            EnumSet.of(CaseStatus.PENDING_EXTERNAL, CaseStatus.APPROVED);
+            EnumSet.of(CaseStatus.PENDING_EXTERNAL, CaseStatus.PENDING_READING_EXPERIENCE, CaseStatus.APPROVED);
 
     // Set of allowed states when returning a case back to the reviewer for corrections.
     private static final Set<CaseStatus> PENDING_ISSUES_CHANGE_ALLOWED_STATES =
             EnumSet.of(
                     CaseStatus.PENDING_EXTERNAL,
+                    CaseStatus.PENDING_READING_EXPERIENCE,
                     CaseStatus.APPROVED,
                     CaseStatus.PENDING_EXPORT,
                     CaseStatus.PENDING_APPROVAL,
@@ -408,7 +410,7 @@ public class Cases {
             // Case must have a status that ensures that there is valid data.
             // This check can be ignored if the query parameter 'override' is set to true
             if (!override) {
-                if (!Arrays.asList(CaseStatus.PENDING_EXTERNAL, CaseStatus.APPROVED, CaseStatus.PENDING_MEETING,
+                if (!Arrays.asList(CaseStatus.PENDING_EXTERNAL, CaseStatus.PENDING_READING_EXPERIENCE, CaseStatus.APPROVED, CaseStatus.PENDING_MEETING,
                         CaseStatus.PENDING_EXPORT, CaseStatus.EXPORTED).contains(cases.get(0).getStatus())) {
                     return ServiceErrorDto.NotFound("Not found or not in valid state",
                             String.format("No case with faust %s or a status that guarantees valid data is found", faust));
@@ -651,13 +653,14 @@ public class Cases {
                 }
 
                 // If status is changing from PENDING_EXTERNAL to APPROVED, any metakompas tasks
-                // should also be approved
-                if( existing.in(CaseStatus.PENDING_EXTERNAL) && status == CaseStatus.APPROVED ) {
+                // should also be approved - not reading experience tasks, which are only approved (and
+                // registered) through their own endpoint, so the case may go on to PENDING_READING_EXPERIENCE
+                if( existing.in(CaseStatus.PENDING_EXTERNAL) && status.in(CaseStatus.APPROVED, CaseStatus.PENDING_READING_EXPERIENCE) ) {
                     LOGGER.info("Promoting metakompas task on case {} to APPROVED prematurely by user request", existing.getId());
                     approveTasks(existing, true);
                 }
 
-                if(existing.in(CaseStatus.APPROVED, CaseStatus.PENDING_EXTERNAL, CaseStatus.PENDING_MEETING)
+                if(existing.in(CaseStatus.APPROVED, CaseStatus.PENDING_EXTERNAL, CaseStatus.PENDING_READING_EXPERIENCE, CaseStatus.PENDING_MEETING)
                         && status.in(CaseStatus.PENDING_ISSUES)) {
                     unApproveTasks(existing);
                 }
@@ -845,10 +848,11 @@ public class Cases {
             // Add the new task
             promatCase.getTasks().add(task);
 
-            // Reset potential approved case in special cases METAKOMPAS and BUGGI.
-            if (List.of(TaskFieldType.METAKOMPAS, TaskFieldType.BUGGI).contains(task.getTaskFieldType()) &&
-                    promatCase.getStatus() == CaseStatus.APPROVED) {
-                promatCase.setStatus(CaseStatus.PENDING_EXTERNAL);
+            // An approved case waits again for a Metakompas/Buggi or reading experience task added to it
+            boolean awaitedTask = PromatTaskUtils.isRegisteredInMetakompasset(task.getTaskFieldType())
+                    || PromatTaskUtils.isReadingExperience(task.getTaskFieldType());
+            if (awaitedTask && promatCase.in(CaseStatus.APPROVED, CaseStatus.PENDING_EXTERNAL, CaseStatus.PENDING_READING_EXPERIENCE)) {
+                promatCase.setStatus(PromatTaskUtils.approvedCaseStatus(promatCase));
             }
 
             return Response.status(201)
@@ -1222,6 +1226,12 @@ public class Cases {
                 return CaseStatus.PENDING_CLOSE;
 
             case APPROVED:
+                if (existing.getStatus() == CaseStatus.PENDING_READING_EXPERIENCE) {
+                    throw new ServiceErrorException("Not allowed to set status APPROVED while reading experience tasks are not approved")
+                            .withDetails("Approve the case's reading experience tasks through tasks/{taskId}/reading-experience/approve - the case is then approved")
+                            .withHttpStatus(400)
+                            .withCode(ServiceErrorCode.INVALID_REQUEST);
+                }
                 if (!existing.in(CaseStatus.PENDING_APPROVAL, CaseStatus.PENDING_EXTERNAL)) {
                     throw new ServiceErrorException("Not allowed to set status APPROVED when case is not in PENDING_APPROVAL or PENDING_EXTERNAL")
                             .withDetails("Attempt to set status of case to APPROVED when case is not in status PENDING_APPROVAL or PENDING_EXTERNAL")
@@ -1229,18 +1239,16 @@ public class Cases {
                             .withCode(ServiceErrorCode.INVALID_REQUEST);
                 }
 
-                // If case is already PENDING_EXTERNAL, move to approved, otherwise check if we need to wait for metakompas topics
+                // If case is already PENDING_EXTERNAL, it's approved by hand without waiting for Metakompasset - but
+                // still waits for its reading experience tasks
                 if( existing.getStatus() == CaseStatus.PENDING_EXTERNAL ) {
-                    return CaseStatus.APPROVED;
+                    return PromatTaskUtils.hasUnapprovedReadingExperience(existing)
+                            ? CaseStatus.PENDING_READING_EXPERIENCE
+                            : CaseStatus.APPROVED;
                 }
 
-                // Check if the case should go to PENDING_EXTERNAL to wait for metakompas and buggi topics, or can be approved now
-                List<TaskFieldType> pendingExternal = List.of(TaskFieldType.METAKOMPAS, TaskFieldType.BUGGI);
-                if (existing.getTasks().stream().anyMatch(task -> task.getApproved() == null && pendingExternal.contains(task.getTaskFieldType()))) {
-                    return CaseStatus.PENDING_EXTERNAL;
-                } else {
-                    return CaseStatus.APPROVED;
-                }
+                // Check if the case should wait for metakompas and buggi topics or reading experience tasks, or can be approved now
+                return PromatTaskUtils.approvedCaseStatus(existing);
 
 
             case PENDING_APPROVAL:
@@ -1306,9 +1314,10 @@ public class Cases {
         }
     }
 
+    // allTasks never includes reading experience tasks - they're only approved (and registered) through their own endpoint
     private void approveTasks(PromatCase existing, boolean allTasks) {
         for (PromatTask task : existing.getTasks()) {
-            if (task.getTaskFieldType().internalTask || allTasks) {
+            if (task.getTaskFieldType().internalTask || (allTasks && !PromatTaskUtils.isReadingExperience(task.getTaskFieldType()))) {
                 task.setApproved(LocalDate.now());
             }
         }

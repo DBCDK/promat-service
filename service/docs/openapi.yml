@@ -886,7 +886,10 @@ paths:
             description: Id of the READING_EXPERIENCE_ADULT or READING_EXPERIENCE_CHILD task
       responses:
         '200':
-          description: Selection was registered in update-service and the task is approved
+          description: >-
+            Selection was registered in update-service and the task is approved. If its case was waiting
+            in PENDING_READING_EXPERIENCE for its last reading experience task, the case moves on to
+            APPROVED (or PENDING_EXTERNAL, if Metakompasset tasks are still waiting)
         '400':
           description: >-
             Wrong task type, invalid persisted data, empty selection, or a Buggi scale without a value
@@ -2039,6 +2042,7 @@ components:
         - 'PENDING_APPROVAL'
         - 'PENDING_ISSUES'
         - 'APPROVED'
+        - 'PENDING_READING_EXPERIENCE'
         - 'EXPORTED'
         - 'CLOSED'
         - 'DELETED'
@@ -2059,6 +2063,8 @@ components:
         * DELETED = Case has been abandoned
         * PENDING_MEETING = case awaits being dealt with at the next editor meeting
         * PENDING_EXTERNAL = case awaits external depencies, such as metakompas
+        * PENDING_READING_EXPERIENCE = editor has approved the case, but its reading experience tasks
+          (READING_EXPERIENCE_ADULT/CHILD) aren't approved yet - see tasks/{taskId}/reading-experience/approve
         * PENDING_REVERT = case awaits the deletion of its primary faust
         * PENDING_EXPORT = case awaits harvesting for future publication
         * REVERTED = primary faust of the case is deleted

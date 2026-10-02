@@ -45,6 +45,8 @@ public class Formatting {
                 return "Afventer rettelser";
             case PENDING_EXTERNAL:
                 return "Afventer metakompas";
+            case PENDING_READING_EXPERIENCE:
+                return "Afventer læseoplevelse";
             case APPROVED:
                 return "Godkendt";
             case PENDING_MEETING:

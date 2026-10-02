@@ -20,6 +20,7 @@ import dk.dbc.promat.service.taskdata.BuggiSelectionEntry;
 import dk.dbc.promat.service.taskdata.MetakompasTaskData;
 import dk.dbc.promat.service.taxonomy.TaxonomyCache;
 import dk.dbc.promat.service.taxonomy.dto.Subject;
+import dk.dbc.promat.service.util.PromatTaskUtils;
 import jakarta.ejb.Stateless;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
@@ -238,6 +239,10 @@ public class MetakompasAndBuggiTaskSelections {
         // Approving again (a correction) keeps the original approval date
         if(task.getApproved() == null) {
             task.setApproved(LocalDate.now());
+        }
+        // The editor has approved the case already - with its last reading experience task approved, it moves on
+        if(promatCase.getStatus() == CaseStatus.PENDING_READING_EXPERIENCE) {
+            promatCase.setStatus(PromatTaskUtils.approvedCaseStatus(promatCase));
         }
     }
 

@@ -24,8 +24,8 @@ not per environment:
 | Registered in | Metakompasset | Promat |
 | Selection saved through | - | `PUT tasks/{taskId}/reading-experience/adult\|child` |
 | Polling, `POST cases/{pid}/buggi` | as before | not touched |
-| Approved | by the polling / `POST cases/{pid}/buggi`; case waits in `PENDING_EXTERNAL` | not with the case - own endpoint and `PENDING_READING_EXPERIENCE` come with the registration branch |
-| Added to an `APPROVED` case | case goes to `PENDING_EXTERNAL` | no status change yet (see above) |
+| Approved | by the polling / `POST cases/{pid}/buggi`; case waits in `PENDING_EXTERNAL` | by the reviewer (or editor) through `PUT tasks/{taskId}/reading-experience/approve`, which registers it; case waits in `PENDING_READING_EXPERIENCE` |
+| Added to an `APPROVED` case | case goes to `PENDING_EXTERNAL` | case goes to `PENDING_READING_EXPERIENCE` |
 | Payment | `PayCategory.METAKOMPAS` / `BUGGI` | the same |
 
 A case may have tasks of both sets, e.g. so an editor can try both flows during the transition. Then
@@ -39,7 +39,6 @@ replacing the existing 665/664 (verify on staging before prod).
 
 Prerequisites:
 
-- Approving and registering the new tasks in update-service (registration branch) is merged.
 - `UPDATE_SERVICE_URL` (including `/UpdateService/rest`), `METAKOMPAS_NETPUNKT_GROUP/USER/PASSWORD`
   and `BUGGI_NETPUNKT_GROUP/USER/PASSWORD` are set - in every environment, since the service
   doesn't start without them. The netpunkt values are the ones Metakompasset uses (separate
@@ -50,14 +49,14 @@ Prerequisites:
 Prod:
 
 1. Deploy promat-service, and the model/connector jars. Nothing creates the new task types yet.
-2. Rebuild and deploy every consumer of the connector: `TaskFieldType` is deserialized with a
-   default `ObjectMapper`, which fails on unknown enum values. Known consumer: dmat-service
+2. Rebuild and deploy every consumer of the connector: `TaskFieldType` and `CaseStatus` are
+   deserialized with a default `ObjectMapper`, which fails on unknown enum values. Known consumer: dmat-service
    (`getCase()` in `StatusHandler` and `ExportedPromatReviewsUpdater`).
 3. Deploy the frontend that creates the new types on new cases. Old cases keep their tasks, done
    in Metakompasset as before.
 4. Metakompasset stays open until no old task is waiting for it (see below). To close it sooner,
-   change the remaining old tasks to the new types (they hold no data yet) and move their cases from `PENDING_EXTERNAL` to `PENDING_ISSUES`, so the reviewer can
-   fill them in.
+   change the remaining old tasks to the new types (they hold no data yet) and move their cases from
+   `PENDING_EXTERNAL` to `PENDING_READING_EXPERIENCE`, so the reviewer can fill them in and approve them.
 
 ## When it's safe to remove the old task types
 
