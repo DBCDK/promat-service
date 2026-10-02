@@ -23,6 +23,7 @@ import jakarta.persistence.TypedQuery;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.DELETE;
 import jakarta.ws.rs.GET;
+import jakarta.ws.rs.POST;
 import jakarta.ws.rs.PUT;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
@@ -164,6 +165,24 @@ public class Tasks {
             PromatTask task = taskSelections.resolveTaskForSelection(taskId, TaskFieldType.READING_EXPERIENCE_CHILD);
             List<BuggiSelectionEntry> saved = taskSelections.writeBuggiSelection(task, requests);
             return Response.ok(saved).build();
+        } catch(ServiceErrorException serviceErrorException) {
+            return Response.status(serviceErrorException.getHttpStatus()).entity(serviceErrorException.getServiceErrorDto()).build();
+        } catch(Exception exception) {
+            LOGGER.error("Caught exception:", exception);
+            return ServiceErrorDto.Failed(exception.getMessage());
+        }
+    }
+
+    // Reading-experience registration is separate from save: save persists the reviewer's
+    // selection, while register sends it to update-service and, on success, marks
+    // the task approved and returns it.
+    @POST
+    @Path("tasks/{taskId}/reading-experience/register")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response registerReadingExperience(@PathParam("taskId") final Integer taskId) {
+        LOGGER.info("tasks/{}/reading-experience/register (POST)", taskId);
+        try {
+            return Response.ok(taskSelections.registerReadingExperience(taskId)).build();
         } catch(ServiceErrorException serviceErrorException) {
             return Response.status(serviceErrorException.getHttpStatus()).entity(serviceErrorException.getServiceErrorDto()).build();
         } catch(Exception exception) {

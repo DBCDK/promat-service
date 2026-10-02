@@ -1,13 +1,17 @@
 package dk.dbc.promat.service.api;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import dk.dbc.promat.service.cataloging.CatalogingMarcMapper;
+import dk.dbc.promat.service.connectors.CatalogingUpdateConnector;
+import dk.dbc.promat.service.connectors.CatalogingUpdateConnectorException;
 import dk.dbc.promat.service.dto.BuggiSelectionRequest;
 import dk.dbc.promat.service.dto.MetakompasSelectionRequest;
 import dk.dbc.promat.service.dto.ServiceErrorCode;
-import dk.dbc.promat.service.dto.Tag;
 import dk.dbc.promat.service.dto.TagList;
 import dk.dbc.promat.service.persistence.JsonMapperProvider;
+import dk.dbc.promat.service.persistence.PromatCase;
 import dk.dbc.promat.service.persistence.PromatEntityManager;
 import dk.dbc.promat.service.persistence.PromatTask;
 import dk.dbc.promat.service.persistence.TaskFieldType;
@@ -18,7 +22,9 @@ import dk.dbc.promat.service.taxonomy.dto.Subject;
 import jakarta.ejb.Stateless;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.TypedQuery;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -30,12 +36,19 @@ import java.util.Set;
 @Stateless
 public class MetakompasAndBuggiTaskSelections {
     private static final ObjectMapper OBJECT_MAPPER = new JsonMapperProvider().getObjectMapper();
+    // The agency of DBC's common records, which reading experiences are registered on
+    private static final String COMMON_RECORDS_AGENCY = "870970";
+    private final CatalogingMarcMapper marcMapper = new CatalogingMarcMapper();
+
     @Inject
     TaxonomyCache taxonomyCache;
 
     @Inject
     @PromatEntityManager
     EntityManager entityManager;
+
+    @Inject
+    CatalogingUpdateConnector catalogingUpdateConnector;
 
     // Resolved against the current taxonomy tree at write time only - a saved selection may
     // later reference an id that no longer resolves; that's expected, not an error.
@@ -162,6 +175,113 @@ public class MetakompasAndBuggiTaskSelections {
                     .withDetails(e.getMessage());
         }
         return taskData;
+    }
+
+    public PromatTask registerReadingExperience(Integer taskId) throws ServiceErrorException {
+        PromatTask task = entityManager.find(PromatTask.class, taskId);
+        if(task == null) {
+            throw new ServiceErrorException(String.format("No task with id %d exists", taskId))
+                    .withHttpStatus(404)
+                    .withCode(ServiceErrorCode.NOT_FOUND)
+                    .withCause("No such task");
+        }
+        if(task.getTaskFieldType() != TaskFieldType.READING_EXPERIENCE_ADULT && task.getTaskFieldType() != TaskFieldType.READING_EXPERIENCE_CHILD) {
+            throw new ServiceErrorException(String.format("Task %d is not a Metakompas or Buggi task", taskId))
+                    .withHttpStatus(400)
+                    .withCode(ServiceErrorCode.INVALID_REQUEST)
+                    .withCause("Wrong task type");
+        }
+        PromatCase promatCase = getCaseOfTask(task.getId());
+        // Built for every target faust before update-service is called, so a selection that can't be
+        // registered isn't registered on some of the records only
+        Map<String, String> marcRecordsByFaust = toMarcRecords(task, promatCase);
+
+        try {
+            for(Map.Entry<String, String> marcRecord : marcRecordsByFaust.entrySet()) {
+                catalogingUpdateConnector.updateRecord(task.getTaskFieldType(),
+                        COMMON_RECORDS_AGENCY + ":" + marcRecord.getKey(), marcRecord.getValue());
+            }
+        } catch(CatalogingUpdateConnectorException e) {
+            throw new ServiceErrorException("Failed to register reading-experience selection in update-service")
+                    .withHttpStatus(502)
+                    .withCode(ServiceErrorCode.FAILED)
+                    .withCause("update-service registration failed")
+                    .withDetails(e.getMessage());
+        }
+        // Approving again (a correction) keeps the original approval date
+        if(task.getApproved() == null) {
+            task.setApproved(LocalDate.now());
+        }
+        return task;
+    }
+
+    private PromatCase getCaseOfTask(int taskId) {
+        TypedQuery<PromatCase> query = entityManager.createNamedQuery(
+                PromatCase.GET_CASE_WITH_TASK_ID_NAME, PromatCase.class);
+        query.setParameter("taskid", taskId);
+        return query.getSingleResult();
+    }
+
+    private List<String> targetFausts(PromatCase promatCase, PromatTask task) {
+        // Most tasks update the primary faust, but task-specific target fausts are
+        // supported when the case data points registration at one or more records.
+        if(task.getTargetFausts() == null || task.getTargetFausts().isEmpty()) {
+            return List.of(promatCase.getPrimaryFaust());
+        }
+        return task.getTargetFausts();
+    }
+
+    // Parses and checks the saved selection - the final check before registration, so tasks whose saved JSON
+    // can't produce a meaningful update-service record aren't sent - and builds the update record for each faust
+    private Map<String, String> toMarcRecords(PromatTask task, PromatCase promatCase) throws ServiceErrorException {
+        if(task.getData() == null || task.getData().isBlank()) {
+            throw emptySelection(task);
+        }
+        List<String> fausts = targetFausts(promatCase, task);
+        Map<String, String> marcRecordsByFaust = new LinkedHashMap<>();
+        try {
+            if(task.getTaskFieldType() == TaskFieldType.READING_EXPERIENCE_ADULT) {
+                MetakompasTaskData data = OBJECT_MAPPER.readValue(task.getData(), MetakompasTaskData.class);
+                boolean hasEntries = data.getEntries() != null && !data.getEntries().isEmpty();
+                boolean hasSuggestions = data.getSuggestions() != null && !data.getSuggestions().isEmpty();
+                if(!hasEntries && !hasSuggestions) {
+                    throw emptySelection(task);
+                }
+                for(String faust : fausts) {
+                    marcRecordsByFaust.put(faust, marcMapper.metakompasToMarc(COMMON_RECORDS_AGENCY, faust, data));
+                }
+            } else {
+                List<BuggiSelectionEntry> buggiEntries = OBJECT_MAPPER.readValue(task.getData(), new TypeReference<>() {});
+                if(buggiEntries.isEmpty()) {
+                    throw emptySelection(task);
+                }
+                for(String faust : fausts) {
+                    marcRecordsByFaust.put(faust, marcMapper.buggiToMarc(COMMON_RECORDS_AGENCY, faust, buggiEntries));
+                }
+            }
+        } catch(JsonProcessingException e) {
+            throw new ServiceErrorException("Failed to parse persisted task selection")
+                    .withHttpStatus(400)
+                    .withCode(ServiceErrorCode.INVALID_REQUEST)
+                    .withCause("Invalid task data")
+                    .withDetails(e.getMessage());
+        } catch(IllegalArgumentException e) {
+            // E.g. a category added to the taxonomy after Metakompasset's MARC mapping was mirrored
+            String message = String.format("Task %d's selection can't be registered: %s", task.getId(), e.getMessage());
+            throw new ServiceErrorException(message)
+                    .withDetails(message)
+                    .withHttpStatus(400)
+                    .withCode(ServiceErrorCode.INVALID_REQUEST)
+                    .withCause("No MARC mapping");
+        }
+        return marcRecordsByFaust;
+    }
+
+    private ServiceErrorException emptySelection(PromatTask task) {
+        return new ServiceErrorException(String.format("Task %d has no selection to approve", task.getId()))
+                .withHttpStatus(400)
+                .withCode(ServiceErrorCode.INVALID_REQUEST)
+                .withCause("Empty selection");
     }
 
     private void validateMetakompasPath(List<String> path) throws ServiceErrorException {

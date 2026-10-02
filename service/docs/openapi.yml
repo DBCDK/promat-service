@@ -855,6 +855,46 @@ paths:
               schema:
                 $ref: '#/components/schemas/ServiceError'
 
+  /tasks/{taskId}/reading-experience/register:
+    post:
+      tags:
+        - tasks
+      summary: Approve a reading experience task, registering its saved selection on the record through cataloging update-service
+      operationId: registerReadingExperienceTask
+      parameters:
+        - in: path
+          name: taskId
+          required: true
+          schema:
+            type: integer
+            description: Id of the READING_EXPERIENCE_ADULT or READING_EXPERIENCE_CHILD task
+      responses:
+        '200':
+          description: Selection was registered in update-service and the task is approved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        '400':
+          description: >-
+            Wrong task type, invalid persisted data, empty selection, or a selection with no MARC mapping
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '404':
+          description: No such task
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+        '502':
+          description: update-service registration failed - details holds update-service's messages
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
+
   /cases/{id}/messages:
     get:
       tags:
