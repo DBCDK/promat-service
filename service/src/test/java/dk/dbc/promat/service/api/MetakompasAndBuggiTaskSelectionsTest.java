@@ -7,6 +7,7 @@ import dk.dbc.promat.service.connectors.CatalogingUpdateConnectorException;
 import dk.dbc.promat.service.dto.BuggiSelectionRequest;
 import dk.dbc.promat.service.dto.MetakompasSelectionRequest;
 import dk.dbc.promat.service.dto.ServiceErrorCode;
+import dk.dbc.promat.service.persistence.CaseStatus;
 import dk.dbc.promat.service.persistence.PromatCase;
 import dk.dbc.promat.service.persistence.PromatTask;
 import dk.dbc.promat.service.persistence.TaskFieldType;
@@ -21,6 +22,7 @@ import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -232,6 +234,39 @@ public class MetakompasAndBuggiTaskSelectionsTest {
         assertThat(exception.getServiceErrorDto().getCause(), is("Incomplete selection"));
         assertThat(exception.getServiceErrorDto().getDetails(), containsString("tekst/tegninger, kort/lang"));
         verifyNoInteractions(taskSelections.catalogingUpdateConnector);
+    }
+
+    @Test
+    public void readingExperienceCantBeChangedOnClosedCase() {
+        PromatTask task = new PromatTask().withId(123).withTaskFieldType(TaskFieldType.READING_EXPERIENCE_CHILD)
+                .withTargetFausts(List.of("12345678"));
+        PromatCase promatCase = new PromatCase().withStatus(CaseStatus.CLOSED).withTasks(new ArrayList<>(List.of(task)));
+        MetakompasAndBuggiTaskSelections taskSelections = taskSelectionsWithEntityManager(task, promatCase);
+
+        ServiceErrorException onSave = assertThrows(ServiceErrorException.class, () ->
+                taskSelections.resolveTaskForSelection(123, TaskFieldType.READING_EXPERIENCE_CHILD));
+        ServiceErrorException onApprove = assertThrows(ServiceErrorException.class, () ->
+                taskSelections.approveReadingExperience(123));
+
+        assertThat(onSave.getHttpStatus(), is(409));
+        assertThat(onApprove.getHttpStatus(), is(409));
+        verifyNoInteractions(taskSelections.catalogingUpdateConnector);
+    }
+
+    @Test
+    public void readingExperienceCanBeCorrectedOnExportedCase() throws Exception {
+        // Registered on the record directly - the exported review isn't affected
+        PromatTask task = new PromatTask().withId(123).withTaskFieldType(TaskFieldType.READING_EXPERIENCE_CHILD)
+                .withTargetFausts(List.of("12345678")).withApproved(LocalDate.now().minusDays(30));
+        PromatCase promatCase = new PromatCase().withStatus(CaseStatus.EXPORTED).withTasks(new ArrayList<>(List.of(task)));
+        MetakompasAndBuggiTaskSelections taskSelections = taskSelectionsWithEntityManager(task, promatCase);
+
+        taskSelections.writeBuggiSelection(taskSelections.resolveTaskForSelection(123, TaskFieldType.READING_EXPERIENCE_CHILD),
+                COMPLETE_BUGGI_SELECTION);
+        taskSelections.approveReadingExperience(123);
+
+        verify(taskSelections.catalogingUpdateConnector).updateRecord(eq(TaskFieldType.READING_EXPERIENCE_CHILD), eq("870970:12345678"), anyString());
+        assertThat(promatCase.getStatus(), is(CaseStatus.EXPORTED));
     }
 
     @Test

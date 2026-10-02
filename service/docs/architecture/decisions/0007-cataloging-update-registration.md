@@ -51,6 +51,10 @@ separate status-polling endpoint.
 - Only set `PromatTask.approved` after update-service returns OK. A failure returns an error
   to the caller instead of approving the task; it can be retried by calling approve again.
   Approving again (a correction) keeps the original approval date.
+- Saving and approving are allowed in any case status - also after the review is exported, since the
+  selection is registered on the record directly, independently of the export - except when the case
+  is CLOSED, DELETED, REVERTED, PENDING_REVERT or PENDING_CLOSE (409), as with Metakompasset's
+  `cases/{pid}/buggi`.
 - Call update-service's REST endpoint (`POST {UPDATE_SERVICE_URL}/api/v1/updateservice`) directly
   with Promat's own `FailSafeHttpClient`, using only the `updateserviceDTO` classes. The shared
   `updateservice-rest-connector` is built against `dbc-commons-httpclient` 2.0 (Java 11) and fails

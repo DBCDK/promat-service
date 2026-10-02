@@ -9,6 +9,7 @@ import dk.dbc.promat.service.dto.MetakompasSelectionRequest;
 import dk.dbc.promat.service.dto.Tag;
 import dk.dbc.promat.service.dto.TagList;
 import dk.dbc.promat.service.dto.TaskDto;
+import dk.dbc.promat.service.persistence.CaseStatus;
 import dk.dbc.promat.service.persistence.MaterialType;
 import dk.dbc.promat.service.persistence.PromatCase;
 import dk.dbc.promat.service.persistence.PromatTask;
@@ -26,6 +27,7 @@ import java.util.List;
 import java.util.concurrent.Callable;
 
 import static jakarta.ws.rs.core.Response.Status.BAD_REQUEST;
+import static jakarta.ws.rs.core.Response.Status.CONFLICT;
 import static jakarta.ws.rs.core.Response.Status.CREATED;
 import static jakarta.ws.rs.core.Response.Status.NOT_FOUND;
 import static org.hamcrest.CoreMatchers.is;
@@ -34,6 +36,13 @@ import static org.hamcrest.MatcherAssert.assertThat;
 // Covers the PUT tasks/{taskId}/reading-experience/adult|child endpoints and the legacy POST cases/{pid}/buggi
 // endpoint's selection sharing across target fausts. CasesIT covers the rest of the legacy endpoint.
 public class CaseTaskSelectionIT extends ContainerTest {
+    // Every Buggi scale set, plus a mood
+    private static final List<BuggiSelectionRequest> COMPLETE_BUGGI_SELECTION = List.of(
+            new BuggiSelectionRequest(1, 2),
+            new BuggiSelectionRequest(2, 3),
+            new BuggiSelectionRequest(3, 4),
+            new BuggiSelectionRequest(4, 5),
+            new BuggiSelectionRequest(8, 2));
 
     @Test
     void testSelectionsAreSavedOnReadingExperienceTasks() throws PromatServiceConnectorException {
@@ -66,6 +75,26 @@ public class CaseTaskSelectionIT extends ContainerTest {
                 List.of(new BuggiSelectionRequest(1, 1))));
 
         deleteResponse("v1/api/cases/" + aCase.getId());
+    }
+
+    @Test
+    void testReadingExperienceCantBeChangedOnClosedCase() throws Exception {
+        String faust = "94001124";
+        PromatCase aCase = postAndAssert("v1/api/cases",
+                makeRequest(faust, TaskFieldType.READING_EXPERIENCE_CHILD), PromatCase.class, CREATED);
+        int buggiTaskId = ContainerTest.findTaskByFieldType(aCase, TaskFieldType.READING_EXPERIENCE_CHILD).getId();
+        setStatus(aCase, CaseStatus.CLOSED, 200);
+
+        assertPromatThrows(CONFLICT, () -> promatServiceConnector.putBuggiSelection(buggiTaskId, COMPLETE_BUGGI_SELECTION));
+        assertThat(putResponse("v1/api/tasks/" + buggiTaskId + "/reading-experience/approve").getStatus(), is(CONFLICT.getStatusCode()));
+
+        deleteResponse("v1/api/cases/" + aCase.getId());
+    }
+
+    private PromatCase setStatus(PromatCase aCase, CaseStatus status, int expectedStatusCode) throws Exception {
+        Response response = postResponse("v1/api/cases/" + aCase.getId(), new CaseRequest().withStatus(status));
+        assertThat("status " + status, response.getStatus(), is(expectedStatusCode));
+        return expectedStatusCode == 200 ? mapper.readValue(response.readEntity(String.class), PromatCase.class) : null;
     }
 
     // The legacy endpoint resolves its task by faust, but the write is task-scoped - approving
