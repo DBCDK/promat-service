@@ -2,9 +2,12 @@ package dk.dbc.promat.service.api;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import dk.dbc.promat.service.connectors.CatalogingUpdateConnector;
+import dk.dbc.promat.service.connectors.CatalogingUpdateConnectorException;
 import dk.dbc.promat.service.dto.BuggiSelectionRequest;
 import dk.dbc.promat.service.dto.MetakompasSelectionRequest;
 import dk.dbc.promat.service.dto.ServiceErrorCode;
+import dk.dbc.promat.service.persistence.PromatCase;
 import dk.dbc.promat.service.persistence.PromatTask;
 import dk.dbc.promat.service.persistence.TaskFieldType;
 import dk.dbc.promat.service.taskdata.BuggiSelectionEntry;
@@ -13,18 +16,35 @@ import dk.dbc.promat.service.taxonomy.TaxonomyCache;
 import dk.dbc.promat.service.taxonomy.dto.Subject;
 import dk.dbc.promat.service.taxonomy.dto.Taxonomy;
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.TypedQuery;
 import org.junit.jupiter.api.Test;
+
+import java.time.LocalDate;
 
 import java.util.List;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 public class MetakompasAndBuggiTaskSelectionsTest {
+    // Every scale (Læsbarhed, Fantasi/virkelighed) set, plus a mood
+    private static final List<BuggiSelectionRequest> COMPLETE_BUGGI_SELECTION = List.of(
+            new BuggiSelectionRequest(1, 2),
+            new BuggiSelectionRequest(2, 3),
+            new BuggiSelectionRequest(3, 4),
+            new BuggiSelectionRequest(4, 5),
+            new BuggiSelectionRequest(8, 2));
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     @Test
@@ -111,6 +131,87 @@ public class MetakompasAndBuggiTaskSelectionsTest {
     }
 
     @Test
+    public void approveReadingExperienceRejectsEmptySelection() {
+        MetakompasAndBuggiTaskSelections taskSelections = taskSelectionsWithEntityManager(new PromatTask()
+                .withId(123)
+                .withTaskFieldType(TaskFieldType.READING_EXPERIENCE_CHILD)
+                .withData(""));
+
+        ServiceErrorException exception = assertThrows(ServiceErrorException.class, () ->
+                taskSelections.approveReadingExperience(123));
+
+        assertThat(exception.getHttpStatus(), is(400));
+        assertThat(exception.getServiceErrorDto().getCause(), is("Empty selection"));
+    }
+
+    @Test
+    public void approveReadingExperienceRegistersNonEmptyBuggiSelectionAndApprovesTask() throws Exception {
+        PromatTask task = new PromatTask()
+                .withId(123)
+                .withTaskFieldType(TaskFieldType.READING_EXPERIENCE_CHILD)
+                .withTargetFausts(List.of("12345678"));
+        MetakompasAndBuggiTaskSelections taskSelections = taskSelectionsWithEntityManager(task);
+        taskSelections.writeBuggiSelection(task, COMPLETE_BUGGI_SELECTION);
+
+        taskSelections.approveReadingExperience(123);
+
+        verify(taskSelections.catalogingUpdateConnector).updateRecord(eq(TaskFieldType.READING_EXPERIENCE_CHILD), eq("870970:12345678"), anyString());
+        assertThat(task.getApproved(), is(notNullValue()));
+    }
+
+    @Test
+    public void approveReadingExperienceAgainKeepsApprovalDate() throws Exception {
+        // A correction: approved before, saved again and approved again
+        LocalDate approvedEarlier = LocalDate.now().minusDays(7);
+        PromatTask task = new PromatTask()
+                .withId(123)
+                .withTaskFieldType(TaskFieldType.READING_EXPERIENCE_CHILD)
+                .withTargetFausts(List.of("12345678"))
+                .withApproved(approvedEarlier);
+        MetakompasAndBuggiTaskSelections taskSelections = taskSelectionsWithEntityManager(task);
+        taskSelections.writeBuggiSelection(task, COMPLETE_BUGGI_SELECTION);
+
+        taskSelections.approveReadingExperience(123);
+
+        assertThat(task.getApproved(), is(approvedEarlier));
+    }
+
+    @Test
+    public void approveReadingExperienceRejectsTaskRegisteredInMetakompasset() {
+        PromatTask task = new PromatTask()
+                .withId(123)
+                .withTaskFieldType(TaskFieldType.METAKOMPAS)
+                .withTargetFausts(List.of("12345678"))
+                .withData("true");
+        MetakompasAndBuggiTaskSelections taskSelections = taskSelectionsWithEntityManager(task);
+
+        ServiceErrorException exception = assertThrows(ServiceErrorException.class, () ->
+                taskSelections.approveReadingExperience(123));
+
+        assertThat(exception.getHttpStatus(), is(400));
+        verifyNoInteractions(taskSelections.catalogingUpdateConnector);
+        assertThat(task.getApproved(), is((Object) null));
+    }
+
+    @Test
+    public void approveReadingExperienceDoesNotApproveTaskWhenUpdateServiceFails() throws Exception {
+        PromatTask task = new PromatTask()
+                .withId(123)
+                .withTaskFieldType(TaskFieldType.READING_EXPERIENCE_CHILD)
+                .withTargetFausts(List.of("12345678"));
+        MetakompasAndBuggiTaskSelections taskSelections = taskSelectionsWithEntityManager(task);
+        taskSelections.writeBuggiSelection(task, COMPLETE_BUGGI_SELECTION);
+        doThrow(new CatalogingUpdateConnectorException("update-service is down"))
+                .when(taskSelections.catalogingUpdateConnector).updateRecord(any(TaskFieldType.class), anyString(), anyString());
+
+        ServiceErrorException exception = assertThrows(ServiceErrorException.class, () ->
+                taskSelections.approveReadingExperience(123));
+
+        assertThat(exception.getHttpStatus(), is(502));
+        assertThat(task.getApproved(), is((Object) null));
+    }
+
+    @Test
     public void removesDuplicateBuggiOptionsKeepingTheLastValue() throws Exception {
         List<BuggiSelectionEntry> saved = taskSelectionsWithTaxonomy().writeBuggiSelection(new PromatTask(), List.of(
                 new BuggiSelectionRequest(8, 2),
@@ -183,12 +284,7 @@ public class MetakompasAndBuggiTaskSelectionsTest {
     }
 
     private MetakompasAndBuggiTaskSelections taskSelectionsWithTask(PromatTask task) {
-        EntityManager entityManager = mock(EntityManager.class);
-        when(entityManager.find(PromatTask.class, task.getId())).thenReturn(task);
-
-        MetakompasAndBuggiTaskSelections taskSelections = new MetakompasAndBuggiTaskSelections();
-        taskSelections.entityManager = entityManager;
-        return taskSelections;
+        return taskSelectionsWithEntityManager(task);
     }
 
     private MetakompasAndBuggiTaskSelections taskSelectionsWithTaxonomy() {
@@ -206,6 +302,27 @@ public class MetakompasAndBuggiTaskSelectionsTest {
 
         MetakompasAndBuggiTaskSelections taskSelections = new MetakompasAndBuggiTaskSelections();
         taskSelections.taxonomyCache = taxonomyCache;
+        return taskSelections;
+    }
+
+    private MetakompasAndBuggiTaskSelections taskSelectionsWithEntityManager(PromatTask task) {
+        return taskSelectionsWithEntityManager(task, new PromatCase());
+    }
+
+    @SuppressWarnings("unchecked")
+    private MetakompasAndBuggiTaskSelections taskSelectionsWithEntityManager(PromatTask task, PromatCase promatCase) {
+        TypedQuery<PromatCase> query = mock(TypedQuery.class);
+        when(query.setParameter(anyString(), any())).thenReturn(query);
+        when(query.getSingleResult()).thenReturn(promatCase);
+
+        EntityManager entityManager = mock(EntityManager.class);
+        when(entityManager.find(PromatTask.class, 123)).thenReturn(task);
+        when(entityManager.createNamedQuery(PromatCase.GET_CASE_WITH_TASK_ID_NAME, PromatCase.class)).thenReturn(query);
+
+        MetakompasAndBuggiTaskSelections taskSelections = new MetakompasAndBuggiTaskSelections();
+        taskSelections.entityManager = entityManager;
+        taskSelections.catalogingUpdateConnector = mock(CatalogingUpdateConnector.class);
+        taskSelections.updateRecordLibraryId = "870970";
         return taskSelections;
     }
 }

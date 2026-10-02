@@ -52,6 +52,5 @@ approved. JED also drops subfield `&`, so fbi-api can't express the Metakompas o
   Removing them (queries, `FbiApiHandler`, WireMock fixtures) is left as a separate cleanup to
   keep this change small.
 - This polling is transitional. Once Promat registers Metakompas/Buggi selections itself and
-  approves the task on success (see the cataloging update-service registration decision on the
-  `mk-buggi-registration-update-service` branch), it is only needed for cases started through
+  approves the task on success (see ADR 0007), it is only needed for cases started through
   Metakompasset, and can be removed when none of those remain.

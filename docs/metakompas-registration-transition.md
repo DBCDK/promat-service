@@ -3,8 +3,8 @@
 Status: transition in progress. Remove the old task types' handling using the checklist below once
 no task of those types is waiting for Metakompasset.
 
-Related: ADR 0006 (checking Metakompas registration in the MARC record) and the cataloging
-update-service registration ADR on the `mk-buggi-registration-update-service` branch.
+Related: ADR 0006 (checking Metakompas registration in the MARC record) and ADR 0007 (registering
+in update-service).
 
 ## Background
 
