@@ -19,13 +19,15 @@ delete from promattask
                  401161, 401162, 401163, 401164, 401165, 401166, 401167, 401171, 401172, 401173, 401174, 401175, 401176, 401177,
                  401178, 401181, 401182, 401183, 400024, 400025, 400026, 400027, 400028, 400029, 400030, 400031, 400032, 400033,
                  400034, 400035, 400036, 400037, 400038, 400039, 400040, 400041, 400042, 400043, 400044, 400045, 400046, 400047,
-                 400048, 400049, 400050, 400051, 400052, 402001, 402002);
+                 400048, 400049, 400050, 400051, 400052, 402001, 402002,
+                 403001, 403002, 403003, 403011, 403012, 403013, 403021, 403022, 403023, 403031, 403032, 403041, 403042);
 
 --
 delete from promatcase
     where id in (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22);
 delete from promatcase
-    where id in (1000, 1010, 1020, 1030, 1040, 1050, 1060, 1070, 1080, 1090, 1100, 1110, 1120, 1130, 1140, 1150, 1160, 1170, 1180);
+    where id in (1000, 1010, 1020, 1030, 1040, 1050, 1060, 1070, 1080, 1090, 1100, 1110, 1120, 1130, 1140, 1150, 1160, 1170, 1180,
+                 1300, 1310, 1320, 1330, 1340);
 --
 delete from notification
     where id in (1, 2, 3);
@@ -604,3 +606,56 @@ insert into casetasks(case_id, task_id)
 values (1180, 401181),
        (1180, 401182),
        (1180, 401183);
+
+--
+-- Reading experience (READING_EXPERIENCE_ADULT/CHILD) - tasks registered in Promat through
+-- tasks/{taskId}/reading-experience/adult|child and .../approve. Reviewer 4902 is the preview login.
+-- Metakompas selections only use suggestions, since the preview's taxonomy may be empty.
+--
+-- 1300: assigned, both reading experience tasks still empty
+insert into promatcase(id, title, details, primaryFaust, relatedFausts, reviewer_id, editor_id, created, deadline, assigned, status, materialType, creator_id)
+values (1300, 'Skovens hemmelighed', 'Billedbog om en bjørneunge der finder vej hjem gennem skoven.', '2001300', '[]', 4902, 4950, '2026-09-28', '2026-10-28', '2026-09-28', 'ASSIGNED', 'BOOK', 4950);
+insert into promattask(id, tasktype, taskfieldtype, created, paycategory, approved, payed, data, targetFausts)
+values (403001, 'GROUP_1_LESS_THAN_100_PAGES', 'BRIEF',                    '2026-09-28', 'BRIEF',      NULL, NULL, NULL, '["2001300"]'),
+       (403002, 'GROUP_1_LESS_THAN_100_PAGES', 'READING_EXPERIENCE_ADULT', '2026-09-28', 'METAKOMPAS', NULL, NULL, NULL, '["2001300"]'),
+       (403003, 'GROUP_1_LESS_THAN_100_PAGES', 'READING_EXPERIENCE_CHILD', '2026-09-28', 'BUGGI',      NULL, NULL, NULL, '["2001300"]');
+insert into casetasks(case_id, task_id)
+values (1300, 403001), (1300, 403002), (1300, 403003);
+--
+-- 1310: assigned, drafts saved - the Buggi draft lacks two scales, so approving it gives 400
+insert into promatcase(id, title, details, primaryFaust, relatedFausts, reviewer_id, editor_id, created, deadline, assigned, status, materialType, creator_id)
+values (1310, 'Lille Bjørn på eventyr', 'Højtlæsningsbog om venskab og mod.', '2001310', '[]', 4902, 4950, '2026-09-28', '2026-10-28', '2026-09-28', 'ASSIGNED', 'BOOK', 4950);
+insert into promattask(id, tasktype, taskfieldtype, created, paycategory, approved, payed, data, targetFausts)
+values (403011, 'GROUP_1_LESS_THAN_100_PAGES', 'BRIEF',                    '2026-09-28', 'BRIEF',      NULL, NULL, 'Hyggelig højtlæsning for de 4-6-årige.', '["2001310"]'),
+       (403012, 'GROUP_1_LESS_THAN_100_PAGES', 'READING_EXPERIENCE_ADULT', '2026-09-28', 'METAKOMPAS', NULL, NULL, '{"entries":[],"suggestions":[{"path":["ramme","genre"],"title":"eventyr"},{"path":["stemning","positiv"],"title":"hyggelig"},{"path":["handling","navngivet hovedperson"],"title":"Lille Bjørn"}]}', '["2001310"]'),
+       (403013, 'GROUP_1_LESS_THAN_100_PAGES', 'READING_EXPERIENCE_CHILD', '2026-09-28', 'BUGGI',      NULL, NULL, '[{"id":1,"name":"let/svær","marcSubfieldCode":"s","value":2},{"id":2,"name":"tekst/tegninger","marcSubfieldCode":"s","value":0},{"id":8,"name":"spændende","marcSubfieldCode":"n","value":3}]', '["2001310"]');
+insert into casetasks(case_id, task_id)
+values (1310, 403011), (1310, 403012), (1310, 403013);
+--
+-- 1320: approved by the editor, waiting for its reading experience tasks (complete, not yet approved)
+insert into promatcase(id, title, details, primaryFaust, relatedFausts, reviewer_id, editor_id, created, deadline, assigned, status, materialType, creator_id)
+values (1320, 'Natten i fyrtårnet', 'Spændende børnebog om to søskende der overnatter i et fyrtårn.', '2001320', '[]', 4902, 4950, '2026-09-20', '2026-10-20', '2026-09-20', 'PENDING_READING_EXPERIENCE', 'BOOK', 4950);
+insert into promattask(id, tasktype, taskfieldtype, created, paycategory, approved, payed, data, targetFausts)
+values (403021, 'GROUP_1_LESS_THAN_100_PAGES', 'BRIEF',                    '2026-09-20', 'BRIEF',      '2026-09-30', NULL, 'Spændende og let tilgængelig.', '["2001320"]'),
+       (403022, 'GROUP_1_LESS_THAN_100_PAGES', 'READING_EXPERIENCE_ADULT', '2026-09-20', 'METAKOMPAS', NULL,         NULL, '{"entries":[],"suggestions":[{"path":["ramme","genre"],"title":"eventyr"},{"path":["stemning","positiv"],"title":"hyggelig"},{"path":["handling","navngivet hovedperson"],"title":"Lille Bjørn"}]}', '["2001320"]'),
+       (403023, 'GROUP_1_LESS_THAN_100_PAGES', 'READING_EXPERIENCE_CHILD', '2026-09-20', 'BUGGI',      NULL,         NULL, '[{"id":1,"name":"let/svær","marcSubfieldCode":"s","value":2},{"id":2,"name":"tekst/tegninger","marcSubfieldCode":"s","value":4},{"id":3,"name":"kort/lang","marcSubfieldCode":"s","value":1},{"id":4,"name":"virkelig/fantasi","marcSubfieldCode":"u","value":3},{"id":5,"name":"rar","marcSubfieldCode":"n","value":5}]', '["2001320"]');
+insert into casetasks(case_id, task_id)
+values (1320, 403021), (1320, 403022), (1320, 403023);
+--
+-- 1330: old and new task types on one case - waits for Metakompasset first (PENDING_EXTERNAL)
+insert into promatcase(id, title, details, primaryFaust, relatedFausts, reviewer_id, editor_id, created, deadline, assigned, status, materialType, creator_id)
+values (1330, 'Byen under isen', 'Roman om en by der langsomt forsvinder under en gletsjer.', '2001330', '[]', 4902, 4950, '2026-09-15', '2026-10-15', '2026-09-15', 'PENDING_EXTERNAL', 'BOOK', 4950);
+insert into promattask(id, tasktype, taskfieldtype, created, paycategory, approved, payed, data, targetFausts)
+values (403031, 'GROUP_2_100_UPTO_199_PAGES', 'METAKOMPAS',               '2026-09-15', 'METAKOMPAS', NULL, NULL, NULL,     '["2001330"]'),
+       (403032, 'GROUP_2_100_UPTO_199_PAGES', 'READING_EXPERIENCE_ADULT', '2026-09-15', 'METAKOMPAS', NULL, NULL, '{"entries":[],"suggestions":[{"path":["ramme","genre"],"title":"eventyr"},{"path":["stemning","positiv"],"title":"hyggelig"},{"path":["handling","navngivet hovedperson"],"title":"Lille Bjørn"}]}', '["2001330"]');
+insert into casetasks(case_id, task_id)
+values (1330, 403031), (1330, 403032);
+--
+-- 1340: exported, its Buggi task approved - for trying a correction (save and approve again)
+insert into promatcase(id, title, details, primaryFaust, relatedFausts, reviewer_id, editor_id, created, deadline, assigned, status, materialType, creator_id)
+values (1340, 'Min første drage', 'Letlæsningsbog om en dreng der finder et drageæg.', '2001340', '[]', 4902, 4950, '2026-08-01', '2026-09-01', '2026-08-01', 'EXPORTED', 'BOOK', 4950);
+insert into promattask(id, tasktype, taskfieldtype, created, paycategory, approved, payed, data, targetFausts)
+values (403041, 'GROUP_1_LESS_THAN_100_PAGES', 'BRIEF',                    '2026-08-01', 'BRIEF', '2026-08-20', NULL, 'Letlæsning med humor.', '["2001340"]'),
+       (403042, 'GROUP_1_LESS_THAN_100_PAGES', 'READING_EXPERIENCE_CHILD', '2026-08-01', 'BUGGI', '2026-08-20', NULL, '[{"id":1,"name":"let/svær","marcSubfieldCode":"s","value":2},{"id":2,"name":"tekst/tegninger","marcSubfieldCode":"s","value":4},{"id":3,"name":"kort/lang","marcSubfieldCode":"s","value":1},{"id":4,"name":"virkelig/fantasi","marcSubfieldCode":"u","value":3},{"id":5,"name":"rar","marcSubfieldCode":"n","value":5}]', '["2001340"]');
+insert into casetasks(case_id, task_id)
+values (1340, 403041), (1340, 403042);

@@ -22,6 +22,7 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.TypedQuery;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.DELETE;
+import jakarta.ws.rs.GET;
 import jakarta.ws.rs.PUT;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
@@ -47,6 +48,19 @@ public class Tasks {
 
     @EJB
     Repository repository;
+
+    // A single task, so a client needing one task doesn't have to fetch its whole case
+    @GET
+    @Path("tasks/{id}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response getTask(@PathParam("id") final Integer id) {
+        LOGGER.info("tasks/{} (GET)", id);
+        PromatTask task = entityManager.find(PromatTask.class, id);
+        if(task == null) {
+            return ServiceErrorDto.NotFound("No such task", String.format("Task with id %s does not exist", id));
+        }
+        return Response.ok(task).build();
+    }
 
     @PUT
     @Path("tasks/{id}")

@@ -153,6 +153,23 @@ public class CaseTaskSelectionIT extends ContainerTest {
         deleteResponse("v1/api/cases/" + aCase.getId());
     }
 
+    @Test
+    void testGetTask() throws Exception {
+        String faust = "94001125";
+        PromatCase aCase = postAndAssert("v1/api/cases",
+                makeRequest(faust, TaskFieldType.READING_EXPERIENCE_CHILD), PromatCase.class, CREATED);
+        int buggiTaskId = ContainerTest.findTaskByFieldType(aCase, TaskFieldType.READING_EXPERIENCE_CHILD).getId();
+        promatServiceConnector.putBuggiSelection(buggiTaskId, COMPLETE_BUGGI_SELECTION);
+
+        PromatTask task = promatServiceConnector.getTask(buggiTaskId);
+        assertThat(task.getTaskFieldType(), is(TaskFieldType.READING_EXPERIENCE_CHILD));
+        assertThat(task.getTargetFausts(), is(List.of(faust)));
+        assertThat("selection included", task.getData().contains("\"let/svær\""), is(true));
+        assertPromatThrows(NOT_FOUND, () -> promatServiceConnector.getTask(999999));
+
+        deleteResponse("v1/api/cases/" + aCase.getId());
+    }
+
     private PromatCase setStatus(PromatCase aCase, CaseStatus status, int expectedStatusCode) throws Exception {
         Response response = postResponse("v1/api/cases/" + aCase.getId(), new CaseRequest().withStatus(status));
         assertThat("status " + status, response.getStatus(), is(expectedStatusCode));

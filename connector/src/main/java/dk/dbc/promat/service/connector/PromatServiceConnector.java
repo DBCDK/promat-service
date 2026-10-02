@@ -13,6 +13,7 @@ import dk.dbc.promat.service.dto.MetakompasSelectionRequest;
 import dk.dbc.promat.service.dto.ServiceErrorDto;
 import dk.dbc.promat.service.dto.TagList;
 import dk.dbc.promat.service.persistence.PromatCase;
+import dk.dbc.promat.service.persistence.PromatTask;
 import dk.dbc.promat.service.taskdata.BuggiSelectionEntry;
 import dk.dbc.promat.service.taskdata.MetakompasTaskData;
 import net.jodah.failsafe.RetryPolicy;
@@ -112,6 +113,21 @@ public class PromatServiceConnector {
      * @return case
      * @throws PromatServiceConnectorException on unexpected failure for get operation
      */
+    /**
+     * Gets a single task
+     * @param taskId id of the task
+     * @return the task
+     * @throws PromatServiceConnectorException on unexpected failure for get operation
+     */
+    public PromatTask getTask(int taskId) throws PromatServiceConnectorException {
+        final HttpGet httpGet = new HttpGet(failSafeHttpClient)
+                .withBaseUrl(baseUrl)
+                .withPathElements("tasks", String.valueOf(taskId));
+        final Response response = httpGet.execute();
+        assertResponseStatus(response, Response.Status.OK);
+        return readResponseEntity(response, PromatTask.class);
+    }
+
     public PromatCase getCase(int caseID) throws PromatServiceConnectorException {
         final HttpGet httpGet = new HttpGet(failSafeHttpClient)
                 .withBaseUrl(baseUrl)

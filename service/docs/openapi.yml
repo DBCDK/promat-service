@@ -1057,6 +1057,31 @@ paths:
                 $ref: '#/components/schemas/ServiceError'
 
   /tasks/{id}:
+    get:
+      tags:
+        - tasks
+      summary: Get a single task
+      operationId: getTask
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            description: Task id
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        '404':
+          description: No such task
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceError'
     put:
       tags:
         - tasks
