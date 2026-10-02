@@ -236,6 +236,28 @@ public class MetakompasAndBuggiTaskSelectionsTest {
     }
 
     @Test
+    public void registerReadingExperienceRequiresEveryBuggiScale() throws Exception {
+        PromatTask task = new PromatTask()
+                .withId(123)
+                .withTaskFieldType(TaskFieldType.READING_EXPERIENCE_CHILD)
+                .withTargetFausts(List.of("12345678"));
+        MetakompasAndBuggiTaskSelections taskSelections = taskSelectionsWithEntityManager(task);
+        // let/svær and virkelig/fantasi set, tekst/tegninger saved as 0 (not filled in yet), kort/lang missing
+        taskSelections.writeBuggiSelection(task, List.of(
+                new BuggiSelectionRequest(1, 2),
+                new BuggiSelectionRequest(2, 0),
+                new BuggiSelectionRequest(4, 5)));
+
+        ServiceErrorException exception = assertThrows(ServiceErrorException.class, () ->
+                taskSelections.registerReadingExperience(123));
+
+        assertThat(exception.getHttpStatus(), is(400));
+        assertThat(exception.getServiceErrorDto().getCause(), is("Incomplete selection"));
+        assertThat(exception.getServiceErrorDto().getDetails(), containsString("tekst/tegninger, kort/lang"));
+        verifyNoInteractions(taskSelections.catalogingUpdateConnector);
+    }
+
+    @Test
     public void removesDuplicateBuggiOptionsKeepingTheLastValue() throws Exception {
         List<BuggiSelectionEntry> saved = taskSelectionsWithTaxonomy().writeBuggiSelection(new PromatTask(), List.of(
                 new BuggiSelectionRequest(8, 2),
