@@ -9,6 +9,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 
 import static dk.dbc.promat.service.cataloging.MarcXchangeBuilder.subfield;
 
@@ -38,11 +39,11 @@ public class CatalogingMarcMapper {
             Map.entry("stemning->trist", "n"),
             Map.entry("stemning->uhyggelig", "n"),
             Map.entry("stemning->fantasifuld", "n"),
-            Map.entry("stemning->tankevækkende", "n"),
-            Map.entry("handling->hovedperson(er) - beskrivelse->om hovedpersonen", "h"),
-            Map.entry("handling->hovedperson(er) - beskrivelse->hovedpersonens karaktertræk", "k"),
-            Map.entry("handling->hovedperson(er) - beskrivelse->hovedpersonens konflikt", "l")
+            Map.entry("stemning->tankevækkende", "n")
     );
+
+    // Subfields metakompasset writes in a 665 of their own, with their category: moods and named main character
+    private static final Set<String> SUBFIELDS_REQUIRING_OWN_FIELD = Set.of("n", "v");
 
     public String toMarc(TaskFieldType taskFieldType, String libraryId, String localIdentifier,
                          MetakompasTaskData metakompasSelectionData, List<BuggiSelectionEntry> buggiEntries) {
@@ -61,16 +62,26 @@ public class CatalogingMarcMapper {
 
         // Mirrored from metakompasset: selected taxonomy subjects and free-text
         // suggestions for the same category path are merged into the same MARC field.
+        // Each suggestion is one value - Promat's UI takes one word per suggestion.
         for(MetakompasTaskData.Entry entry : selection.getEntries() == null ? List.<MetakompasTaskData.Entry>of() : selection.getEntries()) {
             addMetakompasValue(valuesByPath, entry.path(), entry.title());
         }
         for(MetakompasTaskData.Suggestion suggestion : selection.getSuggestions() == null ? List.<MetakompasTaskData.Suggestion>of() : selection.getSuggestions()) {
-            for(String text : splitSuggestion(suggestion.title())) {
-                addMetakompasValue(valuesByPath, suggestion.path(), text);
-            }
+            addMetakompasValue(valuesByPath, suggestion.path(), suggestion.title());
         }
 
         for(MetakompasField field : valuesByPath.values()) {
+            if(SUBFIELDS_REQUIRING_OWN_FIELD.contains(field.subfield())) {
+                // Mirrored from metakompasset (SUBFIELD_REQUIRES_OWN_FIELD): each mood and named main
+                // character in a 665 of its own, with its category in *& - e.g. *n hyggelig *& positiv
+                for(String value : field.values()) {
+                    builder.addField("665", List.of(
+                            subfield(field.subfield(), value),
+                            subfield("&", field.category()),
+                            subfield("&", "lektor")));
+                }
+                continue;
+            }
             List<MarcXchangeBuilder.Subfield> subfields = new ArrayList<>();
             for(String value : field.values()) {
                 subfields.add(subfield(field.subfield(), value));
@@ -120,19 +131,11 @@ public class CatalogingMarcMapper {
         if(subfield == null) {
             throw new IllegalArgumentException("No Metakompas MARC mapping for path: " + path);
         }
-        valuesByPath.computeIfAbsent(normalizedPath, ignored -> new MetakompasField(subfield, new ArrayList<>()))
+        // The category is the path's second level, as in metakompasset: "positiv" for stemning->positiv
+        String category = path.size() > 1 ? path.get(1).trim() : null;
+        valuesByPath.computeIfAbsent(normalizedPath, ignored -> new MetakompasField(subfield, category, new ArrayList<>()))
                 .values()
                 .add(value.trim());
-    }
-
-    private List<String> splitSuggestion(String value) {
-        if(value == null) {
-            return List.of();
-        }
-        return List.of(value.split("\\s*;\\s*")).stream()
-                .map(String::trim)
-                .filter(text -> !text.isEmpty())
-                .toList();
     }
 
     private String normalizePath(List<String> path) {
@@ -143,5 +146,5 @@ public class CatalogingMarcMapper {
         return value == null ? "" : value.toLowerCase(Locale.ROOT).trim();
     }
 
-    private record MetakompasField(String subfield, List<String> values) {}
+    private record MetakompasField(String subfield, String category, List<String> values) {}
 }

@@ -154,13 +154,18 @@ public class CaseInformationUpdater {
 
             //
             // Status is 'PENDING_EXTERNAL'. Now do last check of metakompas data before setting
-            // final state: APPROVED.
+            // final state: APPROVED - or PENDING_READING_EXPERIENCE, if reading experience tasks are
+            // still waiting to be approved in Promat.
             //
             if (CaseStatus.PENDING_EXTERNAL == promatCase.getStatus()) {
                 LOGGER.info("Case '{}' is in PENDING_EXTERNAL state. Checking that all 'metakompas' " +
                         "data has been registered", promatCase.getId());
-                boolean approved = promatCase.getTasks().stream().allMatch(promatTask -> promatTask.getApproved() != null);
-                promatCase.setStatus(approved ? CaseStatus.APPROVED : CaseStatus.PENDING_EXTERNAL);
+                promatCase.setStatus(PromatTaskUtils.approvedCaseStatus(promatCase));
+            }
+            // Normally moved on by the approval of its last reading experience task - this catches a case left
+            // behind, e.g. when two of its tasks were approved at the same time
+            else if (CaseStatus.PENDING_READING_EXPERIENCE == promatCase.getStatus()) {
+                promatCase.setStatus(PromatTaskUtils.approvedCaseStatus(promatCase));
             }
             //
             // A given ebook or book might be present in the "material content repo" (DMAT) for handout to reviewer,

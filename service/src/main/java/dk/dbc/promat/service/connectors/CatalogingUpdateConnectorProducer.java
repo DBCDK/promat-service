@@ -25,19 +25,21 @@ public class CatalogingUpdateConnectorProducer {
     @Produces
     public static CatalogingUpdateConnector produce(
             @ConfigProperty(name = "UPDATE_SERVICE_URL") String baseUrl,
+            // The same in every environment - which update-service is used is decided by UPDATE_SERVICE_URL
+            @ConfigProperty(name = "UPDATE_PROVIDER_NAME", defaultValue = "fbs-update") String providerName,
             @ConfigProperty(name = "METAKOMPAS_NETPUNKT_GROUP") String metakompasGroup,
             @ConfigProperty(name = "METAKOMPAS_NETPUNKT_USER") String metakompasUser,
             @ConfigProperty(name = "METAKOMPAS_NETPUNKT_PASSWORD") String metakompasPassword,
             @ConfigProperty(name = "BUGGI_NETPUNKT_GROUP") String buggiGroup,
             @ConfigProperty(name = "BUGGI_NETPUNKT_USER") String buggiUser,
             @ConfigProperty(name = "BUGGI_NETPUNKT_PASSWORD") String buggiPassword) {
-        return produce(baseUrl,
+        return produce(baseUrl, providerName,
                 new CatalogingUpdateConnector.NetpunktCredentials(metakompasGroup, metakompasUser, metakompasPassword),
                 new CatalogingUpdateConnector.NetpunktCredentials(buggiGroup, buggiUser, buggiPassword),
                 UserAgent.forInternalRequests());
     }
 
-    public static CatalogingUpdateConnector produce(String baseUrl,
+    public static CatalogingUpdateConnector produce(String baseUrl, String providerName,
                                                     CatalogingUpdateConnector.NetpunktCredentials metakompasCredentials,
                                                     CatalogingUpdateConnector.NetpunktCredentials buggiCredentials,
                                                     UserAgent userAgent) {
@@ -47,7 +49,7 @@ public class CatalogingUpdateConnectorProducer {
                         .property(ClientProperties.CONNECT_TIMEOUT, 5000)
                         .property(ClientProperties.READ_TIMEOUT, 30000)),
                 userAgent, RETRY_POLICY);
-        return new CatalogingUpdateConnector(failSafeHttpClient, baseUrl, metakompasCredentials, buggiCredentials);
+        return new CatalogingUpdateConnector(failSafeHttpClient, baseUrl, providerName, metakompasCredentials, buggiCredentials);
     }
 
     static void dispose(@Disposes CatalogingUpdateConnector connector) {

@@ -30,7 +30,7 @@ class CatalogingUpdateConnectorTest {
     void setUp() {
         wireMockServer = new WireMockServer(options().dynamicPort());
         wireMockServer.start();
-        connector = CatalogingUpdateConnectorProducer.produce(wireMockServer.baseUrl(),
+        connector = CatalogingUpdateConnectorProducer.produce(wireMockServer.baseUrl(), "fbs-update",
                 new CatalogingUpdateConnector.NetpunktCredentials("150077", "metakompas-user", "metakompas-secret"),
                 new CatalogingUpdateConnector.NetpunktCredentials("150084", "buggi-user", "buggi-secret"),
                 new UserAgent("cataloging-update-connector-test"));
@@ -57,7 +57,10 @@ class CatalogingUpdateConnectorTest {
                 .withRequestBody(matchingJsonPath("$.bibliographicRecordDTO.recordSchema", equalTo("info:lc/xmlns/marcxchange-v1")))
                 .withRequestBody(matchingJsonPath("$.bibliographicRecordDTO.recordPacking", equalTo("xml")))
                 .withRequestBody(matchingJsonPath("$.bibliographicRecordDTO.recordDataDTO.content[0]", equalTo(MARC)))
-                .withRequestBody(matchingJsonPath("$.trackingId", matching("DBC_PROMAT_870970:12345678_.+"))));
+                .withRequestBody(matchingJsonPath("$.trackingId", matching("DBC_PROMAT_870970:12345678_.+")))
+                .withRequestBody(matchingJsonPath("$.bibliographicRecordDTO.extraRecordDataDTO.content[0]", equalTo(
+                        "<cat:updateRecordExtraData xmlns:cat=\"http://oss.dbc.dk/ns/catalogingUpdate\">"
+                                + "<providerName>fbs-update</providerName></cat:updateRecordExtraData>"))));
     }
 
     @Test

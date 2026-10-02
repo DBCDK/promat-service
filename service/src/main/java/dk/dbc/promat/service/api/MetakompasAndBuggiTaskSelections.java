@@ -10,6 +10,7 @@ import dk.dbc.promat.service.dto.BuggiSelectionRequest;
 import dk.dbc.promat.service.dto.MetakompasSelectionRequest;
 import dk.dbc.promat.service.dto.ServiceErrorCode;
 import dk.dbc.promat.service.dto.TagList;
+import dk.dbc.promat.service.persistence.CaseStatus;
 import dk.dbc.promat.service.persistence.JsonMapperProvider;
 import dk.dbc.promat.service.persistence.PromatCase;
 import dk.dbc.promat.service.persistence.PromatEntityManager;
@@ -19,6 +20,7 @@ import dk.dbc.promat.service.taskdata.BuggiSelectionEntry;
 import dk.dbc.promat.service.taskdata.MetakompasTaskData;
 import dk.dbc.promat.service.taxonomy.TaxonomyCache;
 import dk.dbc.promat.service.taxonomy.dto.Subject;
+import dk.dbc.promat.service.util.PromatTaskUtils;
 import jakarta.ejb.Stateless;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
@@ -27,6 +29,7 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -37,6 +40,8 @@ import java.util.Set;
 @Stateless
 public class MetakompasAndBuggiTaskSelections {
     private static final ObjectMapper OBJECT_MAPPER = new JsonMapperProvider().getObjectMapper();
+    private static final Set<CaseStatus> CLOSED_CASE_STATES = EnumSet.of(CaseStatus.CLOSED, CaseStatus.DELETED,
+            CaseStatus.REVERTED, CaseStatus.PENDING_REVERT, CaseStatus.PENDING_CLOSE);
     private final CatalogingMarcMapper marcMapper = new CatalogingMarcMapper();
 
     @Inject
@@ -101,7 +106,21 @@ public class MetakompasAndBuggiTaskSelections {
                     .withCode(ServiceErrorCode.INVALID_REQUEST)
                     .withCause("Wrong task type");
         }
+        assertCaseIsOpen(getCaseOfTask(task.getId()));
         return task;
+    }
+
+    // A reading experience can be saved and approved in any case status - also after the review is exported,
+    // since it's registered on the record directly - except when the case is closed or its faust is being
+    // or has been deleted. As with Metakompasset's cases/{pid}/buggi.
+    private static void assertCaseIsOpen(PromatCase promatCase) throws ServiceErrorException {
+        if(CLOSED_CASE_STATES.contains(promatCase.getStatus())) {
+            throw new ServiceErrorException(String.format("Case %d is %s - its reading experience can't be changed",
+                    promatCase.getId(), promatCase.getStatus()))
+                    .withHttpStatus(409)
+                    .withCode(ServiceErrorCode.INVALID_STATE)
+                    .withCause("Case is closed");
+        }
     }
 
     public TagList writeBuggiSelection(PromatTask task, TagList tags) throws ServiceErrorException {
@@ -193,9 +212,10 @@ public class MetakompasAndBuggiTaskSelections {
                     .withCode(ServiceErrorCode.INVALID_REQUEST)
                     .withCause("Wrong task type");
         }
+        PromatCase promatCase = getCaseOfTask(task.getId());
+        assertCaseIsOpen(promatCase);
         validateNonEmptySelection(task);
 
-        PromatCase promatCase = getCaseOfTask(task.getId());
         try {
             for(String faust : targetFausts(promatCase, task)) {
                 // Metakompasset also sends compact MarcXchange update records to
@@ -216,7 +236,14 @@ public class MetakompasAndBuggiTaskSelections {
                     .withCause("Invalid task data")
                     .withDetails(e.getMessage());
         }
-        task.setApproved(LocalDate.now());
+        // Approving again (a correction) keeps the original approval date
+        if(task.getApproved() == null) {
+            task.setApproved(LocalDate.now());
+        }
+        // The editor has approved the case already - with its last reading experience task approved, it moves on
+        if(promatCase.getStatus() == CaseStatus.PENDING_READING_EXPERIENCE) {
+            promatCase.setStatus(PromatTaskUtils.approvedCaseStatus(promatCase));
+        }
     }
 
     private PromatCase getCaseOfTask(int taskId) {
@@ -264,6 +291,16 @@ public class MetakompasAndBuggiTaskSelections {
                 List<BuggiSelectionEntry> buggiEntries = OBJECT_MAPPER.readValue(task.getData(), new TypeReference<>() {});
                 if(buggiEntries.isEmpty()) {
                     throw emptySelection(task);
+                }
+                // A draft may leave the scales at 0 - registering it may not
+                List<String> missing = BuggiVocabulary.missingRequiredValues(buggiEntries);
+                if(!missing.isEmpty()) {
+                    String message = String.format("Task %d has no value for %s", task.getId(), String.join(", ", missing));
+                    throw new ServiceErrorException(message)
+                            .withDetails(message)
+                            .withHttpStatus(400)
+                            .withCode(ServiceErrorCode.INVALID_REQUEST)
+                            .withCause("Incomplete selection");
                 }
             }
         } catch(JsonProcessingException e) {

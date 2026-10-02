@@ -1,27 +1,16 @@
 #!groovy
 
 @Library('dependency-track')
-// Temporarily pinned to the fix-hardcoded-resource-type branch to test the kind-aware
-// delete + rollout-wait fix before merging to main and cutting a new release. Revert to
-// a tagged release (e.g. team-x-tools@1.2.0, or whatever supersedes it) once verified.
-@Library('team-x-tools@fix-hardcoded-resource-type')
 
 def workerNode = "devel12"
 def teamSlackNotice = 'de-notifications'
 def teamSlackWarning = 'de-notifications'
-def featureNamespace = 'promat-features'
-def kubeconfigCredentialsId = 'kubecert-team-x'
-def postgresImage = 'docker-dbc.artifacts.dbccloud.dk/dbc-postgres-16:latest'
 
 pipeline {
 	agent {label workerNode}
 
 	tools {
 		maven 'Maven 3'
-	}
-
-	environment {
-		IMAGE = "docker-metascrum.artifacts.dbccloud.dk/promat-service:${env.BRANCH_NAME}-${env.BUILD_NUMBER}"
 	}
 
   triggers {
@@ -99,64 +88,15 @@ pipeline {
             }
         }
 		stage("docker push") {
+			when {
+                branch "master"
+            }
 			steps {
 				script {
-					docker.image(IMAGE).push()
+					docker.image("docker-metascrum.artifacts.dbccloud.dk/promat-service:${env.BRANCH_NAME}-${env.BUILD_NUMBER}").push()
 				}
 			}
 		}
-        stage("Deploy feature branch") {
-            when {
-                not { branch "master" }
-            }
-            steps {
-                script {
-                    def dbUser = 'promat'
-                    def dbName = 'promat_db'
-                    def dbPassword = UUID.randomUUID().toString().replaceAll('-', '')
-
-                    // Disposable feature preview only: the feature deployment tool labels and
-                    // cleans these temporary resources when this branch/build is superseded.
-                    // There is deliberately no PVC, so the preview database disappears with the pod.
-                    def dbPreviewUrl = gitopsSecretsFeatureBranch(
-                        sourceNamespace: featureNamespace,
-                        manifest: 'promat-service/promat-service-db.yml',
-                        image: postgresImage,
-                        kubeconfigCredentialsId: kubeconfigCredentialsId,
-                        envOverrides: [
-                            POSTGRES_PASSWORD: dbPassword,
-                        ],
-                    )
-                    def dbHost = dbPreviewUrl.replace('http://', '')
-
-                    // Feature branch deployment of the service itself.
-                    env.PREVIEW_URL = gitopsSecretsFeatureBranch(
-                        sourceNamespace: featureNamespace,
-                        manifest: 'promat-service/promat-service.yml',
-                        image: IMAGE,
-                        kubeconfigCredentialsId: kubeconfigCredentialsId,
-                        envOverrides: [
-                            PROMAT_DB_URL: "${dbUser}:${dbPassword}@${dbHost}:5432/${dbName}",
-                        ],
-                    )
-
-                    // Seed data is just for the disposable preview/local workflow. It is not part
-                    // of app startup or Flyway migrations, and the script refuses non-preview hosts.
-                    docker.image(postgresImage).inside {
-                        sh """
-                            set +x
-                            scripts/feature-preview/seed \
-                                --host '${dbHost}' \
-                                --port 5432 \
-                                --dbname '${dbName}' \
-                                --dbuser '${dbUser}' \
-                                --dbpassword '${dbPassword}'
-                        """
-                    }
-                    echo "Deployed preview: ${env.PREVIEW_URL}"
-                }
-            }
-        }
         stage("Update staging version number") {
             when {
                 branch "master"

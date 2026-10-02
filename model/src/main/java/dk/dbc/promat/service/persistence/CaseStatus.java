@@ -61,18 +61,30 @@ public enum CaseStatus {
         Editor has approved the review, but there are still tasks that must be checked against
         an external system
 
-        Transition from:    PENDING_APPROVAL
-        Transition to:      APPROVED, PENDING_ISSUES
+        Transition from:    PENDING_APPROVAL, APPROVED/PENDING_READING_EXPERIENCE (Metakompas/Buggi task added)
+        Transition to:      APPROVED, PENDING_READING_EXPERIENCE, PENDING_ISSUES
         Payable:            No
         Visible in DBCKat   No
     */
     PENDING_EXTERNAL,
 
     /*
+        Editor has approved the review, but there are still reading experience tasks
+        (READING_EXPERIENCE_ADULT/CHILD) waiting to be approved - which registers them on the record -
+        through tasks/{taskId}/reading-experience/approve
+
+        Transition from:    PENDING_APPROVAL, PENDING_EXTERNAL, APPROVED (reading experience task added)
+        Transition to:      APPROVED, PENDING_EXTERNAL, PENDING_ISSUES
+        Payable:            No
+        Visible in DBCKat   No
+    */
+    PENDING_READING_EXPERIENCE,
+
+    /*
         Editor has approved the review and/or all external checks has resolved into 'done'
 
-        Transition from:    PENDING_APPROVAL, PENDING_EXTERNAL
-        Transition to:      PENDING_MEETING, PENDING_ISSUES
+        Transition from:    PENDING_APPROVAL, PENDING_EXTERNAL, PENDING_READING_EXPERIENCE
+        Transition to:      PENDING_MEETING, PENDING_ISSUES, PENDING_EXTERNAL/PENDING_READING_EXPERIENCE (task added)
         Payable:            Yes
         Visible in DBCKat   Yes
     */

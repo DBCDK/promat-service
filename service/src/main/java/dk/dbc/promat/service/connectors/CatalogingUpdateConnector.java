@@ -6,6 +6,7 @@ import dk.dbc.httpclient.HttpPost;
 import dk.dbc.promat.service.persistence.TaskFieldType;
 import dk.dbc.updateservice.dto.AuthenticationDTO;
 import dk.dbc.updateservice.dto.BibliographicRecordDTO;
+import dk.dbc.updateservice.dto.ExtraRecordDataDTO;
 import dk.dbc.updateservice.dto.RecordDataDTO;
 import dk.dbc.updateservice.dto.UpdateRecordResponseDTO;
 import dk.dbc.updateservice.dto.UpdateServiceRequestDTO;
@@ -42,11 +43,13 @@ public class CatalogingUpdateConnector {
     private final String baseUrl;
     private final NetpunktCredentials metakompasCredentials;
     private final NetpunktCredentials buggiCredentials;
+    private final String providerName;
 
-    public CatalogingUpdateConnector(FailSafeHttpClient failSafeHttpClient, String baseUrl,
+    public CatalogingUpdateConnector(FailSafeHttpClient failSafeHttpClient, String baseUrl, String providerName,
                                      NetpunktCredentials metakompasCredentials, NetpunktCredentials buggiCredentials) {
         this.failSafeHttpClient = Objects.requireNonNull(failSafeHttpClient, "failSafeHttpClient must not be null");
         this.baseUrl = Objects.requireNonNull(baseUrl, "baseUrl must not be null");
+        this.providerName = Objects.requireNonNull(providerName, "providerName must not be null");
         this.metakompasCredentials = Objects.requireNonNull(metakompasCredentials, "metakompasCredentials must not be null");
         this.buggiCredentials = Objects.requireNonNull(buggiCredentials, "buggiCredentials must not be null");
     }
@@ -90,6 +93,19 @@ public class CatalogingUpdateConnector {
         }
     }
 
+    // The rawrepo queue provider update-service queues the changed record under, as metakompasset sends
+    // it (updateRecordExtraData with an unqualified providerName)
+    private ExtraRecordDataDTO createExtraRecordData() {
+        ExtraRecordDataDTO extraRecordData = new ExtraRecordDataDTO();
+        extraRecordData.setContent(List.of("<cat:updateRecordExtraData xmlns:cat=\"http://oss.dbc.dk/ns/catalogingUpdate\">"
+                + "<providerName>" + escapeXml(providerName) + "</providerName></cat:updateRecordExtraData>"));
+        return extraRecordData;
+    }
+
+    private static String escapeXml(String value) {
+        return value.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;");
+    }
+
     private UpdateServiceRequestDTO createUpdateRequest(String marcRecord, String trackingId, NetpunktCredentials credentials) {
         // Authentication/schema/trackingId mirror the fields sent by metakompasset,
         // but are passed through update-service's typed REST DTOs here.
@@ -105,6 +121,7 @@ public class CatalogingUpdateConnector {
         bibliographicRecord.setRecordSchema(MARCXCHANGE_SCHEMA);
         bibliographicRecord.setRecordPacking("xml");
         bibliographicRecord.setRecordDataDTO(recordData);
+        bibliographicRecord.setExtraRecordDataDTO(createExtraRecordData());
 
         UpdateServiceRequestDTO request = new UpdateServiceRequestDTO();
         request.setAuthenticationDTO(authentication);
