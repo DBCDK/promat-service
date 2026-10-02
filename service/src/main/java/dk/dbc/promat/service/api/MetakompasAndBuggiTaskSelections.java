@@ -268,6 +268,16 @@ public class MetakompasAndBuggiTaskSelections {
                 if(buggiEntries.isEmpty()) {
                     throw emptySelection(task);
                 }
+                // A draft may leave the scales at 0 - registering it may not
+                List<String> missing = BuggiVocabulary.missingRequiredValues(buggiEntries);
+                if(!missing.isEmpty()) {
+                    String message = String.format("Task %d has no value for %s", task.getId(), String.join(", ", missing));
+                    throw new ServiceErrorException(message)
+                            .withDetails(message)
+                            .withHttpStatus(400)
+                            .withCode(ServiceErrorCode.INVALID_REQUEST)
+                            .withCause("Incomplete selection");
+                }
             }
         } catch(JsonProcessingException e) {
             throw new ServiceErrorException("Failed to parse persisted task selection")

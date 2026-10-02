@@ -872,7 +872,9 @@ paths:
         '200':
           description: Selection was registered in update-service and the task is approved
         '400':
-          description: Wrong task type, invalid persisted data, or empty selection
+          description: >-
+            Wrong task type, invalid persisted data, empty selection, or a Buggi scale without a value
+            from its group's minValue
           content:
             application/json:
               schema:

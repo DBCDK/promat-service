@@ -90,6 +90,23 @@ public class BuggiVocabulary {
         return new BuggiSelectionEntry(option.id(), option.name(), group.subfieldCode(), request.value());
     }
 
+    // The options that must have a value of at least their group's minValue before the selection is
+    // registered (the scales), named for an error message.
+    public static List<String> missingRequiredValues(List<BuggiSelectionEntry> entries) {
+        Map<Integer, Integer> valuesById = new LinkedHashMap<>();
+        for(BuggiSelectionEntry entry : entries) {
+            valuesById.put(entry.id(), entry.value());
+        }
+        List<String> missing = new ArrayList<>();
+        for(Option option : OPTIONS) {
+            Integer value = valuesById.get(option.id());
+            if(option.group().minValue() > 0 && (value == null || value < option.group().minValue())) {
+                missing.add(option.name());
+            }
+        }
+        return missing;
+    }
+
     private record Group(String name, String subfieldCode, int minValue, int maxValue) {
     }
 

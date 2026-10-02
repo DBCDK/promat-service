@@ -25,6 +25,7 @@ import java.util.List;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.contains;
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -209,6 +210,28 @@ public class MetakompasAndBuggiTaskSelectionsTest {
 
         assertThat(exception.getHttpStatus(), is(502));
         assertThat(task.getApproved(), is((Object) null));
+    }
+
+    @Test
+    public void approveReadingExperienceRequiresEveryBuggiScale() throws Exception {
+        PromatTask task = new PromatTask()
+                .withId(123)
+                .withTaskFieldType(TaskFieldType.READING_EXPERIENCE_CHILD)
+                .withTargetFausts(List.of("12345678"));
+        MetakompasAndBuggiTaskSelections taskSelections = taskSelectionsWithEntityManager(task);
+        // let/svær and virkelig/fantasi set, tekst/tegninger saved as 0 (not filled in yet), kort/lang missing
+        taskSelections.writeBuggiSelection(task, List.of(
+                new BuggiSelectionRequest(1, 2),
+                new BuggiSelectionRequest(2, 0),
+                new BuggiSelectionRequest(4, 5)));
+
+        ServiceErrorException exception = assertThrows(ServiceErrorException.class, () ->
+                taskSelections.approveReadingExperience(123));
+
+        assertThat(exception.getHttpStatus(), is(400));
+        assertThat(exception.getServiceErrorDto().getCause(), is("Incomplete selection"));
+        assertThat(exception.getServiceErrorDto().getDetails(), containsString("tekst/tegninger, kort/lang"));
+        verifyNoInteractions(taskSelections.catalogingUpdateConnector);
     }
 
     @Test
