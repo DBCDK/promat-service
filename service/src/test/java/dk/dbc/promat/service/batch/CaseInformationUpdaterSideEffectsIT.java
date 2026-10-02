@@ -24,6 +24,7 @@ import jakarta.ws.rs.core.Response;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -210,6 +211,51 @@ public class CaseInformationUpdaterSideEffectsIT extends CaseInformationUpdaterT
         assertThat("selection kept", task.getData(), is(selection));
         assertThat("not approved by the updater", task.getApproved(), is(nullValue()));
         verify(recordServiceConnector, never()).getRecordContentCollection(anyInt(), anyString(), any(RecordServiceConnector.Params.class));
+
+        deleteTestCase(created.getId());
+    }
+
+    // When Metakompasset is done, a case still waiting for reading experience tasks goes on to
+    // PENDING_READING_EXPERIENCE - and a case left there with all its tasks approved is approved.
+    @Test
+    public void testCaseIsRoutedOnByReadingExperienceTasks() throws Exception {
+        CaseRequest dto = new CaseRequest()
+                .withPrimaryFaust("48959939")
+                .withTitle("Title for 48959939")
+                .withDetails("Details for 48959939")
+                .withMaterialType(MaterialType.BOOK)
+                .withTasks(List.of(
+                        new TaskDto()
+                                .withTaskType(TaskType.GROUP_2_100_UPTO_199_PAGES)
+                                .withTaskFieldType(TaskFieldType.METAKOMPAS)
+                                .withTargetFausts(List.of("48959939")),
+                        new TaskDto()
+                                .withTaskType(TaskType.GROUP_2_100_UPTO_199_PAGES)
+                                .withTaskFieldType(TaskFieldType.READING_EXPERIENCE_CHILD)
+                                .withTargetFausts(List.of("48959939"))))
+                .withDeadline("2024-08-07")
+                .withCreator(10)
+                .withEditor(10)
+                .withReviewer(1);
+        PromatCase created = postAndAssert("v1/api/cases", dto, PromatCase.class, Response.Status.CREATED);
+        PromatCase promatCase = getCaseWithId(created.getId());
+        PromatTask metakompas = PromatTaskUtils.getTasksOfType(promatCase, TaskFieldType.METAKOMPAS).get(0);
+        PromatTask buggi = PromatTaskUtils.getTasksOfType(promatCase, TaskFieldType.READING_EXPERIENCE_CHILD).get(0);
+
+        ScheduledCaseInformationUpdater upd = configure();
+        upd.caseInformationUpdater.fbiApiHandler = mockFbiApiHandler(getFbiApiResponseFromResource("48959939"));
+
+        // Metakompasset is done, the reading experience task isn't approved yet
+        promatCase.setStatus(CaseStatus.PENDING_EXTERNAL);
+        metakompas.setData("true");
+        metakompas.setApproved(LocalDate.now());
+        persistenceContext.run(() -> upd.caseInformationUpdater.updateCaseInformation(promatCase));
+        assertThat(promatCase.getStatus(), is(CaseStatus.PENDING_READING_EXPERIENCE));
+
+        // Its reading experience task approved without the case moving on
+        buggi.setApproved(LocalDate.now());
+        persistenceContext.run(() -> upd.caseInformationUpdater.updateCaseInformation(promatCase));
+        assertThat(promatCase.getStatus(), is(CaseStatus.APPROVED));
 
         deleteTestCase(created.getId());
     }

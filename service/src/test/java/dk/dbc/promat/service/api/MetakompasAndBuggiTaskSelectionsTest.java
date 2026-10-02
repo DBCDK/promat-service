@@ -187,7 +187,7 @@ public class MetakompasAndBuggiTaskSelectionsTest {
 
     @Test
     public void registerReadingExperienceAgainKeepsApprovalDate() throws Exception {
-        // A correction: approved before, saved again and approved again
+        // A correction: registered before, saved again and registered again
         LocalDate approvedEarlier = LocalDate.now().minusDays(7);
         PromatTask task = new PromatTask()
                 .withId(123)
@@ -257,6 +257,48 @@ public class MetakompasAndBuggiTaskSelectionsTest {
         assertThat(exception.getServiceErrorDto().getCause(), is("Incomplete selection"));
         assertThat(exception.getServiceErrorDto().getDetails(), containsString("tekst/tegninger, kort/lang"));
         verifyNoInteractions(taskSelections.catalogingUpdateConnector);
+    }
+
+    @Test
+    public void registeringTheLastReadingExperienceTaskApprovesTheCase() throws Exception {
+        PromatTask task = new PromatTask().withId(123).withTaskFieldType(TaskFieldType.READING_EXPERIENCE_CHILD)
+                .withTargetFausts(List.of("12345678"));
+        PromatCase promatCase = new PromatCase().withStatus(CaseStatus.PENDING_READING_EXPERIENCE)
+                .withTasks(new ArrayList<>(List.of(task, new PromatTask().withTaskFieldType(TaskFieldType.BRIEF).withApproved(LocalDate.now()))));
+        MetakompasAndBuggiTaskSelections taskSelections = taskSelectionsWithEntityManager(task, promatCase);
+        taskSelections.writeBuggiSelection(task, COMPLETE_BUGGI_SELECTION);
+
+        taskSelections.registerReadingExperience(123);
+
+        assertThat(promatCase.getStatus(), is(CaseStatus.APPROVED));
+    }
+
+    @Test
+    public void caseWaitsWhileOtherReadingExperienceTasksAreNotRegistered() throws Exception {
+        PromatTask task = new PromatTask().withId(123).withTaskFieldType(TaskFieldType.READING_EXPERIENCE_CHILD)
+                .withTargetFausts(List.of("12345678"));
+        PromatCase promatCase = new PromatCase().withStatus(CaseStatus.PENDING_READING_EXPERIENCE)
+                .withTasks(new ArrayList<>(List.of(task, new PromatTask().withTaskFieldType(TaskFieldType.READING_EXPERIENCE_ADULT))));
+        MetakompasAndBuggiTaskSelections taskSelections = taskSelectionsWithEntityManager(task, promatCase);
+        taskSelections.writeBuggiSelection(task, COMPLETE_BUGGI_SELECTION);
+
+        taskSelections.registerReadingExperience(123);
+
+        assertThat(promatCase.getStatus(), is(CaseStatus.PENDING_READING_EXPERIENCE));
+    }
+
+    @Test
+    public void registeringATaskBeforeTheCaseIsApprovedLeavesTheCaseStatus() throws Exception {
+        PromatTask task = new PromatTask().withId(123).withTaskFieldType(TaskFieldType.READING_EXPERIENCE_CHILD)
+                .withTargetFausts(List.of("12345678"));
+        PromatCase promatCase = new PromatCase().withStatus(CaseStatus.ASSIGNED).withTasks(new ArrayList<>(List.of(task)));
+        MetakompasAndBuggiTaskSelections taskSelections = taskSelectionsWithEntityManager(task, promatCase);
+        taskSelections.writeBuggiSelection(task, COMPLETE_BUGGI_SELECTION);
+
+        taskSelections.registerReadingExperience(123);
+
+        assertThat(task.getApproved(), is(notNullValue()));
+        assertThat(promatCase.getStatus(), is(CaseStatus.ASSIGNED));
     }
 
     @Test

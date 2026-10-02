@@ -20,6 +20,7 @@ import dk.dbc.promat.service.taskdata.BuggiSelectionEntry;
 import dk.dbc.promat.service.taskdata.MetakompasTaskData;
 import dk.dbc.promat.service.taxonomy.TaxonomyCache;
 import dk.dbc.promat.service.taxonomy.dto.Subject;
+import dk.dbc.promat.service.util.PromatTaskUtils;
 import jakarta.ejb.Stateless;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
@@ -107,7 +108,7 @@ public class MetakompasAndBuggiTaskSelections {
         return task;
     }
 
-    // A reading experience can be saved and approved in any case status - also after the review is exported,
+    // A reading experience can be saved and registered in any case status - also after the review is exported,
     // since it's registered on the record directly - except when the case is closed or its faust is being
     // or has been deleted. As with Metakompasset's cases/{pid}/buggi.
     private static void assertCaseIsOpen(PromatCase promatCase) throws ServiceErrorException {
@@ -203,8 +204,8 @@ public class MetakompasAndBuggiTaskSelections {
                     .withCode(ServiceErrorCode.NOT_FOUND)
                     .withCause("No such task");
         }
-        if(task.getTaskFieldType() != TaskFieldType.READING_EXPERIENCE_ADULT && task.getTaskFieldType() != TaskFieldType.READING_EXPERIENCE_CHILD) {
-            throw new ServiceErrorException(String.format("Task %d is not a Metakompas or Buggi task", taskId))
+        if(!PromatTaskUtils.isReadingExperience(task.getTaskFieldType())) {
+            throw new ServiceErrorException(String.format("Task %d is not a reading experience task", taskId))
                     .withHttpStatus(400)
                     .withCode(ServiceErrorCode.INVALID_REQUEST)
                     .withCause("Wrong task type");
@@ -227,9 +228,13 @@ public class MetakompasAndBuggiTaskSelections {
                     .withCause("update-service registration failed")
                     .withDetails(e.getMessage());
         }
-        // Approving again (a correction) keeps the original approval date
+        // Registering again (a correction) keeps the original approval date
         if(task.getApproved() == null) {
             task.setApproved(LocalDate.now());
+        }
+        // The editor has approved the case already - with its last reading experience task registered, it moves on
+        if(promatCase.getStatus() == CaseStatus.PENDING_READING_EXPERIENCE) {
+            promatCase.setStatus(PromatTaskUtils.approvedCaseStatus(promatCase));
         }
         return task;
     }
@@ -307,7 +312,7 @@ public class MetakompasAndBuggiTaskSelections {
     }
 
     private ServiceErrorException emptySelection(PromatTask task) {
-        return new ServiceErrorException(String.format("Task %d has no selection to approve", task.getId()))
+        return new ServiceErrorException(String.format("Task %d has no selection to register", task.getId()))
                 .withHttpStatus(400)
                 .withCode(ServiceErrorCode.INVALID_REQUEST)
                 .withCause("Empty selection");
