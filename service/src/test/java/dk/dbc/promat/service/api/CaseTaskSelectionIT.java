@@ -26,9 +26,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Callable;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.okJson;
-import static com.github.tomakehurst.wiremock.client.WireMock.post;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static jakarta.ws.rs.core.Response.Status.BAD_REQUEST;
 import static jakarta.ws.rs.core.Response.Status.CONFLICT;
 import static jakarta.ws.rs.core.Response.Status.CREATED;
@@ -83,10 +80,10 @@ public class CaseTaskSelectionIT extends ContainerTest {
     }
 
     // Reading experience tasks aren't approved with the case: the editor's approval sends the case to
-    // PENDING_READING_EXPERIENCE, and approving the last reading experience task (registering it) approves it.
+    // PENDING_READING_EXPERIENCE. Approving the reading experience task is a placeholder (501) until
+    // update-service registration works, so the case keeps waiting.
     @Test
     void testCaseWaitsForReadingExperienceTasks() throws Exception {
-        stubUpdateServiceOk();
         String faust = "94001122";
         PromatCase aCase = postAndAssert("v1/api/cases",
                 makeRequest(faust, TaskFieldType.BRIEF, TaskFieldType.READING_EXPERIENCE_CHILD).withReviewer(1),
@@ -103,12 +100,22 @@ public class CaseTaskSelectionIT extends ContainerTest {
         // No way around approving the reading experience task
         setStatus(aCase, CaseStatus.APPROVED, 400);
 
-        assertThat(putResponse("v1/api/tasks/" + buggiTaskId + "/reading-experience/approve").getStatus(), is(200));
+        assertThat(putResponse("v1/api/tasks/" + buggiTaskId + "/reading-experience/approve").getStatus(), is(501));
         PromatCase afterApproval = promatServiceConnector.getCase(aCase.getId());
-        assertThat(afterApproval.getStatus(), is(CaseStatus.APPROVED));
-        assertThat(ContainerTest.findTaskByFieldType(afterApproval, TaskFieldType.READING_EXPERIENCE_CHILD).getApproved(), is(notNullValue()));
+        assertThat(afterApproval.getStatus(), is(CaseStatus.PENDING_READING_EXPERIENCE));
+        assertThat(ContainerTest.findTaskByFieldType(afterApproval, TaskFieldType.READING_EXPERIENCE_CHILD).getApproved(), is(nullValue()));
 
-        // A reading experience task added to the approved case makes it wait again
+        deleteResponse("v1/api/cases/" + aCase.getId());
+    }
+
+    @Test
+    void testReadingExperienceTaskAddedToApprovedCaseMakesItWait() throws Exception {
+        String faust = "94001125";
+        PromatCase aCase = postAndAssert("v1/api/cases",
+                makeRequest(faust, TaskFieldType.BRIEF).withReviewer(1), PromatCase.class, CREATED);
+        setStatus(aCase, CaseStatus.PENDING_APPROVAL, 200);
+        assertThat(setStatus(aCase, CaseStatus.APPROVED, 200).getStatus(), is(CaseStatus.APPROVED));
+
         Response response = postResponse("v1/api/cases/" + aCase.getId() + "/tasks", new TaskDto()
                 .withTaskFieldType(TaskFieldType.READING_EXPERIENCE_ADULT)
                 .withTaskType(TaskType.GROUP_1_LESS_THAN_100_PAGES)
@@ -157,11 +164,6 @@ public class CaseTaskSelectionIT extends ContainerTest {
         Response response = postResponse("v1/api/cases/" + aCase.getId(), new CaseRequest().withStatus(status));
         assertThat("status " + status, response.getStatus(), is(expectedStatusCode));
         return expectedStatusCode == 200 ? mapper.readValue(response.readEntity(String.class), PromatCase.class) : null;
-    }
-
-    private static void stubUpdateServiceOk() {
-        wireMockServer.stubFor(post(urlEqualTo("/api/v1/updateservice"))
-                .willReturn(okJson("{\"updateStatusEnumDTO\":\"OK\"}")));
     }
 
     // The legacy endpoint resolves its task by faust, but the write is task-scoped - approving

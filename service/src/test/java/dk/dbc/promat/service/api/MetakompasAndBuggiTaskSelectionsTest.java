@@ -148,6 +148,24 @@ public class MetakompasAndBuggiTaskSelectionsTest {
     }
 
     @Test
+    public void approveReadingExperienceIsNotImplementedYet() throws Exception {
+        PromatTask task = new PromatTask().withId(123).withTaskFieldType(TaskFieldType.READING_EXPERIENCE_CHILD)
+                .withTargetFausts(List.of("12345678"));
+        PromatCase promatCase = new PromatCase().withStatus(CaseStatus.PENDING_READING_EXPERIENCE)
+                .withTasks(new ArrayList<>(List.of(task)));
+        MetakompasAndBuggiTaskSelections taskSelections = taskSelectionsWithEntityManager(task, promatCase);
+        taskSelections.writeBuggiSelection(task, COMPLETE_BUGGI_SELECTION);
+
+        ServiceErrorException exception = assertThrows(ServiceErrorException.class, () ->
+                taskSelections.approveReadingExperience(123));
+
+        assertThat(exception.getHttpStatus(), is(501));
+        verifyNoInteractions(taskSelections.catalogingUpdateConnector);
+        assertThat(task.getApproved(), is((Object) null));
+        assertThat(promatCase.getStatus(), is(CaseStatus.PENDING_READING_EXPERIENCE));
+    }
+
+    @Test
     public void approveReadingExperienceRegistersNonEmptyBuggiSelectionAndApprovesTask() throws Exception {
         PromatTask task = new PromatTask()
                 .withId(123)
@@ -156,7 +174,7 @@ public class MetakompasAndBuggiTaskSelectionsTest {
         MetakompasAndBuggiTaskSelections taskSelections = taskSelectionsWithEntityManager(task);
         taskSelections.writeBuggiSelection(task, COMPLETE_BUGGI_SELECTION);
 
-        taskSelections.approveReadingExperience(123);
+        taskSelections.registerAndApprove(123);
 
         verify(taskSelections.catalogingUpdateConnector).updateRecord(eq(TaskFieldType.READING_EXPERIENCE_CHILD), eq("870970:12345678"), anyString());
         assertThat(task.getApproved(), is(notNullValue()));
@@ -174,7 +192,7 @@ public class MetakompasAndBuggiTaskSelectionsTest {
         MetakompasAndBuggiTaskSelections taskSelections = taskSelectionsWithEntityManager(task);
         taskSelections.writeBuggiSelection(task, COMPLETE_BUGGI_SELECTION);
 
-        taskSelections.approveReadingExperience(123);
+        taskSelections.registerAndApprove(123);
 
         assertThat(task.getApproved(), is(approvedEarlier));
     }
@@ -208,7 +226,7 @@ public class MetakompasAndBuggiTaskSelectionsTest {
                 .when(taskSelections.catalogingUpdateConnector).updateRecord(any(TaskFieldType.class), anyString(), anyString());
 
         ServiceErrorException exception = assertThrows(ServiceErrorException.class, () ->
-                taskSelections.approveReadingExperience(123));
+                taskSelections.registerAndApprove(123));
 
         assertThat(exception.getHttpStatus(), is(502));
         assertThat(task.getApproved(), is((Object) null));
@@ -245,7 +263,7 @@ public class MetakompasAndBuggiTaskSelectionsTest {
         MetakompasAndBuggiTaskSelections taskSelections = taskSelectionsWithEntityManager(task, promatCase);
         taskSelections.writeBuggiSelection(task, COMPLETE_BUGGI_SELECTION);
 
-        taskSelections.approveReadingExperience(123);
+        taskSelections.registerAndApprove(123);
 
         assertThat(promatCase.getStatus(), is(CaseStatus.APPROVED));
     }
@@ -259,7 +277,7 @@ public class MetakompasAndBuggiTaskSelectionsTest {
         MetakompasAndBuggiTaskSelections taskSelections = taskSelectionsWithEntityManager(task, promatCase);
         taskSelections.writeBuggiSelection(task, COMPLETE_BUGGI_SELECTION);
 
-        taskSelections.approveReadingExperience(123);
+        taskSelections.registerAndApprove(123);
 
         assertThat(promatCase.getStatus(), is(CaseStatus.PENDING_READING_EXPERIENCE));
     }
@@ -272,7 +290,7 @@ public class MetakompasAndBuggiTaskSelectionsTest {
         MetakompasAndBuggiTaskSelections taskSelections = taskSelectionsWithEntityManager(task, promatCase);
         taskSelections.writeBuggiSelection(task, COMPLETE_BUGGI_SELECTION);
 
-        taskSelections.approveReadingExperience(123);
+        taskSelections.registerAndApprove(123);
 
         assertThat(task.getApproved(), is(notNullValue()));
         assertThat(promatCase.getStatus(), is(CaseStatus.ASSIGNED));
@@ -305,7 +323,7 @@ public class MetakompasAndBuggiTaskSelectionsTest {
 
         taskSelections.writeBuggiSelection(taskSelections.resolveTaskForSelection(123, TaskFieldType.READING_EXPERIENCE_CHILD),
                 COMPLETE_BUGGI_SELECTION);
-        taskSelections.approveReadingExperience(123);
+        taskSelections.registerAndApprove(123);
 
         verify(taskSelections.catalogingUpdateConnector).updateRecord(eq(TaskFieldType.READING_EXPERIENCE_CHILD), eq("870970:12345678"), anyString());
         assertThat(promatCase.getStatus(), is(CaseStatus.EXPORTED));

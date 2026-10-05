@@ -160,7 +160,8 @@ public class Tasks {
 
     // Reading-experience approval is separate from save: save persists the reviewer's
     // selection, while approval registers it in update-service and, on success, marks
-    // the task approved.
+    // the task approved. For now a placeholder: valid requests get 501, see
+    // MetakompasAndBuggiTaskSelections.approveReadingExperience.
     @PUT
     @Path("tasks/{taskId}/reading-experience/approve")
     @Produces(MediaType.APPLICATION_JSON)

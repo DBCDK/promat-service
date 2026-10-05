@@ -876,6 +876,9 @@ paths:
       tags:
         - tasks
       summary: Approve a reading experience task, registering its saved selection on the record through cataloging update-service
+      description: >-
+        Placeholder until update-service registration is settled: the request is validated as a real
+        approval, but a valid request returns 501 - nothing is registered, and the task stays unapproved.
       operationId: approveReadingExperienceTask
       parameters:
         - in: path
@@ -885,11 +888,6 @@ paths:
             type: integer
             description: Id of the READING_EXPERIENCE_ADULT or READING_EXPERIENCE_CHILD task
       responses:
-        '200':
-          description: >-
-            Selection was registered in update-service and the task is approved. If its case was waiting
-            in PENDING_READING_EXPERIENCE for its last reading experience task, the case moves on to
-            APPROVED (or PENDING_EXTERNAL, if Metakompasset tasks are still waiting)
         '400':
           description: >-
             Wrong task type, invalid persisted data, empty selection, or a Buggi scale without a value
@@ -912,8 +910,9 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ServiceError'
-        '502':
-          description: update-service registration failed
+        '501':
+          description: >-
+            Valid request, but registration isn't implemented yet - nothing was registered or approved
           content:
             application/json:
               schema:

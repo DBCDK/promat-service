@@ -198,23 +198,23 @@ public class MetakompasAndBuggiTaskSelections {
         return taskData;
     }
 
+    // Placeholder until the update-service registration details are settled: the request is
+    // validated as a real approval would be, but nothing is registered or approved - a valid
+    // request gets 501. Wire in registerAndApprove once update-service registration works.
     public void approveReadingExperience(Integer taskId) throws ServiceErrorException {
-        PromatTask task = entityManager.find(PromatTask.class, taskId);
-        if(task == null) {
-            throw new ServiceErrorException(String.format("No task with id %d exists", taskId))
-                    .withHttpStatus(404)
-                    .withCode(ServiceErrorCode.NOT_FOUND)
-                    .withCause("No such task");
-        }
-        if(task.getTaskFieldType() != TaskFieldType.READING_EXPERIENCE_ADULT && task.getTaskFieldType() != TaskFieldType.READING_EXPERIENCE_CHILD) {
-            throw new ServiceErrorException(String.format("Task %d is not a Metakompas or Buggi task", taskId))
-                    .withHttpStatus(400)
-                    .withCode(ServiceErrorCode.INVALID_REQUEST)
-                    .withCause("Wrong task type");
-        }
-        PromatCase promatCase = getCaseOfTask(task.getId());
-        assertCaseIsOpen(promatCase);
-        validateNonEmptySelection(task);
+        approvableTask(taskId);
+        throw new ServiceErrorException("Reading-experience registration in update-service is not available yet")
+                .withHttpStatus(501)
+                .withCode(ServiceErrorCode.FAILED)
+                .withCause("Not implemented")
+                .withDetails("The task was not approved");
+    }
+
+    // The real approval - not reachable from the API yet, see approveReadingExperience
+    void registerAndApprove(Integer taskId) throws ServiceErrorException {
+        ApprovableTask approvable = approvableTask(taskId);
+        PromatTask task = approvable.task();
+        PromatCase promatCase = approvable.promatCase();
 
         try {
             for(String faust : targetFausts(promatCase, task)) {
@@ -244,6 +244,28 @@ public class MetakompasAndBuggiTaskSelections {
         if(promatCase.getStatus() == CaseStatus.PENDING_READING_EXPERIENCE) {
             promatCase.setStatus(PromatTaskUtils.approvedCaseStatus(promatCase));
         }
+    }
+
+    private record ApprovableTask(PromatTask task, PromatCase promatCase) {}
+
+    private ApprovableTask approvableTask(Integer taskId) throws ServiceErrorException {
+        PromatTask task = entityManager.find(PromatTask.class, taskId);
+        if(task == null) {
+            throw new ServiceErrorException(String.format("No task with id %d exists", taskId))
+                    .withHttpStatus(404)
+                    .withCode(ServiceErrorCode.NOT_FOUND)
+                    .withCause("No such task");
+        }
+        if(task.getTaskFieldType() != TaskFieldType.READING_EXPERIENCE_ADULT && task.getTaskFieldType() != TaskFieldType.READING_EXPERIENCE_CHILD) {
+            throw new ServiceErrorException(String.format("Task %d is not a Metakompas or Buggi task", taskId))
+                    .withHttpStatus(400)
+                    .withCode(ServiceErrorCode.INVALID_REQUEST)
+                    .withCause("Wrong task type");
+        }
+        PromatCase promatCase = getCaseOfTask(task.getId());
+        assertCaseIsOpen(promatCase);
+        validateNonEmptySelection(task);
+        return new ApprovableTask(task, promatCase);
     }
 
     private PromatCase getCaseOfTask(int taskId) {
