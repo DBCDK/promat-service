@@ -97,7 +97,7 @@ public class Tasks {
                 if(!taskSelections.isDirectDataWriteAllowed(existing.getTaskFieldType(), dto.getData())) {
                     return ServiceErrorDto.InvalidRequest("Invalid field for task type",
                             String.format("Task data cannot be set directly on a %s task - use the dedicated " +
-                                    "tasks/{taskId}/metakompas or tasks/{taskId}/buggi endpoint instead", existing.getTaskFieldType()));
+                                    "tasks/{taskId}/reading-experience/adult or tasks/{taskId}/reading-experience/child endpoint instead", existing.getTaskFieldType()));
                 }
                 existing.setData(dto.getData()); // It is allowed to update with an empty value
             }
@@ -119,14 +119,14 @@ public class Tasks {
     // Dedicated selection endpoints let JAX-RS map each task type to its concrete DTO,
     // instead of accepting stringified JSON through the generic task endpoint.
     @PUT
-    @Path("tasks/{taskId}/metakompas")
+    @Path("tasks/{taskId}/reading-experience/adult")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Response putMetakompasSelection(@PathParam("taskId") final Integer taskId,
                                            MetakompasSelectionRequest request) {
-        LOGGER.info("tasks/{}/metakompas (PUT)", taskId);
+        LOGGER.info("tasks/{}/reading-experience/adult (PUT)", taskId);
         try {
-            PromatTask task = taskSelections.resolveTaskForSelection(taskId, TaskFieldType.METAKOMPAS);
+            PromatTask task = taskSelections.resolveTaskForSelection(taskId, TaskFieldType.READING_EXPERIENCE_ADULT);
             MetakompasTaskData saved = taskSelections.writeMetakompasSelection(task, request);
             return Response.ok(saved).build();
         } catch(ServiceErrorException serviceErrorException) {
@@ -140,14 +140,14 @@ public class Tasks {
     // Dedicated selection endpoints let JAX-RS map each task type to its concrete DTO,
     // instead of accepting stringified JSON through the generic task endpoint.
     @PUT
-    @Path("tasks/{taskId}/buggi")
+    @Path("tasks/{taskId}/reading-experience/child")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Response putBuggiSelection(@PathParam("taskId") final Integer taskId,
                                       List<BuggiSelectionRequest> requests) {
-        LOGGER.info("tasks/{}/buggi (PUT)", taskId);
+        LOGGER.info("tasks/{}/reading-experience/child (PUT)", taskId);
         try {
-            PromatTask task = taskSelections.resolveTaskForSelection(taskId, TaskFieldType.BUGGI);
+            PromatTask task = taskSelections.resolveTaskForSelection(taskId, TaskFieldType.READING_EXPERIENCE_CHILD);
             List<BuggiSelectionEntry> saved = taskSelections.writeBuggiSelection(task, requests);
             return Response.ok(saved).build();
         } catch(ServiceErrorException serviceErrorException) {

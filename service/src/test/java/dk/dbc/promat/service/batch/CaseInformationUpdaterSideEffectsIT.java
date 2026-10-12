@@ -3,7 +3,6 @@ package dk.dbc.promat.service.batch;
 import dk.dbc.marc.binding.DataField;
 import dk.dbc.marc.binding.MarcBinding;
 import dk.dbc.marc.binding.SubField;
-import dk.dbc.promat.service.MetakompasRegistration;
 import dk.dbc.promat.service.api.BibliographicInformation;
 import dk.dbc.promat.service.api.FbiApiHandler;
 import dk.dbc.promat.service.api.RecordsProvider;
@@ -183,7 +182,7 @@ public class CaseInformationUpdaterSideEffectsIT extends CaseInformationUpdaterT
                 .withMaterialType(MaterialType.BOOK)
                 .withTasks(List.of(new TaskDto()
                         .withTaskType(TaskType.GROUP_2_100_UPTO_199_PAGES)
-                        .withTaskFieldType(TaskFieldType.METAKOMPAS)
+                        .withTaskFieldType(TaskFieldType.READING_EXPERIENCE_ADULT)
                         .withTargetFausts(List.of("48959939"))))
                 .withDeadline("2024-08-07")
                 .withCreator(10)
@@ -192,13 +191,12 @@ public class CaseInformationUpdaterSideEffectsIT extends CaseInformationUpdaterT
         PromatCase created = postAndAssert("v1/api/cases", dto, PromatCase.class, Response.Status.CREATED);
         PromatCase promatCase = getCaseWithId(created.getId());
 
-        // A selection saved through tasks/{taskId}/metakompas, on a record that already has a 665
+        // A selection saved through tasks/{taskId}/reading-experience/adult, on a record that already has a 665
         String selection = "{\"entries\":[],\"suggestions\":[{\"path\":[\"stemning\",\"positiv\"],\"title\":\"hyggelig\"}]}";
-        PromatTask task = PromatTaskUtils.getTasksOfType(promatCase, TaskFieldType.METAKOMPAS).get(0);
+        PromatTask task = PromatTaskUtils.getTasksOfType(promatCase, TaskFieldType.READING_EXPERIENCE_ADULT).get(0);
         task.setData(selection);
 
         ScheduledCaseInformationUpdater upd = configure();
-        upd.caseInformationUpdater.metakompasRegistration = new MetakompasRegistration(MetakompasRegistration.Mode.PROMAT);
         upd.caseInformationUpdater.fbiApiHandler = mockFbiApiHandler(getFbiApiResponseFromResource("48959939"));
         RecordServiceConnector recordServiceConnector = mock(RecordServiceConnector.class);
         upd.caseInformationUpdater.recordServiceConnector = recordServiceConnector;

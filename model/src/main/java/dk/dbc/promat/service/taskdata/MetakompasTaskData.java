@@ -5,8 +5,8 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.util.List;
 import java.util.Objects;
 
-// The full shape of a METAKOMPAS task's selection - resolved entries plus free-text suggestions -
-// used unchanged both for what's persisted in PromatTask.data and what PUT /tasks/{taskId}/metakompas
+// The full shape of a READING_EXPERIENCE_ADULT task's selection - resolved entries plus free-text suggestions -
+// used unchanged both for what's persisted in PromatTask.data and what PUT /tasks/{taskId}/reading-experience/adult
 // returns. Entry/Suggestion are nested here (like java.util.Map.Entry) since neither exists outside
 // a selection; reference them qualified (MetakompasTaskData.Entry), since "Entry" alone reads poorly.
 public class MetakompasTaskData {

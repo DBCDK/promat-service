@@ -2,7 +2,6 @@ package dk.dbc.promat.service.api;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import dk.dbc.promat.service.MetakompasRegistration;
 import dk.dbc.promat.service.dto.BuggiSelectionRequest;
 import dk.dbc.promat.service.dto.MetakompasSelectionRequest;
 import dk.dbc.promat.service.dto.ServiceErrorCode;
@@ -15,8 +14,6 @@ import dk.dbc.promat.service.taxonomy.dto.Subject;
 import dk.dbc.promat.service.taxonomy.dto.Taxonomy;
 import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.Test;
-
-import java.time.LocalDate;
 
 import java.util.List;
 
@@ -156,77 +153,41 @@ public class MetakompasAndBuggiTaskSelectionsTest {
     }
 
     @Test
-    public void rejectsSelectionWhileRegistrationHappensInMetakompasset() {
+    public void resolvesTaskOfTheExpectedType() throws ServiceErrorException {
+        PromatTask task = new PromatTask().withId(123).withTaskFieldType(TaskFieldType.READING_EXPERIENCE_ADULT);
+
+        assertThat(taskSelectionsWithTask(task).resolveTaskForSelection(123, TaskFieldType.READING_EXPERIENCE_ADULT), is(task));
+    }
+
+    @Test
+    public void rejectsSelectionOnTaskRegisteredInMetakompasset() {
         MetakompasAndBuggiTaskSelections taskSelections = taskSelectionsWithTask(
-                MetakompasRegistration.Mode.METAKOMPASSET, new PromatTask().withId(123).withTaskFieldType(TaskFieldType.BUGGI));
+                new PromatTask().withId(123).withTaskFieldType(TaskFieldType.METAKOMPAS));
 
         ServiceErrorException exception = assertThrows(ServiceErrorException.class, () ->
-                taskSelections.resolveTaskForSelection(123, TaskFieldType.BUGGI));
+                taskSelections.resolveTaskForSelection(123, TaskFieldType.READING_EXPERIENCE_ADULT));
 
-        assertThat(exception.getHttpStatus(), is(409));
-        assertThat(exception.getServiceErrorDto().getCode(), is(ServiceErrorCode.INVALID_STATE));
+        assertThat(exception.getHttpStatus(), is(400));
+        assertThat(exception.getServiceErrorDto().getCause(), is("Wrong task type"));
     }
 
     @Test
-    public void rejectsSelectionOnMetakompasTaskRegisteredInMetakompasset() {
-        // Registered in Metakompasset before the switch: approved, data "true"
-        MetakompasAndBuggiTaskSelections taskSelections = taskSelectionsWithTask(MetakompasRegistration.Mode.PROMAT,
-                new PromatTask().withId(123).withTaskFieldType(TaskFieldType.METAKOMPAS).withData("true").withApproved(LocalDate.now()));
+    public void directDataWriteIsOnlyRejectedForTasksRegisteredInPromat() {
+        MetakompasAndBuggiTaskSelections taskSelections = new MetakompasAndBuggiTaskSelections();
 
-        ServiceErrorException exception = assertThrows(ServiceErrorException.class, () ->
-                taskSelections.resolveTaskForSelection(123, TaskFieldType.METAKOMPAS));
-
-        assertThat(exception.getHttpStatus(), is(409));
-        assertThat(exception.getServiceErrorDto().getCode(), is(ServiceErrorCode.INVALID_STATE));
+        assertThat(taskSelections.isDirectDataWriteAllowed(TaskFieldType.READING_EXPERIENCE_ADULT, "{}"), is(false));
+        assertThat(taskSelections.isDirectDataWriteAllowed(TaskFieldType.READING_EXPERIENCE_CHILD, "[]"), is(false));
+        assertThat(taskSelections.isDirectDataWriteAllowed(TaskFieldType.READING_EXPERIENCE_ADULT, ""), is(true));
+        assertThat(taskSelections.isDirectDataWriteAllowed(TaskFieldType.METAKOMPAS, "true"), is(true));
+        assertThat(taskSelections.isDirectDataWriteAllowed(TaskFieldType.BRIEF, "text"), is(true));
     }
 
-    @Test
-    public void rejectsSelectionOnBuggiTaskRegisteredInMetakompasset() {
-        // Approved through Metakompasset's cases/{pid}/buggi: data is a TagList
-        MetakompasAndBuggiTaskSelections taskSelections = taskSelectionsWithTask(MetakompasRegistration.Mode.PROMAT,
-                new PromatTask().withId(123).withTaskFieldType(TaskFieldType.BUGGI)
-                        .withData("{\"tags\":[{\"name\":\"rar\",\"value\":3}]}").withApproved(LocalDate.now()));
-
-        ServiceErrorException exception = assertThrows(ServiceErrorException.class, () ->
-                taskSelections.resolveTaskForSelection(123, TaskFieldType.BUGGI));
-
-        assertThat(exception.getHttpStatus(), is(409));
-    }
-
-    @Test
-    public void resolvesMetakompasTaskRegisteredInPromat() throws ServiceErrorException {
-        PromatTask task = new PromatTask().withId(123).withTaskFieldType(TaskFieldType.METAKOMPAS)
-                .withData("{\"entries\":[],\"suggestions\":[]}").withApproved(LocalDate.now());
-        MetakompasAndBuggiTaskSelections taskSelections = taskSelectionsWithTask(MetakompasRegistration.Mode.PROMAT, task);
-
-        assertThat(taskSelections.resolveTaskForSelection(123, TaskFieldType.METAKOMPAS), is(task));
-    }
-
-    @Test
-    public void resolvesBuggiTaskRegisteredInPromat() throws ServiceErrorException {
-        PromatTask task = new PromatTask().withId(123).withTaskFieldType(TaskFieldType.BUGGI)
-                .withData("[{\"id\":1,\"name\":\"let/svær\",\"marcSubfieldCode\":\"s\",\"requiresNonzeroValue\":false,\"value\":2}]")
-                .withApproved(LocalDate.now());
-        MetakompasAndBuggiTaskSelections taskSelections = taskSelectionsWithTask(MetakompasRegistration.Mode.PROMAT, task);
-
-        assertThat(taskSelections.resolveTaskForSelection(123, TaskFieldType.BUGGI), is(task));
-    }
-
-    @Test
-    public void resolvesUnregisteredTaskWhenRegistrationHappensInPromat() throws ServiceErrorException {
-        PromatTask task = new PromatTask().withId(123).withTaskFieldType(TaskFieldType.METAKOMPAS);
-        MetakompasAndBuggiTaskSelections taskSelections = taskSelectionsWithTask(MetakompasRegistration.Mode.PROMAT, task);
-
-        assertThat(taskSelections.resolveTaskForSelection(123, TaskFieldType.METAKOMPAS), is(task));
-    }
-
-    private MetakompasAndBuggiTaskSelections taskSelectionsWithTask(MetakompasRegistration.Mode mode, PromatTask task) {
+    private MetakompasAndBuggiTaskSelections taskSelectionsWithTask(PromatTask task) {
         EntityManager entityManager = mock(EntityManager.class);
         when(entityManager.find(PromatTask.class, task.getId())).thenReturn(task);
 
         MetakompasAndBuggiTaskSelections taskSelections = new MetakompasAndBuggiTaskSelections();
         taskSelections.entityManager = entityManager;
-        taskSelections.metakompasRegistration = new MetakompasRegistration(mode);
         return taskSelections;
     }
 

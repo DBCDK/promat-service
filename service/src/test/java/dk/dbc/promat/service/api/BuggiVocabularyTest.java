@@ -32,7 +32,7 @@ class BuggiVocabularyTest {
 
     @Test
     void optionIdsAreUnchanged() {
-        // The ids are part of the API contract used by PUT /tasks/{taskId}/buggi
+        // The ids are part of the API contract used by PUT /tasks/{taskId}/reading-experience/child
         List<Integer> ids = BuggiVocabulary.groups().stream()
                 .flatMap(group -> group.options().stream())
                 .map(BuggiOption::id)

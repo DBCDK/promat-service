@@ -19,7 +19,14 @@ public enum TaskFieldType {
     GENRE, // Todo: Obsolete, remove when no tasks exists in the db with this taskfieldtype
     AGE(true),
     MATLEVEL(true),
-    BUGGI(PayCategory.BUGGI, false, false);
+    BUGGI(PayCategory.BUGGI, false, false),
+    // Reading experience tasks done in Promat instead of Metakompasset: ADULT is the Metakompas selection
+    // (MARC 665), CHILD the Buggi selection (664). Unlike internal tasks, they aren't approved when the case
+    // is approved - each is approved on its own.
+    // METAKOMPAS/BUGGI above are the same tasks done in Metakompasset, kept while such tasks exist, and will
+    // be deprecated later.
+    READING_EXPERIENCE_ADULT(PayCategory.METAKOMPAS, false, false),
+    READING_EXPERIENCE_CHILD(PayCategory.BUGGI, false, false);
 
     private final Function<TaskType, PayCategory> payment;
     public final boolean onceOnlyPerCase;
