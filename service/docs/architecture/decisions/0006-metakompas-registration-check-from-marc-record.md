@@ -51,6 +51,6 @@ approved. JED also drops subfield `&`, so fbi-api can't express the Metakompas o
 - fbi-api's `subjects.dbcVerified` / `BibliographicInformation.metakompassubject` are now unused.
   Removing them (queries, `FbiApiHandler`, WireMock fixtures) is left as a separate cleanup to
   keep this change small.
-- This polling is transitional. Once Promat registers Metakompas/Buggi selections itself and
+- This polling is transitional. Once Promat registers reading experience selections itself and
   approves the task on success (see ADR 0007), it is only needed for cases started through
   Metakompasset, and can be removed when none of those remain.
