@@ -109,12 +109,6 @@ public class PromatServiceConnector {
     }
 
     /**
-     * Gets an existing case
-     * @param caseID case id
-     * @return case
-     * @throws PromatServiceConnectorException on unexpected failure for get operation
-     */
-    /**
      * Gets a single task
      * @param taskId id of the task
      * @return the task
@@ -129,6 +123,12 @@ public class PromatServiceConnector {
         return readResponseEntity(response, PromatTask.class);
     }
 
+    /**
+     * Gets an existing case
+     * @param caseID case id
+     * @return case
+     * @throws PromatServiceConnectorException on unexpected failure for get operation
+     */
     public PromatCase getCase(int caseID) throws PromatServiceConnectorException {
         final HttpGet httpGet = new HttpGet(failSafeHttpClient)
                 .withBaseUrl(baseUrl)
