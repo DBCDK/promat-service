@@ -38,8 +38,9 @@ public class ScheduledUserUpdater {
     private static Lock updateLock = new ReentrantLock();
 
     // Users must be deactivated after 5 years having active=f, so no need to run
-    // this more than one time each day
-    @Schedule(minute = "15", hour = "01", persistent = false)
+    // this more than one time each day. Runs at 03:15 so it does not collide with
+    // ScheduledCaseInformationUpdater.updateCaseAssignedEditor() at 01:15
+    @Schedule(minute = "15", hour = "03", persistent = false)
     public void updateUsers() {
 
         try {
