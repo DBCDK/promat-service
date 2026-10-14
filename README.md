@@ -41,7 +41,7 @@ To build this project, JDK 21 and Apache Maven are required (a `.sdkmanrc` pins 
 * `validate` - analyzes source code and javadoc
 * `start-database` - starts a local Postgres container
 * `start-server` - starts the app server against the `:devel` Docker image built above
-* `start` - runs `start-database` then `start-server`
+* `feature-preview/seed` - optionally adds sample data to a local/feature-preview database
 * `stop` - stops both containers
 
 **Quick start** (from the repo root, unless noted):
@@ -49,11 +49,18 @@ To build this project, JDK 21 and Apache Maven are required (a `.sdkmanrc` pins 
 ./scripts/clean
 mvn verify                    # builds the WAR and, via a bound plugin execution, the :devel Docker image
 ./scripts/start-database
-./scripts/start-server         # or ./scripts/start to do both in one step
+./scripts/start-server
+./scripts/feature-preview/seed --host 127.0.0.1 --port 5432 --dbname "$USER" --dbuser "$USER" --dbpassword "$USER"
 ```
 Notes:
 * `mvn verify` from the repo root builds the whole multi-module reactor (`connector`, `model`, `service`) and also produces the Docker image. If you only want to rebuild the Docker image without re-running the full build, run `../scripts/build docker` from inside `service/` (its `docker build` is relative to that directory).
 * To override any env var for a single run without editing tracked scripts, pass an extra `-e` flag through — `scripts/start-server` forwards any extra arguments straight into `docker run`, e.g. `./scripts/start-server -e FAUST_RESOLVER_URL=http://my-override`.
+* For real auth/FBI API login locally, export `OAUTH2_CLIENT_ID` and `OAUTH2_CLIENT_SECRET` before running `start-server`:
+  ```bash
+  export OAUTH2_CLIENT_ID="..."
+  export OAUTH2_CLIENT_SECRET="..."
+  ```
+* Run `feature-preview/seed` after the server has started; it waits for database migrations before inserting sample data.
 * Once up, the API is served at `http://localhost:8080/v1/api`.
 
 ### License
