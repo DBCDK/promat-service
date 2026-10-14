@@ -7,6 +7,7 @@ import dk.dbc.promat.service.dto.ServiceErrorCode;
 import dk.dbc.promat.service.taskdata.BuggiSelectionEntry;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -88,6 +89,23 @@ public class BuggiVocabulary {
         // Fragile due to name and subfieldCode both being String: the record's positional
         // constructor gives the compiler no way to catch the two being swapped here.
         return new BuggiSelectionEntry(option.id(), option.name(), group.subfieldCode(), request.value());
+    }
+
+    // The options that must have a value of at least their group's minValue before the selection is
+    // registered (the scales), named for an error message.
+    public static List<String> missingRequiredValues(List<BuggiSelectionEntry> entries) {
+        Map<Integer, Integer> valuesById = new HashMap<>();
+        for(BuggiSelectionEntry entry : entries) {
+            valuesById.put(entry.id(), entry.value());
+        }
+        List<String> missing = new ArrayList<>();
+        for(Option option : OPTIONS) {
+            Integer value = valuesById.get(option.id());
+            if(option.group().minValue() > 0 && (value == null || value < option.group().minValue())) {
+                missing.add(option.name());
+            }
+        }
+        return missing;
     }
 
     private record Group(String name, String subfieldCode, int minValue, int maxValue) {

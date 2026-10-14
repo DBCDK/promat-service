@@ -3,8 +3,8 @@
 Status: transition in progress. Remove the old task types' handling using the checklist below once
 no task of those types is waiting for Metakompasset.
 
-Related: ADR 0006 (checking Metakompas registration in the MARC record) and the cataloging
-update-service registration ADR on the `mk-buggi-registration-update-service` branch.
+Related: ADR 0006 (checking Metakompas registration in the MARC record) and ADR 0007 (registering
+in update-service).
 
 ## Background
 
@@ -24,22 +24,22 @@ not per environment:
 | Registered in | Metakompasset | Promat |
 | Selection saved through | - | `PUT tasks/{taskId}/reading-experience/adult\|child` |
 | Polling, `POST cases/{pid}/buggi` | as before | not touched |
-| Approved | by the polling / `POST cases/{pid}/buggi`; case waits in `PENDING_EXTERNAL` | not with the case - own endpoint and `PENDING_READING_EXPERIENCE` come with the registration branch |
-| Added to an `APPROVED` case | case goes to `PENDING_EXTERNAL` | no status change yet (see above) |
+| Approved | by the polling / `POST cases/{pid}/buggi`; case waits in `PENDING_EXTERNAL` | when the reviewer (or editor) registers it through `POST tasks/{taskId}/reading-experience/register`; case waits in `PENDING_READING_EXPERIENCE` |
+| Editor approves the waiting case by hand | the tasks are approved without waiting for Metakompasset | the tasks are approved without being registered |
+| Added to an `APPROVED` case | case goes to `PENDING_EXTERNAL` | case goes to `PENDING_READING_EXPERIENCE` |
 | Payment | `PayCategory.METAKOMPAS` / `BUGGI` | the same |
 
 A case may have tasks of both sets, e.g. so an editor can try both flows during the transition. Then
 the polling for its METAKOMPAS task also takes a 665 Promat registers for a READING_EXPERIENCE_ADULT
 task on the same faust as the METAKOMPAS task's registration, and approves it.
 
-Tasks registered in Promat can be changed and registered again, which relies on update-service
-replacing the existing 665/664 (verify on staging before prod).
+Tasks registered in Promat can be changed and registered again: update-service replaces the existing
+665/664 (verified on fbstest, see ADR 0007).
 
 ## Rolling out
 
 Prerequisites:
 
-- Approving and registering the new tasks in update-service (registration branch) is merged.
 - `UPDATE_SERVICE_URL` (including `/UpdateService/rest`), `METAKOMPAS_NETPUNKT_GROUP/USER/PASSWORD`
   and `BUGGI_NETPUNKT_GROUP/USER/PASSWORD` are set - in every environment, since the service
   doesn't start without them. The netpunkt values are the ones Metakompasset uses (separate
@@ -50,14 +50,14 @@ Prerequisites:
 Prod:
 
 1. Deploy promat-service, and the model/connector jars. Nothing creates the new task types yet.
-2. Rebuild and deploy every consumer of the connector: `TaskFieldType` is deserialized with a
-   default `ObjectMapper`, which fails on unknown enum values. Known consumer: dmat-service
+2. Rebuild and deploy every consumer of the connector: `TaskFieldType` and `CaseStatus` are
+   deserialized with a default `ObjectMapper`, which fails on unknown enum values. Known consumer: dmat-service
    (`getCase()` in `StatusHandler` and `ExportedPromatReviewsUpdater`).
 3. Deploy the frontend that creates the new types on new cases. Old cases keep their tasks, done
    in Metakompasset as before.
 4. Metakompasset stays open until no old task is waiting for it (see below). To close it sooner,
-   change the remaining old tasks to the new types (they hold no data yet) and move their cases from `PENDING_EXTERNAL` to `PENDING_ISSUES`, so the reviewer can
-   fill them in.
+   change the remaining old tasks to the new types (they hold no data yet) and move their cases from
+   `PENDING_EXTERNAL` to `PENDING_READING_EXPERIENCE`, so the reviewer can fill them in and register them.
 
 ## When it's safe to remove the old task types
 
@@ -119,7 +119,7 @@ gitops:
 
 - [ ] Remove `METAKOMPAS_REGISTRATION` from any environment that sets it - it's no longer read.
 
-## Things learned along the way
+## Notes
 
 - fbi-api can't tell whether a record has a Metakompas registration: `subjects.dbcVerified` mixes 665
   with regular cataloguing (600/610, 666/667), and JED drops subfield `&`. That caused false positives
@@ -131,10 +131,10 @@ gitops:
   since DM2 defaults to marcxchange XML. Verified against cisterne, fbstest (DM2) and datawell-test (DM3).
 - DM3 still uses 665, but one subject per field and with an extra `*2` subfield, and without the
   666 copies DM2's update-service makes of `*& LEKTOR` 665 fields.
-- DM2's update-service (what the registration branch calls: `POST /api/v1/updateservice`, schema
-  `metakompas`) merges via opencat-business `metacompass`; whether it replaces existing 665 fields
-  wasn't verified in code. DM3's `POST /api/v1/metacompass/{agencyid}/{bibliographicrecordid}` replaces
-  all 665 fields; Promat's registration must move to it at the DM3 switch. No DM3 endpoint writing 664
-  (Buggi) was found.
+- DM2's update-service (what Promat calls: `POST /api/v1/updateservice`, schema `metakompas`) merges the
+  sent fields into the existing record, replacing its 665 (or 664) fields - verified on fbstest.
+  DM3's `POST /api/v1/metacompass/{agencyid}/{bibliographicrecordid}` replaces all 665 fields;
+  Promat's registration must move to it at the DM3 switch. No DM3 endpoint writing 664 (Buggi) was
+  found.
 - `updateservice-rest-connector` is built against `dbc-commons-httpclient` 2.0 (Java 11), which clashes
-  with promat's 21.x; the registration branch calls update-service directly instead.
+  with promat's 21.x; Promat calls update-service directly instead.
