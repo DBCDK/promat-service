@@ -4,8 +4,8 @@
 -- THIS IS NOT DATA FOR STRUCTURED TESTING!
 --
 -- All titles/authors/publishers/reviewer & editor names below are invented for demo purposes -
--- none of this is real bibliographic or personal data. The exception is three reading experience
--- cases (1300, 1320, 1340), which use real fbstest records, so registering them in update-service works.
+-- none of this is real bibliographic or personal data. The exception is the reading experience
+-- cases (1300-1340), which use real fbstest records, so registering them in update-service works.
 
 -- Cleanup
 -- Just delete those we want to create, DO NOT run a complete truncate on any table
@@ -612,9 +612,9 @@ values (1180, 401181),
 -- Reading experience (READING_EXPERIENCE_ADULT/CHILD) - tasks registered in Promat through
 -- tasks/{taskId}/reading-experience/adult|child and .../register. Reviewer 4902 is the preview login.
 -- Adult selections only use suggestions, since the preview's taxonomy may be empty.
--- 1300, 1320 and 1340 use real records owned by DBC on fbstest (996 *a DBC), so registering them writes
+-- All of them (1300-1340) use real records owned by DBC on fbstest (996 *a DBC), so registering them writes
 -- 665/664 to the record in fbstest's update-service. Registering again replaces the fields, so it can be
--- repeated. 1310 and 1330 keep invented fausts - they never get as far as update-service.
+-- repeated.
 --
 -- 1300: assigned, its adult reading experience task still empty - fill it in and register it
 insert into promatcase(id, title, details, primaryFaust, relatedFausts, reviewer_id, editor_id, created, deadline, assigned, status, materialType, creator_id)
@@ -625,13 +625,13 @@ values (403001, 'GROUP_1_LESS_THAN_100_PAGES', 'BRIEF',                    '2026
 insert into casetasks(case_id, task_id)
 values (1300, 403001), (1300, 403002);
 --
--- 1310: assigned, drafts saved - the child draft lacks two scales, so registering it gives 400
+-- 1310: assigned, drafts saved - the child draft lacks two scales, so registering it gives 400 until they're filled in
 insert into promatcase(id, title, details, primaryFaust, relatedFausts, reviewer_id, editor_id, created, deadline, assigned, status, materialType, creator_id)
-values (1310, 'Lille Bjørn på eventyr', 'Højtlæsningsbog om venskab og mod.', '2001310', '[]', 4902, 4950, '2026-09-28', '2026-10-28', '2026-09-28', 'ASSIGNED', 'BOOK', 4950);
+values (1310, 'Mimbo Jimbos lille ABC', 'Pegebog. Lær alfabetet sammen med Mimbo Jimbo og hans venner.', '46960181', '[]', 4902, 4950, '2026-09-28', '2026-10-28', '2026-09-28', 'ASSIGNED', 'BOOK', 4950);
 insert into promattask(id, tasktype, taskfieldtype, created, paycategory, approved, payed, data, targetFausts)
-values (403011, 'GROUP_1_LESS_THAN_100_PAGES', 'BRIEF',                    '2026-09-28', 'BRIEF',      NULL, NULL, 'Hyggelig højtlæsning for de 4-6-årige.', '["2001310"]'),
-       (403012, 'GROUP_1_LESS_THAN_100_PAGES', 'READING_EXPERIENCE_ADULT', '2026-09-28', 'METAKOMPAS', NULL, NULL, '{"entries":[],"suggestions":[{"path":["ramme","genre"],"title":"eventyr"},{"path":["stemning","positiv"],"title":"hyggelig"},{"path":["handling","navngivet hovedperson"],"title":"Lille Bjørn"}]}', '["2001310"]'),
-       (403013, 'GROUP_1_LESS_THAN_100_PAGES', 'READING_EXPERIENCE_CHILD', '2026-09-28', 'BUGGI',      NULL, NULL, '[{"id":1,"name":"let/svær","marcSubfieldCode":"s","value":2},{"id":2,"name":"tekst/tegninger","marcSubfieldCode":"s","value":0},{"id":8,"name":"spændende","marcSubfieldCode":"n","value":3}]', '["2001310"]');
+values (403011, 'GROUP_1_LESS_THAN_100_PAGES', 'BRIEF',                    '2026-09-28', 'BRIEF',      NULL, NULL, 'Hyggelig højtlæsning for de 4-6-årige.', '["46960181"]'),
+       (403012, 'GROUP_1_LESS_THAN_100_PAGES', 'READING_EXPERIENCE_ADULT', '2026-09-28', 'METAKOMPAS', NULL, NULL, '{"entries":[],"suggestions":[{"path":["ramme","genre"],"title":"eventyr"},{"path":["stemning","positiv"],"title":"hyggelig"},{"path":["handling","navngivet hovedperson"],"title":"Mimbo Jimbo"}]}', '["46960181"]'),
+       (403013, 'GROUP_1_LESS_THAN_100_PAGES', 'READING_EXPERIENCE_CHILD', '2026-09-28', 'BUGGI',      NULL, NULL, '[{"id":1,"name":"let/svær","marcSubfieldCode":"s","value":2},{"id":2,"name":"tekst/tegninger","marcSubfieldCode":"s","value":0},{"id":8,"name":"spændende","marcSubfieldCode":"n","value":3}]', '["46960181"]');
 insert into casetasks(case_id, task_id)
 values (1310, 403011), (1310, 403012), (1310, 403013);
 --
@@ -648,10 +648,10 @@ values (1320, 403021), (1320, 403022), (1320, 403023);
 --
 -- 1330: old and new task types on one case - waits for Metakompasset first (PENDING_EXTERNAL)
 insert into promatcase(id, title, details, primaryFaust, relatedFausts, reviewer_id, editor_id, created, deadline, assigned, status, materialType, creator_id)
-values (1330, 'Byen under isen', 'Roman om en by der langsomt forsvinder under en gletsjer.', '2001330', '[]', 4902, 4950, '2026-09-15', '2026-10-15', '2026-09-15', 'PENDING_EXTERNAL', 'BOOK', 4950);
+values (1330, 'Skæbnens veje', 'Roman om mennesker hvis liv krydser hinanden.', '39358727', '[]', 4902, 4950, '2026-09-15', '2026-10-15', '2026-09-15', 'PENDING_EXTERNAL', 'BOOK', 4950);
 insert into promattask(id, tasktype, taskfieldtype, created, paycategory, approved, payed, data, targetFausts)
-values (403031, 'GROUP_2_100_UPTO_199_PAGES', 'METAKOMPAS',               '2026-09-15', 'METAKOMPAS', NULL, NULL, NULL,     '["2001330"]'),
-       (403032, 'GROUP_2_100_UPTO_199_PAGES', 'READING_EXPERIENCE_ADULT', '2026-09-15', 'METAKOMPAS', NULL, NULL, '{"entries":[],"suggestions":[{"path":["ramme","genre"],"title":"eventyr"},{"path":["stemning","positiv"],"title":"hyggelig"},{"path":["handling","navngivet hovedperson"],"title":"Lille Bjørn"}]}', '["2001330"]');
+values (403031, 'GROUP_2_100_UPTO_199_PAGES', 'METAKOMPAS',               '2026-09-15', 'METAKOMPAS', NULL, NULL, NULL,     '["39358727"]'),
+       (403032, 'GROUP_2_100_UPTO_199_PAGES', 'READING_EXPERIENCE_ADULT', '2026-09-15', 'METAKOMPAS', NULL, NULL, '{"entries":[],"suggestions":[{"path":["ramme","genre"],"title":"romaner"},{"path":["stemning","tankevækkende"],"title":"eftertænksom"}]}', '["39358727"]');
 insert into casetasks(case_id, task_id)
 values (1330, 403031), (1330, 403032);
 --
